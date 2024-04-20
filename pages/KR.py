@@ -13,7 +13,7 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # # Preliminaries
 
 # %%
@@ -104,10 +104,10 @@ scraper_pause = 5
 print(f"\nThe pause between judgment scraping is {scraper_pause} second.")
 
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # # Kercher Reports search engine
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 #function to create dataframe
 def create_df():
 
@@ -116,9 +116,9 @@ def create_df():
 
     #Personal info entries
     
-    name = st.session_state['name']
-    email = st.session_state['email']
-    gpt_api_key = st.session_state['gpt_api_key']
+    name = name_entry
+    email = email_entry
+    gpt_api_key = gpt_api_key_entry
 
     #Judgment counter bound
     
@@ -271,7 +271,7 @@ def search_results_to_case_link_pairs(url_search_results, judgment_counter_bound
     return case_link_pairs
 
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 #Convert case-link pairs to judgment text
 
 def judgment_text(case_link_pair):
@@ -296,9 +296,9 @@ def meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
                      'Medium neutral citation' : '', 
-                     'Other reports': '', 
-                     'Hyperlink to AustLII': '', 
+                     'Original Reports': '', 
                      'Date' : '', 
+                     'Hyperlink to AustLII': '', 
                      'Judgment': ''
                     }
 
@@ -317,7 +317,7 @@ def meta_judgment_dict(case_link_pair):
                 
     judgment_dict['Case name'] = case_name
     judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['Other reports'] = nr_cite
+    judgment_dict['Original Reports'] = nr_cite
     judgment_dict['Date'] = date
     judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
     judgment_dict['Judgment'] = judgment_text(case_link_pair)
@@ -516,7 +516,7 @@ def GPT_json_tokens(questions_json, judgment_json, API_key):
 
 
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 #Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
 #IN USE
 
@@ -527,7 +527,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
     # The output is a new JSON for the relevant respondent with new columns re:
-        # "Report length in tokens (up to 15635 given to GPT)"
+        # "Judgment length in tokens (up to 15635 given to GPT)"
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
@@ -546,19 +546,19 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
-        df_individual.loc[judgment_index, "Report length in tokens (up to 15635 given to GPT)"] = judgment_tokens       
+        df_individual.loc[judgment_index, "Judgment length in tokens (up to 15635 given to GPT)"] = judgment_tokens       
 
-        #Indicate whether Report truncated
+        #Indicate whether judgment truncated
         
-        df_individual.loc[judgment_index, "Report truncated (if given to GPT)?"] = ''       
+        df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = ''       
         
         if judgment_tokens <= tokens_cap:
             
-            df_individual.loc[judgment_index, "Report truncated (if given to GPT)?"] = 'No'
+            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'No'
             
         else:
             
-            df_individual.loc[judgment_index, "Report truncated (if given to GPT)?"] = 'Yes'
+            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'Yes'
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -709,34 +709,24 @@ def open_page(url):
 
 
 # %%
-#Define source text for display
-source_text_raw = st.session_state['source'][0].lower()+st.session_state['source'][1:]
-
-if "(" in source_text_raw:
-    source_text = source_text_raw.split("(")[0]
-else:
-    source_text = source_text_raw
-
-# %% editable=true slideshow={"slide_type": ""}
 #Create form
 
 with st.form("GPT_input_form") as df_responses:
-#    st.title("The Empirical Legal Research Kickstarter")
-#    st.subheader("A Pilot for the Kercher Reports")
-
     return_button = st.form_submit_button('RETURN to previous page')
+    
+    st.header(f"You have selected to study :blue[the Kercher Reports].")
 
-    st.header(f"You have selected to study :blue[{source_text}].")
-
+#    st.header("Judgment Search Criteria")
+    
     st.markdown("""This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit AustLII at https://www8.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
     
-    st.subheader("Judgment Search Criteria")
+    st.subheader("Your Search Terms")
 
-    method_entry = st.selectbox('Find (search method)', methods_list, index=0)
+    method_entry = st.selectbox('Find', methods_list, index=0)
     
     query_entry = st.text_input('Enter search query')
         
@@ -754,6 +744,18 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
     gpt_activation_entry = st.checkbox('Tick to use GPT', value = False)
+
+    st.markdown("""You must enter your name and email address if you wish to use GPT.
+""")
+    #    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
+#To obtain an API key, first sign up for an account with OpenAI at 
+#https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
+#""")
+    
+    name_entry = st.text_input("Your name")
+    email_entry = st.text_input("Your email address")
+#    gpt_api_key_entry = st.text_input("Your GPT API key")
+
 
     st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, the model will be instructed to 'read' up to approximately 11,726 words from each judgment.")
 
@@ -775,7 +777,7 @@ You may enter at most 1000 characters here.
 
     st.header("Consent")
 
-    st.markdown("""By submitting this form to run the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
+    st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
 """)
     
     consent =  st.checkbox('Yes, I agree.', value = False)
@@ -785,7 +787,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**You can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**You can now run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     
@@ -795,11 +797,10 @@ You can also download a record of your responses.
 
     keep_button = st.form_submit_button('DOWNLOAD your form responses')
 
-#    sub_reset_button = st.form_submit_button('Reset', type = 'primary')
 
 
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # # Save and run
 
 # %%
@@ -814,7 +815,7 @@ if preview_button:
     open_page(judgments_url)
 
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 if run_button:
 
     #Using own GPT
@@ -893,7 +894,7 @@ if run_button:
 
 
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 if keep_button:
 
     #Using own GPT API key here
@@ -930,15 +931,7 @@ if keep_button:
     )
 
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 if return_button:
 
     st.switch_page("Home.py")
-
-
-# %% editable=true slideshow={"slide_type": ""}
-#if sub_reset_button:
-#    for key in st.session_state.keys():
-#        del st.session_state[key]
-
-#    st.write("Any information provided has been cleared. To use this program, you must re-enter your responses from the beginning")

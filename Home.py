@@ -40,7 +40,7 @@ sources_list = ["Judgments of select New South Wales courts",
                 "Judgments of the Federal Court of Australia", 
                 "Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1827)", 
-                #"The English Reports (nearly all English case reports from 1220 to 1866)"
+                "The English Reports (nearly all English case reports from 1220 to 1866)"
                ]
 
 
@@ -93,24 +93,12 @@ This pilot version can automatically
 
     st.header("Start")
 
-    st.markdown("""Please enter your name and email address, and select a source of information to study.
+    st.markdown("""What would you like to study?
     """)
-#    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
-#To obtain an API key, first sign up for an account with OpenAI at 
-#https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
-#""")
-    name_entry = st.text_input("Name", value = default_name)
-    email_entry = st.text_input("Email address", value = default_email)
-    #gpt_api_key_entry = st.text_input("Your GPT API key", value = default_gpt_api_key)
-
-#    st.header("Source of information")
-
-    source_entry = st.selectbox("Source of information to collect, code and analyse", sources_list, index = default_source_index)
+    source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
     next_button = st.form_submit_button('Next')
-
-    reset_button = st.form_submit_button('Reset', type = 'primary')
 
 
 
@@ -120,28 +108,10 @@ This pilot version can automatically
 # %% editable=true slideshow={"slide_type": ""}
 if next_button:
 
-    if name_entry == None:
-        st.write('You must enter a name.')
-
-    elif ((email_entry == None) or ('@' not in email_entry)):
-        st.write('You must enter a valid email address.')
-
-    elif source_entry == None:
+    if source_entry == None:
         st.write('You must choose a source of information.')
 
     else:
-
-#        if 'name' not in st.session_state:
-        st.session_state['name'] = name_entry
-    
-#        if 'email' not in st.session_state:
-        st.session_state['email'] = email_entry
-    
-#        if 'gpt_api_key' not in st.session_state:
-        st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
-
-#        if 'source' not in st.session_state:
-        st.session_state['source'] = source_entry
     
         if (('New South Wales' in source_entry) and ('Kercher' not in source_entry)):
             st.switch_page("pages/NSW.py")
@@ -161,14 +131,5 @@ if next_button:
         if 'English Reports' in source_entry:
             
              st.switch_page("pages/ER.py")
-    
-
-
-# %% editable=true slideshow={"slide_type": ""}
-if reset_button:
-    for key in st.session_state.keys():
-        del st.session_state[key]
-
-    st.write("Any information provided has been cleared. To use this program, you must re-enter your responses.")
 
 
