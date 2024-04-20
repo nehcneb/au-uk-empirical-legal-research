@@ -296,7 +296,7 @@ def meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
                      'Medium neutral citation' : '', 
-                     'Other Reports': '', 
+                     'Other reports': '', 
                      'Hyperlink to AustLII': '', 
                      'Date' : '', 
                      'Judgment': ''
@@ -317,7 +317,7 @@ def meta_judgment_dict(case_link_pair):
                 
     judgment_dict['Case name'] = case_name
     judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['Other Reports'] = nr_cite
+    judgment_dict['Other reports'] = nr_cite
     judgment_dict['Date'] = date
     judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
     judgment_dict['Judgment'] = judgment_text(case_link_pair)
@@ -527,7 +527,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
     # The output is a new JSON for the relevant respondent with new columns re:
-        # "Judgment length in tokens (up to 15635 given to GPT)"
+        # "Report length in tokens (up to 15635 given to GPT)"
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
@@ -546,19 +546,19 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
-        df_individual.loc[judgment_index, "Judgment length in tokens (up to 15635 given to GPT)"] = judgment_tokens       
+        df_individual.loc[judgment_index, "Report length in tokens (up to 15635 given to GPT)"] = judgment_tokens       
 
-        #Indicate whether judgment truncated
+        #Indicate whether Report truncated
         
-        df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = ''       
+        df_individual.loc[judgment_index, "Report truncated (if given to GPT)?"] = ''       
         
         if judgment_tokens <= tokens_cap:
             
-            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'No'
+            df_individual.loc[judgment_index, "Report truncated (if given to GPT)?"] = 'No'
             
         else:
             
-            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'Yes'
+            df_individual.loc[judgment_index, "Report truncated (if given to GPT)?"] = 'Yes'
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
