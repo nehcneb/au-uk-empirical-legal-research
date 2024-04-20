@@ -516,7 +516,7 @@ def GPT_json_tokens(questions_json, judgment_json, API_key):
 
 
 
-# %%
+# %% editable=true slideshow={"slide_type": ""}
 #Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
 #IN USE
 
