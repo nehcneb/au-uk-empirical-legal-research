@@ -304,8 +304,14 @@ def meta_judgment_dict(case_link_pair):
 
     case_name = case_link_pair['case']
     date = case_link_pair['case'].split('(')[-1].replace(')', '')
-    year = case_link_pair['case'].split('[')[1][0:4] 
-    case_number = case_link_pair['case'].split('NSWSupC ')[1].split(' (')[0].replace(';', '')
+    year = case_link_pair['case'].split('[')[1][0:4]
+    case_number_raw = case_link_pair['case'].split('NSWSupC ')[1].split(' (')[0]
+
+    if ";" in case_number_raw:
+        case_number = case_number_raw.split(';')[0]
+    else:
+        case_number = case_number_raw
+    
     mnc = '[' + year +']' + ' NSWSupC ' + case_number
     nr_cite = ''
         
