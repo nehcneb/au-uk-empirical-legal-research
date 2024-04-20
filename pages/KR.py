@@ -296,7 +296,7 @@ def meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
                      'Medium neutral citation' : '', 
-                     'Original Reports': '', 
+                     'Other reports': '', 
                      'Date' : '', 
                      'Hyperlink to AustLII': '', 
                      'Judgment': ''
@@ -317,7 +317,7 @@ def meta_judgment_dict(case_link_pair):
                 
     judgment_dict['Case name'] = case_name
     judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['Original Reports'] = nr_cite
+    judgment_dict['Other reports'] = nr_cite
     judgment_dict['Date'] = date
     judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
     judgment_dict['Judgment'] = judgment_text(case_link_pair)
