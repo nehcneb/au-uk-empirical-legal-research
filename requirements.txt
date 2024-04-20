@@ -1,0 +1,17 @@
+altair
+numpy
+pandas
+pydeck 
+pandas
+datetime
+streamlit
+st-gsheets-connection
+#streamlit-gsheets
+streamlit-ext
+nswcaselaw
+openai
+tiktoken
+pause
+textract
+httplib2
+PyPDF2
