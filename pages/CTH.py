@@ -1221,7 +1221,7 @@ if keep_button:
 if return_button:
 
     st.switch_page("Home.py")
-    
+
 
 # %% editable=true slideshow={"slide_type": ""}
 #if sub_reset_button:
