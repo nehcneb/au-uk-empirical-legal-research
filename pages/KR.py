@@ -271,7 +271,7 @@ def search_results_to_case_link_pairs(url_search_results, judgment_counter_bound
     return case_link_pairs
 
 
-# %%
+# %% editable=true slideshow={"slide_type": ""}
 #Convert case-link pairs to judgment text
 
 def judgment_text(case_link_pair):
@@ -715,7 +715,7 @@ with st.form("GPT_input_form") as df_responses:
 #    st.title("The Empirical Legal Research Kickstarter")
 #    st.subheader("A Pilot for the Kercher Reports")
 
-    return_button = st.form_submit_button('Return to previous page')
+    return_button = st.form_submit_button('RETURN to previous page')
 
     st.header("You are studying :blue[the Kercher Reports].")
 
@@ -776,7 +776,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**You can submit this form to run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**You can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     

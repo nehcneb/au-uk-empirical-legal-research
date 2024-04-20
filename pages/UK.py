@@ -862,7 +862,7 @@ with st.form("GPT_input_form") as df_responses:
     #st.title("The Empirical Legal Research Kickstarter")
     #st.subheader("A United Kingdom Pilot")
 
-    return_button = st.form_submit_button('Return to previous page')
+    return_button = st.form_submit_button('RETURN to previous page')
 
     #    st.subheader("Judgment Search Criteria")
 
@@ -951,7 +951,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**You can submit this form to run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**You can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     
@@ -1114,7 +1114,7 @@ if keep_button:
 if return_button:
 
     st.switch_page("Home.py")
-    
+
 
 # %% editable=true slideshow={"slide_type": ""}
 #if sub_reset_button:
