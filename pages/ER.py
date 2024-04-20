@@ -301,8 +301,8 @@ def meta_judgment_dict(case_link_pair):
                      'Medium neutral citation' : '', 
                      'English Reports': '', 
                      'Nominate Reports': '', 
-                     'Year' : '', 
                      'Hyperlink to CommonLII': '', 
+                     'Year' : '', 
                      'Judgment': ''
                     }
 
