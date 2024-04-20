@@ -773,7 +773,7 @@ You may enter at most 1000 characters here.
 
     gpt_questions_entry = st.text_area("", height= 200, max_chars=1000) 
 
-    st.subheader("Consent")
+    st.header("Consent")
 
     st.markdown("""By submitting this form to run the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
 """)
@@ -785,7 +785,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**:green[You can run the Empirical Legal Research Kickstarter].** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**You can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     
