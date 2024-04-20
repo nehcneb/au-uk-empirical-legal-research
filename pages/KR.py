@@ -297,8 +297,8 @@ def meta_judgment_dict(case_link_pair):
     judgment_dict = {'Case name': '',
                      'Medium neutral citation' : '', 
                      'Other Reports': '', 
-                     'Date' : '', 
                      'Hyperlink to AustLII': '', 
+                     'Date' : '', 
                      'Judgment': ''
                     }
 
