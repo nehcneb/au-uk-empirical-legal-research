@@ -36,11 +36,11 @@ st.set_page_config(
 
 # %% editable=true slideshow={"slide_type": ""}
 #List of sources of information
-sources_list = ["Judgments of select New South Wales courts and tribunals", 
+sources_list = ["Judgments of select New South Wales courts", 
                 "Judgments of the Federal Court of Australia", 
                 "Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1827)", 
-#                "The English Reports (nearly all English case reports from 1220 to 1866)"
+                "The English Reports (nearly all English case reports from 1220 to 1866)"
                ]
 
 
@@ -93,7 +93,7 @@ This pilot version can automatically
 
     st.header("Start")
 
-    st.markdown("""Please enter your name and email address, and select a source of information for processing.
+    st.markdown("""Please enter your name and email address, and select a source of information to study.
     """)
 #    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
 #To obtain an API key, first sign up for an account with OpenAI at 

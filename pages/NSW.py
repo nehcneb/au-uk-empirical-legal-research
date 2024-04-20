@@ -934,6 +934,15 @@ def open_page(url):
     html(open_script)
 
 
+# %%
+#Define source text for display
+source_text_raw = st.session_state['source'][0].lower()+st.session_state['source'][1:]
+
+if "(" in source_text_raw:
+    source_text = source_text_raw.split("(")[0]
+else:
+    source_text = source_text_raw
+
 # %% editable=true slideshow={"slide_type": ""}
 #Create form
 
@@ -945,7 +954,7 @@ with st.form("GPT_input_form") as df_responses:
     
 #    st.header("Judgment Search Criteria")
 
-    st.header("You are studying :blue[select New South Wales courts and tribunals].")
+    st.header(f"You have selected to study :blue[{source_text}].")
     
     st.markdown("""This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
@@ -1056,7 +1065,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**You can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**:green[You can run the Empirical Legal Research Kickstarter].** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     
