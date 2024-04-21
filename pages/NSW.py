@@ -846,11 +846,6 @@ def tidying_up(df_master, df_individual):
     except:
         pass
         
-    #Remove blank decisions under appeal cells
-    for j in df_individual.index:
-        if df_individual.loc[j, "Decision under appeal"] == {'Court or tribunal': [], 'Jurisdiction': [], 'Citation': [], 'Date of Decision': [], 'Before': [], 'File Number(s)': []}:
-            df_individual.loc[j, "Decision under appeal"] = ''
-
     #Check case name, medium neutral citation 
 
     for k in df_individual.index:
