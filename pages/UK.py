@@ -865,7 +865,7 @@ with st.form("GPT_input_form") as df_responses:
     
     #st.header("Judgment Search Criteria")
     
-    st.markdown("""This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**Please enter your search terms.** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit The National Archives at https://caselaw.nationalarchives.gov.uk/structured_search. This section mimics their case law search function.
 """)

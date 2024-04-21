@@ -727,7 +727,7 @@ with st.form("GPT_input_form") as df_responses:
 
 #    st.header("Judgment Search Criteria")
     
-    st.markdown("""This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**Please enter your search terms.** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit CommonLII at http://www.commonlii.org/form/search1.html?mask=uk/cases/EngR. This section mimics their search function.
 """)

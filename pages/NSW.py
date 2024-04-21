@@ -939,13 +939,11 @@ def open_page(url):
 with st.form("GPT_input_form") as df_responses:
     return_button = st.form_submit_button('RETURN to previous page')
     
-    st.header(f"You have selected to study :blue[judgments of select New South Wales courts].")
+    st.header("You have selected to study :blue[judgments of select New South Wales courts].")
 
     #Search terms
 
-#    st.header("Judgment Search Criteria")
-    
-    st.markdown("""This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**Please enter your search terms.** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/search/advanced. This section mimics their Advanced Search function.
 """)
