@@ -1146,7 +1146,7 @@ if run_button:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.
 
-If you see an error message or obtains an unexpected spreadsheet, please check your search terms and re-run this program.
+If the program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
 """)
         #Upload placeholder record onto Google sheet
         #df_plaeceholdeer = pd.concat([df_google, df_master])
