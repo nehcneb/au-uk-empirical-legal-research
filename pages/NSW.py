@@ -859,12 +859,6 @@ def tidying_up(df_master, df_individual):
             mnc_proper = '[' + df_individual.loc[k, "Medium neutral citation"].split(' [')[-1]
             df_individual.loc[k, "Case name"] = case_name_proper
             df_individual.loc[k, "Medium neutral citation"] = mnc_proper
-
-    #Check judge name
-    for l in df_individual.index:
-        if ((' at ' in df_individual.loc[l, "Before"]) and (len(df_individual.loc[l, "Before"].split(' at ')) == 2)):
-            judge_name_proper = df_individual.loc[l, "Before"].split(' at ')[0]
-            df_individual.loc[l, "Before"] = judge_name_proper
     
     return df_individual
 
