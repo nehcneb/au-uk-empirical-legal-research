@@ -93,9 +93,9 @@ This pilot version can automatically
 
     st.header("Start")
 
-    st.markdown("""What would you like to study?
+    st.markdown("""Which courts' judgments would you like to study?
     """)
-    source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
+    source_entry = st.selectbox("Please select a source of judgments to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
     next_button = st.form_submit_button('Next')

@@ -747,7 +747,9 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
 
     st.header("Use GPT as Your Research Assistant")
 
-    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
+#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
+
+    st.markdown("**Would you like GPT to answer questions about each judgment returned by your search terms?**")
 
     gpt_activation_entry = st.checkbox('Tick to use GPT', value = False)
 
