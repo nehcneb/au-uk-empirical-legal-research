@@ -66,13 +66,8 @@ current_dir = os.getcwd()
 
 # %%
 #today
-day = datetime.now().strftime("%-d")
-month = datetime.now().strftime("%B")
-year = datetime.now().strftime("%Y")
-today = day + ' ' + month + ' ' + year
 today_in_nums = str(datetime.now())[0:10]
-today_month = day + ' ' + month
-today_words = datetime.now().strftime('%A')
+
 
 # %%
 # Generate placeholder list of errors
@@ -827,25 +822,17 @@ if preview_button:
 # %%
 if run_button:
 
-    #Using own GPT
+    all_search_terms = str(query_entry)
+        
+    if all_search_terms.replace('None', '') == "":
 
-    gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
+        st.write('You must enter some search terms.')
 
-    #Create spreadsheet of responses
-    df_master = create_df()
-
-    #Obtain google spreadsheet
-
-   # conn = st.connection("gsheets_uk", type=GSheetsConnection)
-    #df_google = conn.read()
-    #df_google = df_google.fillna('')
-    #df_google=df_google[df_google["Processed"]!='']
-
-    if int(consent) == 0:
+    elif int(consent) == 0:
         st.write("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
 
-    elif (('@' not in df_master.loc[0, 'Your email address']) & (int(df_master.loc[0]["Tick to use GPT"]) > 0)):
-        st.write('You must enter a valid email address to use GPT')
+    elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
+        st.write('You must enter a valid email address to use GPT.')
 
     #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
        # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
@@ -859,6 +846,21 @@ if run_button:
 
 If the program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
 """)
+
+        #Using own GPT
+    
+        gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
+    
+        #Create spreadsheet of responses
+        df_master = create_df()
+    
+        #Obtain google spreadsheet
+    
+       # conn = st.connection("gsheets_uk", type=GSheetsConnection)
+        #df_google = conn.read()
+        #df_google = df_google.fillna('')
+        #df_google=df_google[df_google["Processed"]!='']
+    
         #Upload placeholder record onto Google sheet
         #df_plaeceholdeer = pd.concat([df_google, df_master])
         #conn.update(worksheet="UK", data=df_plaeceholdeer, )
@@ -908,38 +910,45 @@ If the program produces an error (in red) or an unexpected spreadsheet, please d
 # %%
 if keep_button:
 
-    #Using own GPT API key here
+    all_search_terms = str(query_entry)
+        
+    if all_search_terms.replace('None', '') == "":
 
-    gpt_api_key_entry = ''
+        st.write('You must enter some search terms.')
+
+    else:
+        #Using own GPT API key here
     
-    df_master = create_df()
-
-    df_master.pop("Your GPT API key")
-
-    df_master.pop("Processed")
-
-    responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
-
-    #Produce a file to download
-
-    csv = convert_df_to_csv(df_master)
+        gpt_api_key_entry = ''
+        
+        df_master = create_df()
     
-    ste.download_button(
-        label="Download as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=responses_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    json = convert_df_to_json(df_master)
+        df_master.pop("Your GPT API key")
     
-    ste.download_button(
-        label="Download as a JSON", 
-        data = json,
-        file_name= responses_output_name + '.json', 
-        mime= "application/json", 
-    )
+        df_master.pop("Processed")
+    
+        responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
+    
+        #Produce a file to download
+    
+        csv = convert_df_to_csv(df_master)
+        
+        ste.download_button(
+            label="Download as a CSV (for use in Excel etc)", 
+            data = csv,
+            file_name=responses_output_name + '.csv', 
+            mime= "text/csv", 
+    #            key='download-csv'
+        )
+    
+        json = convert_df_to_json(df_master)
+        
+        ste.download_button(
+            label="Download as a JSON", 
+            data = json,
+            file_name= responses_output_name + '.json', 
+            mime= "application/json", 
+        )
 
 
 # %%

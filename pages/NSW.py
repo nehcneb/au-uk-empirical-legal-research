@@ -60,13 +60,8 @@ from google.oauth2 import service_account
 
 # %%
 #today
-day = datetime.now().strftime("%-d")
-month = datetime.now().strftime("%B")
-year = datetime.now().strftime("%Y")
-today = day + ' ' + month + ' ' + year
 today_in_nums = str(datetime.now())[0:10]
-today_month = day + ' ' + month
-today_words = datetime.now().strftime('%A')
+
 
 # %%
 # Generate placeholder list of errors
@@ -100,18 +95,6 @@ nsw_courts =["Court of Appeal", "Court of Criminal Appeal", "Supreme Court"] #, 
 headnotes_choices = ["Catchwords", "Before", "Decision date(s)", "Hearing date(s)", "Date(s) of order",  "Jurisdiction", "Decision", "Legislation cited", "Cases cited", "Texts cited", "Category", "Parties", "File number", "Representation", "Decision under appeal", "All of the above"]
 search_criteria = ['Free text', 'Case name', 'Before', 'Catchwords', 'Party names', 'Medium neutral citation', 'Decision date from', 'Decision date to', 'File number', 'Legislation cited', 'Cases cited']
 meta_labels_droppable = ["Catchwords", "Before", "Decision date(s)", "Hearing date(s)", "Date(s) of order",  "Jurisdiction", "Decision", "Legislation cited", "Cases cited", "Texts cited", "Category", "Parties", "File number", "Representation", "Decision under appeal"]
-
-def search_terms_str(df):
-
-    output = ''
-    
-    search_terms = df[search_criteria]
-
-    for i in search_terms.loc[0]:
-        output = output + str(i)
-
-    return output
-
 
 
 # %%
@@ -1083,30 +1066,22 @@ if preview_button:
     open_page(judgments_url)
 
 
-
 # %%
 if run_button:
 
-    #Using own GPT
+    #Check whether search terms entered
 
-    gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
+    all_search_terms = str(catchwords_entry) + str(body_entry) + str(title_entry) + str(before_entry) + str(party_entry) + str(mnc_entry) + str(startDate_entry) + str(endDate_entry) + str(fileNumber_entry) + str(legislationCited_entry) + str(casesCited_entry)
+    
+    if all_search_terms.replace('None', '') == "":
 
-    #Create spreadsheet of responses
-    df_master = create_df()
+        st.write('You must enter some search terms.')
 
-    #Obtain google spreadsheet
-
-    #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-    #df_google = conn.read()
-    #df_google = df_google.fillna('')
-    #df_google=df_google[df_google["Processed"]!='']
-
-
-    if int(consent) == 0:
+    elif int(consent) == 0:
         st.write("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
 
-    elif (('@' not in df_master.loc[0, 'Your email address']) & (int(df_master.loc[0]["Tick to use GPT"]) > 0)):
-        st.write('You must enter a valid email address to use GPT')
+    elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
+        st.write('You must enter a valid email address to use GPT.')
 
    # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
         #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
@@ -1117,15 +1092,26 @@ if run_button:
 #    elif len(courts_entry) == 0:
 #        st.write('Please select at least one court.')
 
-    elif search_terms_str(df_master) == 'NoneNone':
-        st.write('Please enter at least one search term.')
-
     else:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.
 
 If the program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
 """)
+
+        #Using own GPT
+
+        gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
+    
+        #Create spreadsheet of responses
+        df_master = create_df()
+    
+        #Obtain google spreadsheet
+    
+        #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+        #df_google = conn.read()
+        #df_google = df_google.fillna('')
+        #df_google=df_google[df_google["Processed"]!='']
 
         #Upload placeholder record onto Google sheet
        # df_plaeceholdeer = pd.concat([df_google, df_master])
@@ -1179,25 +1165,30 @@ If the program produces an error (in red) or an unexpected spreadsheet, please d
 # %%
 if keep_button:
 
-    #Using own GPT API key here
+    #Check whether search terms entered
 
-    gpt_api_key_entry = ''
+    all_search_terms = str(catchwords_entry) + str(body_entry) + str(title_entry) + str(before_entry) + str(party_entry) + str(mnc_entry) + str(startDate_entry) + str(endDate_entry) + str(fileNumber_entry) + str(legislationCited_entry) + str(casesCited_entry)
     
-    df_master = create_df()
+    if all_search_terms.replace('None', '') == "":
 
-    df_master.pop("Your GPT API key")
-
-    df_master.pop("Processed")
-    
-    if search_terms_str(df_master) == 'NoneNone':
-        st.write('Please enter at least one search term.')
+        st.write('You must enter some search terms.')
 
     else:
 
+        #Using own GPT API key here
+    
+        gpt_api_key_entry = ''
+        
+        df_master = create_df()
+    
+        df_master.pop("Your GPT API key")
+    
+        df_master.pop("Processed")
+    
         responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
-
+    
         #Produce a file to download
-
+    
         csv = convert_df_to_csv(df_master)
         
         ste.download_button(
@@ -1205,9 +1196,9 @@ if keep_button:
             data = csv,
             file_name=responses_output_name + '.csv', 
             mime= "text/csv", 
-#            key='download-csv'
+    #            key='download-csv'
         )
-
+    
         json = convert_df_to_json(df_master)
         
         ste.download_button(
