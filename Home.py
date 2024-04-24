@@ -93,11 +93,18 @@ This pilot version can automatically
 
     st.header("Start")
 
+    st.write("This program may not work on a mobile device or a tablet. Please confirm that you understand.")
+
+    browser_entry = st.checkbox('Yes, I understand.', value = False)
+
+    st.subheader("Source of Information")
+
     st.markdown("""Which courts' judgments would you like to study?
     """)
     source_entry = st.selectbox("Please select a source of judgments to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
+    
     next_button = st.form_submit_button('Next')
 
 
@@ -108,7 +115,10 @@ This pilot version can automatically
 # %% editable=true slideshow={"slide_type": ""}
 if next_button:
 
-    if source_entry == None:
+    if int(browser_entry) == 0:
+        st.write('You must confirm that you understand this program may not work on a mobile device or a tablet.')
+
+    elif source_entry == None:
         st.write('You must choose a source of information.')
 
     else:
