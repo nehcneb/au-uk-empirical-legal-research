@@ -93,7 +93,7 @@ This pilot version can automatically
 
     st.header("Start")
 
-    st.write("This program may not work on a mobile device or a tablet. Please use a desktop or a laptop computer.")
+    st.write("This program may not work on a mobile device or a tablet. Please use a desktop or a laptop.")
 
     browser_entry = st.checkbox('Yes, I understand.', value = False)
 
