@@ -92,7 +92,7 @@ print(f"\nThe pause between GPT prompting is {scraper_pause} second.")
 
 
 # %% [markdown]
-# # Own Files
+# # Functions for Own Files
 
 # %%
 #function to create dataframe
@@ -555,6 +555,7 @@ def run(df_master, uploaded_files):
 
 # %%
 acceptable_types = ["pdf", "txt", "xps", "epub", "mobi", "fb2", "cbz", "svg", 
+                    'cs', 'xml', 'json', 
                    # "jpg", "jpeg", "png", "bmp", "gif", "tiff", "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"
                    ]
 
@@ -574,7 +575,7 @@ with st.form("GPT_input_form") as df_responses:
     st.markdown("""**Please upload your files.** This program will 'read' up to 10 files and up to about 10,413 words per file.
 """)
 
-    st.markdown("""The following file formats are supported: **(searchable) PDF**, **TXT**, XPS, EPUB, MOBI, FB2, CBZ, SVG. :red[(Microsoft Word documents are not yet supported.)]
+    st.markdown("""The following file formats are supported: **(searchable) PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(Microsoft Word documents are not yet supported.)]
     """)
 
     uploaded_files = st.file_uploader("Choose your file(s)", type = acceptable_types, accept_multiple_files=True)
