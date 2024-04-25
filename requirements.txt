@@ -15,4 +15,4 @@ pause
 textract
 httplib2
 PyPDF2
-fitz
+PyMuPDF
