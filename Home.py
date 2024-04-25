@@ -94,14 +94,13 @@ This pilot version can automatically
 
     st.header("Start")
 
-    st.write("This program may not work on a mobile device or a tablet. Please use a desktop or a laptop.")
+#    st.write("This program may not work on a mobile device or a tablet. Please use a desktop or a laptop.")
 
-    browser_entry = st.checkbox('Yes, I understand.', value = False)
+#    browser_entry = st.checkbox('Yes, I understand.', value = False)
 
-    st.subheader("What would you like to study?")
+#    st.subheader("What would you like to study?")
 
-#    st.markdown("""What would you like to study?
-#    """)
+    st.markdown("""What would you like to study?""")
     source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
@@ -116,10 +115,12 @@ This pilot version can automatically
 # %% editable=true slideshow={"slide_type": ""}
 if next_button:
 
-    if int(browser_entry) == 0:
-        st.write('You must confirm that you understand this program may not work on a mobile device or a tablet.')
+#    if int(browser_entry) == 0:
+#        st.write('You must confirm that you understand this program may not work on a mobile device or a tablet.')
 
-    elif source_entry == None:
+#    elif source_entry == None:
+    if source_entry == None:
+
         st.write('You must choose a source of information.')
 
     else:
