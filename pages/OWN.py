@@ -575,7 +575,7 @@ with st.form("GPT_input_form") as df_responses:
     st.markdown("""**Please upload your files.** This program will 'read' up to 10 files and up to about 10,413 words per file.
 """)
 
-    st.markdown("""The following file formats are supported: **(searchable) PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(Microsoft Word documents are not yet supported.)]
+    st.markdown("""The following file formats are supported: **(searchable) PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(DOC, DOCX are not yet supported.)]
     """)
 
     uploaded_files = st.file_uploader("Choose your file(s)", type = acceptable_types, accept_multiple_files=True)
