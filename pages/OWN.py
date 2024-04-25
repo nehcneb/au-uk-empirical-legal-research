@@ -565,7 +565,7 @@ acceptable_types = ["pdf", "txt", "xps", "epub", "mobi", "fb2", "cbz", "svg",
 with st.form("GPT_input_form") as df_responses:
     return_button = st.form_submit_button('RETURN to previous page')
     
-    st.header(f"You have selected to study :blue[your own files].")
+    st.header(f"You have selected to study :blue[your own documents].")
     
     #Search terms
 
@@ -631,7 +631,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**:red[Once your files are uploaded,] you can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**:orange[Once your files are uploaded,] you can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     
@@ -655,7 +655,7 @@ You can also download a record of your responses.
 #    for uploaded_file in uploaded_files:
 #        output = file_to_text(uploaded_file)
 #        st.write(output)
-        
+
 
 # %%
 if run_button:
