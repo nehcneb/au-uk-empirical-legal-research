@@ -517,7 +517,7 @@ def run(df_master, uploaded_files):
     
     files_counter_bound = int(df_master.loc[0, 'Maximum number of files'])
 
-    file_counter = 0 
+    file_counter = 1 
     
     for uploaded_file in uploaded_files:
         if file_counter <= files_counter_bound:
