@@ -40,7 +40,8 @@ sources_list = ["Judgments of select New South Wales courts",
                 "Judgments of the Federal Court of Australia", 
                 "Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1827)", 
-                "The English Reports (nearly all English case reports from 1220 to 1866)"
+                "The English Reports (nearly all English case reports from 1220 to 1866)",
+                "Your own documents"
                ]
 
 
@@ -97,11 +98,11 @@ This pilot version can automatically
 
     browser_entry = st.checkbox('Yes, I understand.', value = False)
 
-    st.subheader("Source of Information")
+    st.subheader("What would you like to study?")
 
-    st.markdown("""Which courts' judgments would you like to study?
-    """)
-    source_entry = st.selectbox("Please select a source of judgments to collect, code and analyse.", sources_list, index = default_source_index)
+#    st.markdown("""What would you like to study?
+#    """)
+    source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
     
@@ -140,6 +141,12 @@ if next_button:
 
         if 'English Reports' in source_entry:
             
-             st.switch_page("pages/ER.py")
+            st.switch_page("pages/ER.py")
+            
+        if ' own ' in source_entry:
+
+            st.switch_page("pages/OWN.py")
+
+
 
 

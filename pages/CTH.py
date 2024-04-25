@@ -54,9 +54,6 @@ import tiktoken
 #Google
 from google.oauth2 import service_account
 
-#Word
-import textract
-
 
 
 # %%
