@@ -53,6 +53,9 @@ import tiktoken
 #Google
 from google.oauth2 import service_account
 
+#Excel
+from pyxlsb import open_workbook as open_xlsb
+
 
 # %%
 #Get current directory
@@ -69,13 +72,25 @@ today_in_nums = str(datetime.now())[0:10]
 errors_list = set()
 
 
-# %% jupyter={"source_hidden": true}
+# %%
 #Create function for saving responses and results
 def convert_df_to_json(df):
     return df.to_json(orient = 'split', compression = 'infer')
 
 def convert_df_to_csv(df):
    return df.to_csv(index=False).encode('utf-8')
+
+def convert_df_to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None, format1)  
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
 
 # %%
 #Title of webpage
@@ -889,6 +904,14 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 #            key='download-csv'
         )
 
+        excel_xlsx = convert_df_to_excel(df_individual_output)
+        
+        ste.download_button(label='Download your results as an Excel file',
+                            data=excel_xlsx,
+                            file_name= output_name + '.xlsx', 
+                            mime='application/vnd.ms-excel',
+                           )
+
         json_output = convert_df_to_json(df_individual_output)
         
         ste.download_button(
@@ -935,7 +958,16 @@ if keep_button:
             mime= "text/csv", 
     #            key='download-csv'
         )
-    
+
+
+        xlsx = convert_df_to_excel(df_master)
+        
+        ste.download_button(label='Download as an Excel file',
+                            data=xlsx,
+                            file_name=responses_output_name + '.xlsx', 
+                            mime='application/vnd.ms-excel',
+                           )
+        
         json = convert_df_to_json(df_master)
         
         ste.download_button(

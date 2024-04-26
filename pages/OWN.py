@@ -60,6 +60,9 @@ import tiktoken
 #Google
 from google.oauth2 import service_account
 
+#Excel
+from pyxlsb import open_workbook as open_xlsb
+
 
 # %%
 #Get current directory
@@ -82,6 +85,18 @@ def convert_df_to_json(df):
 
 def convert_df_to_csv(df):
    return df.to_csv(index=False).encode('utf-8')
+
+def convert_df_to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None, format1)  
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
 
 # %%
 #Title of webpage
@@ -883,6 +898,14 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 #            key='download-csv'
         )
 
+        excel_xlsx = convert_df_to_excel(df_individual_output)
+        
+        ste.download_button(label='Download your results as an Excel file',
+                            data=excel_xlsx,
+                            file_name= output_name + '.xlsx', 
+                            mime='application/vnd.ms-excel',
+                           )
+        
         json_output = convert_df_to_json(df_individual_output)
         
         ste.download_button(
@@ -894,11 +917,8 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 
         if df_master.loc[0, 'Language choice'] != 'English':
 
-            st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode. For Excel, please see:")
-    
-            st.link_button("Excel for Mac encoding guide", "https://answers.microsoft.com/en-us/msoffice/forum/all/excel-for-mac-not-opening-utf-8-csv-files/67d951d3-b616-4f7d-9d9a-af76045f7947")
-    
-            st.link_button("Excel for Windows encoding guide", "https://support.microsoft.com/en-au/office/text-import-wizard-c5b02af6-fda1-4440-899f-f78bafe41857#ID0EBBJ=Newer_versions")
+            st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
+
 
 
 # %%
@@ -937,6 +957,14 @@ if keep_button:
             mime= "text/csv", 
     #            key='download-csv'
         )
+
+        xlsx = convert_df_to_excel(df_master)
+        
+        ste.download_button(label='Download as an Excel file',
+                            data=xlsx,
+                            file_name=responses_output_name + '.xlsx', 
+                            mime='application/vnd.ms-excel',
+                           )
     
         json = convert_df_to_json(df_master)
         
