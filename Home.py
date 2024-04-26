@@ -127,27 +127,27 @@ if next_button:
     else:
     
         if (('New South Wales' in source_entry) and ('Kercher' not in source_entry)):
-            st.switch_page("pages/nsw.py")
+            st.switch_page("pages/NSW.py")
     
         if 'Federal Court of Australia' in source_entry:
             
-            st.switch_page("pages/cth.py")
+            st.switch_page("pages/CTH.py")
     
         if 'United Kingdom' in source_entry:
             
-            st.switch_page("pages/uk.py")
+            st.switch_page("pages/UK.py")
             
         if 'Kercher' in source_entry:
             
-            st.switch_page("pages/kr.py")
+            st.switch_page("pages/KR.py")
 
         if 'English Reports' in source_entry:
             
-            st.switch_page("pages/er.py")
+            st.switch_page("pages/ER.py")
             
         if ' own ' in source_entry:
 
-            st.switch_page("pages/own.py")
+            st.switch_page("pages/OWN.py")
 
 
 
