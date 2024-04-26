@@ -703,14 +703,13 @@ with st.form("GPT_input_form") as df_responses:
     
     st.header(f"You have selected to study :blue[your own files].")
         
-    st.markdown("""**Please upload your files.** This program will extract text from up to 10 files, and process up to approximately 10,000 words from the first 10 pages of each file.
+    st.markdown("""**Please upload your documents or images.** This program will extract text from up to 10 files, and process up to approximately 10,000 words from the first 10 pages of each file.
 
 This program works only if the text from your file(s) is displayed horizontally and neatly.
 
-You may upload documents or images.
 """)
 
-    st.caption('During the pilot stage, the number of files and the number of words per file to read are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
+    st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
 
     st.subheader('Upload Documents')
     
@@ -733,7 +732,7 @@ You may upload documents or images.
         
     language_entry = st.selectbox("Please choose a language.", languages_list, index=0)
 
-    st.caption('English is chosen by default.')
+    st.caption('During the pilot stage, the languages supported are limited. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to choose a language which is not available under this menu.')
 
     #Bound on number of files to process
     files_counter_bound_entry = files_counter_bound
