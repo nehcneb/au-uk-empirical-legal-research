@@ -832,7 +832,7 @@ if run_button:
 
     else:
 
-        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes. Please be patient if you have uploaded a very large file.
+        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes. 
 
 If this program produces an error (in red) or an unexpected spreadsheet, please double-check your uploaded file(s) and language choice and try again.
 """)
@@ -869,7 +869,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
         
         #conn.update(worksheet="UK", data=df_to_update, )
 
-        st.write("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.")
+        st.write('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.')
         
         #Button for downloading results
         output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
@@ -893,6 +893,9 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
             mime= "application/json", 
         )
 
+        st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode. For Excel for Mac, please click on:")
+
+        st.link_button("Excel for Mac encoding guide", "https://answers.microsoft.com/en-us/msoffice/forum/all/excel-for-mac-not-opening-utf-8-csv-files/67d951d3-b616-4f7d-9d9a-af76045f7947")
 
 
 # %%
