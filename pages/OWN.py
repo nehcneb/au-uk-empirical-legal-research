@@ -322,6 +322,7 @@ def image_to_text(uploaded_image, language):
                 
             except RuntimeError as timeout_error:
                 print(timeout_error)
+                pass
 
     file_triple['file_text'] = str(text_list)
 
@@ -516,7 +517,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
     # The output is a new JSON for the relevant respondent with new columns re:
-        # "First 10 pages in tokens (up to 13385 given to GPT)"
+        # "Length of first 10 pages in tokens (up to 13385 given to GPT)"
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
@@ -535,7 +536,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         
         #Calculate and append number of tokens of file, regardless of whether given to GPT
         file_tokens = num_tokens_from_string(str(file_triple), "cl100k_base")
-        df_individual.loc[file_index, "First 10 pages in tokens (up to 13385 given to GPT)"] = file_tokens       
+        df_individual.loc[file_index, "Length of first 10 pages in tokens (up to 13385 given to GPT)"] = file_tokens       
 
         #Indicate whether file truncated
         
