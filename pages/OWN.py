@@ -893,7 +893,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
             mime= "application/json", 
         )
 
-        st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode. For Microsoft Excel, please see:")
+        st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode. For Excel, please see:")
 
         st.link_button("Excel for Mac encoding guide", "https://answers.microsoft.com/en-us/msoffice/forum/all/excel-for-mac-not-opening-utf-8-csv-files/67d951d3-b616-4f7d-9d9a-af76045f7947")
 
