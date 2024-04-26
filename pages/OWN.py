@@ -263,6 +263,8 @@ def doc_to_text(uploaded_doc, language):
     if extension == 'docx':
         doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
         text_list.append(doc_string)
+
+        file_triple['Page length'] = 1
         
     else:
         #text formats
@@ -280,11 +282,11 @@ def doc_to_text(uploaded_doc, language):
             text_page = page.get_text() 
             text_list.append(text_page)
 
+        #Length of pages
+        file_triple['Page length'] = len(doc)
+
     file_triple['file_text'] = str(text_list)
 
-    #Length of pages
-    file_triple['Page length'] = len(doc)
-    
     #Test page
 #    file_triple['Page 2'] = doc.load_page(1).get_text()
     
