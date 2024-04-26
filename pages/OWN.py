@@ -356,17 +356,17 @@ answers_characters_bound = 1000
 
 print(f"\nQuestions for GPT are capped at {answers_characters_bound} characters.")
 
-#Upperbound on number of Files to scrape
+#Upperbound on number of files to scrape
 
 files_counter_bound = 10
 
 print(f"\nNumber of files to process per request is capped at {files_counter_bound}.")
 
-#Lowerbound on length of File text to proccess, in tokens
+#Lowerbound on length of file text to proccess, in tokens
 
 file_text_lower_bound = 500
 
-print(f"\nThe lower bound on lenth of File text to process is {file_text_lower_bound} tokens.")
+print(f"\nThe lower bound on lenth of file text to process is {file_text_lower_bound} tokens.")
 
 
 # %%
@@ -411,7 +411,7 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-#Define File input function for JSON approach
+#Define file input function for JSON approach
 
 #Token limit covering both GTP input and GPT output is 16385, each token is about 4 characters
 tokens_cap = int(16385 - 3000)
@@ -460,7 +460,7 @@ def GPT_json_tokens(questions_json, file_triple, API_key):
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers in the File or specific sections in the metadata.'})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
     
     #Create questions, which include the answer format
     
@@ -511,7 +511,7 @@ def GPT_json_tokens(questions_json, file_triple, API_key):
 
 
 # %%
-#Define GPT function for each respondent's dataframe, index by File then question, with input and output tokens given by GPT itself
+#Define GPT function for each respondent's dataframe, index by file then question, with input and output tokens given by GPT itself
 #IN USE
 
 #The following function DOES NOT check for existence of questions for GPT
@@ -538,11 +538,11 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         
         file_triple = df_individual.to_dict('index')[file_index]
         
-        #Calculate and append number of tokens of File, regardless of whether given to GPT
+        #Calculate and append number of tokens of file, regardless of whether given to GPT
         file_tokens = num_tokens_from_string(str(file_triple), "cl100k_base")
         df_individual.loc[file_index, "File length in tokens (up to 14635 given to GPT)"] = file_tokens       
 
-        #Indicate whether File truncated
+        #Indicate whether file truncated
         
         df_individual.loc[file_index, "File truncated (if given to GPT)?"] = ''       
         
@@ -562,7 +562,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 
         GPT_start_time = datetime.now()
 
-        #Depending on activation status, apply GPT_json function to each File, gives answers as a string containing a dictionary
+        #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
             GPT_file_triple = GPT_json_tokens(questions_json, file_triple, API_key) #Gives [answers as a JSON, output tokens, input tokens]
@@ -571,13 +571,13 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         else:
             answers_dict = {}    
             for q_index in question_keys:
-                #Increases File index by 2 to ensure consistency with Excel spreadsheet
-                answer = 'Placeholder answer for ' + ' File ' + str(int(file_index) + 2) + ' ' + str(q_index)
+                #Increases file index by 2 to ensure consistency with Excel spreadsheet
+                answer = 'Placeholder answer for ' + ' file ' + str(int(file_index) + 2) + ' ' + str(q_index)
                 answers_dict.update({q_index: answer})
             
             #Own calculation of GPT costs for Placeholder answer fors
 
-            #Calculate capped File tokens
+            #Calculate capped file tokens
 
             file_capped_tokens = num_tokens_from_string(file_prompt(file_triple), "cl100k_base")
 
@@ -589,7 +589,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 
             other_instructions = role_content + 'The document is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers in the File or specific sections in the metadata.", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
@@ -633,7 +633,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: answers_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
     
-    #Create Files file
+    #Create files file
     Files_file = []
     
     #Convert uploaded documents to text
@@ -665,7 +665,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     
     API_key = df_master.loc[0, 'Your GPT API key'] 
     
-    #apply GPT_individual to each respondent's File spreadsheet
+    #apply GPT_individual to each respondent's file spreadsheet
     
     GPT_activation = gpt_activation_entry
 
@@ -714,7 +714,7 @@ You may upload documents or images.
 """)
     uploaded_images = st.file_uploader("Please choose your image(s).", type = image_types, accept_multiple_files=True)
 
-    st.subheader('Language of Uploaded Files')
+    st.subheader('Language of Uploaded files')
     
     st.markdown("""In what language is the text from your uploaded file(s) written?""")
         
@@ -737,7 +737,7 @@ You may upload documents or images.
 
     st.markdown("""You must enter your name and email address if you wish to use GPT.
 """)
-    #    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 Files. 
+    #    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 files. 
 #To obtain an API key, first sign up for an account with OpenAI at 
 #https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
 #""")
@@ -746,7 +746,7 @@ You may upload documents or images.
     email_entry = st.text_input("Your email address")
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
-    st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per File. The exact cost for answering a question about a File depends on the length of the question, the length of the File, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
+    st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per file. The exact cost for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
 
     st.subheader("Enter your question(s) for GPT")
     
