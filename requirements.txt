@@ -20,3 +20,4 @@ pillow
 pytesseract
 pdf2image
 mammoth
+pyxlsb
