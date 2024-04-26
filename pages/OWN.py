@@ -692,13 +692,13 @@ You may upload documents or images.
     st.markdown("""Supported document formats: **searchable PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(DOC, DOCX are not yet supported.)]
 """)
 
-    uploaded_docs = st.file_uploader("Choose your document(s)", type = doc_types, accept_multiple_files=True)
+    uploaded_docs = st.file_uploader("Please choose your document(s).", type = doc_types, accept_multiple_files=True)
 
     st.subheader('Upload Images')
     
     st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG**, **PNG**, BMP, GIF, TIFF.
 """)
-    uploaded_images = st.file_uploader("Choose your image(s)", type = image_types, accept_multiple_files=True)
+    uploaded_images = st.file_uploader("Please choose your image(s).", type = image_types, accept_multiple_files=True)
 
     st.subheader('Language of Uploaded Files')
     
@@ -706,7 +706,7 @@ You may upload documents or images.
     
 #    st.write(f"Supported languages: {languages_words}.")
     
-    language_entry = st.selectbox("Choose a language", languages_list, index=0)
+    language_entry = st.selectbox("Please choose a language.", languages_list, index=0)
 
     st.caption('English is chosen by default.')
 
