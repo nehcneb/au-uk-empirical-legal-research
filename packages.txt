@@ -1,7 +1,7 @@
 tesseract-ocr-eng
 tesseract-ocr-enm
-tesseract-ocr-chi_sim
-tesseract-ocr-chi_tra
+tesseract-ocr-chi-sim
+tesseract-ocr-chi-tra
 tesseract-ocr-fra
 tesseract-ocr-deu
 tesseract-ocr-ell
@@ -11,7 +11,7 @@ tesseract-ocr-hin
 tesseract-ocr-hun
 tesseract-ocr-ind
 tesseract-ocr-ita
-tesseract-ocr-ita_old
+tesseract-ocr-ita-old
 tesseract-ocr-jpn
 tesseract-ocr-kor
 tesseract-ocr-msa
@@ -20,7 +20,7 @@ tesseract-ocr-pol
 tesseract-ocr-por
 tesseract-ocr-rus
 tesseract-ocr-spa
-tesseract-ocr-spa_old
+tesseract-ocr-spa-old
 tesseract-ocr-swe
 tesseract-ocr-tha
 tesseract-ocr-tur
