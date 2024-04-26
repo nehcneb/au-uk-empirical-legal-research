@@ -783,21 +783,21 @@ You can also download a record of your responses.
 
     keep_button = st.form_submit_button('DOWNLOAD your form responses')
 
-#    test_button = st.form_submit_button('Test')
+    test_button = st.form_submit_button('Test')
 
 
 # %% [markdown]
 # # Save and run
 
 # %%
-#if test_button:
-#    for uploaded_doc in uploaded_docs:
-#        output = doc_to_text(uploaded_doc, language_entry)
-#        st.write(output)
+if test_button:
+    for uploaded_doc in uploaded_docs:
+        output = doc_to_text(uploaded_doc, language_entry)
+        st.write(output)
 
-#    for uploaded_image in uploaded_images:
-#        output = image_to_text(uploaded_image, language_entry)
-#        st.write(output)
+    for uploaded_image in uploaded_images:
+        output = image_to_text(uploaded_image, language_entry)
+        st.write(output)
 
 
 # %%
