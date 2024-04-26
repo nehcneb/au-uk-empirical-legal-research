@@ -249,7 +249,10 @@ def doc_to_text(uploaded_doc, language):
     
     #Get file name
     file_triple['File name']=uploaded_doc.name
-
+    
+    #Length of pages
+    file_triple['Page length'] = len(doc)
+    
     #Get file data
     bytes_data = uploaded_doc.getvalue()
 
@@ -258,6 +261,8 @@ def doc_to_text(uploaded_doc, language):
 
     #Create list of pages
     text_list = []
+
+    max_doc_number=min(len(doc), page_bound)
 
     #Word format
     if extension == 'docx':
@@ -273,15 +278,12 @@ def doc_to_text(uploaded_doc, language):
         else:
             doc = fitz.open(stream=bytes_data)
 
-        for page_index in list(range(0, page_bound)):
+        for page_index in list(range(0, max_doc_number)):
             page = doc.load_page(page_index)
             text_page = page.get_text() 
             text_list.append(text_page)
 
     file_triple['file_text'] = str(text_list)
-
-    #Length of pages
-    file_triple['Page length'] = len(doc)
 
     #Test page
 #    file_triple['Page 2'] = doc.load_page(1).get_text()
@@ -299,6 +301,9 @@ def image_to_text(uploaded_image, language):
 
     #Get file name
     file_triple['File name']=uploaded_image.name
+
+    #Length of pages
+    file_triple['Page length'] = len(images)
 
     #Get file data
     bytes_data = uploaded_image.read()
@@ -321,7 +326,9 @@ def image_to_text(uploaded_image, language):
     #Extract text from images
     text_list = []
     
-    for image in images[ : page_bound]:
+    max_images_number=min(len(images), page_bound)
+
+    for image in images[ : max_images_number]:
         try:
             text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=30)
             text_list.append(text_page)
@@ -331,14 +338,11 @@ def image_to_text(uploaded_image, language):
 
     file_triple['file_text'] = str(text_list)
 
-    #Length of pages
-    file_triple['Page length'] = len(images)
 
     #Test page
 #    file_triple['Page 2'] = pytesseract.image_to_string(images[1], lang=languages_dict[language], timeout=30)
         
     return file_triple
-
 
 # %% [markdown]
 # # GPT functions and parameters
