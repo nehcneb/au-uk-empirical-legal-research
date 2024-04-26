@@ -1,6 +1,6 @@
 [server]
 port = 8501
-maxUploadSize = 10
+maxUploadSize = 5
 
 [client]
 showSidebarNavigation = false
