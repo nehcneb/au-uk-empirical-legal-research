@@ -904,7 +904,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 #            key='download-csv'
         )
 
-         excel_xlsx = convert_df_to_excel(df_individual_output)
+        excel_xlsx = convert_df_to_excel(df_individual_output)
         
         ste.download_button(label='Download your results as an Excel file',
                             data=excel_xlsx,
