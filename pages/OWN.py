@@ -703,12 +703,12 @@ You may upload documents or images.
     st.subheader('Upload Documents')
     
     st.markdown("""Supported document formats: **DOCX**, **searchable PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS.
-    
-:red[DOC is not yet supported. Microsoft Word or a similar program can convert a DOC file to a DOCX file.]
 """)
 
     uploaded_docs = st.file_uploader("Please choose your document(s).", type = doc_types, accept_multiple_files=True)
 
+    st.caption('DOC is not yet supported. Microsoft Word or a similar program can convert a DOC file to a DOCX file.')
+    
     st.subheader('Upload Images')
     
     st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG**, **PNG**, BMP, GIF, TIFF.
