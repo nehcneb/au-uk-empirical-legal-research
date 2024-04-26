@@ -243,8 +243,10 @@ def GPT_label_dict(x_list):
 # Function to convert each uploaded file to file name, text
 #@st.cache_data
 def doc_to_text(uploaded_doc, language):
-    file_triple = {'File name' : '', 'Language choice': language, 'file_text': ''}
-
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'file_text': '', 
+#                  'Page 2': '' #Test page
+                  }
+    
     #Get file name
     file_triple['File name']=uploaded_doc.name
 
@@ -256,7 +258,6 @@ def doc_to_text(uploaded_doc, language):
 
     #Create list of pages
     text_list = []
-    page_counter = 1
 
     #Word format
     if extension == 'docx':
@@ -272,15 +273,19 @@ def doc_to_text(uploaded_doc, language):
         else:
             doc = fitz.open(stream=bytes_data)
 
-        for page in doc:
-            if page_counter <= page_bound:
-        #        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
-                text_page = page.get_text() 
-                text_list.append(text_page)
-                page_counter += 1
+        for page_index in list(range(0, page_bound)):
+            page = doc.load_page(page_index)
+            text_page = page.get_text() 
+            text_list.append(text_page)
 
     file_triple['file_text'] = str(text_list)
 
+    #Length of pages
+    file_triple['Page length'] = len(doc)
+
+    #Test page
+#    file_triple['Page 2'] = doc.load_page(1).get_text()
+    
     return file_triple
 
 
@@ -288,7 +293,9 @@ def doc_to_text(uploaded_doc, language):
 #Function for images to text
 #@st.cache_data
 def image_to_text(uploaded_image, language):
-    file_triple = {'File name' : '', 'Language choice': language, 'file_text': ''}
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'file_text': '', 
+#                  'Page 2': '' #Test page
+                  }
 
     #Get file name
     file_triple['File name']=uploaded_image.name
@@ -301,7 +308,10 @@ def image_to_text(uploaded_image, language):
 
     #Obtain images from uploaded file
     if extension == 'pdf':
-        images = pdf2image.convert_from_bytes(bytes_data)
+        try:
+            images = pdf2image.convert_from_bytes(bytes_data, timeout=30)
+        except PDFPopplerTimeoutError as pdf2image_timeout_error:
+            print(f"pdf2image error: {pdf2image_timeout_error}.")
 
     else:
         images = []
@@ -310,22 +320,23 @@ def image_to_text(uploaded_image, language):
         
     #Extract text from images
     text_list = []
-    page_count = 1
     
-    for image in images:
-        if page_count <= page_bound:
-    #        text_page = '[Start of page] ' + pytesseract.image_to_string(image) + ' [End of page]' 
-            try:
-                text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=10)
-                text_list.append(text_page)
-                page_count += 1
-                
-            except RuntimeError as timeout_error:
-                print(timeout_error)
-                pass
+    for image in images[ : page_bound]:
+        try:
+            text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=30)
+            text_list.append(text_page)
+            
+        except RuntimeError as pytesseract_timeout_error:
+            print(f"pytesseract error: {pytesseract_timeout_error}.")
 
     file_triple['file_text'] = str(text_list)
 
+    #Length of pages
+    file_triple['Page length'] = len(images)
+
+    #Test page
+#    file_triple['Page 2'] = pytesseract.image_to_string(images[1], lang=languages_dict[language], timeout=30)
+        
     return file_triple
 
 
