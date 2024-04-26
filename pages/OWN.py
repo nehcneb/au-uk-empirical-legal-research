@@ -698,11 +698,11 @@ You may upload documents or images.
     
     st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG**, **PNG**, BMP, GIF, TIFF.
 """)
-    uploaded_images = st.file_uploader("Choose your images(s)", type = image_types, accept_multiple_files=True)
+    uploaded_images = st.file_uploader("Choose your image(s)", type = image_types, accept_multiple_files=True)
 
     st.subheader('Language of Uploaded Files')
     
-    st.markdown("""In what language are your uploaded file(s) written?""")
+    st.markdown("""In what language is the text from your uploaded file(s) written?""")
     
 #    st.write(f"Supported languages: {languages_words}.")
     
