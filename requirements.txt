@@ -19,3 +19,5 @@ PyMuPDF
 pillow
 pytesseract
 pdf2image
+mammoth
+python-docx

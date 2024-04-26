@@ -45,6 +45,8 @@ from io import BytesIO
 import pdf2image
 from PIL import Image
 import pytesseract
+import mammoth
+from docx import Document
 
 #Streamlit
 import streamlit as st
@@ -168,7 +170,7 @@ def create_df():
 
 # %%
 #File types and languages for processing
-doc_types = ["pdf", "txt", "xps", "epub", "mobi", "fb2", "cbz", "svg",'cs', 'xml', 'json']
+doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", "fb2", "cbz", "svg",'cs', 'xml', 'json']
 image_types = ["pdf", "jpg", "jpeg", "png", "bmp", "gif", "tiff"] #, "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"]
 languages_dict = {'English': 'eng', 
                   'English, Middle (1100-1500)': 'enm', 
@@ -255,16 +257,29 @@ def doc_to_text(uploaded_doc, language):
     if extension in ['txt', 'cs', 'xml', 'json']:
         doc = fitz.open(stream=bytes_data, filetype="txt")
 
-    #Other formats
+    #Word formats
+    elif extension == 'docx':
+        doc = mammoth.convert_to_html(BytesIO(bytes_data)).value
+
+#    elif extension == 'doc':
+#        docx_doc = Document(BytesIO(bytes_data))
+#        doc = mammoth.convert_to_html(docx_doc).value
+
     else:
         doc = fitz.open(stream=bytes_data)
-    
-    text_list = []
-    for page in doc:
-#        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
-        text_page = page.get_text() 
-        text_list.append(text_page)
 
+    #Create list of pages
+    text_list = []
+
+#    if extension not in ['docx', 'doc']:
+    if extension != 'docx':
+        for page in doc:
+    #        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
+            text_page = page.get_text() 
+            text_list.append(text_page)
+    else:
+        text_list.append(doc)
+    
     file_triple['file_text'] = str(text_list)
 
     return file_triple
@@ -687,7 +702,9 @@ You may upload documents or images.
 
     st.subheader('Upload Documents')
     
-    st.markdown("""Supported document formats: **searchable PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(DOC, DOCX are not yet supported.)]
+    st.markdown("""Supported document formats: **DOCX**, **searchable PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS.
+    
+:red[DOC is not yet supported. Microsoft Word or a similar program can convert a DOC file to a DOCX file.]
 """)
 
     uploaded_docs = st.file_uploader("Please choose your document(s).", type = doc_types, accept_multiple_files=True)
@@ -711,7 +728,7 @@ You may upload documents or images.
 
     st.header("Use GPT as Your Research Assistant")
 
-    st.markdown("**GPT can answer your questions about each file uploaded by you.**")
+    st.markdown("**GPT can answer questions about each file uploaded by you.**")
     
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
