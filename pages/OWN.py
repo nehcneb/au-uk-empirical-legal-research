@@ -218,6 +218,7 @@ def split_by_line(x):
     return y
 
 #Create function to split a list into a dictionary for list items longer than 10 characters
+
 #Apply split_by_line() before the following function
 def GPT_label_dict(x_list):
     GPT_dict = {}
@@ -435,7 +436,6 @@ role_content = 'You are a legal research assistant helping an academic researche
 
 def GPT_json_tokens(questions_json, file_triple, API_key):
     #'question_json' variable is a json of questions to GPT
-    #'jugdment' variable is a file_triple   
 
     file_for_GPT = [{"role": "user", "content": file_prompt(file_triple) + 'you will be given questions to answer in JSON form.'}]
         
@@ -675,12 +675,10 @@ with st.form("GPT_input_form") as df_responses:
     return_button = st.form_submit_button('RETURN to previous page')
     
     st.header(f"You have selected to study :blue[your own files].")
-    
-    #Search terms
-
-#    st.header("File Search Criteria")
-    
+        
     st.markdown("""**Please upload your files.** This program will extract text from up to 10 files, and process up to approximately 10,413 words per file.
+
+This program works only if the text from your file(s) is displayed horizontally and neatly.
 
 You may upload documents or images.
 """)
@@ -703,9 +701,7 @@ You may upload documents or images.
     st.subheader('Language of Uploaded Files')
     
     st.markdown("""In what language is the text from your uploaded file(s) written?""")
-    
-#    st.write(f"Supported languages: {languages_words}.")
-    
+        
     language_entry = st.selectbox("Please choose a language.", languages_list, index=0)
 
     st.caption('English is chosen by default.')
