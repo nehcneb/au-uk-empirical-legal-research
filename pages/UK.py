@@ -22,7 +22,6 @@ import base64
 import json
 import pandas as pd
 import shutil
-import requests
 import numpy as np
 import re
 import datetime
@@ -1022,7 +1021,7 @@ if run_button:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.
 
-If the program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
+If this program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
 """)
     
         #Using own GPT
@@ -1132,4 +1131,4 @@ if keep_button:
 # %%
 if return_button:
 
-    st.switch_page("Home.py")
+    st.switch_page("home.py")

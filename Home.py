@@ -41,7 +41,7 @@ sources_list = ["Judgments of select New South Wales courts",
                 "Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
-                "Your own documents"
+                "Your own files"
                ]
 
 
@@ -88,6 +88,8 @@ This pilot version can automatically
 
 (3) use GPT — a generative AI — as a research assistant to answer your questions about each judgment.
 
+This program can also process your own files.
+
 **Complete this form to kickstart your project :green[for free]!** The results of the above tasks will be available for download.
 """)
     st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please send any enquiries to Ben at ben.chen@sydney.edu.au.')
@@ -108,7 +110,6 @@ This pilot version can automatically
     next_button = st.form_submit_button('Next')
 
 
-
 # %% [markdown]
 # # Buttons
 
@@ -126,27 +127,27 @@ if next_button:
     else:
     
         if (('New South Wales' in source_entry) and ('Kercher' not in source_entry)):
-            st.switch_page("pages/NSW.py")
+            st.switch_page("pages/nsw.py")
     
         if 'Federal Court of Australia' in source_entry:
             
-            st.switch_page("pages/CTH.py")
+            st.switch_page("pages/cth.py")
     
         if 'United Kingdom' in source_entry:
             
-            st.switch_page("pages/UK.py")
+            st.switch_page("pages/uk.py")
             
         if 'Kercher' in source_entry:
             
-            st.switch_page("pages/KR.py")
+            st.switch_page("pages/kr.py")
 
         if 'English Reports' in source_entry:
             
-            st.switch_page("pages/ER.py")
+            st.switch_page("pages/er.py")
             
         if ' own ' in source_entry:
 
-            st.switch_page("pages/OWN.py")
+            st.switch_page("pages/own.py")
 
 
 

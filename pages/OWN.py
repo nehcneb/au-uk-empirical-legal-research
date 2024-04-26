@@ -13,6 +13,9 @@
 #     name: python3
 # ---
 
+# %%
+#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/pages/OWN.py
+
 # %% [markdown]
 # # Preliminaries
 
@@ -22,7 +25,6 @@ import base64
 import json
 import pandas as pd
 import shutil
-import requests
 import numpy as np
 import re
 import datetime
@@ -33,10 +35,16 @@ from dateutil.relativedelta import *
 from datetime import datetime, timedelta
 import sys
 import pause
-import requests
 import os
 import io
+
+#Conversion to text
 import fitz
+from io import StringIO
+from io import BytesIO
+import pdf2image
+from PIL import Image
+import pytesseract
 
 #Streamlit
 import streamlit as st
@@ -96,7 +104,7 @@ print(f"\nThe pause between GPT prompting is {scraper_pause} second.")
 
 # %%
 #function to create dataframe
-@st.cache_data
+#@st.cache_data
 def create_df():
 
     #submission time
@@ -124,15 +132,23 @@ def create_df():
 
     file_names_list = []
 
-    for uploaded_file in uploaded_files:
-        file_names_list.append(uploaded_file.name)
+    for uploaded_doc in uploaded_docs:
+        file_names_list.append(uploaded_doc.name)
 
+    for uploaded_image in uploaded_images:
+        file_names_list.append(uploaded_image.name)
+
+    #Language choice
+
+    language = language_entry
+    
     new_row = {'Processed': '',
            'Timestamp': timestamp,
            'Your name': name, 
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
             'Your uploaded files' : str(file_names_list), 
+           'Language choice': language, 
            'Maximum number of files': files_counter_bound, 
            'Enter your question(s) for GPT': gpt_questions, 
           }
@@ -148,6 +164,46 @@ def create_df():
 
 #    else:
 #        return 'Error: spreadsheet of reponses NOT generated.' 
+
+
+# %%
+#File types and languages for processing
+doc_types = ["pdf", "txt", "xps", "epub", "mobi", "fb2", "cbz", "svg",'cs', 'xml', 'json']
+image_types = ["pdf", "jpg", "jpeg", "png", "bmp", "gif", "tiff"] #, "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"]
+languages_dict = {'English': 'eng', 
+                  'English, Middle (1100-1500)': 'enm', 
+                  'Chinese - Simplified': 'chi_sim', 
+                  'Chinese - Traditional': 'chi_tra', 
+                  'French': 'fra', 
+                  'German' : 'deu',
+                  'Greek, Modern (1453-)': 'ell', 
+                  'Greek, Ancient (-1453)': 'grc', 
+                  'Hebrew' : 'heb', 
+                  'Hindi' : 'hin', 
+                  'Hungarian': 'hun', 
+                  'Indonesian': 'ind', 
+                  'Italian': 'ita', 
+                  'Italian - Old': 'ita_old', 
+                  'Japanese': 'jpn', 
+                  'Korean': 'kor', 
+                  'Malay': 'msa', 
+                  'Panjabi; Punjabi': 'pan', 
+                  'Polish': 'pol', 
+                  'Portuguese': 'por', 
+                  'Russian': 'rus', 
+                  'Spanish; Castilian': 'spa', 
+                  'Spanish; Castilian - Old': 'spa_old', 
+                  'Swedish': 'swe', 
+                  'Thai': 'tha', 
+                  'Turkish': 'tur', 
+                  'Uighur; Uyghur': 'uig', 
+                  'Ukrainian': 'ukr', 
+                  'Vietnamese': 'vie', 
+                  'Yiddish': 'yid'
+                 }
+languages_list = list(languages_dict.keys())
+
+#languages_words = ', '.join(languages_list)
 
 
 # %%
@@ -176,40 +232,90 @@ def GPT_label_dict(x_list):
 
 # %%
 # Function to convert each uploaded file to file name, text
-@st.cache_data
-def file_to_text(uploaded_file):
-    file_pair = {'File name' : '', 'file_text': ''}
+#@st.cache_data
+def doc_to_text(uploaded_doc, language):
+    file_triple = {'File name' : '', 'Language choice': language, 'file_text': ''}
 
     #Get file name
-    file_pair['File name']=uploaded_file.name
+    file_triple['File name']=uploaded_doc.name
 
     #Get file data
-    bytes_data = uploaded_file.getvalue()
+    bytes_data = uploaded_doc.getvalue()
 
-    #Convert file data to text
-
-    #File extension
+    #Get file extension
 
     extension = ''
     try:
-        extension = file_pair['File name'].split('.')[-1].lower()
+        extension = file_triple['File name'].split('.')[-1].lower()
     except Exception as e:
         print(e)
 
+    #text formats
     if extension in ['txt', 'cs', 'xml', 'json']:
         doc = fitz.open(stream=bytes_data, filetype="txt")
 
+    #Other formats
     else:
         doc = fitz.open(stream=bytes_data)
     
-    text_list = ''
+    text_list = []
     for page in doc:
-        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
-        text_list = text_list + text_page
+#        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
+        text_page = page.get_text() 
+        text_list.append(text_page)
 
-    file_pair['file_text'] = text_list
+    file_triple['file_text'] = str(text_list)
 
-    return file_pair
+    return file_triple
+
+
+# %%
+#Function for images to text
+#@st.cache_data
+def image_to_text(uploaded_image, language):
+    file_triple = {'File name' : '', 'Language choice': language, 'file_text': ''}
+
+    #Get file name
+    file_triple['File name']=uploaded_image.name
+
+    #Get file data
+    bytes_data = uploaded_image.read()
+
+    #Convert file data to text
+
+    #Get file extension
+
+    extension = ''
+    try:
+        extension = file_triple['File name'].split('.')[-1].lower()
+    except Exception as e:
+        print(e)
+
+    #Obtain images from uploaded file
+    if extension == 'pdf':
+
+        images = pdf2image.convert_from_bytes(bytes_data)
+
+#        doc = fitz.open(stream=bytes_data)
+#        images = []
+#        for page in doc:
+#            images.append(page.get_images())
+        
+    else:
+        images = []
+        image_raw = Image.open(BytesIO(bytes_data))
+        images.append(image_raw)
+        
+    #Extract text from images
+    text_list = []
+    for image in images:
+#        text_page = '[Start of page] ' + pytesseract.image_to_string(image) + ' [End of page]' 
+        text_page = pytesseract.image_to_string(image, lang=languages_dict[language])
+        text_list.append(text_page)
+
+    file_triple['file_text'] = str(text_list)
+
+    return file_triple
 
 
 # %% [markdown]
@@ -295,9 +401,9 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 #Token limit covering both GTP input and GPT output is 16385, each token is about 4 characters
 tokens_cap = int(16385 - 2500)
 
-def file_prompt(file_pair):
+def file_prompt(file_triple):
                 
-    file_content = 'Based on the following document:  """'+ file_pair['file_text'] + '""",'
+    file_content = 'Based on the following document:  """'+ file_triple['file_text'] + '""",'
 
     file_content_tokens = num_tokens_from_string(file_content, "cl100k_base")
     
@@ -309,7 +415,7 @@ def file_prompt(file_pair):
                 
         file_chars_capped = int(tokens_cap*4)
         
-        file_string_trimmed = file_pair['file_text'][ :int(file_chars_capped/2)] + file_pair['file_text'][-int(file_chars_capped/2): ]
+        file_string_trimmed = file_triple['file_text'][ :int(file_chars_capped/2)] + file_triple['file_text'][-int(file_chars_capped/2): ]
         
         file_content_capped = 'Based on the following document:  """'+ file_string_trimmed + '""",'
         
@@ -321,18 +427,17 @@ def file_prompt(file_pair):
 #Define system role content for GPT
 role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a document. You will be provided with the document in text form. Please answer questions based only on information contained in the document. Where your answer comes from a specific page or section of the document, provide the page number or section as part of your answer. If you cannot answer any of the questions based on the document, do not make up information, but instead write "answer not found".'
 
-intro_for_GPT = [{"role": "system", "content": role_content}]
-
+#intro_for_GPT = [{"role": "system", "content": role_content}]
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens(questions_json, file_pair, API_key):
+def GPT_json_tokens(questions_json, file_triple, API_key):
     #'question_json' variable is a json of questions to GPT
-    #'jugdment' variable is a file_pair   
+    #'jugdment' variable is a file_triple   
 
-    file_for_GPT = [{"role": "user", "content": file_prompt(file_pair) + 'you will be given questions to answer in JSON form.'}]
+    file_for_GPT = [{"role": "user", "content": file_prompt(file_triple) + 'you will be given questions to answer in JSON form.'}]
         
     #Create answer format
     
@@ -348,6 +453,10 @@ def GPT_json_tokens(questions_json, file_pair, API_key):
     question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
     
     #Create messages in one prompt for GPT
+    language_content = f"The document is written in {file_triple['Language choice']}."
+
+    intro_for_GPT = [{"role": "system", "content": role_content + language_content}] 
+
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
     
 #   return messages_for_GPT
@@ -413,10 +522,10 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
     
     for file_index in df_individual.index:
         
-        file_pair = df_individual.to_dict('index')[file_index]
+        file_triple = df_individual.to_dict('index')[file_index]
         
         #Calculate and append number of tokens of File, regardless of whether given to GPT
-        file_tokens = num_tokens_from_string(str(file_pair), "cl100k_base")
+        file_tokens = num_tokens_from_string(str(file_triple), "cl100k_base")
         df_individual.loc[file_index, "File length in tokens (up to 14635 given to GPT)"] = file_tokens       
 
         #Indicate whether File truncated
@@ -442,8 +551,8 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         #Depending on activation status, apply GPT_json function to each File, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_file_pair = GPT_json_tokens(questions_json, file_pair, API_key) #Gives [answers as a JSON, output tokens, input tokens]
-            answers_dict = GPT_file_pair[0]
+            GPT_file_triple = GPT_json_tokens(questions_json, file_triple, API_key) #Gives [answers as a JSON, output tokens, input tokens]
+            answers_dict = GPT_file_triple[0]
         
         else:
             answers_dict = {}    
@@ -456,7 +565,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 
             #Calculate capped File tokens
 
-            file_capped_tokens = num_tokens_from_string(file_prompt(file_pair), "cl100k_base")
+            file_capped_tokens = num_tokens_from_string(file_prompt(file_triple), "cl100k_base")
 
             #Calculate questions tokens and cost
 
@@ -464,7 +573,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = role_content + 'The document is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers in the File or specific sections in the metadata.", "cl100k_base")
 
@@ -473,7 +582,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 
             input_tokens = file_capped_tokens + questions_tokens + other_tokens
             
-            GPT_file_pair = [answers_dict, answers_tokens, input_tokens]
+            GPT_file_triple = [answers_dict, answers_tokens, input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
 
@@ -490,7 +599,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 
         #Calculate GPT costs
 
-        GPT_cost = GPT_file_pair[1]*GPT_output_cost + GPT_file_pair[2]*GPT_input_cost
+        GPT_cost = GPT_file_triple[1]*GPT_output_cost + GPT_file_triple[2]*GPT_input_cost
 
         #Calculate and append GPT cost to individual df
         df_individual.loc[file_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
@@ -502,7 +611,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 # %%
 #Obtain parameters
 
-def run(df_master, uploaded_files):
+def run(df_master, uploaded_docs, uploaded_images):
     df_master = df_master.fillna('')
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -513,24 +622,30 @@ def run(df_master, uploaded_files):
     #Create Files file
     Files_file = []
     
-    #Convert uploaded files to text
+    #Convert uploaded documents to text
     
     files_counter_bound = int(df_master.loc[0, 'Maximum number of files'])
 
     file_counter = 1 
     
-    for uploaded_file in uploaded_files:
+    for uploaded_doc in uploaded_docs:
         if file_counter <= files_counter_bound:
-            file_pair = file_to_text(uploaded_file)
-            Files_file.append(file_pair)
+            file_triple = doc_to_text(uploaded_doc, df_master.loc[0, 'Language choice'])
+            Files_file.append(file_triple)
+            file_counter += 1
+
+    #Convert uploaded images to text
+
+    for uploaded_image in uploaded_images:
+        if file_counter <= files_counter_bound:
+            file_triple = image_to_text(uploaded_image, df_master.loc[0, 'Language choice'])
+            Files_file.append(file_triple)
             file_counter += 1
     
     #Create and export json file with search results
     json_individual = json.dumps(Files_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
-
-#    df_individual.set_index('File name')
     
     #Instruct GPT
     
@@ -554,34 +669,48 @@ def run(df_master, uploaded_files):
 # # Streamlit form, functions and parameters
 
 # %%
-acceptable_types = ["pdf", "txt", "xps", "epub", "mobi", "fb2", "cbz", "svg", 
-                    'cs', 'xml', 'json', 
-                   # "jpg", "jpeg", "png", "bmp", "gif", "tiff", "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"
-                   ]
-
-
-# %%
 #Create form
 
 with st.form("GPT_input_form") as df_responses:
     return_button = st.form_submit_button('RETURN to previous page')
     
-    st.header(f"You have selected to study :blue[your own documents].")
+    st.header(f"You have selected to study :blue[your own files].")
     
     #Search terms
 
 #    st.header("File Search Criteria")
     
-    st.markdown("""**Please upload your files.** This program will 'read' up to 10 files and up to about 10,413 words per file.
+    st.markdown("""**Please upload your files.** This program will extract text from up to 10 files, and process up to approximately 10,413 words per file.
+
+You may upload documents or images.
 """)
-
-    st.markdown("""Supported file formats: **(searchable) PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(DOC, DOCX are not yet supported.)]
-    """)
-
-    uploaded_files = st.file_uploader("Choose your file(s)", type = acceptable_types, accept_multiple_files=True)
 
     st.caption('During the pilot stage, the number of files and the number of words per file to read are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
 
+    st.subheader('Upload Documents')
+    
+    st.markdown("""Supported document formats: **searchable PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS. :red[(DOC, DOCX are not yet supported.)]
+""")
+
+    uploaded_docs = st.file_uploader("Choose your document(s)", type = doc_types, accept_multiple_files=True)
+
+    st.subheader('Upload Images')
+    
+    st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG**, **PNG**, BMP, GIF, TIFF.
+""")
+    uploaded_images = st.file_uploader("Choose your images(s)", type = image_types, accept_multiple_files=True)
+
+    st.subheader('Language of Uploaded Files')
+    
+    st.markdown("""In what language are your uploaded file(s) written?""")
+    
+#    st.write(f"Supported languages: {languages_words}.")
+    
+    language_entry = st.selectbox("Choose a language", languages_list, index=0)
+
+    st.caption('English is chosen by default.')
+
+    #Bound on number of files to process
     files_counter_bound_entry = files_counter_bound
 
     st.header("Use GPT as Your Research Assistant")
@@ -645,23 +774,24 @@ You can also download a record of your responses.
 #    test_button = st.form_submit_button('Test')
 
 
-
-
 # %% [markdown]
 # # Save and run
 
 # %%
 #if test_button:
-#    st.write(f"{len(uploaded_files)}")
-#    for uploaded_file in uploaded_files:
-#        output = file_to_text(uploaded_file)
+#    for uploaded_doc in uploaded_docs:
+#        output = doc_to_text(uploaded_doc, language_entry)
+#        st.write(output)
+
+#    for uploaded_image in uploaded_images:
+#        output = image_to_text(uploaded_image, language_entry)
 #        st.write(output)
 
 
 # %%
 if run_button:
 
-    if len(uploaded_files) == 0:
+    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
 
         st.write('You must upload some file(s).')
 
@@ -679,7 +809,7 @@ if run_button:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.
 
-If the program produces an error (in red) or an unexpected spreadsheet, please double-check your uploaded file(s) and try again.
+If this program produces an error (in red) or an unexpected spreadsheet, please double-check your uploaded file(s) and language choice and try again.
 """)
         
         #Using own GPT
@@ -702,7 +832,7 @@ If the program produces an error (in red) or an unexpected spreadsheet, please d
 
         #Produce results
 
-        df_individual_output = run(df_master, uploaded_files)
+        df_individual_output = run(df_master, uploaded_docs, uploaded_images)
 
         #Keep record on Google sheet
         
@@ -740,12 +870,10 @@ If the program produces an error (in red) or an unexpected spreadsheet, please d
 
 
 
-
-
 # %%
 if keep_button:
 
-    if len(uploaded_files) == 0:
+    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
 
         st.write('You must upload some file(s).')
 
@@ -792,4 +920,4 @@ if keep_button:
 # %%
 if return_button:
 
-    st.switch_page("Home.py")
+    st.switch_page("home.py")

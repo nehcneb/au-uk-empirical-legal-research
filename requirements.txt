@@ -16,3 +16,5 @@ textract
 httplib2
 PyPDF2
 PyMuPDF
+pillow
+pytesseract
