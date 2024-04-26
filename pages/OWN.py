@@ -169,7 +169,7 @@ def create_df():
 
 # %%
 #File types and languages for processing
-doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", "fb2", "cbz", "svg",'cs', 'xml', 'json']
+doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", 'cs', 'xml', 'json'] #"fb2", "cbz", "svg",
 image_types = ["pdf", "jpg", "jpeg", "png", "bmp", "gif", "tiff"] #, "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"]
 languages_dict = {'English': 'eng', 
                   'English, Middle (1100-1500)': 'enm', 
@@ -701,7 +701,7 @@ You may upload documents or images.
 
     st.subheader('Upload Documents')
     
-    st.markdown("""Supported document formats: **DOCX**, **searchable PDF**, **TXT**, **JSON**, CS, CBZ, EPUB, FB2, MOBI, SVG, XML, XPS.
+    st.markdown("""Supported document formats: **searchable PDF**, **DOCX**, **TXT**, **JSON**, CS,  EPUB, MOBI, XML, XPS.
 """)
 
     uploaded_docs = st.file_uploader("Please choose your document(s).", type = doc_types, accept_multiple_files=True)
