@@ -949,4 +949,4 @@ if keep_button:
 # %%
 if return_button:
 
-    st.switch_page("home.py")
+    st.switch_page("Home.py")
