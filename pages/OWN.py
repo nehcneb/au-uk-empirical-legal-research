@@ -99,6 +99,13 @@ scraper_pause = 5
 
 print(f"\nThe pause between GPT prompting is {scraper_pause} second.")
 
+# %%
+#Page bound
+
+page_bound = 10
+
+print(f"\nThe maximum number of pages per file is {page_bound}.")
+
 
 # %% [markdown]
 # # Functions for Own Files
@@ -245,40 +252,33 @@ def doc_to_text(uploaded_doc, language):
     bytes_data = uploaded_doc.getvalue()
 
     #Get file extension
-
-    extension = ''
-    try:
-        extension = file_triple['File name'].split('.')[-1].lower()
-    except Exception as e:
-        print(e)
-
-    #text formats
-    if extension in ['txt', 'cs', 'xml', 'json']:
-        doc = fitz.open(stream=bytes_data, filetype="txt")
-
-    #Word formats
-    elif extension == 'docx':
-        doc = mammoth.convert_to_html(BytesIO(bytes_data)).value
-
-#    elif extension == 'doc':
-#        docx_doc = Document(BytesIO(bytes_data))
-#        doc = mammoth.convert_to_html(docx_doc).value
-
-    else:
-        doc = fitz.open(stream=bytes_data)
+    extension = file_triple['File name'].split('.')[-1].lower()
 
     #Create list of pages
     text_list = []
+    page_counter = 1
 
-#    if extension not in ['docx', 'doc']:
-    if extension != 'docx':
-        for page in doc:
-    #        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
-            text_page = page.get_text() 
-            text_list.append(text_page)
+    #Word format
+    if extension == 'docx':
+        doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
+        text_list.append(doc_string)
+        
     else:
-        text_list.append(doc)
-    
+        #text formats
+        if extension in ['txt', 'cs', 'xml', 'json']:
+            doc = fitz.open(stream=bytes_data, filetype="txt")
+
+        #Other formats
+        else:
+            doc = fitz.open(stream=bytes_data)
+
+        for page in doc:
+            if page_counter <= page_bound:
+        #        text_page = '[Start of page] ' + page.get_text() + ' [End of page]' 
+                text_page = page.get_text() 
+                text_list.append(text_page)
+                page_counter += 1
+
     file_triple['file_text'] = str(text_list)
 
     return file_triple
@@ -296,26 +296,13 @@ def image_to_text(uploaded_image, language):
     #Get file data
     bytes_data = uploaded_image.read()
 
-    #Convert file data to text
-
     #Get file extension
-
-    extension = ''
-    try:
-        extension = file_triple['File name'].split('.')[-1].lower()
-    except Exception as e:
-        print(e)
+    extension = file_triple['File name'].split('.')[-1].lower()
 
     #Obtain images from uploaded file
     if extension == 'pdf':
-
         images = pdf2image.convert_from_bytes(bytes_data)
 
-#        doc = fitz.open(stream=bytes_data)
-#        images = []
-#        for page in doc:
-#            images.append(page.get_images())
-        
     else:
         images = []
         image_raw = Image.open(BytesIO(bytes_data))
@@ -323,10 +310,18 @@ def image_to_text(uploaded_image, language):
         
     #Extract text from images
     text_list = []
+    page_count = 1
+    
     for image in images:
-#        text_page = '[Start of page] ' + pytesseract.image_to_string(image) + ' [End of page]' 
-        text_page = pytesseract.image_to_string(image, lang=languages_dict[language])
-        text_list.append(text_page)
+        if page_count <= page_bound:
+    #        text_page = '[Start of page] ' + pytesseract.image_to_string(image) + ' [End of page]' 
+            try:
+                text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=10)
+                text_list.append(text_page)
+                page_count += 1
+                
+            except RuntimeError as timeout_error:
+                print(timeout_error)
 
     file_triple['file_text'] = str(text_list)
 
@@ -690,7 +685,7 @@ with st.form("GPT_input_form") as df_responses:
     
     st.header(f"You have selected to study :blue[your own files].")
         
-    st.markdown("""**Please upload your files.** This program will extract text from up to 10 files, and process up to approximately 10,000 words per file.
+    st.markdown("""**Please upload your files.** This program will extract text from up to 10 files, and process up to approximately 10,000 words from the first 10 pages of each file.
 
 This program works only if the text from your file(s) is displayed horizontally and neatly.
 
@@ -783,21 +778,21 @@ You can also download a record of your responses.
 
     keep_button = st.form_submit_button('DOWNLOAD your form responses')
 
-#    test_button = st.form_submit_button('Test')
+    test_button = st.form_submit_button('Test')
 
 
 # %% [markdown]
 # # Save and run
 
 # %%
-#if test_button:
-#    for uploaded_doc in uploaded_docs:
-#        output = doc_to_text(uploaded_doc, language_entry)
-#        st.write(output)
+if test_button:
+    for uploaded_doc in uploaded_docs:
+        output = doc_to_text(uploaded_doc, language_entry)
+        st.write(output)
 
-#    for uploaded_image in uploaded_images:
-#        output = image_to_text(uploaded_image, language_entry)
-#        st.write(output)
+    for uploaded_image in uploaded_images:
+        output = image_to_text(uploaded_image, language_entry)
+        st.write(output)
 
 
 # %%
