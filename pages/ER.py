@@ -81,14 +81,19 @@ def convert_df_to_json(df):
 def convert_df_to_csv(df):
    return df.to_csv(index=False).encode('utf-8')
 
+#Excel metadata
+excel_author = 'The Empirical Legal Research Kickstarter'
+excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize partially funded the development of the Empirical Legal Research Kickstarter, which generated this spreadsheet.'
+
 def convert_df_to_excel(df):
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     df.to_excel(writer, index=False, sheet_name='Sheet1')
     workbook = writer.book
+    workbook.set_properties({"author": excel_author, "comments": excel_description})
     worksheet = writer.sheets['Sheet1']
-    format1 = workbook.add_format({'num_format': '0.00'}) 
-    worksheet.set_column('A:A', None, format1)  
+#    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None)#, format1)  
     writer.save()
     processed_data = output.getvalue()
     return processed_data
@@ -907,7 +912,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 
         excel_xlsx = convert_df_to_excel(df_individual_output)
         
-        ste.download_button(label='Download your results as an Excel file',
+        ste.download_button(label='Download your results as an Excel file (XLSX)',
                             data=excel_xlsx,
                             file_name= output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
@@ -964,7 +969,7 @@ if keep_button:
 
         xlsx = convert_df_to_excel(df_master)
         
-        ste.download_button(label='Download as an Excel file',
+        ste.download_button(label='Download as an Excel file (XLSX)',
                             data=xlsx,
                             file_name=responses_output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
