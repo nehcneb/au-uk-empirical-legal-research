@@ -57,6 +57,7 @@ import tiktoken
 from google.oauth2 import service_account
 
 #Excel
+from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
 

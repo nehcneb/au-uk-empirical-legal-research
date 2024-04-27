@@ -40,7 +40,7 @@ import io
 
 #Conversion to text
 import fitz
-from io import StringIO
+#from io import StringIO
 from io import BytesIO
 import pdf2image
 from PIL import Image
