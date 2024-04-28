@@ -555,14 +555,6 @@ answers_characters_bound = 1000
 
 print(f"\nQuestions for GPT are capped at {answers_characters_bound} characters.")
 
-#Lowerbound on length of judgment text to proccess, in tokens
-
-judgment_text_lower_bound = 1000
-
-print(f"\nThe lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.")
-
-
-
 
 # %%
 #Define function to determine eligibility for GPT use

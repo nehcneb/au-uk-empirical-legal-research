@@ -263,7 +263,7 @@ def GPT_label_dict(x_list):
 # Function to convert each uploaded file to file name, text
 #@st.cache_data
 def doc_to_text(uploaded_doc, language):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'file_text': '', 
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': '', 
 #                  'Page 2': '' #Test page
                   }
     
@@ -305,7 +305,7 @@ def doc_to_text(uploaded_doc, language):
         #Length of pages
         file_triple['Page length'] = len(doc)
 
-    file_triple['file_text'] = str(text_list)
+    file_triple['Extracted text'] = str(text_list)
 
     #Test page
 #    file_triple['Page 2'] = doc.load_page(1).get_text()
@@ -317,7 +317,7 @@ def doc_to_text(uploaded_doc, language):
 #Function for images to text
 #@st.cache_data
 def image_to_text(uploaded_image, language):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'file_text': '', 
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': '', 
 #                  'Page 2': '' #Test page
                   }
 
@@ -355,7 +355,7 @@ def image_to_text(uploaded_image, language):
         except RuntimeError as pytesseract_timeout_error:
             print(f"pytesseract error: {pytesseract_timeout_error}.")
 
-    file_triple['file_text'] = str(text_list)
+    file_triple['Extracted text'] = str(text_list)
 
     #Length of pages
     file_triple['Page length'] = len(images)
@@ -395,11 +395,6 @@ files_counter_bound = 10
 
 print(f"\nNumber of files to process per request is capped at {files_counter_bound}.")
 
-#Lowerbound on length of file text to proccess, in tokens
-
-file_text_lower_bound = 500
-
-print(f"\nThe lower bound on lenth of file text to process is {file_text_lower_bound} tokens.")
 
 
 # %%
@@ -451,7 +446,7 @@ tokens_cap = int(16385 - 3000)
 
 def file_prompt(file_triple):
                 
-    file_content = 'Based on the following document:  """'+ file_triple['file_text'] + '""",'
+    file_content = 'Based on the following document:  """'+ file_triple['Extracted text'] + '""",'
 
     file_content_tokens = num_tokens_from_string(file_content, "cl100k_base")
     
@@ -464,10 +459,10 @@ def file_prompt(file_triple):
         file_chars_capped = int(tokens_cap*4)
         
         #Keep first x characters rather than cut out the middle
-        file_string_trimmed = file_triple['file_text'][ : int(file_chars_capped)]
+        file_string_trimmed = file_triple['Extracted text'][ : int(file_chars_capped)]
 
         #If want to cut out the middle instead
-#        file_string_trimmed = file_triple['file_text'][ :int(file_chars_capped/2)] + file_triple['file_text'][-int(file_chars_capped/2): ]
+#        file_string_trimmed = file_triple['Extracted text'][ :int(file_chars_capped/2)] + file_triple['Extracted text'][-int(file_chars_capped/2): ]
         
         file_content_capped = 'Based on the following document:  """'+ file_string_trimmed + '""",'
         
@@ -711,7 +706,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     #Engage GPT
     df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_key)
 
-    df_updated.pop('file_text')
+    df_updated.pop('Extracted text')
     
     return df_updated
 

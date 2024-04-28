@@ -379,14 +379,6 @@ judgments_counter_bound = 10
 print(f"\nNumber of judgments to scrape per request is capped at {judgments_counter_bound}.")
 
 
-#Lowerbound on length of judgment text to proccess, in tokens
-
-judgment_text_lower_bound = 500
-
-print(f"\nThe lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.")
-
-
-
 # %%
 #Define function to determine eligibility for GPT use
 
