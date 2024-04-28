@@ -463,7 +463,11 @@ def file_prompt(file_triple):
                 
         file_chars_capped = int(tokens_cap*4)
         
-        file_string_trimmed = file_triple['file_text'][ :int(file_chars_capped/2)] + file_triple['file_text'][-int(file_chars_capped/2): ]
+        #Keep first x characters rather than cut out the middle
+        file_string_trimmed = file_triple['file_text'][ : int(file_chars_capped)]
+
+        #If want to cut out the middle instead
+#        file_string_trimmed = file_triple['file_text'][ :int(file_chars_capped/2)] + file_triple['file_text'][-int(file_chars_capped/2): ]
         
         file_content_capped = 'Based on the following document:  """'+ file_string_trimmed + '""",'
         
