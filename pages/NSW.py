@@ -144,7 +144,6 @@ def create_df():
     party = party_entry
     mnc = mnc_entry
 
-
     startDate = ''
 
     if startDate_entry != 'None':
@@ -1075,15 +1074,14 @@ You can also download a record of your responses.
 
     keep_button = st.form_submit_button('DOWNLOAD your form responses')
 
+    reset_button = st.form_submit_button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the Empirical Legal Research Kickstarter afresh.")
+    
+
 
 # %%
 #Create placeholder download buttons if previous responses and results in st.session_state:
 
 if (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
-
-    if st.button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the Empirical Legal Research Kickstarter afresh."):
-        clear_cache()
-        st.rerun()
 
     #Load previous responses and results
     
@@ -1155,8 +1153,6 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
     )
 
     st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
-
 
 # %% [markdown]
 # # Save and run
@@ -1285,9 +1281,6 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
             )
     
             st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-    
-            
-
 
 # %%
 if keep_button:
@@ -1347,3 +1340,8 @@ if keep_button:
 if return_button:
 
     st.switch_page("Home.py")
+
+# %%
+if reset_button:
+    clear_cache()
+    st.rerun()

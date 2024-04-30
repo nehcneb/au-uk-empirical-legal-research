@@ -76,7 +76,7 @@ questions_bound = 10
 print(f"\nThe maximum number of questions per thread is {questions_bound}.")
 
 # %%
-#today
+#today and time
 today_in_nums = str(datetime.now())[0:10]
 
 
@@ -285,7 +285,7 @@ if 'df_to_analyse' in st.session_state:
     
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
-    st.markdown("""**You can edit this spreadsheet.** Your edits will be read by the AI.""")
+    st.markdown("""**You can directly edit this spreadsheet.** Your edits will be read by the AI.""")
     
     #Choice of AI
 #    st.subheader("Which AI would you like to use?")
@@ -295,7 +295,7 @@ if 'df_to_analyse' in st.session_state:
 #    sdf = SmartDataframe(st.session_state.edited_df, config = {'llm': llm})
     agent = Agent(st.session_state.edited_df, config={"llm": llm}, memory_size=questions_bound, description = agent_description)
     
-    st.subheader('Your question')
+    st.subheader('Your question for the AI')
 
     st.write('You may ask at most 10 questions in sequence. Each question may amount to at most 1000 characters.')
     
@@ -305,7 +305,7 @@ if 'df_to_analyse' in st.session_state:
 
     # Generate output
     
-    if st.button("ASK"):
+    if st.button("ASK the AI"):
         if prompt:
             #Keep record of prompt
             st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
@@ -317,7 +317,7 @@ if 'df_to_analyse' in st.session_state:
 
                     response = agent.chat(prompt)
 
-                    st.write('If you see an error, please modify your question and try again.') # or :red[RESET] the AI.')
+                    st.write('If you see an error, please modify your question or :red[RESET] the AI and try again.') # or :red[RESET] the AI.')
 
                     st.subheader('Response')
 
@@ -325,14 +325,17 @@ if 'df_to_analyse' in st.session_state:
                     
                     st.write(response)
 
-                    #Keep record of response
-                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
-
                     #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
 
                     #Display number of questionsl left
                     st.session_state.question_left -= 1
-                    st.write(f"*Number of questions left: :orange[{st.session_state.question_left}].*")
+                    questions_left_text = f"You have :orange[{st.session_state.question_left}] questions left."
+                    st.write(questions_left_text)
+
+            
+                    #Keep record of response
+                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
+                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": questions_left_text})
 
             else:
                 no_more_questions = 'You have reached the maximum number of questions allowed during the pilot stage.'
@@ -354,50 +357,65 @@ if 'df_to_analyse' in st.session_state:
             #for question in questions:
                 #st.write(question)
 
-#Reset button, not particularly useful
-#    if st.button('RESET', type = 'primary', help = "Press to obtain fresh responses from the AI."):
-#        pai.clear_cache()
+    #Reset button, not particularly useful
+    if st.button('RESET the AI', type = 'primary', help = "Press to engage with the AI afresh."):
+        pai.clear_cache()
+        #clear_cache()
+        #st.rerun()
 
+    #Button for displaying chat history
+    history_on = st.toggle(label = 'SEE all questions and responses')
 
+    if history_on:
 
-# %%
-#Button for downloading chat history
-if len(st.session_state.messages) > 0:
-    #Create and export json file with questions and responses
+        #Check if history exists
+        if len(st.session_state.messages) > 0:
     
-    df_history = pd.DataFrame(st.session_state.messages)
+            st.subheader('Conversation')
 
-    if "df_master" in st.session_state:
-        history_output_name = st.session_state.df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_chat_history'
-    else:
-        history_output_name = str(today_in_nums) + '_chat_history'
+            st.write('Questions and responses are displayed from earliest to latest.')
 
-    st.subheader('History of questions and responses')
+            st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
 
-    csv = convert_df_to_csv(df_history)
-
-    ste.download_button(
-        label="Download as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=history_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    xlsx = convert_df_to_excel(df_history)
+            # Display chat messages from history on app rerun
+            for message in st.session_state.messages:
+                st.write('Time: ' + message["time"][0:19])
+                with st.chat_message(message["role"]):
+                    st.write(message["content"])
     
-    ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                        data=xlsx,
-                        file_name=history_output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    json = convert_df_to_json(df_history)
-    
-    ste.download_button(
-        label="Download as a JSON", 
-        data = json,
-        file_name= history_output_name + '.json', 
-        mime= "application/json", 
-    )        
+            #Create and export json file with questions and responses for downloading
+            
+            df_history = pd.DataFrame(st.session_state.messages)
+        
+            if "df_master" in st.session_state:
+                history_output_name = st.session_state.df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_chat_history'
+            else:
+                history_output_name = str(today_in_nums) + '_chat_history'
+            
+            csv = convert_df_to_csv(df_history)
+        
+            ste.download_button(
+                label="Download the conversation as a CSV (for use in Excel etc)", 
+                data = csv,
+                file_name=history_output_name + '.csv', 
+                mime= "text/csv", 
+        #            key='download-csv'
+            )
+        
+            xlsx = convert_df_to_excel(df_history)
+            
+            ste.download_button(label='Download the conversation as an Excel spreadsheet (XLSX)',
+                                data=xlsx,
+                                file_name=history_output_name + '.xlsx', 
+                                mime='application/vnd.ms-excel',
+                               )
+        
+            json = convert_df_to_json(df_history)
+            
+            ste.download_button(
+                label="Download the conversation as a JSON", 
+                data = json,
+                file_name= history_output_name + '.json', 
+                mime= "application/json", 
+            )        
 
