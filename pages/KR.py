@@ -718,6 +718,13 @@ def open_page(url):
 
 
 # %%
+def clear_cache():
+    keys = list(st.session_state.keys())
+    for key in keys:
+        st.session_state.pop(key)
+
+
+# %%
 #Create form
 
 with st.form("GPT_input_form") as df_responses:
@@ -812,6 +819,89 @@ You can also download a record of your responses.
 
 
 
+# %%
+#Create placeholder download buttons if previous responses and results in st.session_state:
+
+if (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+
+    if st.button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the Empirical Legal Research Kickstarter afresh."):
+        clear_cache()
+        st.rerun()
+
+    #Load previous responses and results
+    
+    df_master = st.session_state.df_master
+    df_individual_output = st.session_state.df_individual_output
+
+    #Buttons for downloading responses
+
+    csv = convert_df_to_csv(df_master)
+
+    responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
+
+    st.subheader('Looking for your previous form responses?')
+    
+    ste.download_button(
+        label="Download your previous responses as a CSV (for use in Excel etc)", 
+        data = csv,
+        file_name=responses_output_name + '.csv', 
+        mime= "text/csv", 
+#            key='download-csv'
+    )
+
+    xlsx = convert_df_to_excel(df_master)
+    
+    ste.download_button(label='Download your previous responses as an Excel spreadsheet (XLSX)',
+                        data=xlsx,
+                        file_name=responses_output_name + '.xlsx', 
+                        mime='application/vnd.ms-excel',
+                       )
+
+    json = convert_df_to_json(df_master)
+    
+    ste.download_button(
+        label="Download your previous responses as a JSON", 
+        data = json,
+        file_name= responses_output_name + '.json', 
+        mime= "application/json", 
+    )
+
+    #Button for downloading results
+    output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
+
+    csv_output = convert_df_to_csv(df_individual_output)
+
+    st.subheader('Looking for your previous results?')
+    
+    ste.download_button(
+        label="Download your previous results as a CSV (for use in Excel etc)", 
+        data = csv_output,
+        file_name= output_name + '.csv', 
+        mime= "text/csv", 
+#            key='download-csv'
+    )
+
+    excel_xlsx = convert_df_to_excel(df_individual_output)
+    
+    ste.download_button(label='Download your previous results as an Excel spreadsheet (XLSX)',
+                        data=excel_xlsx,
+                        file_name= output_name + '.xlsx', 
+                        mime='application/vnd.ms-excel',
+                       )
+    
+    json_output = convert_df_to_json(df_individual_output)
+    
+    ste.download_button(
+        label="Download your previous results as a JSON", 
+        data = json_output,
+        file_name= output_name + '.json', 
+        mime= "application/json", 
+    )
+
+    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+
+
+
 # %% [markdown]
 # # Save and run
 
@@ -830,8 +920,10 @@ if preview_button:
 # %%
 if run_button:
 
-    all_search_terms = str(query_entry)
-        
+    #Check whether search terms entered
+
+    all_search_terms = str(catchwords_entry) + str(body_entry) + str(title_entry) + str(before_entry) + str(party_entry) + str(mnc_entry) + str(startDate_entry) + str(endDate_entry) + str(fileNumber_entry) + str(legislationCited_entry) + str(casesCited_entry)
+    
     if all_search_terms.replace('None', '') == "":
 
         st.write('You must enter some search terms.')
@@ -842,11 +934,14 @@ if run_button:
     elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
         st.write('You must enter a valid email address to use GPT.')
 
-    #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
-       # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
+   # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
+        #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
-    #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
-        #st.write("You must enter a valid API key for GPT.")
+   # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
+       # st.write("You must enter a valid API key for GPT.")
+
+#    elif len(courts_entry) == 0:
+#        st.write('Please select at least one court.')
 
     else:
 
@@ -856,7 +951,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 """)
 
         #Using own GPT
-    
+
         gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
     
         #Create spreadsheet of responses
@@ -864,28 +959,41 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
     
         #Obtain google spreadsheet
     
-       # conn = st.connection("gsheets_uk", type=GSheetsConnection)
+        #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
         #df_google = conn.read()
         #df_google = df_google.fillna('')
         #df_google=df_google[df_google["Processed"]!='']
-    
+
         #Upload placeholder record onto Google sheet
-        #df_plaeceholdeer = pd.concat([df_google, df_master])
-        #conn.update(worksheet="UK", data=df_plaeceholdeer, )
+       # df_plaeceholdeer = pd.concat([df_google, df_master])
+        #conn.update(worksheet="NSW", data=df_plaeceholdeer, )
 
         #Produce results
 
-        df_individual_output = run(df_master)
+        df_individual = run(df_master)
+
+        df_individual_output = tidying_up(df_master, df_individual)
+
+#        df_individual_output = df_individual
 
         #Keep record on Google sheet
         
-        df_master["Processed"] = datetime.now()
+        #df_master["Processed"] = datetime.now()
 
         df_master.pop("Your GPT API key")
         
         #df_to_update = pd.concat([df_google, df_master])
         
-        #conn.update(worksheet="UK", data=df_to_update, )
+        #conn.update(worksheet="NSW", data=df_to_update, )
+
+        #Keep results in session state
+        if "df_individual_output" not in st.session_state:
+            st.session_state["df_individual_output"] = df_individual_output#.astype(str)
+
+        if "df_master" not in st.session_state:
+            st.session_state["df_master"] = df_master
+        
+        st.session_state["page_from"] = 'pages/NSW.py'
 
         st.write("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.")
         
@@ -904,12 +1012,12 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 
         excel_xlsx = convert_df_to_excel(df_individual_output)
         
-        ste.download_button(label='Download your results as an Excel file (XLSX)',
+        ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
                             data=excel_xlsx,
                             file_name= output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
                            )
-
+        
         json_output = convert_df_to_json(df_individual_output)
         
         ste.download_button(
@@ -919,8 +1027,9 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
             mime= "application/json", 
         )
 
+        st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
 
-
+        
 
 
 # %%
@@ -960,7 +1069,7 @@ if keep_button:
 
         xlsx = convert_df_to_excel(df_master)
         
-        ste.download_button(label='Download as an Excel file (XLSX)',
+        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
                             data=xlsx,
                             file_name=responses_output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
