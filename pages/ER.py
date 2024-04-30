@@ -971,7 +971,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
         if "df_master" not in st.session_state:
             st.session_state["df_master"] = df_master
         
-        st.session_state["page_from"] = 'pages/UK.py'
+        st.session_state["page_from"] = 'pages/ER.py'
 
         #Write results
 
