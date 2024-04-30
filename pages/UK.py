@@ -1124,7 +1124,7 @@ if run_button:
 
 If this program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
 """)
-        with st.spinner('RUNNING...'):
+        with st.spinner('Running...'):
         
             #Using own GPT
         

@@ -312,7 +312,7 @@ if 'df_to_analyse' in st.session_state:
             
             if st.session_state.question_left > 0:
                 # call pandas_ai.run(), passing dataframe and prompt
-                with st.spinner("Generating response..."):
+                with st.spinner("Running..."):
                     #response = sdf.chat(prompt)
 
                     response = agent.chat(prompt)
