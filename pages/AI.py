@@ -157,11 +157,12 @@ def reverse_link(x):
 
 def convert_links_column(df):
     new_df = df.copy()
+    
     link_header = link_heading_picker(df)
     new_df[link_header] = df[link_header].apply(reverse_link)
 
     return new_df
-
+    
 
 
 # %%
@@ -190,7 +191,7 @@ if 'question_left' not in st.session_state:
 #Open spreadsheet
 if 'df_individual_output' in st.session_state:
 
-    st.session_state['df_to_analyse'] = st.session_state.df_individual_output
+    st.session_state['df_to_analyse'] = st.session_state.df_individual_output.astype(str)
 
 if 'df_individual_output' not in st.session_state:
 
@@ -211,7 +212,7 @@ if 'df_individual_output' not in st.session_state:
         if extension == 'json':
             df_uploaded = pd.read_json(uploaded_file, orient= 'split')
 
-        st.session_state["df_to_analyse"]=df_uploaded
+        st.session_state["df_to_analyse"]=df_uploaded.astype(str)
 
 if 'df_to_analyse' in st.session_state:
 
@@ -219,11 +220,12 @@ if 'df_to_analyse' in st.session_state:
 
     #Make any column of hyperlinks clickable
 
+    link_heading_config = {} 
+    
     try:
-        link_heading = link_heading_picker(df_to_analyse)
-        
+        link_heading = link_heading_picker(df_to_analyse)       
         df_to_analyse = convert_links_column(df_to_analyse)
-        
+        link_heading_config={link_heading: st.column_config.LinkColumn()}       
     except Exception as e:
         print(e)
         print('No column has hyperlinks.')
@@ -234,7 +236,7 @@ if 'df_to_analyse' in st.session_state:
 
     st.caption('To download, search or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
     
-    st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config={link_heading: st.column_config.LinkColumn()})
+    st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
     st.markdown("""**You can edit this spreadsheet.** Your edits will be read by the AI.""")
     

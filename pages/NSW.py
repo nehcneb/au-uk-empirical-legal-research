@@ -1245,7 +1245,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 
         #Keep results in session state
         if "df_individual_output" not in st.session_state:
-            st.session_state["df_individual_output"] = df_individual_output.astype(str)
+            st.session_state["df_individual_output"] = df_individual_output#.astype(str)
 
         if "df_master" not in st.session_state:
             st.session_state["df_master"] = df_master
