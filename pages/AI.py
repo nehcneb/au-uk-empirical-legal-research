@@ -380,7 +380,7 @@ if len(st.session_state.messages) > 0:
 
     csv = convert_df_to_csv(df_history)
 
-    ste.download_button(
+    st.download_button(
         label="Download as a CSV (for use in Excel etc)", 
         data = csv,
         file_name=history_output_name + '.csv', 
@@ -390,7 +390,7 @@ if len(st.session_state.messages) > 0:
 
     xlsx = convert_df_to_excel(df_history)
     
-    ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
+    st.download_button(label='Download as an Excel spreadsheet (XLSX)',
                         data=xlsx,
                         file_name=history_output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
@@ -398,7 +398,7 @@ if len(st.session_state.messages) > 0:
 
     json = convert_df_to_json(df_history)
     
-    ste.download_button(
+    st.download_button(
         label="Download as a JSON", 
         data = json,
         file_name= history_output_name + '.json', 
