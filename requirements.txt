@@ -22,4 +22,4 @@ pdf2image
 mammoth
 pyxlsb
 pandasai
-yaml
+PyYAML
