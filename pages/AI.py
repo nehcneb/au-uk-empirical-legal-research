@@ -181,7 +181,7 @@ if st.button('RETURN to previous page'):
     else:
         st.switch_page('Home.py')
 
-st.title("You have chosen to :blue[analyse your spreadsheet].")
+st.header("You have chosen to :blue[analyse your spreadsheet].")
 
 #Activate questions bound
 if 'question_left' not in st.session_state:
