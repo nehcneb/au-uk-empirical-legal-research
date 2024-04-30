@@ -1108,7 +1108,7 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 
     xlsx = convert_df_to_excel(df_master)
     
-    ste.download_button(label='Download your previous responses as an Excel file (XLSX)',
+    ste.download_button(label='Download your previous responses as an Excel spreadsheet (XLSX)',
                         data=xlsx,
                         file_name=responses_output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
@@ -1140,7 +1140,7 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 
     excel_xlsx = convert_df_to_excel(df_individual_output)
     
-    ste.download_button(label='Download your previous results as an Excel file (XLSX)',
+    ste.download_button(label='Download your previous results as an Excel spreadsheet (XLSX)',
                         data=excel_xlsx,
                         file_name= output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
@@ -1245,7 +1245,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 
         #Keep results in session state
         if "df_individual_output" not in st.session_state:
-            st.session_state["df_individual_output"] = df_individual_output
+            st.session_state["df_individual_output"] = df_individual_output.astype(str)
 
         if "df_master" not in st.session_state:
             st.session_state["df_master"] = df_master
@@ -1269,7 +1269,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 
         excel_xlsx = convert_df_to_excel(df_individual_output)
         
-        ste.download_button(label='Download your results as an Excel file (XLSX)',
+        ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
                             data=excel_xlsx,
                             file_name= output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
@@ -1328,7 +1328,7 @@ if keep_button:
 
         xlsx = convert_df_to_excel(df_master)
         
-        ste.download_button(label='Download as an Excel file (XLSX)',
+        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
                             data=xlsx,
                             file_name=responses_output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
