@@ -3,3 +3,6 @@ maxUploadSize = 5
 
 [client]
 showSidebarNavigation = false
+
+[global]
+dataFrameSerialization = "legacy"
