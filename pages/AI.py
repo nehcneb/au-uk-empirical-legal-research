@@ -286,7 +286,7 @@ if 'df_individual_output' in st.session_state:
                     
                     st.write(response)
 
-                    st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
+                    #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
 
                     #Display number of questionsl left
                     st.session_state.question_left -= 1
