@@ -172,8 +172,12 @@ def clear_cache():
 
 # %%
 if st.button('RETURN to previous page'):
-    
-    st.switch_page(st.session_state.page_from)
+
+    if 'page_from' in st.session_state:
+        st.switch_page(st.session_state.page_from)
+
+    else:
+        st.switch_page('Home.py')
 
 st.title("You have chosen to :blue[analyse your spreadsheet].")
 
