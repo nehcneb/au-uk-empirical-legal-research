@@ -106,7 +106,6 @@ This program can also process your own files or spreadsheet of data.
     st.markdown("""What would you like to study?""")
     source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
-
     
     next_button = st.form_submit_button('Next')
 

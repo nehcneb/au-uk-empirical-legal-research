@@ -77,7 +77,7 @@ print(f"\nThe maximum number of questions per thread is {questions_bound}.")
 # %%
 #Default choice of AI
 
-default_ai = 'BambooLLM' #'GPT'
+default_ai = 'GPT' #'BambooLLM'
 
 if 'ai_choice' not in st.session_state:
     st.session_state['ai_choice'] = default_ai
@@ -188,6 +188,12 @@ if 'question_left' not in st.session_state:
 
     st.session_state["question_left"] = questions_bound
 
+#Activate response record
+
+if 'response_given' not in st.session_state:
+
+    st.session_state['response_given'] = None
+
 #Open spreadsheet
 if 'df_individual_output' in st.session_state:
 
@@ -288,10 +294,11 @@ if 'df_to_analyse' in st.session_state:
 
                     st.subheader('Response')
 
-                    
                     st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
                     
                     st.write(response)
+
+                    st.session_state['response_given'] = response
 
                     #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
 
@@ -299,21 +306,25 @@ if 'df_to_analyse' in st.session_state:
                     st.session_state.question_left -= 1
                     st.write(f"*Number of questions left: :orange[{st.session_state.question_left}].*")
 
-                    #Button for clarifications; NOT WORKING YET
-                    #if st.button('Clarify'):
-                        #questions = agent.clarification_questions(prompt)
-                        #for question in questions:
-                            #st.write(question)
-    
-                    #if st.button('Explain'):
-                        #explanation = agent.explain()
-                        #st.write(explanation)
-            
+
+
             else:
                 st.write('You have reached the maximum number of questions allowed during the pilot stage.')
         else:
             st.warning("Please enter a question.")
 
+    if st.session_state.response_given is not None:
+        if st.button('SHOW CODE'):
+            explanation = agent.explain()
+            st.write(explanation)
+
+        #if st.button('Clarify'):
+            #questions = agent.clarification_questions(prompt)
+            #for question in questions:
+                #st.write(question)
+    
     if st.button('RESET the AI', type = 'primary', help = "Press to obtain fresh responses from the AI."):
         pai.clear_cache()
+        st.session_state['response_given'] = None
+
 
