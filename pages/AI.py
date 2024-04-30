@@ -281,7 +281,7 @@ if 'df_to_analyse' in st.session_state:
 
     # Generate output
     
-    if st.button("ASK the AI"):
+    if st.button("ASK"):
         if prompt:
             if st.session_state.question_left > 0:
                 # call pandas_ai.run(), passing dataframe and prompt
@@ -306,24 +306,23 @@ if 'df_to_analyse' in st.session_state:
                     st.session_state.question_left -= 1
                     st.write(f"*Number of questions left: :orange[{st.session_state.question_left}].*")
 
-
-
             else:
                 st.write('You have reached the maximum number of questions allowed during the pilot stage.')
         else:
             st.warning("Please enter a question.")
 
-    if st.session_state.response_given is not None:
-        if st.button('SHOW CODE'):
-            explanation = agent.explain()
-            st.write(explanation)
+    #Show code and clarification are not working yet
+    #if st.session_state.response_given is not None:
+        #if st.button('SHOW code'):
+            #explanation = agent.explain()
+            #st.write(explanation)
 
         #if st.button('Clarify'):
             #questions = agent.clarification_questions(prompt)
             #for question in questions:
                 #st.write(question)
     
-    if st.button('RESET the AI', type = 'primary', help = "Press to obtain fresh responses from the AI."):
+    if st.button('RESET', type = 'primary', help = "Press to obtain fresh responses from the AI."):
         pai.clear_cache()
         st.session_state['response_given'] = None
 
