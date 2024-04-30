@@ -106,7 +106,7 @@ def convert_df_to_excel(df):
 # %%
 #Title of webpage
 st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter (OWN)",
+   page_title="Empirical Legal Research Kickstarter",
    page_icon="🧊",
    layout="centered",
    initial_sidebar_state="collapsed",
@@ -718,7 +718,7 @@ def run(df_master, uploaded_docs, uploaded_images):
 #Create form
 
 with st.form("GPT_input_form") as df_responses:
-    return_button = st.form_submit_button('RETURN to previous page')
+    return_button = st.form_submit_button('RETURN to first page')
     
     st.header(f"You have selected to study :blue[your own files].")
         
@@ -817,6 +817,96 @@ You can also download a record of your responses.
 #    test_button = st.form_submit_button('Test')
 
 
+# %%
+def clear_cache():
+    keys = list(st.session_state.keys())
+    for key in keys:
+        st.session_state.pop(key)
+
+
+# %%
+#Create placeholder download buttons if previous responses and results in st.session_state:
+
+if 'df_master' and 'df_individual_output' in st.session_state:
+
+    if st.button(label='RESET to process new search terms or questions', type = 'primary', help = "Press to run the Empirical Legal Research Kickstarter afresh."):
+        clear_cache()
+        st.rerun()
+
+    #Load previous responses and results
+
+    df_master = st.session_state.df_master
+    df_individual_output = st.session_state.df_individual_output
+
+    #Buttons for downloading responses
+
+    csv = convert_df_to_csv(df_master)
+
+    responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
+
+    st.subheader('Looking for your previous form responses?')
+    
+    ste.download_button(
+        label="Download your previous responses as a CSV (for use in Excel etc)", 
+        data = csv,
+        file_name=responses_output_name + '.csv', 
+        mime= "text/csv", 
+#            key='download-csv'
+    )
+
+    xlsx = convert_df_to_excel(df_master)
+    
+    ste.download_button(label='Download your previous responses as an Excel file (XLSX)',
+                        data=xlsx,
+                        file_name=responses_output_name + '.xlsx', 
+                        mime='application/vnd.ms-excel',
+                       )
+
+    json = convert_df_to_json(df_master)
+    
+    ste.download_button(
+        label="Download your previous responses as a JSON", 
+        data = json,
+        file_name= responses_output_name + '.json', 
+        mime= "application/json", 
+    )
+
+    #Button for downloading results
+    output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
+
+    csv_output = convert_df_to_csv(df_individual_output)
+
+    st.subheader('Looking for your previous results?')
+    
+    ste.download_button(
+        label="Download your previous results as a CSV (for use in Excel etc)", 
+        data = csv_output,
+        file_name= output_name + '.csv', 
+        mime= "text/csv", 
+#            key='download-csv'
+    )
+
+    excel_xlsx = convert_df_to_excel(df_individual_output)
+    
+    ste.download_button(label='Download your previous results as an Excel file (XLSX)',
+                        data=excel_xlsx,
+                        file_name= output_name + '.xlsx', 
+                        mime='application/vnd.ms-excel',
+                       )
+    
+    json_output = convert_df_to_json(df_individual_output)
+    
+    ste.download_button(
+        label="Download your previous results as a JSON", 
+        data = json_output,
+        file_name= output_name + '.json', 
+        mime= "application/json", 
+    )
+
+    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+
+
+
 # %% [markdown]
 # # Save and run
 
@@ -887,8 +977,23 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
         
         #conn.update(worksheet="UK", data=df_to_update, )
 
-        st.write('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.')
+        #Keep results in session state
+        if "df_individual_output" not in st.session_state:
+            st.session_state["df_individual_output"] = df_individual_output
+
+        if "df_master" not in st.session_state:
+            st.session_state["df_master"] = df_master
         
+        st.session_state["page_from"] = 'pages/OWN.py'
+
+        #Write results
+
+        st.write('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.')
+
+        if df_master.loc[0, 'Language choice'] != 'English':
+
+            st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
+
         #Button for downloading results
         output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
 
@@ -919,10 +1024,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
             mime= "application/json", 
         )
 
-        if df_master.loc[0, 'Language choice'] != 'English':
-
-            st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
-
+        st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
 
 
 # %%

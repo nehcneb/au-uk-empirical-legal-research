@@ -21,3 +21,4 @@ pytesseract
 pdf2image
 mammoth
 pyxlsb
+pandasai

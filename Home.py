@@ -41,7 +41,8 @@ sources_list = ["Judgments of select New South Wales courts",
                 "Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
-                "Your own files"
+                "Your own files", 
+                "Your own spreadsheet"
                ]
 
 
@@ -78,7 +79,7 @@ with st.form("GPT_input_form") as df_responses:
     st.title("The Empirical Legal Research Kickstarter")
     st.header("An Anglo-Australian Pilot")
     
-    st.markdown("""The Empirical Legal Research Kickstarter is a web-based program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
+    st.markdown("""*The Empirical Legal Research Kickstarter* is a web-based program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
 
 This pilot version can automatically
 
@@ -86,7 +87,7 @@ This pilot version can automatically
 
 (2) extract and code information from the judgment headnotes (ie metadata); and
 
-(3) use GPT — a generative AI — as a research assistant to answer your questions about each judgment.
+(3) use a generative AI as a research assistant to answer your questions about each judgment.
 
 This program can also process your own files.
 
@@ -125,6 +126,8 @@ if next_button:
         st.write('You must choose a source of information.')
 
     else:
+
+        st.session_state["page_from"] = "Home.py"
     
         if (('New South Wales' in source_entry) and ('Kercher' not in source_entry)):
             st.switch_page("pages/NSW.py")
@@ -145,10 +148,12 @@ if next_button:
             
             st.switch_page("pages/ER.py")
             
-        if ' own ' in source_entry:
+        if ' own files' in source_entry:
 
             st.switch_page("pages/OWN.py")
 
+        if ' own spreadsheet' in source_entry:
+            st.switch_page('pages/AI.py')
 
 
 
