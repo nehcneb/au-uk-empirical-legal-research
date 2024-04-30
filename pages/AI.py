@@ -362,10 +362,10 @@ if 'df_to_analyse' in st.session_state:
 
 # %%
 #Button for downloading chat history
-#if len(st.session_state.messages) > 0:
+if len(st.session_state.messages) > 0:
     #Create and export json file with questions and responses
-
-#    df_history = pd.DataFrame(st.session_state.messages)
+    
+    df_history = pd.DataFrame(st.session_state.messages)
 
     if "df_master" in st.session_state:
         history_output_name = st.session_state.df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_chat_history'
