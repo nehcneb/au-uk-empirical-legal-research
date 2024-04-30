@@ -281,15 +281,16 @@ if 'df_individual_output' in st.session_state:
 
                     st.subheader('Response')
 
-                    #st.write(':red[An experimental AI produced this response. Please be cautious.]')
                     
                     st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
                     
                     st.write(response)
 
+                    st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
+
                     #Display number of questionsl left
                     st.session_state.question_left -= 1
-                    st.write(f"*(Number of questions left: :orange[{st.session_state.question_left}].)*")
+                    st.write(f"*Number of questions left: :orange[{st.session_state.question_left}].*")
 
                     #Button for clarifications; NOT WORKING YET
                     #if st.button('Clarify'):
