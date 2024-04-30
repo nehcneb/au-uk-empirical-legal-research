@@ -1095,7 +1095,7 @@ You can also download a record of your responses.
 # %%
 #Create placeholder download buttons if previous responses and results in st.session_state:
 
-if 'df_master' and 'df_individual_output' in st.session_state:
+if (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
 
     if st.button(label='RESET to process new search terms or questions', type = 'primary', help = "Press to run the Empirical Legal Research Kickstarter afresh."):
         clear_cache()
