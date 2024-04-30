@@ -295,7 +295,7 @@ if 'df_to_analyse' in st.session_state:
 #    sdf = SmartDataframe(st.session_state.edited_df, config = {'llm': llm})
     agent = Agent(st.session_state.edited_df, config={"llm": llm}, memory_size=questions_bound, description = agent_description)
     
-    st.subheader('Please enter your question.')
+    st.subheader('Your question')
 
     st.write('You may ask at most 10 questions in sequence. Each question may amount to at most 1000 characters.')
     
