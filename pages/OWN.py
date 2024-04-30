@@ -926,17 +926,20 @@ if run_button:
 
     if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
 
-        st.write('You must upload some file(s).')
+        st.warning('You must upload some file(s).')
 
     elif int(consent) == 0:
-        st.write("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
+        st.warning("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
 
     elif len(gpt_questions_entry) < 5:
 
-        st.write('You must enter some question(s) for GPT.')
+        st.warning('You must enter some question(s) for GPT.')
 
     elif '@' not in str(email_entry):
-        st.write('You must enter a valid email address to use GPT.')
+        st.warning('You must enter a valid email address to use GPT.')
+
+    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+        st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
 
     else:
 
@@ -990,7 +993,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
     
             #Write results
     
-            st.write('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.')
+            st.success('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
     
             if df_master.loc[0, 'Language choice'] != 'English':
     
@@ -1034,11 +1037,14 @@ if keep_button:
 
     if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
 
-        st.write('You must upload some file(s).')
+        st.warning('You must upload some file(s).')
 
     elif len(gpt_questions_entry) < 5:
 
-        st.write('You must enter some question(s) for GPT.')
+        st.warning('You must enter some question(s) for GPT.')
+
+    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+        st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
 
     else:
 

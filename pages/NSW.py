@@ -1178,13 +1178,13 @@ if run_button:
     
     if all_search_terms.replace('None', '') == "":
 
-        st.write('You must enter some search terms.')
-
-    elif int(consent) == 0:
-        st.write("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
+        st.warning('You must enter some search terms.')
 
     elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
-        st.write('You must enter a valid email address to use GPT.')
+        st.warning('You must enter a valid email address to use GPT.')
+
+    elif int(consent) == 0:
+        st.warning("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
 
    # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
         #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
@@ -1194,6 +1194,9 @@ if run_button:
 
 #    elif len(courts_entry) == 0:
 #        st.write('Please select at least one court.')
+
+    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
     else:
 
@@ -1248,7 +1251,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
             
             st.session_state["page_from"] = 'pages/NSW.py'
     
-            st.write("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.")
+            st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
             
             #Button for downloading results
             output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
@@ -1291,7 +1294,10 @@ if keep_button:
     
     if all_search_terms.replace('None', '') == "":
 
-        st.write('You must enter some search terms.')
+        st.warning('You must enter some search terms.')
+
+    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
     else:
 
