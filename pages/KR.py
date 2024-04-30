@@ -920,10 +920,8 @@ if preview_button:
 # %%
 if run_button:
 
-    #Check whether search terms entered
-
-    all_search_terms = str(catchwords_entry) + str(body_entry) + str(title_entry) + str(before_entry) + str(party_entry) + str(mnc_entry) + str(startDate_entry) + str(endDate_entry) + str(fileNumber_entry) + str(legislationCited_entry) + str(casesCited_entry)
-    
+    all_search_terms = str(query_entry)
+        
     if all_search_terms.replace('None', '') == "":
 
         st.write('You must enter some search terms.')
@@ -934,14 +932,11 @@ if run_button:
     elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
         st.write('You must enter a valid email address to use GPT.')
 
-   # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
-        #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
+    #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
+       # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
-   # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
-       # st.write("You must enter a valid API key for GPT.")
-
-#    elif len(courts_entry) == 0:
-#        st.write('Please select at least one court.')
+    #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
+        #st.write("You must enter a valid API key for GPT.")
 
     else:
 
@@ -951,7 +946,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
 """)
 
         #Using own GPT
-
+    
         gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
     
         #Create spreadsheet of responses
@@ -959,41 +954,39 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
     
         #Obtain google spreadsheet
     
-        #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+       # conn = st.connection("gsheets_uk", type=GSheetsConnection)
         #df_google = conn.read()
         #df_google = df_google.fillna('')
         #df_google=df_google[df_google["Processed"]!='']
-
+    
         #Upload placeholder record onto Google sheet
-       # df_plaeceholdeer = pd.concat([df_google, df_master])
-        #conn.update(worksheet="NSW", data=df_plaeceholdeer, )
+        #df_plaeceholdeer = pd.concat([df_google, df_master])
+        #conn.update(worksheet="UK", data=df_plaeceholdeer, )
 
         #Produce results
 
-        df_individual = run(df_master)
-
-        df_individual_output = tidying_up(df_master, df_individual)
-
-#        df_individual_output = df_individual
+        df_individual_output = run(df_master)
 
         #Keep record on Google sheet
         
-        #df_master["Processed"] = datetime.now()
+        df_master["Processed"] = datetime.now()
 
         df_master.pop("Your GPT API key")
         
         #df_to_update = pd.concat([df_google, df_master])
         
-        #conn.update(worksheet="NSW", data=df_to_update, )
+        #conn.update(worksheet="UK", data=df_to_update, )
 
         #Keep results in session state
         if "df_individual_output" not in st.session_state:
-            st.session_state["df_individual_output"] = df_individual_output#.astype(str)
+            st.session_state["df_individual_output"] = df_individual_output
 
         if "df_master" not in st.session_state:
             st.session_state["df_master"] = df_master
         
-        st.session_state["page_from"] = 'pages/NSW.py'
+        st.session_state["page_from"] = 'pages/UK.py'
+
+        #Write results
 
         st.write("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter.")
         
@@ -1017,7 +1010,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
                             file_name= output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
                            )
-        
+
         json_output = convert_df_to_json(df_individual_output)
         
         ste.download_button(
@@ -1028,8 +1021,6 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
         )
 
         st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
-        
 
 
 # %%

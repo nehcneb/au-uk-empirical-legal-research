@@ -919,8 +919,8 @@ if preview_button:
 
 # %%
 if run_button:
-    
-    all_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
+
+    all_search_terms = str(query_entry)
         
     if all_search_terms.replace('None', '') == "":
 
@@ -934,18 +934,17 @@ if run_button:
 
     #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
        # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
-        
+    
     #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
         #st.write("You must enter a valid API key for GPT.")
 
-    
     else:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.
 
 If this program produces an error (in red) or an unexpected spreadsheet, please double-check your search terms and try again.
 """)
-    
+        
         #Using own GPT
     
         gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
@@ -959,24 +958,10 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
         #df_google = conn.read()
         #df_google = df_google.fillna('')
         #df_google=df_google[df_google["Processed"]!='']
-    
+        
         #Upload placeholder record onto Google sheet
         #df_plaeceholdeer = pd.concat([df_google, df_master])
         #conn.update(worksheet="UK", data=df_plaeceholdeer, )
-
-        #Produce results
-
-        df_individual_output = run(df_master)
-
-        #Keep record on Google sheet
-        
-        df_master["Processed"] = datetime.now()
-
-        df_master.pop("Your GPT API key")
-        
-        #df_to_update = pd.concat([df_google, df_master])
-        
-        #conn.update(worksheet="UK", data=df_to_update, )
 
         #Keep results in session state
         if "df_individual_output" not in st.session_state:
@@ -1022,6 +1007,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
         )
 
         st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+
 
 # %%
 if keep_button:

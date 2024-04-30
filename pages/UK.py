@@ -1116,7 +1116,6 @@ if run_button:
         
     #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
         #st.write("You must enter a valid API key for GPT.")
-
     
     else:
 
