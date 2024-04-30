@@ -89,7 +89,7 @@ This pilot version can automatically
 
 (3) use a generative AI as a research assistant to answer your questions about each judgment.
 
-This program can also process your own files.
+This program can also process your own files or spreadsheet of data.
 
 **Complete this form to kickstart your project :green[for free]!** The results of the above tasks will be available for download.
 """)
