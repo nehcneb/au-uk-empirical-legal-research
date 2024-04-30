@@ -240,10 +240,10 @@ if 'df_to_analyse' in st.session_state:
     
     #Permit uploading of new spreadsheet
     
-    if st.button(label = 'CLEAR the spreadsheet', type = 'primary'):
-        pai.clear_cache()
-        clear_cache()
-        st.rerun()
+    #if st.button(label = 'CLEAR the spreadsheet', type = 'primary'):
+        #pai.clear_cache()
+        #clear_cache()
+        #st.rerun()
     
     #Choice of AI
 #    st.subheader("Which AI would you like to use?")
