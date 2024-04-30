@@ -317,7 +317,7 @@ if 'df_to_analyse' in st.session_state:
 
                     response = agent.chat(prompt)
 
-                    st.write('If you see an error, please ask your question again or :red[RESET] the AI.')
+                    st.write('If you see an error, please modify your question and try again.') # or :red[RESET] the AI.')
 
                     st.subheader('Response')
 
@@ -353,34 +353,30 @@ if 'df_to_analyse' in st.session_state:
             #questions = agent.clarification_questions(prompt)
             #for question in questions:
                 #st.write(question)
-    
-    if st.button('RESET', type = 'primary', help = "Press to obtain fresh responses from the AI."):
-        pai.clear_cache()
-        #st.session_state['response_given'] = None
 
+#Reset button, not particularly useful
+#    if st.button('RESET', type = 'primary', help = "Press to obtain fresh responses from the AI."):
+#        pai.clear_cache()
 
 
 
 # %%
 #Button for downloading chat history
-if len(st.session_state.messages) > 0:
+#if len(st.session_state.messages) > 0:
     #Create and export json file with questions and responses
 
-    df_history = pd.DataFrame(st.session_state.messages)
-    #json_history = json.dumps(st.session_state.messages, indent=2)
-    
-    #df_history = pd.read_json(json_history)
+#    df_history = pd.DataFrame(st.session_state.messages)
 
     if "df_master" in st.session_state:
         history_output_name = st.session_state.df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_chat_history'
     else:
         history_output_name = str(today_in_nums) + '_chat_history'
 
-    st.subheader('History of questions and responses')
+    ste.subheader('History of questions and responses')
 
     csv = convert_df_to_csv(df_history)
 
-    st.download_button(
+    ste.download_button(
         label="Download as a CSV (for use in Excel etc)", 
         data = csv,
         file_name=history_output_name + '.csv', 
@@ -390,7 +386,7 @@ if len(st.session_state.messages) > 0:
 
     xlsx = convert_df_to_excel(df_history)
     
-    st.download_button(label='Download as an Excel spreadsheet (XLSX)',
+    ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
                         data=xlsx,
                         file_name=history_output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
@@ -398,7 +394,7 @@ if len(st.session_state.messages) > 0:
 
     json = convert_df_to_json(df_history)
     
-    st.download_button(
+    ste.download_button(
         label="Download as a JSON", 
         data = json,
         file_name= history_output_name + '.json', 
