@@ -840,11 +840,12 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 
     #Buttons for downloading responses
 
-    csv = convert_df_to_csv(df_master)
+    st.subheader('Looking for your previous form responses?')
 
     responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
+    
+    csv = convert_df_to_csv(df_master)
 
-    st.subheader('Looking for your previous form responses?')
     
     ste.download_button(
         label="Download your previous responses as a CSV (for use in Excel etc)", 
@@ -872,12 +873,13 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
     )
 
     #Button for downloading results
+
+    st.subheader('Looking for your previous results?')
+
     output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
 
     csv_output = convert_df_to_csv(df_individual_output)
 
-    st.subheader('Looking for your previous results?')
-    
     ste.download_button(
         label="Download your previous results as a CSV (for use in Excel etc)", 
         data = csv_output,

@@ -13,7 +13,7 @@
 # ---
 
 # %%
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/pages/AI.py
+#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/pages/AI-New.py
 
 # %%
 #Preliminary modules
@@ -55,10 +55,6 @@ from pandasai.llm import BambooLLM
 from pandasai.llm.openai import OpenAI
 import pandasai as pai
 
-#Excel
-from io import BytesIO
-from pyxlsb import open_workbook as open_xlsb
-
 
 # %%
 #Title of webpage
@@ -74,10 +70,6 @@ st.set_page_config(
 questions_bound = 10
 
 print(f"\nThe maximum number of questions per thread is {questions_bound}.")
-
-# %%
-#today
-today_in_nums = str(datetime.now())[0:10]
 
 
 # %%
@@ -215,20 +207,15 @@ if "messages" not in st.session_state:
 # Display chat messages from history on app rerun
 
 # %%
-#Initialize questions counter
+#Initialize questions bound
 if 'question_left' not in st.session_state:
 
     st.session_state["question_left"] = questions_bound
 
-# %%
-#Initialize AI choice counter
-#NO USE YET
-
-#if 'ai_choice' not in st.session_state:
-    #st.session_state["ai_choice"] = ''
-
 
 # %%
+#Form before questioning
+
 if st.button('RETURN to previous page'):
 
     if 'page_from' in st.session_state:
@@ -238,6 +225,11 @@ if st.button('RETURN to previous page'):
         st.switch_page('Home.py')
 
 st.header("You have chosen to :blue[analyse your spreadsheet].")
+
+#Activate response record
+#if 'response_given' not in st.session_state:
+    #The only function of this is to enable the show code button. This button is not working yet.
+    #st.session_state['response_given'] = None
 
 #Open spreadsheet
 if 'df_individual_output' in st.session_state:
@@ -265,6 +257,13 @@ if 'df_individual_output' not in st.session_state:
 
         st.session_state["df_to_analyse"]=df_uploaded.astype(str)
 
+
+
+
+
+# %%
+#Form for questioning 
+
 if 'df_to_analyse' in st.session_state:
 
     df_to_analyse = st.session_state.df_to_analyse
@@ -280,6 +279,10 @@ if 'df_to_analyse' in st.session_state:
     except Exception as e:
         print(e)
         print('No column has hyperlinks.')
+    
+#    st.write(df_to_analyse.head(10))
+
+#    edited_df = st.data_editor(df_to_analyse)
 
     st.caption('To download, search or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
     
@@ -289,6 +292,16 @@ if 'df_to_analyse' in st.session_state:
     
     #Choice of AI
 #    st.subheader("Which AI would you like to use?")
+    
+#    st.markdown("""BambooLLM is better at answering questions about statistics while GPT questions about words.
+    
+#BambooLLM is chosen by default.
+#""")
+    
+#    st.session_state["ai_choice"] = st.selectbox(label = 'Please choose an AI.', options = ai_list, index = 0)
+    
+#    st.caption('BambooLLM is developed by PandasAI with data analysis in mind (see https://docs.pandas-ai.com/en/latest/LLMs/llms/). GPT is released by OpenAI. The GPT model to be used is model gpt-3.5-turbo-0125.')
+
 #    if 'ai_choice' in st.session_state:
 
     llm = ai_model_setting(st.session_state.ai_choice)
@@ -297,111 +310,59 @@ if 'df_to_analyse' in st.session_state:
     
     st.subheader('Please enter your question.')
 
-    st.write('You may ask at most 10 questions in sequence. Each question may amount to at most 1000 characters.')
-    
-    prompt = st.text_area(ai_model_description(st.session_state.ai_choice), height= 200, max_chars=1000) 
+    st.write('You may ask at most 10 questions. Each question may amount to at most 1000 characters.')
 
+    #Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
+    st.write('If you see an error, please ask your question again or :red[RESET] the AI.')
     st.caption('During the pilot stage, the number of questions and the number of characters per question are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to ask more or longer questions.')
-
-    # Generate output
     
-    if st.button("ASK"):
-        if prompt:
-            #Keep record of prompt
-            st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
-            
-            if st.session_state.question_left > 0:
-                # call pandas_ai.run(), passing dataframe and prompt
-                with st.spinner("Generating response..."):
-                    #response = sdf.chat(prompt)
+    # React to user input
+    if prompt := st.chat_input("Enter your question."):
+        
+        # Display user message in chat message container
+        st.chat_message("user").markdown(prompt)
+        
 
-                    response = agent.chat(prompt)
+        # Add user message to chat history
+        
+        st.session_state.messages.append({"role": "user", "content": prompt})
+    
+        response = ''
 
-                    st.write('If you see an error, please ask your question again or :red[RESET] the AI.')
+        if st.session_state.question_left > 0:
+            # call pandas_ai.run(), passing dataframe and prompt
+            #with st.spinner("Generating response..."):
+            #response = sdf.chat(prompt)
 
-                    st.subheader('Response')
+            with st.spinner("Generating response..."):
+    
+                response = agent.chat(prompt)
+    
+                st.session_state.question_left -= 1
+                count_down = f"*Number of questions left: :orange[{st.session_state.question_left}].*"
+    
+                #st.session_state['response_given'] = response
+    
+                #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
+    
+                #Display number of questionsl left
 
-                    st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
-                    
-                    st.write(response)
-
-                    #Keep record of response
-                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
-
-                    #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
-
-                    #Display number of questionsl left
-                    st.session_state.question_left -= 1
-                    st.write(f"*Number of questions left: :orange[{st.session_state.question_left}].*")
-
-            else:
-                no_more_questions = 'You have reached the maximum number of questions allowed during the pilot stage.'
-                st.write(no_more_questions)
-                
-                #Keep record of response
-                st.session_state.messages.append({"role": "assistant", "content": no_more_questions})
         else:
-            st.warning("Please enter a question.")
+            response ='You have reached the maximum number of questions allowed during the pilot stage.'
 
-    #Show code and clarification are not working yet
-    #if len(st.session_state.messages) > 0:
-        #if st.button('SHOW code'):
-            #explanation = agent.explain()
-            #st.write(explanation)
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            st.write(response)
+            st.write(count_down)
 
-        #if st.button('Clarify'):
-            #questions = agent.clarification_questions(prompt)
-            #for question in questions:
-                #st.write(question)
-    
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
     if st.button('RESET', type = 'primary', help = "Press to obtain fresh responses from the AI."):
         pai.clear_cache()
         #st.session_state['response_given'] = None
-
-
-
-
-# %%
-#Button for downloading chat history
-if len(st.session_state.messages) > 0:
-    #Create and export json file with questions and responses
-
-    df_history = pd.DataFrame(st.session_state.messages)
-    #json_history = json.dumps(st.session_state.messages, indent=2)
-    
-    #df_history = pd.read_json(json_history)
-
-    if "df_master" in st.session_state:
-        history_output_name = st.session_state.df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_chat_history'
-    else:
-        history_output_name = str(today_in_nums) + '_chat_history'
-
-    st.subheader('History of questions and responses')
-
-    csv = convert_df_to_csv(df_history)
-
-    ste.download_button(
-        label="Download as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=history_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    xlsx = convert_df_to_excel(df_history)
-    
-    ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                        data=xlsx,
-                        file_name=history_output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    json = convert_df_to_json(df_history)
-    
-    ste.download_button(
-        label="Download as a JSON", 
-        data = json,
-        file_name= history_output_name + '.json', 
-        mime= "application/json", 
-    )        
-
