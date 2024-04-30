@@ -372,7 +372,7 @@ if 'df_to_analyse' in st.session_state:
     else:
         history_output_name = str(today_in_nums) + '_chat_history'
 
-    ste.subheader('History of questions and responses')
+    st.subheader('History of questions and responses')
 
     csv = convert_df_to_csv(df_history)
 
