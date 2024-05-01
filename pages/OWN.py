@@ -818,6 +818,12 @@ You can also download a record of your responses.
 
 #    test_button = st.form_submit_button('Test')
 
+#Display need resetting message if necessary
+if 'need_resetting' in st.session_state:
+    #if st.session_state.need_resetting == 1:
+    st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+    
+
 
 # %%
 def clear_cache():
@@ -940,7 +946,11 @@ if run_button:
     
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
-
+        
+        if 'need_resetting' not in st.session_state:
+            
+            st.session_state['need_resetting'] = 1
+            
     else:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes. 
@@ -1045,7 +1055,11 @@ if keep_button:
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
-
+        
+        if 'need_resetting' not in st.session_state:
+            
+            st.session_state['need_resetting'] = 1
+            
     else:
 
         #Using own GPT API key here

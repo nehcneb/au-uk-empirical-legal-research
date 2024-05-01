@@ -819,6 +819,12 @@ You can also download a record of your responses.
     reset_button = st.form_submit_button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the Empirical Legal Research Kickstarter afresh.")
 
 
+#Display need resetting message if necessary
+if 'need_resetting' in st.session_state:
+    #if st.session_state.need_resetting == 1:
+    st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+    
+
 
 # %%
 #Create placeholder download buttons if previous responses and results in st.session_state:
@@ -933,7 +939,11 @@ if run_button:
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
+        
+        if 'need_resetting' not in st.session_state:
+            
+            st.session_state['need_resetting'] = 1
+            
     #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
        # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
@@ -1028,8 +1038,8 @@ If this program produces an error or an unexpected spreadsheet, please double-ch
                 st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
 
             except Exception as e:
-                st.warning('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
-                st.warning(f'Error: {e}')
+                st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
+                st.error(f'Error: {e}.')
 
 
 
@@ -1044,7 +1054,11 @@ if keep_button:
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
+        
+        if 'need_resetting' not in st.session_state:
+            
+            st.session_state['need_resetting'] = 1
+            
     else:
         #Using own GPT API key here
     

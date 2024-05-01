@@ -201,6 +201,23 @@ def convert_links_column(df):
 
 
 # %%
+# For NSW, function for columns which are lists to strings:
+
+list_columns = ['Catchwords', 'Legislation cited', 'Cases cited', 'Texts cited', 'Parties', 'Representation', 'Decision under appeal'] 
+
+#'Decision under appeal' is a dictionary but the values of some keys are lists
+
+def nsw_df_list_columns(df):
+    df_new = df.copy()
+
+    for heading in list_columns:
+        if heading in df.columns:
+            df_new[heading] = df[heading].astype(str)
+
+    return df_new
+
+
+# %%
 def clear_cache():
     keys = list(st.session_state.keys())
     for key in keys:
@@ -221,28 +238,21 @@ if 'instruction_left' not in st.session_state:
     st.session_state["instruction_left"] = instructions_bound
 
 # %%
-#Initialize AI choice counter
-#NO USE YET
-
-#if 'ai_choice' not in st.session_state:
-    #st.session_state["ai_choice"] = ''
-
+#Initalize page_from:
+if 'page_from' not in st.session_state:
+    st.session_state['page_from'] = 'Home.py'
 
 # %%
 if st.button('RETURN to previous page'):
 
-    if 'page_from' in st.session_state:
-        st.switch_page(st.session_state.page_from)
-
-    else:
-        st.switch_page('Home.py')
+    st.switch_page(st.session_state.page_from)
 
 st.header("You have chosen to :blue[analyse your spreadsheet].")
 
 #Open spreadsheet
 if 'df_individual_output' in st.session_state:
 
-    st.session_state['df_to_analyse'] = st.session_state.df_individual_output.astype(str)
+    st.session_state['df_to_analyse'] = st.session_state.df_individual_output
 
 if 'df_individual_output' not in st.session_state:
 
@@ -263,7 +273,7 @@ if 'df_individual_output' not in st.session_state:
         if extension == 'json':
             df_uploaded = pd.read_json(uploaded_file, orient= 'split')
 
-        st.session_state["df_to_analyse"]=df_uploaded.astype(str)
+        st.session_state["df_to_analyse"]=df_uploaded
 
 if 'df_to_analyse' in st.session_state:
 
@@ -277,21 +287,46 @@ if 'df_to_analyse' in st.session_state:
         link_heading = link_heading_picker(df_to_analyse)       
         df_to_analyse = convert_links_column(df_to_analyse)
         link_heading_config={link_heading: st.column_config.LinkColumn()}       
+    
     except Exception as e:
         print(e)
         print('No column has hyperlinks.')
-    
-    st.caption('To download, search or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
-    
-    st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
-    st.markdown("""You can directly edit this spreadsheet.""")
+    st.write(':green[You can directly edit this spreadsheet.]')
+    st.caption('To download, search or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
+
+    #Try to avoid conflict between PyArrow and numpy by converting columns with both lists and null values to string
+
+    try:
+    
+        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+
+    except Exception as e:
+
+        error_to_show = ''
+
+        if st.session_state.page_from == 'pages/NSW.py':
+            
+            df_to_analyse = nsw_df_list_columns(df_to_analyse)
+
+            error_to_show = 'The lists in your spreadsheet have been converted to text.'
+
+        else:
+            df_to_analyse = df_to_analyse.astype(str)
+
+            error_to_show = 'The non-textual data in your spreadsheet have been converted to text.'
+            
+        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+
+        st.warning(error_to_show)
+        
+        print(f'Error: {e}.')
     
     #Choice of AI
 #    st.subheader("Which AI would you like to use?")
-#    if 'ai_choice' in st.session_state:
 
     llm = ai_model_setting(st.session_state.ai_choice)
+    
 #    sdf = SmartDataframe(st.session_state.edited_df, config = {'llm': llm})
     agent = Agent(st.session_state.edited_df, config={"llm": llm}, memory_size=instructions_bound, description = agent_description)
     
