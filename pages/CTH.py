@@ -975,7 +975,7 @@ For search tips, please visit the Federal Court Digital Law Library at https://w
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
     
-    st.subheader("Your Search Terms")
+    st.subheader("Your search terms")
 
     catchwords_entry = st.text_input('Catchwords')
 

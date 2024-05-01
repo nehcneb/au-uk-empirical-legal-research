@@ -947,13 +947,13 @@ For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/sear
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to Cover more judgments, courts, or tribunals.')
 
-    st.subheader("New South Wales Courts to Cover")
+    st.subheader("New South Wales courts to cover")
 
-    courts_entry = st.multiselect('Select the Courts to cover', nsw_courts)
+    courts_entry = st.multiselect('Select the courts to cover', nsw_courts)
 
-    st.caption("All Courts listed in the above menu will be covered if left blank")
+    st.caption("All courts listed in the above menu will be covered if left blank")
 
-    st.subheader("Your Search Terms")
+    st.subheader("Your search terms")
 
     catchwords_entry = st.text_input("Catchwords")
     

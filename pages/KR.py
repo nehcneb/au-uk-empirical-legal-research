@@ -740,7 +740,7 @@ For search tips, please visit AustLII at https://www8.austlii.edu.au/cgi-bin/vie
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
     
-    st.subheader("Your Search Terms")
+    st.subheader("Your search terms")
 
     method_entry = st.selectbox('Find', methods_list, index=0)
     

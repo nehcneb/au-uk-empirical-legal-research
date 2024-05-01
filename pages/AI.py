@@ -297,7 +297,7 @@ if 'df_to_analyse' in st.session_state:
 #    sdf = SmartDataframe(st.session_state.edited_df, config = {'llm': llm})
     agent = Agent(st.session_state.edited_df, config={"llm": llm}, memory_size=instructions_bound, description = agent_description)
     
-    st.subheader(f'Enter your instruction for {st.session_state.ai_choice}')
+    st.subheader(f'Enter your instruction(s) for {st.session_state.ai_choice}')
 
     st.write(':green[You may give at most 10 instructions in sequence.] Each instruction must not exceed 1000 characters.')
     

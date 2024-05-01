@@ -742,7 +742,7 @@ For search tips, please visit CommonLII at http://www.commonlii.org/form/search1
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
     
-    st.subheader("Your Search Terms")
+    st.subheader("Your search terms")
 
     method_entry = st.selectbox('Find', methods_list, index=1)
     

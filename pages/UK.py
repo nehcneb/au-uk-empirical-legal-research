@@ -879,15 +879,15 @@ For search tips, please visit The National Archives at https://caselaw.nationala
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
     
-    st.subheader("UK Courts and Tribunals to Cover")
+    st.subheader("UK courts and tribunals to cover")
 
-    courts_entry = st.multiselect('Select the Courts and Tribunals to cover', uk_courts)
+    courts_entry = st.multiselect('Select the courts and tribunals to cover', uk_courts)
 
-    st.caption("All Courts and Tribunals listed in the above menu will be covered if left blank")
+    st.caption("All courts and tribunals listed in the above menu will be covered if left blank")
     
     #Search terms
     
-    st.subheader("Your Search Terms")
+    st.subheader("Your search terms")
 
     query_entry = st.text_input('Free text')
 
