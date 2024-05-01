@@ -734,7 +734,7 @@ with st.form("GPT_input_form") as df_responses:
 
 #    st.header("Judgment Search Criteria")
     
-    st.markdown("""**Please enter your search terms.** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit AustLII at https://www8.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
 """)
@@ -760,7 +760,7 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
 
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
-    st.markdown("**Would you like GPT to answer questions about each judgment returned by your search terms?**")
+    st.markdown("**:orange[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
 
     st.markdown("""Please consider trying the Empirical Legal Research Kickstarter without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
 """)
@@ -806,7 +806,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**You can now run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     

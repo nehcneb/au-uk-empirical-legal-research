@@ -722,7 +722,7 @@ with st.form("GPT_input_form") as df_responses:
     
     st.header(f"You have selected to study :blue[your own files].")
         
-    st.markdown("""**Please upload your documents or images.** This program will extract text from up to 10 files, and process up to approximately 10,000 words from the first 10 pages of each file.
+    st.markdown("""**:green[Please upload your documents or images.]** This program will extract text from up to 10 files, and process up to approximately 10,000 words from the first 10 pages of each file.
 
 This program works only if the text from your file(s) is displayed horizontally and neatly.
 
@@ -730,7 +730,7 @@ This program works only if the text from your file(s) is displayed horizontally 
 
     st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
 
-    st.subheader('Upload Documents')
+    st.subheader('Upload documents')
     
     st.markdown("""Supported document formats: **searchable PDF**, **DOCX**, **TXT**, **JSON**, CS,  EPUB, MOBI, XML, XPS.
 """)
@@ -739,13 +739,13 @@ This program works only if the text from your file(s) is displayed horizontally 
 
     st.caption('DOC is not yet supported. Microsoft Word or a similar program can convert a DOC file to a DOCX file.')
     
-    st.subheader('Upload Images')
+    st.subheader('Upload images')
     
     st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG**, **PNG**, BMP, GIF, TIFF.
 """)
     uploaded_images = st.file_uploader("Please choose your image(s).", type = image_types, accept_multiple_files=True)
 
-    st.subheader('Language of Uploaded files')
+    st.subheader('Language of uploaded files')
     
     st.markdown("""In what language is the text from your uploaded file(s) written?""")
         
@@ -758,7 +758,7 @@ This program works only if the text from your file(s) is displayed horizontally 
 
     st.header("Use GPT as Your Research Assistant")
 
-    st.markdown("**GPT can answer questions about each file uploaded by you.**")
+    st.markdown("**:green[GPT can answer questions about each file uploaded by you.]**")
     
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
@@ -804,7 +804,7 @@ You may enter at most 1000 characters here.
 
     st.header("Next Steps")
 
-    st.markdown("""**:orange[Once your files are uploaded,] you can run the Empirical Legal Research Kickstarter.** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+    st.markdown("""**:orange[Once your files are uploaded,] :green[you can run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
     
