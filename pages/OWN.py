@@ -928,9 +928,6 @@ if run_button:
 
         st.warning('You must upload some file(s).')
 
-    elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
-
     elif len(gpt_questions_entry) < 5:
 
         st.warning('You must enter some question(s) for GPT.')
@@ -938,6 +935,9 @@ if run_button:
     elif '@' not in str(email_entry):
         st.warning('You must enter a valid email address to use GPT.')
 
+    elif int(consent) == 0:
+        st.warning("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
+    
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
 
@@ -997,7 +997,7 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
     
             if df_master.loc[0, 'Language choice'] != 'English':
     
-                st.write("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
+                st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
     
             #Button for downloading results
             output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
