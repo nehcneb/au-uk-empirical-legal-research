@@ -883,7 +883,7 @@ For search tips, please visit The National Archives at https://caselaw.nationala
 
     courts_entry = st.multiselect('Select the courts and tribunals to cover', uk_courts)
 
-    st.caption("All courts and tribunals listed in the above menu will be covered if left blank")
+    st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
     
     #Search terms
     

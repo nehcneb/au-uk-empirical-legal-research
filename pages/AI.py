@@ -280,8 +280,6 @@ if 'df_to_analyse' in st.session_state:
     except Exception as e:
         print(e)
         print('No column has hyperlinks.')
-
-    st.subheader('Your spreadsheet')
     
     st.caption('To download, search or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
     

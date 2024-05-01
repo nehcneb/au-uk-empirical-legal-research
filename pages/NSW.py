@@ -110,11 +110,46 @@ st.set_page_config(
 
 # %%
 #Auxiliary lists
-
-nsw_courts =["Court of Appeal", "Court of Criminal Appeal", "Supreme Court"] #, "All of the above Courts"]
-headnotes_choices = ["Catchwords", "Before", "Decision date(s)", "Hearing date(s)", "Date(s) of order",  "Jurisdiction", "Decision", "Legislation cited", "Cases cited", "Texts cited", "Category", "Parties", "File number", "Representation", "Decision under appeal", "All of the above"]
 search_criteria = ['Free text', 'Case name', 'Before', 'Catchwords', 'Party names', 'Medium neutral citation', 'Decision date from', 'Decision date to', 'File number', 'Legislation cited', 'Cases cited']
 meta_labels_droppable = ["Catchwords", "Before", "Decision date(s)", "Hearing date(s)", "Date(s) of order",  "Jurisdiction", "Decision", "Legislation cited", "Cases cited", "Texts cited", "Category", "Parties", "File number", "Representation", "Decision under appeal"]
+
+
+# %%
+#List of nsw courts
+
+#For showing as menu
+nsw_courts =["Court of Appeal", 
+             "Court of Criminal Appeal", 
+             "Supreme Court", 
+             'Land and Environment Court (Judges)', 
+             'Land and Environment Court (Commissioners)', 
+             'District Court', 
+             'Local Court',
+             "Children's Court", 
+             'Compensation Court', 
+             'Drug Court', 
+             'Industrial Court',
+             'Industrial Relations Commission (Judges)', 
+             'Industrial Relations Commission (Commissioners)'
+            ] #, "All of the above Courts"]
+
+#For positioning
+nsw_courts_positioning = ["Placeholder", "Children's Court",
+ 'Compensation Court',
+ 'Court of Appeal',
+ 'Court of Criminal Appeal',
+ 'District Court',
+ 'Drug Court',
+ 'Industrial Court',
+ 'Industrial Relations Commission (Commissioners)',
+ 'Industrial Relations Commission (Judges)',
+ 'Land and Environment Court (Commissioners)',
+ 'Land and Environment Court (Judges)',
+ 'Local Court',
+ 'Supreme Court']
+
+#Default courts
+nsw_default_courts = ["Court of Appeal", "Court of Criminal Appeal", "Supreme Court"]
 
 
 # %%
@@ -228,53 +263,21 @@ def create_df():
 
 
 # %%
-#Define format functions for headnotes choice, courts choice, and GPT questions
-
-#Create list of all headnotes choices
-headnotes_choices_string = str(headnotes_choices)
-
-#Remove 'All of the above' from list of all headnotes choices
-#headnotes_choices.remove('All of the above')
-
-#Create function to convert the string of chosen headnotes choices to a list
-def headnotes_choice(x):
-    y = x.split(', ')
-    individual_choices = []
- 
-    if 'All of the above' in x:
-        return headnotes_choices
-
-    else:
-        for i in y:
-            if i == 'All of the above':
-                individual_choices.append(i)
-        return individual_choices
-
-#Create list of all court choices in NSWCaseLaw Scraper notation
-
-#NSW_courts_string = 'Court of Appeal, Court of Criminal Appeal, Supreme Court'
-#NSW_courts_string = 'Court of Appeal, Court of Criminal Appeal, Supreme Court, All of the above Courts'
-#nsw_courts = NSW_courts_string.split(', ')
-
-#Remove 'All of the above' from list of all court choices
-#nsw_courts.remove('All of the above Courts')
-
 #Create function to convert the string of chosen courts to a list; 13 = NSWSC, 3 = NSWCA, 4 = NSWCCA
 #For more, see https://github.com/Sydney-Informatics-Hub/nswcaselaw/blob/main/src/nswcaselaw/constants.py
 
 def court_choice(x):
     individual_choice = []
+    #if len(x) < 5:
+        #individual_choice = [3, 4, 13]
+    #else:
     if len(x) < 5:
-        individual_choice = [3, 4, 13]
+        for j in range(1, len(nsw_courts_positioning)):
+            individual_choice.append(j)
     else:
         y = x.split(', ')
         for i in y:
-            if i == 'Court of Appeal':
-                individual_choice.append(3)
-            if i == 'Court of Criminal Appeal':
-                individual_choice.append(4)
-            if i == 'Supreme Court':
-                individual_choice.append(13)           
+            individual_choice.append(nsw_courts_positioning.index(i))            
     
     return individual_choice
     
@@ -871,7 +874,6 @@ def search_url(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-#    df_master['Information to Collect from Judgment Headnotes'] = df_master['Information to Collect from Judgment Headnotes'].apply(headnotes_choice)
     df_master['New South Wales Courts to Cover'] = df_master['New South Wales Courts to Cover'].apply(court_choice)
     #df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: answers_characters_bound].apply(split_by_line)
     #df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
@@ -949,9 +951,9 @@ For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/sear
 
     st.subheader("New South Wales courts to cover")
 
-    courts_entry = st.multiselect('Select the courts to cover', nsw_courts)
+    courts_entry = st.multiselect(label = 'Select the courts to cover', options = nsw_courts, default = nsw_default_courts)
 
-    st.caption("All courts listed in the above menu will be covered if left blank")
+    st.caption(f"The {', the '.join(nsw_default_courts)} are selected by default. All courts listed in this menu will be covered if left blank.")
 
     st.subheader("Your search terms")
 
@@ -994,14 +996,6 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     """)
     
     preview_button = st.form_submit_button('PREVIEW on NSW Caselaw (in a popped up window)')
-
-    
-#    st.subheader("Information to Collect from Judgment Headnotes")
-    
-#    st.markdown("""Please select what information from judgment headnotes you would like to obtain.
-#Case name, link to NSW Caselaw, and medium neutral citation are always included.
-#""")
-#    st.caption('The code used to extract judgment headnotes is available at https://github.com/Sydney-Informatics-Hub/nswcaselaw. Such extraction does not require engagement with GPT.')
 
 #    headnotes_entry = st.multiselect("Please select", headnotes_choices)
 
