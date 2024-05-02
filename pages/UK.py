@@ -121,11 +121,29 @@ def create_df():
     #submission time
     timestamp = datetime.now()
 
-    #Personal info entries
     
-    name = name_entry
-    email = email_entry
-    gpt_api_key = gpt_api_key_entry
+    #Personal info entries
+
+    name = ''
+    
+    email = ''
+
+    gpt_api_key = ''
+
+    try:
+        name = name_entry
+    except:
+        print('Name not entered')
+    
+    try:
+        email = email_entry
+    except:
+        print('Email not entered')
+
+    try:
+        gpt_api_key = gpt_api_key_entry
+    except:
+        print('API key not entered')
 
     #Free text
 
@@ -181,8 +199,15 @@ def create_df():
 
     #GPT choice and entry
     gpt_activation_status = gpt_activation_entry
-    gpt_questions = gpt_questions_entry[0: 1000]
-
+    
+    gpt_questions = ''
+    
+    try:
+        gpt_questions = gpt_questions_entry[0: 1000]
+    
+    except:
+        print('GPT questions not entered.')
+        
     #metadata choice
 
     meta_data_choice = meta_data_entry
@@ -205,7 +230,7 @@ def create_df():
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your question(s) for GPT': gpt_questions, 
-            'Tick to use GPT': gpt_activation_status 
+            'Use GPT': gpt_activation_status 
           }
 
     df_master_new = pd.DataFrame(new_row, index = [0])
@@ -219,6 +244,27 @@ def create_df():
 
 #    else:
 #        return 'Error: spreadsheet of reponses NOT generated.' 
+
+# %%
+#Initialize default courts
+
+uk_courts_default_list = ['United Kingdom Supreme Court',
+ 'Privy Council',
+ 'Court of Appeal Civil Division',
+ 'Court of Appeal Criminal Division',
+ 'High Court (England & Wales) Administrative Court',
+ 'High Court (England & Wales) Admiralty Court',
+ 'High Court (England & Wales) Chancery Division',
+ 'High Court (England & Wales) Commercial Court',
+ 'High Court (England & Wales) Family Division',
+ 'High Court (England & Wales) Intellectual Property Enterprise Court',
+ "High Court (England & Wales) King's/Queen's Bench Division",
+ 'High Court (England & Wales) Mercantile Court',
+ 'High Court (England & Wales) Patents Court',
+ 'High Court (England & Wales) Senior Courts Costs Office',
+ 'High Court (England & Wales) Technology and Construction Court'
+]
+
 
 # %%
 #Define format functions for courts choice, and GPT questions
@@ -250,11 +296,14 @@ uk_courts ={'United Kingdom Supreme Court': 'uksc',
 'Tax Chamber' : 'ukftt%2Ftc'
 }
 
+uk_courts_list = list(uk_courts.keys())
+
 def court_choice(x):
     individual_choice = []
     if len(x) < 5:
-        for i in uk_courts.keys():
-            individual_choice.append(uk_courts[i])
+        pass #If want no court to be covered absent choice
+        #for i in uk_courts.keys():
+            #individual_choice.append(uk_courts[i])
     else:
         y = x.split(', ')
         for j in y:
@@ -484,7 +533,7 @@ def prior_GPT_uses(email_address, df_online):
     prior_use_counter = 0
     for i in df_online.index:
         if ((df_online.loc[i, "Your email address"] == email_address) 
-            and (int(df_online.loc[i, "Tick to use GPT"]) > 0) 
+            and (int(df_online.loc[i, "Use GPT"]) > 0) 
             and (len(df_online.loc[i, "Processed"])>0)
            ):
             prior_use_counter += 1
@@ -796,7 +845,7 @@ def run(df_master):
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
-    GPT_activation = int(df_master.loc[0, 'Tick to use GPT'])
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
             
@@ -864,130 +913,142 @@ def clear_cache():
 
 
 # %%
-#Create form
+#Initialize default_courts
 
-with st.form("GPT_input_form") as df_responses:
-    return_button = st.form_submit_button('RETURN to first page')
-    
-    st.header(f"You have selected to study :blue[judgments of select United Kingdom courts and tribunals].")
-    
-    #st.header("Judgment Search Criteria")
-    
-    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+if 'default_courts' not in st.session_state:
+    st.session_state['default_courts'] = None
+
+# %%
+#Create form for court selection
+
+return_button = st.button('RETURN to first page')
+
+st.header(f"You have selected to study :blue[judgments of select United Kingdom courts and tribunals].")
+
+#st.header("Judgment Search Criteria")
+
+st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit The National Archives at https://caselaw.nationalarchives.gov.uk/structured_search. This section mimics their case law search function.
 """)
-    st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+
+st.subheader("UK courts and tribunals to cover")
+
+default_on = st.checkbox('Prefill the Supreme Court, the Court of Appeal, and the High Court of England and Wales')
+
+if default_on:
+
+    st.session_state.default_courts = uk_courts_default_list
+
+else:
+    st.session_state.default_courts = None
+
+courts_entry = st.multiselect(label = 'Select the courts and tribunals to cover', options = uk_courts_list, default = st.session_state.default_courts)
     
-    st.subheader("UK courts and tribunals to cover")
+#st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
 
-    courts_entry = st.multiselect('Select the courts and tribunals to cover', uk_courts)
+#Search terms
 
-    st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
-    
-    #Search terms
-    
-    st.subheader("Your search terms")
+st.subheader("Your search terms")
 
-    query_entry = st.text_input('Free text')
+query_entry = st.text_input('Free text')
 
-    from_date_entry = st.date_input('From date', value = None, format="DD/MM/YYYY")
+from_date_entry = st.date_input('From date', value = None, format="DD/MM/YYYY")
 
-    to_date_entry = st.date_input('to date', value = None, format="DD/MM/YYYY")
+to_date_entry = st.date_input('to date', value = None, format="DD/MM/YYYY")
 
-    st.caption('For information about judgment availability, please visit https://caselaw.nationalarchives.gov.uk/structured_search.')
-    
-    judge_entry = st.text_input('Judge name')
+st.caption('For information about judgment availability, please visit https://caselaw.nationalarchives.gov.uk/structured_search.')
 
-    party_entry = st.text_input('Party name')
-    
-    judgments_counter_bound_entry = judgments_counter_bound
+judge_entry = st.text_input('Judge name')
 
-    st.markdown("""You can preview the judgments returned by your search terms on the National Archives after you have entered some search terms.
+party_entry = st.text_input('Party name')
+
+judgments_counter_bound_entry = judgments_counter_bound
+
+st.markdown("""You can preview the judgments returned by your search terms on the National Archives after you have entered some search terms.
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-    """)
-    
-    preview_button = st.form_submit_button('PREVIEW on the National Archives (in a popped up window)')
+""")
 
-    st.header("Judgment Metadata Collection")
-    
-    st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the names of the parties and so on. 
-    
+preview_button = st.button('PREVIEW on the National Archives (in a popped up window)')
+
+st.subheader("Judgment metadata collection")
+
+st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the names of the parties and so on. 
+
 Case name and medium neutral citation are always included with your results.
 """)
-    
-    meta_data_entry = st.checkbox('Tick to include metadata in your results', value = False)
+
+meta_data_entry = st.checkbox('Include metadata', value = False)
 
 
-    st.header("Use GPT as Your Research Assistant")
+st.header("Use GPT as your research assistant")
 
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
-    st.markdown("**:orange[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
+st.markdown("**:orange[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
 
-    st.markdown("""Please consider trying the Empirical Legal Research Kickstarter without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
+st.markdown("""Please consider trying the Empirical Legal Research Kickstarter without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
 """)
-    
-    gpt_activation_entry = st.checkbox('Tick to use GPT', value = False)
 
-    st.markdown("""You must enter your name and email address if you wish to use GPT.
+gpt_activation_entry = st.checkbox('Use GPT', value = False)
+
+#if gpt_activation_entry:
+st.markdown("""You must enter your name and email address if you wish to use GPT.
 """)
-    #    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
+#    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
 #To obtain an API key, first sign up for an account with OpenAI at 
 #https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
 #""")
-    
-    name_entry = st.text_input("Your name")
-    email_entry = st.text_input("Your email address")
+
+name_entry = st.text_input("Your name")
+email_entry = st.text_input("Your email address")
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
-    st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
+st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
 
-    st.subheader("Enter your question(s) for GPT")
-    
-    st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
+st.subheader("Enter your question(s) for GPT")
+
+st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
 
 GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).
 
 You may enter at most 1000 characters here.
-    """)
-
-    gpt_questions_entry = st.text_area("", height= 200, max_chars=1000) 
-
-    st.caption("Answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, the model will be instructed to 'read' up to approximately 11,726 words from each judgment.")
-
-
-    st.header("Consent")
-
-    st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
-""")
-    
-    consent =  st.checkbox('Yes, I agree.', value = False)
-
-    st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
 """)
 
-    st.header("Next Steps")
+gpt_questions_entry = st.text_area("", height= 200, max_chars=1000) 
 
-    st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+st.caption("Answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, the model will be instructed to 'read' up to approximately 11,726 words from each judgment.")
+
+st.header("Consent")
+
+st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
+""")
+
+consent =  st.checkbox('Yes, I agree.', value = False)
+
+st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
+""")
+
+st.header("Next steps")
+
+st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
-    
+
 """)
 
-    run_button = st.form_submit_button('RUN the program')
+run_button = st.button('RUN the program')
 
-    keep_button = st.form_submit_button('DOWNLOAD your form responses')
+keep_button = st.button('DOWNLOAD your form responses')
 
-    reset_button = st.form_submit_button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the program afresh.")
+reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
 
 #Display need resetting message if necessary
 if 'need_resetting' in st.session_state:
-    #if st.session_state.need_resetting == 1:
+#if st.session_state.need_resetting == 1:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-    
-
 
 # %%
 #Create placeholder download buttons if previous responses and results in st.session_state:
@@ -1107,6 +1168,9 @@ if run_button:
 
         st.warning('You must enter some search terms.')
 
+    elif len(courts_entry) == 0:
+        st.write('Please select at least one court to cover.')
+        
     elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
         st.warning('You must enter a valid email address to use GPT.')
 
@@ -1120,10 +1184,10 @@ if run_button:
             
             st.session_state['need_resetting'] = 1
             
-    #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
+    #elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
        # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
         
-    #elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
+    #elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
         #st.write("You must enter a valid API key for GPT.")
     
     else:
@@ -1226,6 +1290,9 @@ if keep_button:
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
+
+    elif len(courts_entry) == 0:
+        st.write('Please select at least one court to cover.')
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')

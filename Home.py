@@ -36,9 +36,9 @@ st.set_page_config(
 
 # %% editable=true slideshow={"slide_type": ""}
 #List of sources of information
-sources_list = ["Judgments of select New South Wales courts", 
+sources_list = ["Judgments of the New South Wales courts and tribunals", 
                 "Judgments of the Federal Court of Australia", 
-                "Judgments of select United Kingdom courts and tribunals", 
+                "Judgments of the United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
                 "Your own files", 
@@ -75,11 +75,10 @@ else:
 # %% editable=true slideshow={"slide_type": ""}
 #Create form
 
-with st.form("GPT_input_form") as df_responses:
-    st.title("The Empirical Legal Research Kickstarter")
-    st.header("An Anglo-Australian Pilot")
-    
-    st.markdown("""*The Empirical Legal Research Kickstarter* is a web-based program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
+st.title("The Empirical Legal Research Kickstarter")
+st.header("An Anglo-Australian Pilot")
+
+st.markdown("""*The Empirical Legal Research Kickstarter* is a web-based program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
 
 This pilot version can automatically
 
@@ -93,9 +92,9 @@ This program can also process your own files or spreadsheet of data.
 
 **Complete this form to kickstart your project :green[for free]!** The results of the abovementioned tasks will be available for download.
 """)
-    st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please send any enquiries to Ben at ben.chen@sydney.edu.au.')
+st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please send any enquiries to Ben at ben.chen@sydney.edu.au.')
 
-    st.header("Start")
+st.header("Start")
 
 #    st.write("This program may not work on a mobile device or a tablet. Please use a desktop or a laptop.")
 
@@ -103,11 +102,11 @@ This program can also process your own files or spreadsheet of data.
 
 #    st.subheader("What would you like to study?")
 
-    st.markdown("""What would you like to study?""")
-    source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
+st.markdown("""What would you like to study?""")
+source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
-    
-    next_button = st.form_submit_button('Next')
+
+next_button = st.button('Next')
 
 
 # %% [markdown]

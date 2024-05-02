@@ -151,6 +151,40 @@ nsw_courts_positioning = ["Placeholder", "Children's Court",
 #Default courts
 nsw_default_courts = ["Court of Appeal", "Court of Criminal Appeal", "Supreme Court"]
 
+# %%
+#List of NSW tribunals
+
+nsw_tribunals = ['Administrative Decisions Tribunal (Appeal Panel)',
+ 'Administrative Decisions Tribunal (Divisions)',
+ 'Civil and Administrative Tribunal (Administrative and Equal Opportunity Division)',
+ 'Civil and Administrative Tribunal (Appeal Panel)',
+ 'Civil and Administrative Tribunal (Consumer and Commercial Division)',
+ 'Civil and Administrative Tribunal (Enforcement)',
+ 'Civil and Administrative Tribunal (Guardianship Division)',
+ 'Civil and Administrative Tribunal (Occupational Division)',
+ 'Dust Diseases Tribunal',
+ 'Equal Opportunity Tribunal',
+ 'Fair Trading Tribunal',
+ 'Legal Services Tribunal',
+ 'Medical Tribunal',
+ 'Transport Appeal Boards']
+
+nsw_tribunals_positioning = ['Placeholder',
+ 'Administrative Decisions Tribunal (Appeal Panel)',
+ 'Administrative Decisions Tribunal (Divisions)',
+ 'Civil and Administrative Tribunal (Administrative and Equal Opportunity Division)',
+ 'Civil and Administrative Tribunal (Appeal Panel)',
+ 'Civil and Administrative Tribunal (Consumer and Commercial Division)',
+ 'Civil and Administrative Tribunal (Enforcement)',
+ 'Civil and Administrative Tribunal (Guardianship Division)',
+ 'Civil and Administrative Tribunal (Occupational Division)',
+ 'Dust Diseases Tribunal',
+ 'Equal Opportunity Tribunal',
+ 'Fair Trading Tribunal',
+ 'Legal Services Tribunal',
+ 'Medical Tribunal',
+ 'Transport Appeal Boards']
+
 
 # %%
 #function to create dataframe
@@ -160,16 +194,40 @@ def create_df():
     timestamp = datetime.now()
 
     #Personal info entries
+
+    name = ''
     
-    name = name_entry
-    email = email_entry
-    gpt_api_key = gpt_api_key_entry
+    email = ''
+
+    gpt_api_key = ''
+
+    try:
+        name = name_entry
+    except:
+        print('Name not entered')
+    
+    try:
+        email = email_entry
+    except:
+        print('Email not entered')
+
+    try:
+        gpt_api_key = gpt_api_key_entry
+    except:
+        print('API key not entered')
 
     #NSW court choices
-    
+
     courts_list = courts_entry
+
     courts = ', '.join(courts_list)
     
+    #NSW tribunals choices
+    
+    tribunals_list = tribunals_entry
+
+    tribunals = ', '.join(tribunals_list)
+
     #Search terms
     
     body = body_entry
@@ -223,14 +281,22 @@ def create_df():
 
     #GPT choice and entry
     gpt_activation_status = gpt_activation_entry
-    gpt_questions = gpt_questions_entry[0: 1000]
 
+    gpt_questions = ''
+    
+    try:
+        gpt_questions = gpt_questions_entry[0: 1000]
+    
+    except:
+        print('GPT questions not entered.')
+        
     new_row = {'Processed': '',
            'Timestamp': timestamp,
            'Your name': name, 
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
-           'New South Wales Courts to Cover': courts, 
+           'Courts': courts,
+           'Tribunals': tribunals, 
            'Free text': body, 
            'Case name': title, 
            'Before' : before, 
@@ -246,10 +312,11 @@ def create_df():
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your question(s) for GPT': gpt_questions, 
-            'Tick to use GPT': gpt_activation_status 
+            'Use GPT': gpt_activation_status 
           }
 
     df_master_new = pd.DataFrame(new_row, index = [0])
+
     
 #    df_master_new.to_json(current_dir + '/df_master.json', orient = 'split', compression = 'infer')
 #    df_master_new.to_excel(current_dir + '/df_master.xlsx', index=False)
@@ -268,19 +335,33 @@ def create_df():
 
 def court_choice(x):
     individual_choice = []
-    #if len(x) < 5:
-        #individual_choice = [3, 4, 13]
-    #else:
+
     if len(x) < 5:
-        for j in range(1, len(nsw_courts_positioning)):
-            individual_choice.append(j)
+        pass #If want to select no court absent any choice
+        #individual_choice = [3, 4, 13] #If want to select NSWSC, CA and CCA absent any choice
+        #for j in range(1, len(nsw_courts_positioning)):
+            #individual_choice.append(j) #If want to select all courts absent any choice
     else:
         y = x.split(', ')
         for i in y:
             individual_choice.append(nsw_courts_positioning.index(i))            
     
     return individual_choice
+
+def tribunal_choice(x):
+    individual_choice = []
+
+    if len(x) < 5:
+        pass #If want to select no tribunal absent any choice
+        #for j in range(1, len(nsw_tribunals_positioning)):
+            #individual_choice.append(j) #If want to select all tribunals absent any choice
+    else:
+        y = x.split(', ')
+        for i in y:
+            individual_choice.append(nsw_tribunals_positioning.index(i))            
     
+    return individual_choice
+
 #Create function to split a string into a list by line
 def split_by_line(x):
     y = x.split('\n')
@@ -425,7 +506,7 @@ def prior_GPT_uses(email_address, df_online):
     prior_use_counter = 0
     for i in df_online.index:
         if ((df_online.loc[i, "Your email address"] == email_address) 
-            and (int(df_online.loc[i, "Tick to use GPT"]) > 0) 
+            and (int(df_online.loc[i, "Use GPT"]) > 0) 
             and (len(df_online.loc[i, "Processed"])>0)
            ):
             prior_use_counter += 1
@@ -683,13 +764,17 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
 def run(df_master):
     df_master = df_master.fillna('')
     
-    #Apply split and format functions for court choice and GPT questions
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['New South Wales Courts to Cover'] = df_master['New South Wales Courts to Cover'].apply(court_choice)
+#    df_master['Information to Collect from Judgment Headnotes'] = df_master['Information to Collect from Judgment Headnotes'].apply(headnotes_choice)
+    df_master['Courts'] = df_master['Courts'].apply(court_choice)
+    df_master['Tribunals'] = df_master['Tribunals'].apply(court_choice)
     df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: answers_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
     
-    #Combining catchwords into new column
+    
+    #Do search
+
     
     search_dict = {'body': df_master.loc[0, 'Free text']}
     search_dict.update({'title': df_master.loc[0, 'Case name']})
@@ -703,15 +788,11 @@ def run(df_master):
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
     df_master.loc[0, 'SearchCriteria']=[search_dict]
-    
-    #Do search
-    
-    #Create judgments file
-    judgments_file = []
-    
+
     #Conduct search
     
-    query = Search(courts=df_master.loc[0, 'New South Wales Courts to Cover'], 
+    query = Search(courts=df_master.loc[0, 'Courts'], 
+                   tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
                    title = df_master.loc[0, "SearchCriteria"]['title'], 
                    before = df_master.loc[0, "SearchCriteria"]['before'], 
@@ -723,12 +804,16 @@ def run(df_master):
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
-                   pause = 0
+                   pause = scraper_pause
                   )
-    
+
+
+    #Create judgments file
+    judgments_file = []
+
     #Counter to limit search results to append
     counter = 0
-    
+
     #Go through search results
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
@@ -747,7 +832,6 @@ def run(df_master):
             
         else:
             break
-
 
     
     #Create and export json file with search results
@@ -807,7 +891,7 @@ def run(df_master):
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
-    GPT_activation = int(df_master.loc[0, 'Tick to use GPT'])
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
     
     questions_json = df_master.loc[0, 'questions_json']
             
@@ -874,7 +958,9 @@ def search_url(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['New South Wales Courts to Cover'] = df_master['New South Wales Courts to Cover'].apply(court_choice)
+    df_master['Courts'] = df_master['Courts'].apply(court_choice)
+    df_master['Tribunals'] = df_master['Tribunals'].apply(tribunal_choice)
+
     #df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: answers_characters_bound].apply(split_by_line)
     #df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
     
@@ -895,7 +981,8 @@ def search_url(df_master):
 
     #Conduct search
     
-    query = Search(courts=df_master.loc[0, 'New South Wales Courts to Cover'], 
+    query = Search(courts=df_master.loc[0, 'Courts'], 
+                   tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
                    title = df_master.loc[0, "SearchCriteria"]['title'], 
                    before = df_master.loc[0, "SearchCriteria"]['before'], 
@@ -934,144 +1021,172 @@ def clear_cache():
 
 
 # %%
+#Initialize default_courts and tribunals
+
+if 'default_courts' not in st.session_state:
+    st.session_state['default_courts'] = None
+
+if 'default_tribunals' not in st.session_state:
+    st.session_state['default_tribunals'] = None
+
+
+# %%
 #Create form
 
-with st.form("GPT_input_form") as df_responses:
-    return_button = st.form_submit_button('RETURN to first page')
-    
-    st.header("You have selected to study :blue[judgments of select New South Wales courts].")
+return_button = st.button('RETURN to first page')
 
-    #Search terms
+st.header("You have selected to study :blue[judgments of the New South Wales courts and tribunals].")
 
-    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+#Search terms
+
+st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
 For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/search/advanced. This section mimics their Advanced Search function.
 """)
-    st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to Cover more judgments, courts, or tribunals.')
+st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to Cover more judgments.')
 
-    st.subheader("New South Wales courts to cover")
+st.subheader("NSW courts and tribunals to cover")
 
-    courts_entry = st.multiselect(label = 'Select the courts to cover', options = nsw_courts, default = nsw_default_courts)
+default_on_courts = st.checkbox('Prefill the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court')
 
-    st.caption(f"The {', the '.join(nsw_default_courts)} are selected by default. All courts listed in this menu will be covered if left blank.")
+if default_on_courts:
 
-    st.subheader("Your search terms")
+    st.session_state.default_courts = nsw_default_courts
 
-    catchwords_entry = st.text_input("Catchwords")
-    
-    body_entry = st.text_input("Free text (searches the entire judgment)") 
-    
-    title_entry = st.text_input("Case name")
-    
-    before_entry = st.text_input("Before")
+else:
+    st.session_state.default_courts = None
 
-    st.caption("Name of judge, commissioner, magistrate, member, registrar or assessor")
-    
-    party_entry = st.text_input("Party names")
-    
-    mnc_entry = st.text_input("Medium neutral citation")
+courts_entry = st.multiselect(label = 'Select the courts to cover', options = nsw_courts, default = st.session_state.default_courts)
 
-    st.caption("Must include square brackets eg [2022] NSWSC 922")
-    
-    startDate_entry = st.date_input("Decision date from (01/01/1999 the earliest)", value = None, format="DD/MM/YYYY")
 
-    st.caption("Pre-1999 decisions are usually not available at NSW Caselaw and will unlikely to be collected (see https://www.caselaw.nsw.gov.au/about).")
-    
-    endDate_entry = st.date_input("Decision date to", value = None,  format="DD/MM/YYYY")
-    
-    fileNumber_entry = st.text_input("File number")
-    
-    legislationCited_entry = st.text_input("Legislation cited")
-    
-    casesCited_entry = st.text_input("Cases cited")
+#st.write(len(courts_entry))
+#st.write(courts_entry)
 
-    #Cap number of judgments
+tribunals_entry = st.multiselect(label = 'Select the tribunals to cover', options = nsw_tribunals, default = st.session_state.default_tribunals)
+
+#st.write(len(tribunals_entry))
+#st.write(tribunals_entry)
+
+#st.caption(f"All courts and tribunals listed in these menus will be covered if left blank.")
+
+st.subheader("Your search terms")
+
+catchwords_entry = st.text_input("Catchwords")
+
+body_entry = st.text_input("Free text (searches the entire judgment)") 
+
+title_entry = st.text_input("Case name")
+
+before_entry = st.text_input("Before")
+
+st.caption("Name of judge, commissioner, magistrate, member, registrar or assessor")
+
+party_entry = st.text_input("Party names")
+
+mnc_entry = st.text_input("Medium neutral citation")
+
+st.caption("Must include square brackets eg [2022] NSWSC 922")
+
+startDate_entry = st.date_input("Decision date from (01/01/1999 the earliest)", value = None, format="DD/MM/YYYY")
+
+st.caption("Pre-1999 decisions are usually not available at NSW Caselaw and will unlikely to be collected (see https://www.caselaw.nsw.gov.au/about).")
+
+endDate_entry = st.date_input("Decision date to", value = None,  format="DD/MM/YYYY")
+
+fileNumber_entry = st.text_input("File number")
+
+legislationCited_entry = st.text_input("Legislation cited")
+
+casesCited_entry = st.text_input("Cases cited")
+
+#Cap number of judgments
 #    judgments_counter_bound_entry = st.checkbox('Untick to collect potentially more than 10 judgments', value = True)
 
-    judgments_counter_bound_entry = judgments_counter_bound
+judgments_counter_bound_entry = judgments_counter_bound
 
-    st.markdown("""You can preview the judgments returned by your search terms on NSW Caselaw after you have entered some search terms.
+st.markdown("""You can preview the judgments returned by your search terms on NSW Caselaw after you have entered some search terms.
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-    """)
-    
-    preview_button = st.form_submit_button('PREVIEW on NSW Caselaw (in a popped up window)')
+""")
+
+preview_button = st.button('PREVIEW on NSW Caselaw (in a popped up window)')
 
 #    headnotes_entry = st.multiselect("Please select", headnotes_choices)
 
-    st.header("Judgment Metadata Collection")
-    
-    st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
-    
+st.subheader("Judgment metadata collection")
+
+st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+
 Case name and medium neutral citation are always included with your results.
 """)
-    
-    meta_data_entry = st.checkbox('Tick to include metadata in your results', value = False)
 
-    st.header("Use GPT as Your Research Assistant")
+meta_data_entry = st.checkbox('Include metadata', value = False)
+
+st.header("Use GPT as your research assistant")
 
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
-    st.markdown("**:orange[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
+st.markdown("**:orange[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
 
-    st.markdown("""Please consider trying the Empirical Legal Research Kickstarter without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
+st.markdown("""Please consider trying the Empirical Legal Research Kickstarter without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
 """)
-    
-    gpt_activation_entry = st.checkbox('Tick to use GPT', value = False)
 
-    st.markdown("""You must enter your name and email address if you wish to use GPT.
+gpt_activation_entry = st.checkbox('Use GPT', value = False)
+
+#if gpt_activation_entry:
+st.markdown("""You must enter your name and email address if you wish to use GPT.
 """)
-    #    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
+#    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
 #To obtain an API key, first sign up for an account with OpenAI at 
 #https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
 #""")
-    
-    name_entry = st.text_input("Your name")
-    email_entry = st.text_input("Your email address")
+
+name_entry = st.text_input("Your name")
+email_entry = st.text_input("Your email address")
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
-    st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
+st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
 
-    st.subheader("Enter your question(s) for GPT")
-    
-    st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
+st.subheader("Enter your question(s) for GPT")
+
+st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
 
 GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).
 
 You may enter at most 1000 characters here.
-    """)
-
-    gpt_questions_entry = st.text_area("", height= 200, max_chars=1000) 
-
-    st.caption("Answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, the model will be instructed to 'read' up to approximately 11,726 words from each judgment.")
-
-    st.header("Consent")
-
-    st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
-""")
-    
-    consent =  st.checkbox('Yes, I agree.', value = False)
-
-    st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
 """)
 
-    st.header("Next Steps")
+gpt_questions_entry = st.text_area("", height= 200, max_chars=1000) 
 
-    st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+st.caption("Answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, the model will be instructed to 'read' up to approximately 11,726 words from each judgment.")
+
+st.header("Consent")
+
+st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
+""")
+
+consent =  st.checkbox('Yes, I agree.', value = False)
+
+st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
+""")
+
+st.header("Next steps")
+
+st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
-    
+
 """)
 
-    run_button = st.form_submit_button('RUN the program')
+run_button = st.button('RUN the program')
 
-    keep_button = st.form_submit_button('DOWNLOAD your form responses')
+keep_button = st.button('DOWNLOAD your form responses')
 
-    reset_button = st.form_submit_button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the program afresh.")
+reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
 
 #Display need resetting message if necessary
 if 'need_resetting' in st.session_state:
-    #if st.session_state.need_resetting == 1:
+#if st.session_state.need_resetting == 1:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
 
@@ -1176,6 +1291,9 @@ if run_button:
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
+    
+    elif (len(courts_entry) == 0) and (len(tribunals_entry) == 0):
+        st.write('Please select at least one court or tribunal to cover.')
 
     elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
         st.warning('You must enter a valid email address to use GPT.')
@@ -1183,14 +1301,12 @@ if run_button:
     elif int(consent) == 0:
         st.warning("You must click on 'Yes, I agree.' to run the program.")
 
-   # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
+   # elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
         #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
-   # elif ((int(df_master.loc[0]["Tick to use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
+   # elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
        # st.write("You must enter a valid API key for GPT.")
 
-#    elif len(courts_entry) == 0:
-#        st.write('Please select at least one court.')
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         
@@ -1303,6 +1419,9 @@ if keep_button:
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
+
+    elif (len(courts_entry) == 0) and (len(tribunals_entry) == 0):
+        st.write('Please select at least one court or tribunal to cover.')
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
