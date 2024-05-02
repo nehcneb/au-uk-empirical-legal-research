@@ -768,7 +768,7 @@ def run(df_master):
      
 #    df_master['Information to Collect from Judgment Headnotes'] = df_master['Information to Collect from Judgment Headnotes'].apply(headnotes_choice)
     df_master['Courts'] = df_master['Courts'].apply(court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(court_choice)
+    df_master['Tribunals'] = df_master['Tribunals'].apply(tribunal_choice)
     df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: answers_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
     
