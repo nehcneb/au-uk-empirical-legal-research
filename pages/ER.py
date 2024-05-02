@@ -813,11 +813,11 @@ You can also download a record of your responses.
     
 """)
 
-    run_button = st.form_submit_button('RUN the Empirical Legal Research Kickstarter')
+    run_button = st.form_submit_button('RUN the program')
 
     keep_button = st.form_submit_button('DOWNLOAD your form responses')
 
-    reset_button = st.form_submit_button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the Empirical Legal Research Kickstarter afresh.")
+    reset_button = st.form_submit_button(label='RESET to process new search terms or questions', type = 'primary',  help = "Press to run the program afresh.")
 
 #Display need resetting message if necessary
 if 'need_resetting' in st.session_state:
@@ -934,7 +934,7 @@ if run_button:
         st.warning('You must enter a valid email address to use GPT.')
 
     elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the Empirical Legal Research Kickstarter.")
+        st.warning("You must click on 'Yes, I agree.' to run the program.")
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
