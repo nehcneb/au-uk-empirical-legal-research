@@ -254,6 +254,9 @@ if 'df_individual_output' in st.session_state:
 
     st.session_state['df_to_analyse'] = st.session_state.df_individual_output
 
+    st.success('Your spreadsheet has been imported. Please scroll down.')
+
+
 if 'df_individual_output' not in st.session_state:
 
     st.markdown("""**:green[Please upload a spreadsheet.]** Supported formats: CSV, XLSX, JSON.""")
@@ -275,7 +278,22 @@ if 'df_individual_output' not in st.session_state:
 
         st.session_state["df_to_analyse"]=df_uploaded
 
+        st.success('Your spreadsheet has been imported. Please scroll down.')
+
+st.subheader("Consent")
+
+st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
+""")
+
+consent =  st.checkbox('Yes, I agree.', value = False)
+
+st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
+""")
+
+
 if 'df_to_analyse' in st.session_state:
+
+    st.subheader('Your spreadsheet')
 
     df_to_analyse = st.session_state.df_to_analyse
 
@@ -321,6 +339,11 @@ if 'df_to_analyse' in st.session_state:
         st.warning(error_to_show)
         
         print(f'Error: {e}.')
+
+    if 'df_individual_output' in st.session_state:
+        if st.button('UPLOAD a spreadsheet instead'):
+            clear_cache()
+            st.rerun()
     
     #Choice of AI
 #    st.subheader("Which AI would you like to use?")
@@ -340,7 +363,7 @@ if 'df_to_analyse' in st.session_state:
 
     # Generate output
 
-    st.warning('A low-cost AI will respond to your instruction(s). Please be cautious.')
+    #st.warning('A low-cost AI will respond to your instruction(s). Please be cautious.')
 
     if st.button("ASK the AI"):
         if prompt:

@@ -40,6 +40,7 @@ import os
 import PyPDF2
 import io
 
+
 #Streamlit
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
@@ -669,7 +670,7 @@ intro_for_GPT = [{"role": "system", "content": role_content}]
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens(questions_json, judgment_json, API_key):
+def GPT_json_tokens(questions_json, judgment_json): #, API_key): #If want to make API key a parameter
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
@@ -736,7 +737,7 @@ def GPT_json_tokens(questions_json, judgment_json, API_key):
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_key):
+def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, API_key): #If want to make API key a parameter
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -785,7 +786,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_ke
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_output_list = GPT_json_tokens(questions_json, judgment_json, API_key) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = GPT_json_tokens(questions_json, judgment_json) #, API_key): #If want to make API key a parameter #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
         
         else:
@@ -910,7 +911,7 @@ def run(df_master):
     
     #Instruct GPT
     
-    API_key = df_master.loc[0, 'Your GPT API key'] 
+    #API_key = df_master.loc[0, 'Your GPT API key'] 
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -919,7 +920,7 @@ def run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, API_key)
+    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation) #, API_key): #If want to make API key a parameter
 
     df_updated.pop('Judgment')
 
@@ -1207,7 +1208,7 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 # %%
 if preview_button:
     
-    gpt_api_key_entry = ''
+    #gpt_api_key_entry = ''
 
     df_master = create_df()
 
@@ -1243,7 +1244,7 @@ if run_button:
 
         st.warning('You must enter some search terms.')
         
-    elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
+    #elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
         st.warning('You must enter a valid email address to use GPT.')
     
     elif int(consent) == 0:
@@ -1271,37 +1272,17 @@ If this program produces an error or an unexpected spreadsheet, please double-ch
         with st.spinner('Running...'):
 
             try:
-        
-                #Using own GPT
-        
-                gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
-            
+                
+                #gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
+
+                API_key = st.secrets["openai"]["gpt_api_key"]
+
                 #Create spreadsheet of responses
                 df_master = create_df()
-        
-                #Upload placeholder record onto Google sheet
-                #df_plaeceholdeer = pd.concat([df_google, df_master])
-                #conn.update(worksheet="CTH", data=df_plaeceholdeer, )
-        
-                #Obtain google spreadsheet
-            
-                #conn = st.connection("gsheets_cth", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
             
                 #Produce results
                 df_individual_output = run(df_master)
         
-                #Keep record on Google sheet
-                
-                df_master["Processed"] = datetime.now()
-        
-                df_master.pop("Your GPT API key")
-                
-                #df_to_update = pd.concat([df_google, df_master])
-                
-                #conn.update(worksheet="CTH", data=df_to_update, )
         
                 #Keep results in session state
                 if "df_individual_output" not in st.session_state:
@@ -1347,10 +1328,24 @@ If this program produces an error or an unexpected spreadsheet, please double-ch
                 )
         
                 st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+
+                #Keep record on Google sheet
+                
+                df_master["Processed"] = datetime.now()
+        
+                df_master.pop("Your GPT API key")
+                
+                #conn.update(worksheet="CTH", data=df_to_update, )            
+                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+                #df_google = conn.read()
+                #df_google = df_google.fillna('')
+                #df_google=df_google[df_google["Processed"]!='']
+                #df_to_update = pd.concat([df_google, df_master])
+                #conn.update(worksheet="CTH", data=df_to_update, )
+            
             except Exception as e:
                 st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
-                st.error(f'Error: {e}.')
-
+                st.exception(e)
 
 
 # %%
@@ -1374,7 +1369,7 @@ if keep_button:
     else:
         #Using own GPT API key here
     
-        gpt_api_key_entry = ''
+        #gpt_api_key_entry = ''
         
         df_master = create_df()
     
