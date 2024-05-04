@@ -222,19 +222,22 @@ def clear_cache():
 
 
 # %%
+#Initialize default values
+
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages from history on app rerun
-
-# %%
 #Initialize instructions counter
 if 'instruction_left' not in st.session_state:
 
     st.session_state["instruction_left"] = instructions_bound
 
-# %%
+#Initialize default show code status
+
+if 'explain_status' not in st.session_state:
+    st.session_state["explain_status"] = False
+
 #Initalize page_from:
 if 'page_from' not in st.session_state:
     st.session_state['page_from'] = 'Home.py'
@@ -360,10 +363,20 @@ if 'df_to_analyse' in st.session_state:
 
     # Generate output
 
-    #st.warning('A low-cost AI will respond to your instruction(s). Please be cautious.')
+    #Explain 
+    code_show = st.toggle('Explain reasoning and show any code produced')
 
+    if code_show:
+        st.session_state.explain_status = True
+    else:
+        st.session_state.explain_status = False
+        
     if st.button("ASK the AI"):
         if prompt:
+            if int(consent) == 0:
+                st.warning("You must click on 'Yes, I agree.' to run the program.")
+                quit()
+                
             #Keep record of prompt
             st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
             
@@ -382,6 +395,17 @@ if 'df_to_analyse' in st.session_state:
                     
                     st.write(response)
 
+                    #Keep record of response
+                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
+
+                    if st.session_state.explain_status is True:
+
+                        explanation = agent.explain()
+                        st.write(explanation)
+                        
+                        #Keep record of explanation
+                        st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": explanation})
+
                     #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
 
                     #Display number of instructionsl left
@@ -389,16 +413,16 @@ if 'df_to_analyse' in st.session_state:
                     instructions_left_text = f"You have :orange[{st.session_state.instruction_left}] instructions left."
                     st.write(instructions_left_text)
 
-                    #Keep record of response
-                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
+                    #Keep record of instructions left
                     st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": instructions_left_text})
+
 
             else:
                 no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
                 st.write(no_more_instructions)
                 
                 #Keep record of response
-                st.session_state.messages.append({"role": "assistant", "content": no_more_instructions})
+                st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": no_more_instructions})
         else:
             st.warning("Please enter some instruction.")
 
