@@ -13,9 +13,6 @@
 # ---
 
 # %%
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/pages/AI.py
-
-# %%
 #Preliminary modules
 import base64 
 import json

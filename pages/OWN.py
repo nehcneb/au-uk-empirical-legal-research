@@ -13,9 +13,6 @@
 #     name: python3
 # ---
 
-# %%
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/pages/OWN.py
-
 # %% [markdown]
 # # Preliminaries
 
