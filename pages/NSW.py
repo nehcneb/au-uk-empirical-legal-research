@@ -1056,13 +1056,13 @@ if default_on_courts:
 else:
     st.session_state.default_courts = None
 
-courts_entry = st.multiselect(label = 'Select the courts to cover', options = nsw_courts, default = st.session_state.default_courts)
+courts_entry = st.multiselect(label = 'Select or type in the courts to cover', options = nsw_courts, default = st.session_state.default_courts)
 
 
 #st.write(len(courts_entry))
 #st.write(courts_entry)
 
-tribunals_entry = st.multiselect(label = 'Select the tribunals to cover', options = nsw_tribunals, default = st.session_state.default_tribunals)
+tribunals_entry = st.multiselect(label = 'Select or type in the tribunals to cover', options = nsw_tribunals, default = st.session_state.default_tribunals)
 
 #st.write(len(tribunals_entry))
 #st.write(tribunals_entry)

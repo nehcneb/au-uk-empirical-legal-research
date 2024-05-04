@@ -944,7 +944,7 @@ if default_on:
 else:
     st.session_state.default_courts = None
 
-courts_entry = st.multiselect(label = 'Select the courts and tribunals to cover', options = uk_courts_list, default = st.session_state.default_courts)
+courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to cover', options = uk_courts_list, default = st.session_state.default_courts)
     
 #st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
 
@@ -1269,7 +1269,7 @@ If this program produces an error or an unexpected spreadsheet, please double-ch
             except Exception as e:
                 st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
                 st.exception(e)
-                
+
 
 # %%
 if keep_button:
