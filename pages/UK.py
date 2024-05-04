@@ -1190,10 +1190,8 @@ if run_button:
     
     else:
 
-        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.
+        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.""")
 
-If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.
-""")
         with st.spinner('Running...'):
 
             try:
