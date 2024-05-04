@@ -946,7 +946,7 @@ else:
 
 courts_entry = st.multiselect(label = 'Select the courts and tribunals to cover', options = uk_courts_list, default = st.session_state.default_courts)
     
-#st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
+st.write("All courts and tribunals listed in this menu will be covered if left blank.")
 
 #Search terms
 
