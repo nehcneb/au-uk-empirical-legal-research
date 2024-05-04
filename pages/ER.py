@@ -999,8 +999,11 @@ If this program produces an error (in red) or an unexpected spreadsheet, please 
                 #df_plaeceholdeer = pd.concat([df_google, df_master])
                 #conn.update(worksheet="UK", data=df_plaeceholdeer, )
 
-                #Produce results
+                 #Produce results
+        
                 df_individual_output = run(df_master)
+        
+                #Keep record on Google sheet
         
                 #Keep results in session state
                 if "df_individual_output" not in st.session_state:
