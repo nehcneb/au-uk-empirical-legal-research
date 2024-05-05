@@ -13,6 +13,9 @@
 # ---
 
 # %%
+#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/pages/AI.py
+
+# %%
 #Preliminary modules
 import base64 
 import json
@@ -109,7 +112,7 @@ def convert_df_to_excel(df):
 # %%
 #Default choice of AI
 
-default_ai = 'GPT' #'BambooLLM'
+default_ai = default_ai = 'BambooLLM' #'GPT'
 
 if 'ai_choice' not in st.session_state:
     st.session_state['ai_choice'] = default_ai
@@ -149,6 +152,7 @@ def ai_model_setting(ai_choice):
 
 # %%
 #AI model descript
+#NOT in use
 
 def ai_model_description(ai_choice):
     
@@ -156,19 +160,35 @@ def ai_model_description(ai_choice):
     
     if ai_choice == 'GPT': #llm.type == 'GPT':
     
-        model_description = "GPT model gpt-3.5-turbo-0125 will respond to your instructions."
+        model_description = "GPT model gpt-3.5-turbo-0125 is selected by default. This model can explain its reasoning."
     
     if ai_choice == 'BambooLLM': #llm.type == 'Bamboollm':
     
-        model_description = 'BambooLLM will respond to your instruction(s). This model is developed by PandasAI with data analysis in mind (see https://docs.pandas-ai.com/en/latest/LLMs/llms/).'
+        model_description = 'BambooLLM is selected by default. This model is developed by PandasAI with data analysis in mind (see https://docs.pandas-ai.com/en/stable/).'
 
     return model_description
     
 
 
 # %%
-agent_description = 'You are a data analyst. Your main goal is to help non-technical users to clean and analyze data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
+def ai_model_printing(ai_choice, gpt_model_choice):
 
+    output = 'BambooLLM'
+
+    if ai_choice == 'GPT':
+        
+        output = 'GPT model ' + gpt_model_choice
+
+    return output
+
+
+# %%
+#Agent description
+
+agent_description = 'You are a data analyst. Your main goal is to help users to clean, analyze and visualize data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
+
+#If want to minimize technicality
+#agent_description = 'You are a data analyst. Your main goal is to help non-technical users to clean, analyze and visualize data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -228,19 +248,37 @@ def clear_cache():
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+#Initalize page_from:
+if 'page_from' not in st.session_state:
+    st.session_state['page_from'] = 'Home.py'
+
+#Initialize default instructions bound
+
+default_instructions_bound = 10
+
+print(f"The default maximum number of instructions per thread is {default_instructions_bound}.\n")
+
+#Initialize instructions cap
+
+if 'instructions_bound' not in st.session_state:
+    st.session_state['instructions_bound'] = default_instructions_bound
+
 #Initialize instructions counter
+
 if 'instruction_left' not in st.session_state:
 
-    st.session_state["instruction_left"] = instructions_bound
+    st.session_state["instruction_left"] = st.session_state.instructions_bound
 
 #Initialize default show code status
 
 if 'explain_status' not in st.session_state:
     st.session_state["explain_status"] = False
 
-#Initalize page_from:
-if 'page_from' not in st.session_state:
-    st.session_state['page_from'] = 'Home.py'
+#Initilize default gpt model
+
+if 'gpt_model' not in st.session_state:
+    st.session_state['gpt_model'] = "gpt-3.5-turbo-0125"
+
 
 # %%
 if st.button('RETURN to previous page'):
@@ -280,6 +318,18 @@ if 'df_individual_output' not in st.session_state:
 
         st.success('Your spreadsheet has been imported. Please scroll down.')
 
+st.subheader('Choose an AI')
+
+st.markdown("""Please choose an AI to respond to your instructions.
+""")
+
+st.markdown("""GPT can explain its reasoning. BambooLLM is developed with data analysis in mind (see https://docs.pandas-ai.com/en/stable/).""")
+
+ai_choice = st.selectbox(label = f'{default_ai} is selected by default.', options = ai_list, index=0)
+
+
+st.session_state['ai_choice'] = ai_choice
+
 st.subheader("Consent")
 
 st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
@@ -289,7 +339,6 @@ consent =  st.checkbox('Yes, I agree.', value = False)
 
 st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
 """)
-
 
 if 'df_to_analyse' in st.session_state:
 
@@ -316,7 +365,7 @@ if 'df_to_analyse' in st.session_state:
     #Try to avoid conflict between PyArrow and numpy by converting columns with both lists and null values to string
 
     try:
-    
+        
         st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
     except Exception as e:
@@ -344,33 +393,31 @@ if 'df_to_analyse' in st.session_state:
         if st.button('UPLOAD a spreadsheet instead'):
             clear_cache()
             st.rerun()
-    
-    #Choice of AI
-#    st.subheader("Which AI would you like to use?")
 
     llm = ai_model_setting(st.session_state.ai_choice)
     
-#    sdf = SmartDataframe(st.session_state.edited_df, config = {'llm': llm})
-    agent = Agent(st.session_state.edited_df, config={"llm": llm}, memory_size=instructions_bound, description = agent_description)
+    agent = Agent(st.session_state.edited_df, config={"llm": llm, "verbose": True}, memory_size=st.session_state.instructions_bound, description = agent_description)
+    #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True})
     
     st.subheader(f'Enter your instruction(s) for {st.session_state.ai_choice}')
 
-    st.write(':green[You may give at most 10 instructions in sequence.] Each instruction must not exceed 1000 characters.')
+    st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instruction(s).')
     
-    prompt = st.text_area(ai_model_description(st.session_state.ai_choice), height= 200, max_chars=1000) 
+    prompt = st.text_area('Each instruction must not exceed 1000 characters.', height= 200, max_chars=1000) 
 
     st.caption('During the pilot stage, the number of instructions and the number of characters per instruction are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to give more instructions or longer instructions.')
 
+    #Generate explain button
+    if st.session_state.ai_choice == 'GPT':
+        code_show = st.toggle('Explain reasoning and show any code produced')
+    
+        if code_show:
+            st.session_state.explain_status = True
+        else:
+            st.session_state.explain_status = False
+
     # Generate output
 
-    #Explain 
-    code_show = st.toggle('Explain reasoning and show any code produced')
-
-    if code_show:
-        st.session_state.explain_status = True
-    else:
-        st.session_state.explain_status = False
-        
     if st.button("ASK the AI"):
         if prompt:
             if int(consent) == 0:
@@ -383,8 +430,7 @@ if 'df_to_analyse' in st.session_state:
             if st.session_state.instruction_left > 0:
                 # call pandas_ai.run(), passing dataframe and prompt
                 with st.spinner("Running..."):
-                    #response = sdf.chat(prompt)
-
+                    
                     response = agent.chat(prompt)
 
                     st.write('If you see an error, please modify your instruction or :red[RESET] the AI and try again.') # or :red[RESET] the AI.')
@@ -401,16 +447,28 @@ if 'df_to_analyse' in st.session_state:
                     if st.session_state.explain_status is True:
 
                         explanation = agent.explain()
+                        st.write('**Explanation**')
                         st.write(explanation)
-                        
+
                         #Keep record of explanation
                         st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": explanation})
 
+                        try:
+                            code = response.last_code_generated
+                            st.write(code)
+                            
+                            #Keep record of code
+                            st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": code})
+                        
+                        except Exception as e:
+                            print('No code generated.')
+                            print(e)
+                            
                     #st.write('*:red[An experimental AI produced this response. Please be cautious.]*')
 
                     #Display number of instructionsl left
                     st.session_state.instruction_left -= 1
-                    instructions_left_text = f"You have :orange[{st.session_state.instruction_left}] instructions left."
+                    instructions_left_text = f"*You have :orange[{st.session_state.instruction_left}] instructions left.*"
                     st.write(instructions_left_text)
 
                     #Keep record of instructions left
