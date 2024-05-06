@@ -464,7 +464,7 @@ if 'df_to_analyse' in st.session_state:
                             pdf_to_download = io.BytesIO()
                             png_to_download = io.BytesIO()
                             
-                            plt.savefig(pdf_to_download, format = 'pdf')
+                            plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
                             
                             pdf_button = ste.download_button(
                                label="DOWNLOAD the figure as a PDF",
@@ -473,7 +473,7 @@ if 'df_to_analyse' in st.session_state:
                                mime="image/pdf"
                             )
 
-                            plt.savefig(png_to_download, format = 'png')
+                            plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
                             
                             png_button = ste.download_button(
                                label="DOWNLOAD the figure as a PNG",
