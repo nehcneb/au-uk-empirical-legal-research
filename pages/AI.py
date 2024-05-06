@@ -113,8 +113,8 @@ def convert_df_to_excel(df):
 # %%
 #Default choice of AI
 
-#default_ai = 'GPT'
-default_ai = 'BambooLLM'
+default_ai = 'GPT'
+#default_ai = 'BambooLLM'
 
 if 'ai_choice' not in st.session_state:
     st.session_state['ai_choice'] = default_ai
