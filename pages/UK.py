@@ -103,16 +103,20 @@ st.set_page_config(
    initial_sidebar_state="collapsed",
 )
 
+# %% [markdown]
+# # UK Courts search engine
+
 # %%
 #Pause between judgment scraping
 
-scraper_pause = 10
+#scraper_pause = 5
 
-print(f"\nThe pause between judgment scraping is {scraper_pause} second.")
+#print(f"The pause between judgment scraping is {scraper_pause} second.\n")
 
+scraper_pause_mean = int((15-5)/2)
 
-# %% [markdown]
-# # UK Courts search engine
+print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
+
 
 # %%
 #function to create dataframe
@@ -465,7 +469,7 @@ def meta_judgment_dict(judgment_url_xml):
 
     #Get judgment
 
-    pause.seconds(scraper_pause)
+    pause.seconds(np.random.randint(5, 15))
 
     html_link = judgment_url_xml.replace('/data.xml', '')
     page_html = requests.get(html_link)
@@ -824,7 +828,7 @@ def run(df_master):
 #        judgments_all_info = { **meta_data, **judgment_dict}
 #        judgments_file.append(judgments_all_info)
         judgments_file.append(judgment_dict)
-        pause.seconds(scraper_pause)
+        pause.seconds(np.random.randint(5, 15))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
