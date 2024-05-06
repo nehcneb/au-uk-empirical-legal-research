@@ -82,9 +82,13 @@ print(f"\nNumber of judgments to scrape per request is capped at {judgments_coun
 
 #Pause between judgment scraping
 
-scraper_pause = 5
+#scraper_pause = 5
 
-print(f"\nThe pause between judgment scraping is {scraper_pause} second.")
+#print(f"The pause between judgment scraping is {scraper_pause} second.\n")
+
+scraper_pause_mean = int((15-5)/2)
+
+print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 
 # %%
@@ -892,7 +896,7 @@ def run(df_master):
 #        judgments_all_info = { **meta_data, **judgment_dict}
 #        judgments_file.append(judgments_all_info)
         judgments_file.append(judgment_dict)
-        pause.seconds(scraper_pause)
+        pause.seconds(np.random.randint(5, 15))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

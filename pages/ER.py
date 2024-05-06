@@ -111,9 +111,13 @@ st.set_page_config(
 # %%
 #Pause between judgment scraping
 
-scraper_pause = 10
+#scraper_pause = 5
 
-print(f"\nThe pause between judgment scraping is {scraper_pause} second.")
+#print(f"The pause between judgment scraping is {scraper_pause} second.\n")
+
+scraper_pause_mean = int((15-5)/2)
+
+print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 
 # %% [markdown]
@@ -300,7 +304,7 @@ def search_results_to_case_link_pairs(url_search_results, judgment_counter_bound
                     case_link_pairs.append(dict_object)
                     counter = counter + 1
 
-            pause.seconds(scraper_pause)
+            pause.seconds(np.random.randint(5, 15))
             
         else:
             break
@@ -364,7 +368,7 @@ def meta_judgment_dict(case_link_pair):
     judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
     judgment_dict['Judgment'] = judgment_text(case_link_pair)
 
-#    pause.seconds(scraper_pause)
+#    pause.seconds(np.random.randint(5, 15))
     
     #try:
      #   judgment_text = str(soup.find_all('content'))
@@ -690,7 +694,7 @@ def run(df_master):
 
         judgment_dict = meta_judgment_dict(case_link_pair)
         judgments_file.append(judgment_dict)
-        pause.seconds(scraper_pause)
+        pause.seconds(np.random.randint(5, 15))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

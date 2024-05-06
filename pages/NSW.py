@@ -465,31 +465,35 @@ GPT_output_cost = 1/1000*0.0015
 
 GPT_use_bound = 3
 
-print(f"\nPrior number of GPT uses is capped at {GPT_use_bound} times.")
+print(f"Prior number of GPT uses is capped at {GPT_use_bound} times.\n")
 
 #Upperbound on the length of questions for GPT
 
 answers_characters_bound = 1000
 
-print(f"\nQuestions for GPT are capped at {answers_characters_bound} characters.")
+print(f"Questions for GPT are capped at {answers_characters_bound} characters.\n")
 
 #Upperbound on number of judgments to scrape
 
 judgments_counter_bound = 10
 
-print(f"\nNumber of judgments to scrape per request is capped at {judgments_counter_bound}.")
+print(f"Number of judgments to scrape per request is capped at {judgments_counter_bound}.\n")
 
 #Pause between judgment scraping
 
-scraper_pause = 5
+#scraper_pause = 5
 
-print(f"\nThe pause between judgment scraping is {scraper_pause} second.")
+#print(f"The pause between judgment scraping is {scraper_pause} second.\n")
+
+scraper_pause_mean = int((15-5)/2)
+
+print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 #Lowerbound on length of judgment text to proccess, in tokens
 
 judgment_text_lower_bound = 1000
 
-print(f"\nThe lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.")
+print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 
 
@@ -804,7 +808,7 @@ def run(df_master):
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
-                   pause = scraper_pause
+                   pause = np.random.randint(5, 15)
                   )
 
 
@@ -828,7 +832,7 @@ def run(df_master):
             judgments_file.append(decision_v)
             counter +=1
     
-            pause.seconds(scraper_pause)
+            pause.seconds(np.random.randint(5, 15))
             
         else:
             break
@@ -866,7 +870,7 @@ def run(df_master):
                 except:
                     pass
             
-            pause.seconds(scraper_pause)
+            pause.seconds(np.random.randint(5, 15))
 
     #Rename column titles
     
@@ -994,7 +998,7 @@ def search_url(df_master):
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
-                   pause = scraper_pause
+                   pause = np.random.randint(5, 15)
                   )
     return query.url
 
