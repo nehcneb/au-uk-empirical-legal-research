@@ -329,7 +329,7 @@ if 'df_individual_output' not in st.session_state:
 
 st.subheader('Choose an AI')
 
-st.markdown("""Please choose an AI to respond to your instructions.
+st.markdown("""Please choose an AI to help analyse your spreadsheet.
 """)
 
 st.markdown("""GPT can explain its reasoning. BambooLLM is developed with data analysis in mind (see https://docs.pandas-ai.com/en/stable/).""")
