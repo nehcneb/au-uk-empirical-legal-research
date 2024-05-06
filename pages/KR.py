@@ -237,7 +237,7 @@ method_types = ['auto', 'title', 'boolean', 'any', 'all']
 def kr_search(query= '', 
               method = ''
              ):
-    base_url = "https://www8.austlii.edu.au/cgi-bin/sinosrch.cgi?"
+    base_url = "https://www.austlii.edu.au/cgi-bin/sinosrch.cgi?"
 
     method_index = methods_list.index(method)
     method_type = method_types[method_index]
@@ -277,7 +277,7 @@ def search_results_to_case_link_pairs(url_search_results, judgment_counter_bound
 #        if ((counter <= judgment_counter_bound) and ('AustLII' in str(link)) and ('cases/EngR' in str(link)) and ('LawCite' not in str(link))):
             case = link.get_text()
             link_direct = link.get('href')
-            link = 'https://www8.austlii.edu.au' + link_direct.split('?context')[0]
+            link = 'https://www.austlii.edu.au' + link_direct.split('?context')[0]
             dict_object = { 'case': case, 'link_direct': link}
             case_link_pairs.append(dict_object)
             counter = counter + 1
@@ -294,7 +294,7 @@ def search_results_to_case_link_pairs(url_search_results, judgment_counter_bound
 #                if ((counter <= judgment_counter_bound) and ('AustLII' in str(extra_link)) and ('cases/EngR' in str(extra_link)) and ('LawCite' not in str(extra_link))):
                     case = extra_link.get_text()
                     extra_link_direct = extra_link.get('href')
-                    extra_link = 'https://www8.austlii.edu.au' + extra_link_direct.split('?context')[0]
+                    extra_link = 'https://www.austlii.edu.au' + extra_link_direct.split('?context')[0]
                     dict_object = { 'case': case, 'link_direct': extra_link}
                     case_link_pairs.append(dict_object)
                     counter = counter + 1
@@ -760,7 +760,7 @@ st.header(f"You have selected to study :blue[the Kercher Reports].")
 
 st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
-For search tips, please visit AustLII at https://www8.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
+For search tips, please visit AustLII at https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
 """)
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
