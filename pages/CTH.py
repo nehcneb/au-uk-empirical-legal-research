@@ -823,12 +823,15 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, AP
             
             GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
-        #Create GPT question headings and append answers to individual spreadsheets
+        #Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
 
         for question_index in question_keys:
             question_heading = question_index + ': ' + questions_json[question_index]
             df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
-
+            
+            if 'Your answer to the question with index GPT question' in answers_dict[question_index]:
+                df_individual.loc[judgment_index, question_heading] = f'Error for judgment {str(int(judgment_index)+2)}, GPT question {question_index}. Please try again.'
+        
         #Calculate and append GPT finish time and time difference to individual df
         GPT_finish_time = datetime.now()
         
