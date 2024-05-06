@@ -54,6 +54,7 @@ from pandasai import Agent
 from pandasai.llm import BambooLLM
 from pandasai.llm.openai import OpenAI
 import pandasai as pai
+from pandasai.responses.streamlit_response import StreamlitResponse
 
 #Excel
 from io import BytesIO
@@ -112,13 +113,16 @@ def convert_df_to_excel(df):
 # %%
 #Default choice of AI
 
-default_ai = 'GPT' #'BambooLLM'
+#default_ai = 'GPT'
+default_ai = 'BambooLLM'
 
 if 'ai_choice' not in st.session_state:
     st.session_state['ai_choice'] = default_ai
 
 ai_list_raw = ['BambooLLM', 'GPT']
+
 ai_list = ['0', '1']
+
 for ai in ai_list_raw:
     if ai == default_ai:
         ai_list[0] = ai
@@ -185,10 +189,15 @@ def ai_model_printing(ai_choice, gpt_model_choice):
 # %%
 #Agent description
 
-agent_description = 'You are a data analyst. Your main goal is to help users to clean, analyze and visualize data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
+default_agent_description = 'You are a data analyst. Your main goal is to help clean, analyse and visualise data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
 
+#visualisation = ' Everytime you are given a question or an instruction, try to provide the code to visualise your answer using Matplotlib.'
+
+visualisation = ' If you are asked to visualise your answer, try to provide the code for visualisation using Matplotlib.'
+
+agent_description = default_agent_description + visualisation
 #If want to minimize technicality
-#agent_description = 'You are a data analyst. Your main goal is to help non-technical users to clean, analyze and visualize data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
+#agent_description = 'You are a data analyst. Your main goal is to help non-technical users to clean, analyse and visualise data. You will be given a spreadsheet of data. Each column starting with "GPT question" was previously entered by you. You will be given questions or instructions about the spreadsheet.'
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -327,7 +336,9 @@ st.markdown("""GPT can explain its reasoning. BambooLLM is developed with data a
 
 ai_choice = st.selectbox(label = f'{default_ai} is selected by default.', options = ai_list, index=0)
 
-
+if ai_choice:
+    pai.clear_cache()
+    
 st.session_state['ai_choice'] = ai_choice
 
 st.subheader("Consent")
@@ -396,8 +407,8 @@ if 'df_to_analyse' in st.session_state:
 
     llm = ai_model_setting(st.session_state.ai_choice)
     
-    agent = Agent(st.session_state.edited_df, config={"llm": llm, "verbose": True}, memory_size=st.session_state.instructions_bound, description = agent_description)
-    #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True})
+    agent = Agent(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse}, memory_size=st.session_state.instructions_bound, description = agent_description)
+    #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse}, description = agent_description)
     
     st.subheader(f'Enter your instruction(s) for {st.session_state.ai_choice}')
 
@@ -409,7 +420,7 @@ if 'df_to_analyse' in st.session_state:
 
     #Generate explain button
     if st.session_state.ai_choice == 'GPT':
-        code_show = st.toggle('Explain reasoning and show any code produced')
+        code_show = st.toggle('Explain reasoning')
     
         if code_show:
             st.session_state.explain_status = True
@@ -432,18 +443,49 @@ if 'df_to_analyse' in st.session_state:
                 with st.spinner("Running..."):
                     
                     response = agent.chat(prompt)
-
+                    
                     st.write('If you see an error, please modify your instruction or :red[RESET] the AI and try again.') # or :red[RESET] the AI.')
 
                     st.subheader(f'{st.session_state.ai_choice} Response')
-
                     st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
-                    
                     st.write(response)
 
                     #Keep record of response
                     st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
+                        
+                    #Check if any figure generated
+                    try:
+                        if plt.get_fignums():
+                            st.write('**Visualisation**')
+                            fig_to_plot = plt.gcf()
+                            st.pyplot(fig = fig_to_plot)
 
+                            #Enable downloading
+                            pdf_to_download = io.BytesIO()
+                            png_to_download = io.BytesIO()
+                            
+                            plt.savefig(pdf_to_download, format = 'pdf')
+                            
+                            pdf_button = ste.download_button(
+                               label="DOWNLOAD the figure as a PDF",
+                               data=pdf_to_download,
+                               file_name='Figure generated.pdf',
+                               mime="image/pdf"
+                            )
+
+                            plt.savefig(png_to_download, format = 'png')
+                            
+                            png_button = ste.download_button(
+                               label="DOWNLOAD the figure as a PNG",
+                               data=png_to_download,
+                               file_name='Figure generated.png',
+                               mime="image/png"
+                            )
+                    except Exception as e:
+                        print('An error with visualisation has occured.')
+                        print(e)
+
+                    #Explanations
                     if st.session_state.explain_status is True:
 
                         explanation = agent.explain()
@@ -495,7 +537,7 @@ if 'df_to_analyse' in st.session_state:
             #for instruction in instructions:
                 #st.write(instruction)
 
-    #Reset button, not particularly useful
+    #Reset button
     if st.button('RESET the AI', type = 'primary', help = "Press to engage with the AI afresh."):
         pai.clear_cache()
         #clear_cache()
