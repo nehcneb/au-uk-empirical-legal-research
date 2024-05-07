@@ -376,9 +376,8 @@ if 'df_to_analyse' in st.session_state:
     #Try to avoid conflict between PyArrow and numpy by converting columns with both lists and null values to string
 
     try:
-        st.session_state["edited_df"] = df_to_analyse
-        st.data_editor(st.session_state.edited_df,  column_config=link_heading_config)
-        
+        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+    
     except Exception as e:
 
         error_to_show = ''
@@ -393,9 +392,8 @@ if 'df_to_analyse' in st.session_state:
             df_to_analyse = df_to_analyse.astype(str)
 
             error_to_show = 'The non-textual data in your spreadsheet have been converted to text.'
-            
-        st.session_state["edited_df"] = df_to_analyse
-        st.data_editor(st.session_state.edited_df,  column_config=link_heading_config)
+                    
+        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
         
         st.warning(error_to_show)
         
@@ -429,6 +427,8 @@ if 'df_to_analyse' in st.session_state:
             st.session_state.explain_status = False
 
     # Generate output
+
+    st.warning('A low-cost AI will respond to your instruction(s). Please be cautious.')
 
     if st.button("ASK the AI"):
         if prompt:
