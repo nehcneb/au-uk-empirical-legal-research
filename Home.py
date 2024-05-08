@@ -13,17 +13,24 @@
 # ---
 
 # %% editable=true slideshow={"slide_type": ""}
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research/Home.py
+#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research-unlimited/Home.py
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Preliminaries
 
 # %% editable=true slideshow={"slide_type": ""}
-#Preliminary modules
-
 #Streamlit
 import streamlit as st
 
+
+# %%
+#Whether users are allowed to use their account
+from own_account import own_account_allowed
+
+if own_account_allowed() > 0:
+    print(f'By default, users are allowed to use their own account')
+else:
+    print(f'By default, users are NOT allowed to use their own account')
 
 # %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
@@ -33,6 +40,14 @@ st.set_page_config(
    layout="centered",
    initial_sidebar_state="collapsed",
 )
+
+# %%
+#Determine whether to allow user to use own account
+
+if own_account_allowed() > 0:
+    print(f'By default, users are allowed to use their own account')
+else:
+    print(f'By default, users are NOT allowed to use their own account')
 
 # %% editable=true slideshow={"slide_type": ""}
 #List of sources of information
@@ -47,26 +62,18 @@ sources_list = ["Judgments of the New South Wales courts and tribunals",
 
 
 # %% editable=true slideshow={"slide_type": ""}
-#Default values
-if 'name' in st.session_state:
-    default_name = st.session_state['name']
-else:
-    default_name = None
+#Initialize source and understanding
 
-if 'email' in st.session_state:
-    default_email = st.session_state['email']
-else:
-    default_email = None
-    
-if 'gpt_api_key' in st.session_state:
-    default_gpt_api_key = st.session_state['gpt_api_key']
-else:
-    default_gpt_api_key = None
+if 'source' not in st.session_state:
+    st.session_state['source'] = None
 
-if 'source' in st.session_state:
+if st.session_state.source:
     default_source_index = sources_list.index(st.session_state['source'])
 else:
     default_source_index = None
+
+if 'i_understand' not in st.session_state:
+    st.session_state['i_understand'] = False
 
 
 # %% [markdown]
@@ -90,21 +97,28 @@ This pilot version can automatically
 
 This program can also process your own files or spreadsheet of data.
 
-**Complete this form to kickstart your project :green[for free]!** The results of the abovementioned tasks will be available for download.
+**Complete this form to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
 """)
 st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please send any enquiries to Ben at ben.chen@sydney.edu.au.')
 
 st.header("Start")
 
-#    st.write("This program may not work on a mobile device or a tablet. Please use a desktop or a laptop.")
-
-#    browser_entry = st.checkbox('Yes, I understand.', value = False)
 
 #    st.subheader("What would you like to study?")
 
 st.markdown("""What would you like to study?""")
 source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
+
+if source_entry:
+
+    if source_entry != st.session_state.source:
+
+        st.session_state.i_understand = False
+    
+    st.warning(f"You must be able to evaluate the quality and accruacy of computer-generated information or data about {source_entry[0].lower()}{source_entry[1:]}. Do you understand?")
+
+    browser_entry = st.checkbox('Yes, I understand.', value = st.session_state['i_understand'])
 
 next_button = st.button('Next')
 
@@ -115,15 +129,18 @@ next_button = st.button('Next')
 # %% editable=true slideshow={"slide_type": ""}
 if next_button:
 
-#    if int(browser_entry) == 0:
-#        st.write('You must confirm that you understand this program may not work on a mobile device or a tablet.')
-
-#    elif source_entry == None:
     if source_entry == None:
 
         st.write('You must choose a source of information.')
 
+    elif browser_entry == False:
+        st.write('You must tick "Yes, I understand." to use this program.')
+
     else:
+
+        st.session_state.source = source_entry
+
+        st.session_state.i_understand = True
 
         st.session_state["page_from"] = "Home.py"
     

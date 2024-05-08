@@ -463,7 +463,7 @@ def gpt_output_cost(gpt_model):
 def tokens_cap(gpt_model):
     
     if gpt_model == "gpt-3.5-turbo-0125":
-        tokens_cap = int(16385 - 2500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
+        tokens_cap = int(16385 - 1500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
     
     if gpt_model == "gpt-4-turbo":
         tokens_cap = int(128000 - 6000) #For GPT-4-turbo, token limit covering both input and output is 128000, while the output limit is 4096.
@@ -704,6 +704,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
     
             df_individual.loc[file_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
 
+        
         else:
             answers_dict = {}    
             for q_index in question_keys:
@@ -1087,13 +1088,6 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
         if int(GPT_activation) > 0:
             GPT_file_triple = GPT_b64_json_tokens(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
-
-            #Calculate and append GPT finish time and time difference to individual df
-            GPT_finish_time = datetime.now()
-            
-            GPT_time_difference = GPT_finish_time - GPT_start_time
-    
-            df_individual.loc[file_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
         
         else:
             answers_dict = {}    
@@ -1130,6 +1124,13 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
         for question_index in question_keys:
             question_heading = question_index + ': ' + questions_json[question_index]
             df_individual.loc[file_index, question_heading] = answers_dict[question_index]
+
+        #Calculate and append GPT finish time and time difference to individual df
+        GPT_finish_time = datetime.now()
+        
+        GPT_time_difference = GPT_finish_time - GPT_start_time
+
+        df_individual.loc[file_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
 
         #Calculate GPT costs
 
@@ -1303,9 +1304,11 @@ st.caption('During the pilot stage, the languages supported are limited. Please 
 # %%
 st.header("Use GPT as your research assistant")
 
+#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
+
 st.markdown("**:green[Would you like GPT to answer questions about each file uploaded by you?]**")
 
-st.markdown("""Please consider trying this program without asking GPT any questions first. Doing so will produce a rough cost estimate for using GPT.
+st.markdown("""Please consider trying this program without asking GPT any questions first. You can obtain a cost estimate for using GPT.
 """)
 
 gpt_activation_entry = st.checkbox('Use GPT', value = False)

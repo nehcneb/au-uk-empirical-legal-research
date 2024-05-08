@@ -41,7 +41,6 @@ import urllib.request
 import PyPDF2
 import io
 
-
 #Streamlit
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
@@ -59,6 +58,15 @@ from google.oauth2 import service_account
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
+
+# %%
+#Whether users are allowed to use their account
+from own_account import own_account_allowed
+
+if own_account_allowed() > 0:
+    print(f'By default, users are allowed to use their own account')
+else:
+    print(f'By default, users are NOT allowed to use their own account')
 
 # %%
 #Get current directory
@@ -88,7 +96,7 @@ excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Pri
 
 def convert_df_to_excel(df):
     output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
     df.to_excel(writer, index=False, sheet_name='Sheet1')
     workbook = writer.book
     workbook.set_properties({"author": excel_author, "comments": excel_description})
@@ -108,6 +116,9 @@ st.set_page_config(
    initial_sidebar_state="collapsed",
 )
 
+# %% [markdown]
+# # English Reports search engine
+
 # %%
 #Pause between judgment scraping
 
@@ -119,9 +130,6 @@ scraper_pause_mean = int((15-5)/2)
 
 print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
-
-# %% [markdown]
-# # English Reports search engine
 
 # %%
 #function to create dataframe
@@ -154,13 +162,14 @@ def create_df():
     except:
         print('API key not entered')
 
-    #Judgment counter bound
+    #Own account status
+    own_account = st.session_state.own_account
     
-    judgments_counter_bound_ticked = judgments_counter_bound_entry
-    if int(judgments_counter_bound_ticked) > 0:
-        judgments_counter_bound = 10
-    else:
-        judgments_counter_bound = 10000
+    #Judgment counter bound
+    judgments_counter_bound = st.session_state.judgments_counter_bound
+
+    #GPT enhancement
+    gpt_enhancement = st.session_state.gpt_enhancement_entry
 
     #GPT choice and entry
     gpt_activation_status = gpt_activation_entry
@@ -168,7 +177,7 @@ def create_df():
     gpt_questions = ''
     
     try:
-        gpt_questions = gpt_questions_entry[0: 1000]
+        gpt_questions = gpt_questions_entry[0: question_characters_bound]
     
     except:
         print('GPT questions not entered.')
@@ -182,7 +191,9 @@ def create_df():
            'Find (method)': method_entry,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your question(s) for GPT': gpt_questions, 
-            'Use GPT': gpt_activation_status 
+            'Use GPT': gpt_activation_status,
+              'Use own account': own_account,
+            'Use latest version of GPT' : gpt_enhancement
           }
 
     df_master_new = pd.DataFrame(new_row, index = [0])
@@ -382,30 +393,90 @@ def meta_judgment_dict(case_link_pair):
 # # GPT functions and parameters
 
 # %%
-#Module and costs
+#Check validity of API key
 
-GPT_model = "gpt-3.5-turbo-0125"
+def is_api_key_valid(key_to_check):
+    openai.api_key = key_to_check
+    
+    try:
+        completion = openai.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[{"role": "user", "content": 'Who is Taylor Swift?'}], 
+            max_tokens = 5
+        )
+    except:
+        return False
+    else:
+        return True
 
-GPT_input_cost = 1/1000*0.0005 
-GPT_output_cost = 1/1000*0.0015
+
+# %%
+#Module, costs and upperbounds
+
+#Initialize default GPT settings
+
+if 'gpt_model' not in st.session_state:
+    st.session_state['gpt_model'] = "gpt-3.5-turbo-0125"
 
 #Upperbound on number of engagements with GPT
 
-GPT_use_bound = 3
+#GPT_use_bound = 3
 
-print(f"\nPrior number of GPT uses is capped at {GPT_use_bound} times.")
+#print(f"\nPrior number of GPT uses is capped at {GPT_use_bound} times.")
+
+#Define input and output costs, token caps and maximum characters
+#each token is about 4 characters
+
+def gpt_input_cost(gpt_model):
+    if gpt_model == "gpt-3.5-turbo-0125":
+        gpt_input_cost = 1/1000000*0.5
+        
+    if gpt_model == "gpt-4-turbo":
+        gpt_input_cost = 1/1000000*10
+    return gpt_input_cost
+
+def gpt_output_cost(gpt_model):
+    if gpt_model == "gpt-3.5-turbo-0125":
+        gpt_output_cost = 1/1000000*0.5
+        
+    if gpt_model == "gpt-4-turbo":
+        gpt_output_cost = 1/1000000*10
+        
+    return gpt_output_cost
+
+def tokens_cap(gpt_model):
+    
+    if gpt_model == "gpt-3.5-turbo-0125":
+        tokens_cap = int(16385 - 2500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
+    
+    if gpt_model == "gpt-4-turbo":
+        tokens_cap = int(128000 - 6000) #For GPT-4-turbo, token limit covering both input and output is 128000, while the output limit is 4096.
+
+    return tokens_cap
+    
+#Initialize API key
+if 'gpt_api_key' not in st.session_state:
+
+    st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
 #Upperbound on the length of questions for GPT
+#if 'question_characters_bound' not in st.session_state:
+#    st.session_state['question_characters_bound'] = 1000
 
-answers_characters_bound = 1000
+question_characters_bound = 1000
 
-print(f"\nQuestions for GPT are capped at {answers_characters_bound} characters.")
+print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
 
 #Upperbound on number of judgments to scrape
 
-judgments_counter_bound = 10
+#Default judgment counter bound
 
-print(f"\nNumber of judgments to scrape per request is capped at {judgments_counter_bound}.")
+default_judgment_counter_bound = 10
+
+if 'judgments_counter_bound' not in st.session_state:
+    st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
+
+print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
 
 
 # %%
@@ -442,8 +513,8 @@ def check_edu_gov(email_address):
 
 # %%
 #Tokens estimate preliminaries
-encoding = tiktoken.get_encoding("cl100k_base")
-encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+#encoding = tiktoken.get_encoding("cl100k_base")
+#encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
 #Tokens estimate function
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -454,15 +525,15 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 #Define judgment input function for JSON approach
 
 #Token limit covering both GTP input and GPT output is 16385, each token is about 4 characters
-tokens_cap = int(16385 - 3000)
+#tokens_cap(gpt_model) = int(16385 - 3000)
 
-def judgment_prompt_json(judgment_json):
+def judgment_prompt_json(judgment_json, gpt_model):
                 
     judgment_content = 'Based on the metadata and judgment in the following JSON:  """'+ str(judgment_json) + '""",'
 
     judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
     
-    if judgment_content_tokens <= tokens_cap:
+    if judgment_content_tokens <= tokens_cap(gpt_model):
         
         return judgment_content
 
@@ -470,7 +541,7 @@ def judgment_prompt_json(judgment_json):
         
         meta_data_len = judgment_content_tokens - num_tokens_from_string(judgment_json['Judgment'], "cl100k_base")
         
-        judgment_chars_capped = int((tokens_cap - meta_data_len)*4)
+        judgment_chars_capped = int((tokens_cap(gpt_model) - meta_data_len)*4)
         
         judgment_string_trimmed = judgment_json['Judgment'][ :int(judgment_chars_capped/2)] + judgment_json['Judgment'][-int(judgment_chars_capped/2): ]
 
@@ -493,12 +564,12 @@ intro_for_GPT = [{"role": "system", "content": role_content}]
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens(questions_json, judgment_json): #, API_key): #If want to make API key a parameter
+def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
     
-    judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json) + 'you will be given questions to answer in JSON form.'}]
+    judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model) + 'you will be given questions to answer in JSON form.'}]
         
     #Create answer format
     
@@ -528,7 +599,7 @@ def GPT_json_tokens(questions_json, judgment_json): #, API_key): #If want to mak
     try:
         #completion = client.chat.completions.create(
         completion = openai.chat.completions.create(
-            model=GPT_model,
+            model=gpt_model,
             messages=messages_for_GPT, 
             response_format={"type": "json_object"}
         )
@@ -560,12 +631,12 @@ def GPT_json_tokens(questions_json, judgment_json): #, API_key): #If want to mak
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, API_key): #If want to make API key a parameter
+def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
     # The output is a new JSON for the relevant respondent with new columns re:
-        # "Judgment length in tokens (up to 13385 given to GPT)"
+        # f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
@@ -584,13 +655,13 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, AP
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
-        df_individual.loc[judgment_index, "Judgment length in tokens (up to 13385 given to GPT)"] = judgment_tokens       
+        df_individual.loc[judgment_index, f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
 
         #Indicate whether judgment truncated
         
         df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = ''       
         
-        if judgment_tokens <= tokens_cap:
+        if judgment_tokens <= tokens_cap(gpt_model):
             
             df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'No'
             
@@ -609,9 +680,16 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, AP
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_output_list = GPT_json_tokens(questions_json, judgment_json) #, API_key): #If want to make API key a parameter #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = GPT_json_tokens(questions_json, judgment_json, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
-        
+
+            #Calculate and append GPT finish time and time difference to individual df
+            GPT_finish_time = datetime.now()
+            
+            GPT_time_difference = GPT_finish_time - GPT_start_time
+    
+            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
+
         else:
             answers_dict = {}    
             for q_index in question_keys:
@@ -623,7 +701,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, AP
 
             #Calculate capped judgment tokens
 
-            judgment_capped_tokens = num_tokens_from_string(judgment_prompt_json(judgment_json), "cl100k_base")
+            judgment_capped_tokens = num_tokens_from_string(judgment_prompt_json(judgment_json, gpt_model), "cl100k_base")
 
             #Calculate questions tokens and cost
 
@@ -642,26 +720,18 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation): #, AP
             
             GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
-
-        #Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
+    	#Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
 
         for question_index in question_keys:
             question_heading = question_index + ': ' + questions_json[question_index]
             df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
             
-            if 'Your answer to the question with index GPT question' in answers_dict[question_index]:
+            if 'Your answer to the question with index GPT question' in str(answers_dict[question_index]):
                 df_individual.loc[judgment_index, question_heading] = f'Error for judgment {str(int(judgment_index)+2)}, GPT question {question_index}. Please try again.'
         
-        #Calculate and append GPT finish time and time difference to individual df
-        GPT_finish_time = datetime.now()
-        
-        GPT_time_difference = GPT_finish_time - GPT_start_time
-
-        df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
-
         #Calculate GPT costs
 
-        GPT_cost = GPT_output_list[1]*GPT_output_cost + GPT_output_list[2]*GPT_input_cost
+        GPT_cost = GPT_output_list[1]*gpt_output_cost(gpt_model) + GPT_output_list[2]*gpt_input_cost(gpt_model)
 
         #Calculate and append GPT cost to individual df
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
@@ -678,7 +748,7 @@ def run(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: answers_characters_bound].apply(split_by_line)
+    df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
     
     #Create judgments file
@@ -706,17 +776,23 @@ def run(df_master):
     df_individual = pd.read_json(json_individual)
     
     #Instruct GPT
+
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
     
-    #API_key = df_master.loc[0, 'Your GPT API key'] 
-    
+    #GPT model
+
+    if df_master.loc[0, 'Use latest version of GPT'] == True:
+        gpt_model = "gpt-4-turbo"
+    else:        
+        gpt_model = "gpt-3.5-turbo-0125"
+        
     #apply GPT_individual to each respondent's judgment spreadsheet
     
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation) #, API_key): #If want to make API key a parameter
+    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model)
 
     df_updated.pop('Judgment')
     
@@ -739,6 +815,9 @@ def search_url(df_master):
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
+# %% [markdown]
+# ## Function definitions
+
 # %%
 #Function to open url
 def open_page(url):
@@ -751,18 +830,58 @@ def open_page(url):
 
 
 # %%
-def clear_cache():
+def clear_cache_except_validation_df_master():
     keys = list(st.session_state.keys())
+    if 'gpt_api_key_validity' in keys:
+        keys.remove('gpt_api_key_validity')
+    if 'df_master' in keys:
+        keys.remove('df_master')
     for key in keys:
         st.session_state.pop(key)
 
+
+# %% [markdown]
+# ## Initialize session states
+
+# %%
+#Initialize default values
+
+if 'gpt_enhancement_entry' not in st.session_state:
+    st.session_state['gpt_enhancement_entry'] = False
+
+if 'gpt_api_key_validity' not in st.session_state:
+    st.session_state['gpt_api_key_validity'] = False
+
+if 'own_account' not in st.session_state:
+    st.session_state['own_account'] = False
+
+# %%
+#Try to carry over previously entered personal details    
+try:
+    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
+except:
+    st.session_state['gpt_api_key_entry'] = ''
+
+try:
+    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
+except:
+    st.session_state['name_entry'] = ''
+
+try:
+    st.session_state['email_entry'] = st.session_state.df_master.loc[0, 'Your email address']
+    
+except:
+    st.session_state['email_entry'] = ''
+
+# %% [markdown]
+# ## Form before AI
 
 # %%
 #Create form
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[judgments of the English Reports].")
+st.header(f"You have selected to study :blue[the English Reports].")
 
 #Search terms
 
@@ -780,8 +899,6 @@ method_entry = st.selectbox('Find', methods_list, index=1)
 
 query_entry = st.text_input('Enter search query')
     
-judgments_counter_bound_entry = judgments_counter_bound
-
 st.markdown("""You can preview the judgments returned by your search terms on CommonLII after you have entered some search terms.
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
@@ -790,53 +907,115 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
 preview_button = st.button('PREVIEW on CommonLII (in a popped up window)')
 
 
+# %% [markdown]
+# ## Form for AI and account
+
+# %%
 st.header("Use GPT as your research assistant")
 
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
-st.markdown("**:orange[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
+st.markdown("**:green[Would you like GPT to answer questions about each judgment returned by your search terms?]**")
 
-st.markdown("""Please consider trying the Empirical Legal Research Kickstarter without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
+st.markdown("""Please consider trying this program without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
 """)
 
 gpt_activation_entry = st.checkbox('Use GPT', value = False)
 
-#if gpt_activation_entry:
-st.markdown("""You must enter your name and email address if you wish to use GPT.
-""")
-#    st.markdown("""You must enter an API key if you wish to use GPT to analyse more than 10 judgments. 
-#To obtain an API key, first sign up for an account with OpenAI at 
-#https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
-#""")
-
-name_entry = st.text_input("Your name")
-email_entry = st.text_input("Your email address")
-#    gpt_api_key_entry = st.text_input("Your GPT API key")
-
-st.caption("Released by OpenAI, GPT is a family of large language models (ie a generative AI that works on language). Engagement with GPT is costly and funded by a grant.  Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
+st.caption("Use of GPT is costly and funded by a grant. For the model used by default, Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
 
 st.subheader("Enter your question(s) for GPT")
 
 st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
 
 GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).
-
-You may enter at most 1000 characters here.
 """)
 
-gpt_questions_entry = st.text_area("", height= 200, max_chars=1000) 
+gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
-st.caption("Answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, the model will be instructed to 'read' up to approximately 11,726 words from each judgment.")
+st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each judgment.")
 
+if own_account_allowed() > 0:
+
+    st.subheader(':orange[Enhance program capabilities]')
+    
+    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of judgments to process? You can do so with your own GPT account.
+    """)
+    
+    own_account_entry = st.toggle('Use my own GPT account')
+    
+    if own_account_entry:
+    
+        st.session_state["own_account"] = True
+    
+        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage at https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
+    """)
+            
+        name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
+        
+        email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
+        
+        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
+        
+        valdity_check = st.button('VALIDATE your API key')
+    
+        if valdity_check:
+            
+            api_key_valid = is_api_key_valid(gpt_api_key_entry)
+                    
+            if api_key_valid == False:
+                st.session_state['gpt_api_key_validity'] = False
+                st.error('Your API key is not valid.')
+                
+            else:
+                st.session_state['gpt_api_key_validity'] = True
+                st.success('Your API key is valid.')
+    
+        st.markdown("""**:green[You can use the latest version of GPT model (gpt-4-turbo),]** which is :red[20 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
+        
+        gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
+        st.caption('For more on pricing for different GPT models, please see https://openai.com/api/pricing.')
+        
+        if gpt_enhancement_entry == True:
+        
+            st.session_state.gpt_model = "gpt-4-turbo"
+            st.session_state.gpt_enhancement_entry = True
+
+        else:
+            
+            st.session_state.gpt_model = "gpt-3.5-turbo-0125"
+            st.session_state.gpt_enhancement_entry = False
+        
+        st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
+        
+        judgments_counter_bound_entry = round(st.number_input(label = 'Enter the maximum number of judgments up to 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
+    
+        st.session_state.judgments_counter_bound = judgments_counter_bound_entry
+    
+        st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
+    
+    else:
+        
+        st.session_state["own_account"] = False
+    
+        st.session_state.gpt_model = "gpt-3.5-turbo-0125"
+
+        st.session_state.gpt_enhancement_entry = False
+
+        st.session_state.judgments_counter_bound = default_judgment_counter_bound
+
+
+# %% [markdown]
+# ## Consent and next steps
+
+# %%
 st.header("Consent")
 
-st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more of Ben Chen's electronic devices and/or one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to GPT for the same purpose should you choose to use GPT.
-""")
+st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
 consent =  st.checkbox('Yes, I agree.', value = False)
 
-st.markdown("""If you do not agree, then please feel free to close this form. Any data or information this form provides will neither be received by Ben Chen nor be sent to GPT.
-""")
+st.markdown("""If you do not agree, then please feel free to close this form.""")
 
 st.header("Next steps")
 
@@ -845,6 +1024,14 @@ st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter
 You can also download a record of your responses.
 
 """)
+
+#Warning
+if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
+    st.warning('A low-cost AI will answer your question(s). Please be cautious.')
+
+if st.session_state.gpt_model == "gpt-4-turbo":
+    st.warning('An expensive AI will answer your question(s). Please be cautious.')
+
 
 run_button = st.button('RUN the program')
 
@@ -856,6 +1043,11 @@ reset_button = st.button(label='RESET to start afresh', type = 'primary',  help 
 if 'need_resetting' in st.session_state:
 #if st.session_state.need_resetting == 1:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+
+
+
+# %% [markdown]
+# ## Previous responses and outputs
 
 # %%
 #Create placeholder download buttons if previous responses and results in st.session_state:
@@ -871,7 +1063,7 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 
     st.subheader('Looking for your previous form responses?')
    
-    responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
+    responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
 
     csv = convert_df_to_csv(df_master)
     
@@ -904,7 +1096,7 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 
     st.subheader('Looking for your previous results?')
 
-    output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
+    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
 
     csv_output = convert_df_to_csv(df_individual_output)
 
@@ -943,8 +1135,6 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 # %%
 if preview_button:
 
-    #gpt_api_key_entry = ''
-
     df_master = create_df()
 
     judgments_url = search_url(df_master)
@@ -960,9 +1150,6 @@ if run_button:
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
-        
-    elif (('@' not in str(email_entry)) & (int(gpt_activation_entry) > 0)):
-        st.warning('You must enter a valid email address to use GPT.')
 
     elif int(consent) == 0:
         st.warning("You must click on 'Yes, I agree.' to run the program.")
@@ -977,28 +1164,38 @@ if run_button:
     #elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
        # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
-    #elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (len(df_master.loc[0]["Your GPT API key"]) < 20)):
-        #st.write("You must enter a valid API key for GPT.")
-
+    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
+    
+        #if (st.session_state.gpt_api_key_validity == False):
+        
+        st.warning('You have not validated your API key. Please do so.')
+        #st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+        quit()
+        
     else:
-
-        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes.""")
+        
+        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.""")
+        #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
 
         with st.spinner('Running...'):
 
             try:
-                        
-                #gpt_api_key_entry = st.secrets["openai"]["gpt_api_key"]
-
-                API_key = st.secrets["openai"]["gpt_api_key"]
-
+        
                 #Create spreadsheet of responses
                 df_master = create_df()
-
-                #Produce results
-        
-                df_individual_output = run(df_master)
+    
+                #Activate user's own key or mine
+                if st.session_state.own_account == True:
+                    
+                    API_key = df_master.loc[0, 'Your GPT API key']
+    
+                else:
+                    API_key = st.secrets["openai"]["gpt_api_key"]
                 
+            
+                #Produce results
+                df_individual_output = run(df_master)
+
                 #Keep results in session state
                 if "df_individual_output" not in st.session_state:
                     st.session_state["df_individual_output"] = df_individual_output
@@ -1013,7 +1210,7 @@ if run_button:
                 st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
                 
                 #Button for downloading results
-                output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_results'
+                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
         
                 csv_output = convert_df_to_csv(df_individual_output)
                 
@@ -1044,23 +1241,22 @@ if run_button:
         
                 st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
 
-            
+                    
                 #Keep record on Google sheet
-                            
-                df_master["Processed"] = datetime.now()
-                df_master.pop("Your GPT API key")
-            
-                #conn.update(worksheet="ER", data=df_to_update, )            
+                #Obtain google spreadsheet       
                 #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
                 #df_google = conn.read()
                 #df_google = df_google.fillna('')
                 #df_google=df_google[df_google["Processed"]!='']
+                #df_master["Processed"] = datetime.now()
+                #df_master.pop("Your GPT API key")
                 #df_to_update = pd.concat([df_google, df_master])
                 #conn.update(worksheet="ER", data=df_to_update, )
-            
+        
             except Exception as e:
                 st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
                 st.exception(e)
+                
 
 
 # %%
@@ -1079,20 +1275,16 @@ if keep_button:
         if 'need_resetting' not in st.session_state:
             
             st.session_state['need_resetting'] = 1
-            
-    else:
 
-        #Using own GPT API key here
-    
-        gpt_api_key_entry = ''
-        
+    else:
+            
         df_master = create_df()
     
         df_master.pop("Your GPT API key")
     
         df_master.pop("Processed")
     
-        responses_output_name = df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_responses'
+        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
     
         #Produce a file to download
     
@@ -1131,5 +1323,5 @@ if return_button:
 
 # %%
 if reset_button:
-    clear_cache()
+    clear_cache_except_validation_df_master()
     st.rerun()

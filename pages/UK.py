@@ -37,8 +37,6 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
 from urllib.request import urlretrieve
 import os
-import urllib.request
-import io
 
 #Streamlit
 import streamlit as st
@@ -57,7 +55,6 @@ from google.oauth2 import service_account
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
-
 # %%
 #Whether users are allowed to use their account
 from own_account import own_account_allowed
@@ -75,7 +72,6 @@ current_dir = os.getcwd()
 # %%
 #today
 today_in_nums = str(datetime.now())[0:10]
-
 
 # %%
 # Generate placeholder list of errors
@@ -101,7 +97,7 @@ def convert_df_to_excel(df):
     workbook = writer.book
     workbook.set_properties({"author": excel_author, "comments": excel_description})
     worksheet = writer.sheets['Sheet1']
-#    format1 = workbook.add_format({'num_format': '0.00'})
+#    format1 = workbook.add_format({'num_format': '0.00'}) 
     worksheet.set_column('A:A', None)#, format1)  
     writer.save()
     processed_data = output.getvalue()
@@ -117,7 +113,7 @@ st.set_page_config(
 )
 
 # %% [markdown]
-# # Kercher Reports search engine
+# # UK Courts search engine
 
 # %%
 #Pause between judgment scraping
@@ -161,7 +157,7 @@ def create_df():
         gpt_api_key = gpt_api_key_entry
     except:
         print('API key not entered')
-
+        
     #Own account status
     own_account = st.session_state.own_account
     
@@ -171,6 +167,50 @@ def create_df():
     #GPT enhancement
     gpt_enhancement = st.session_state.gpt_enhancement_entry
     
+    #Free text
+
+    query = query_entry
+    
+    #dates        
+    
+    from_day= '',
+    from_month='', 
+    from_year='', 
+
+    if from_date_entry != 'None':
+
+        try:
+            from_day = str(from_date_entry.strftime('%d'))
+            from_month = str(from_date_entry.strftime('%m'))
+            from_year = str(from_date_entry.strftime('%Y'))
+
+        except:
+            pass
+
+    
+    to_day= '',
+    to_month='', 
+    to_year='', 
+
+    if to_date_entry != 'None':
+
+        try:
+            to_day = str(to_date_entry.strftime('%d'))
+            to_month = str(to_date_entry.strftime('%m'))
+            to_year = str(to_date_entry.strftime('%Y'))
+
+        except:
+            pass
+    
+    #Courts
+    courts_list = courts_entry
+    court_string = ', '.join(courts_list)
+    court = court_string
+    
+    #Other entries
+    party = party_entry
+    judge =  judge_entry
+
     #GPT choice and entry
     gpt_activation_status = gpt_activation_entry
     
@@ -181,18 +221,31 @@ def create_df():
     
     except:
         print('GPT questions not entered.')
+        
+    #metadata choice
+
+    meta_data_choice = meta_data_entry
     
     new_row = {'Processed': '',
            'Timestamp': timestamp,
            'Your name': name, 
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
-            'Enter search query': query_entry,
-           'Find (method)': method_entry,
+            'Free text': query,
+           'From date': from_day, 
+            'From month': from_month,
+            'From year': from_year,
+            'To day': to_day,
+            'To month': to_month,
+            'To year' : to_year,
+            'Courts' : court, 
+            'Party' : party,
+            'Judge' : judge, 
+            'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your question(s) for GPT': gpt_questions, 
             'Use GPT': gpt_activation_status, 
-           'Use own account': own_account,
+          'Use own account': own_account,
             'Use latest version of GPT' : gpt_enhancement
           }
 
@@ -209,7 +262,71 @@ def create_df():
 #        return 'Error: spreadsheet of reponses NOT generated.' 
 
 # %%
-#Define format functions for GPT questions    
+#Initialize default courts
+
+uk_courts_default_list = ['United Kingdom Supreme Court',
+ 'Privy Council',
+ 'Court of Appeal Civil Division',
+ 'Court of Appeal Criminal Division',
+ 'High Court (England & Wales) Administrative Court',
+ 'High Court (England & Wales) Admiralty Court',
+ 'High Court (England & Wales) Chancery Division',
+ 'High Court (England & Wales) Commercial Court',
+ 'High Court (England & Wales) Family Division',
+ 'High Court (England & Wales) Intellectual Property Enterprise Court',
+ "High Court (England & Wales) King's/Queen's Bench Division",
+ 'High Court (England & Wales) Mercantile Court',
+ 'High Court (England & Wales) Patents Court',
+ 'High Court (England & Wales) Senior Courts Costs Office',
+ 'High Court (England & Wales) Technology and Construction Court'
+]
+
+
+# %%
+#Define format functions for courts choice, and GPT questions
+
+#auxiliary lists and variables
+uk_courts ={'United Kingdom Supreme Court': 'uksc',
+'Privy Council': 'ukpc',  
+'Court of Appeal Civil Division': 'ewca%2Fciv', 
+ 'Court of Appeal Criminal Division':  'ewca%2Fcrim',  
+'High Court (England & Wales) Administrative Court': 'ewhc%2Fadmin',
+'High Court (England & Wales) Admiralty Court': 'ewhc%2Fadmlty',  
+'High Court (England & Wales) Chancery Division': 'ewhc%2Fch',  
+'High Court (England & Wales) Commercial Court': 'ewhc%2Fcomm',  
+'High Court (England & Wales) Family Division': 'ewhc%2Ffam',  
+'High Court (England & Wales) Intellectual Property Enterprise Court': 'ewhc%2Fipec',  
+"High Court (England & Wales) King's/Queen's Bench Division" : 'ewhc%2Fkb',
+'High Court (England & Wales) Mercantile Court': 'ewhc%2Fmercantile',  
+'High Court (England & Wales) Patents Court': 'ewhc%2Fpat',  
+'High Court (England & Wales) Senior Courts Costs Office': 'ewhc%2Fscco',  
+'High Court (England & Wales) Technology and Construction Court': 'ewhc%2Ftcc',  
+'Court of Protection': 'ewcop',  
+'Family Court': 'ewfc',  
+'Employment Appeal Tribunal': 'eat',  
+'Administrative Appeals Chamber': 'ukut%2Faac',  
+'Immigration and Asylum Chamber': 'ukut%2Fiac',
+'Lands Chamber': 'ukut%2Flc',  
+'Tax and Chancery Chamber': 'ukut%2Ftcc',  
+'General Regulatory Chamber': 'ukftt%2Fgrc',  
+'Tax Chamber' : 'ukftt%2Ftc'
+}
+
+uk_courts_list = list(uk_courts.keys())
+
+def court_choice(x):
+    individual_choice = []
+    if len(x) < 5:
+        pass #If want no court to be covered absent choice
+        #for i in uk_courts.keys():
+            #individual_choice.append(uk_courts[i])
+    else:
+        y = x.split(', ')
+        for j in y:
+            individual_choice.append(uk_courts[j])
+    
+    return individual_choice
+    
 
 #Create function to split a string into a list by line
 def split_by_line(x):
@@ -234,152 +351,155 @@ def GPT_label_dict(x_list):
 
 #Tidy up hyperlink
 def link(x):
-    y =str(x)#.replace('.uk/id', '.uk')
+    y =str(x).replace('.uk/id', '.uk')
     value = '=HYPERLINK("' + y + '")'
     return value
 
 
-# %%
-#list of search methods
-
-methods_list = ['Full text', 'Titles only', 'This Boolean query', 'Any of these words', 'All of these words']
-method_types = ['auto', 'title', 'boolean', 'any', 'all']
-
 
 # %%
 #Function turning search terms to search results url
-
-def kr_search(query= '', 
-              method = ''
+def uk_search(query= '', 
+              from_day= '',
+              from_month='', 
+              from_year='', 
+              to_day='', 
+              to_month='', 
+              to_year='', 
+              court = [], 
+              party = '', 
+              judge = ''
              ):
-    base_url = "https://www.austlii.edu.au/cgi-bin/sinosrch.cgi?"
-
-    method_index = methods_list.index(method)
-    method_type = method_types[method_index]
-
-    query_text = query
-
-    params = {#'meta' : ';',
-              'mask_path' : 'au/cases/nsw/NSWSupC', 
-              'method' : method_type,
-              'query' : query_text
-             }
+    base_url = "https://caselaw.nationalarchives.gov.uk/judgments/search?per_page=50&order=relevance"
+    params = {'query' : query, 
+              'from_day' : from_day,
+              'from_month' : from_month, 
+              'from_year' : from_year, 
+              'to_day' : to_day, 
+              'to_month' : to_month, 
+              'to_year' : to_year, 
+              'court' : court, 
+              'party' : party, 
+              'judge' : judge}
 
     response = requests.get(base_url, params=params)
+    response.raise_for_status()
+
+    proper_url = str(response.url).replace('%25', '%')
     
-    return response.url
+    return proper_url
 
 
 # %%
-#Define function turning search results url to case_link_pairs to judgments
-def search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
+#Define function turning search results url to links to judgments
+def search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
-    headers = {'User-Agent': 'whatever'}
-    page = requests.get(url_search_results, headers=headers)
+    page = requests.get(url_search_results)
     soup = BeautifulSoup(page.content, "lxml")
     hrefs = soup.find_all('a', href=True)
-    case_link_pairs = []
-
-    #number of search results
-    docs_found_string = str(soup.find('title')).split('AustLII:')[1].split('documents')[0].replace(' ', '')
-    docs_found = int(docs_found_string)
-
+    links = []
+    
     #Start counter
+    
     counter = 1
     
     for link in hrefs:
-        if ((counter <= judgment_counter_bound) and (' NSWSupC ' in str(link)) and ('LawCite' not in str(link))):
-#        if ((counter <= judgment_counter_bound) and ('AustLII' in str(link)) and ('cases/EngR' in str(link)) and ('LawCite' not in str(link))):
-            case = link.get_text()
-            link_direct = link.get('href')
-            link = 'https://www.austlii.edu.au' + link_direct.split('?context')[0]
-            dict_object = { 'case': case, 'link_direct': link}
-            case_link_pairs.append(dict_object)
+        if ((counter <= judgment_counter_bound) and ('a href="/' in str(link)) and '">' in str(link) and '?' in str(link)):
+            link_direct = 'https://caselaw.nationalarchives.gov.uk' + str(link).split('?')[0][9:] + '/data.xml'
+            links.append(link_direct.replace('.uk/id', '.uk'))
             counter = counter + 1
-        
-    for ending in range(10, docs_found, 10):
-        if counter <= min(judgment_counter_bound, docs_found):
-            url_next_page = url_search_results + ';offset=' + f"{ending}"
-            page_judgment_next_page = requests.get(url_next_page, headers=headers)
+    
+    for ending in range(100):
+        if counter <=judgment_counter_bound:
+            url_next_page = url_search_results + '&page=2' + f"{ending}"
+            page_judgment_next_page = requests.get(url_next_page)
             soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
+    
+            #Check if stll more results
+            if 'No results have been found' not in str(soup_judgment_next_page):
+                hrefs_next_page = soup_judgment_next_page.find_all('a', href=True)
+                for extra_link in hrefs_next_page:
+                    if ((counter <= judgment_counter_bound) and ('a href="/' in str(extra_link)) and '">' in str(extra_link) and '?' in str(extra_link)):
+                        extra_link_direct = 'https://caselaw.nationalarchives.gov.uk' + str(extra_link).split('?')[0][9:] + '/data.xml'
+                        links.append(extra_link_direct.replace('.uk/id', '.uk'))
+                        counter = counter + 1
+            else:
+                break
             
-            hrefs_next_page = soup_judgment_next_page.find_all('a', href=True)
-            for extra_link in hrefs_next_page:
-                if ((counter <= judgment_counter_bound) and (' NSWSupC ' in str(extra_link)) and ('LawCite' not in str(link))):
-#                if ((counter <= judgment_counter_bound) and ('AustLII' in str(extra_link)) and ('cases/EngR' in str(extra_link)) and ('LawCite' not in str(extra_link))):
-                    case = extra_link.get_text()
-                    extra_link_direct = extra_link.get('href')
-                    extra_link = 'https://www.austlii.edu.au' + extra_link_direct.split('?context')[0]
-                    dict_object = { 'case': case, 'link_direct': extra_link}
-                    case_link_pairs.append(dict_object)
-                    counter = counter + 1
-
             pause.seconds(np.random.randint(5, 15))
-            
-        else:
-            break
-    
-    return case_link_pairs
 
-
-# %%
-#Convert case-link pairs to judgment text
-
-def judgment_text(case_link_pair):
-    url = case_link_pair['link_direct']
-    headers = {'User-Agent': 'whatever'}
-    page = requests.get(url, headers=headers)
-    soup = BeautifulSoup(page.content, "lxml")
-    text = soup.get_text()
-    try:
-        text = soup.get_text().split('Print (pretty)')[0].split('\n Any \n')[-1]
-    except:
-        pass
-    
-    return text
-        
+    return links
 
 
 # %%
 #Meta labels and judgment combined
 
-def meta_judgment_dict(case_link_pair):
+meta_labels_droppable = ['Date', 
+                         'Court', 
+                         'Case number', 
+                         'Judge(s) (non-exhaustiveive)', 
+                         'Parties', 
+                         'Header'
+                        ]
+
+    
+def meta_judgment_dict(judgment_url_xml):
+    page = requests.get(judgment_url_xml)
+    soup = BeautifulSoup(page.content, "lxml")
     
     judgment_dict = {'Case name': '',
-                     'Medium neutral citation' : '', 
-                     'Other reports': '', 
-                     'Hyperlink to AustLII': '', 
-                     'Date' : '', 
-                     'Judgment': ''
-                    }
-
-    case_name = case_link_pair['case']
-    date = case_link_pair['case'].split('(')[-1].replace(')', '')
-    year = case_link_pair['case'].split('[')[1][0:4]
-    case_number_raw = case_link_pair['case'].split('NSWSupC ')[1].split(' (')[0]
-    
-    if ";" in case_number_raw:
-        case_number = case_number_raw.split(';')[0]
-    else:
-        case_number = case_number_raw
-    
-    mnc = '[' + year +']' + ' NSWSupC ' + case_number
-    nr_cite = ''
-        
+                 'Medium neutral citation': '',
+                'Hyperlink to The National Archives' : '', 
+                'Date' : '',
+                'Court' : '', 
+                'Case number': '',
+                'Judge(s) (non-exhaustiveive)' : [], 
+                'Parties' : [],
+                'Header' : '',
+                'Judgment': ''
+                }
     try:
-        case_name = case_link_pair['case'].split('[')[0][:-1]
-        nr_cite = case_link_pair['case'].split('; ')[1].replace(' (' + date + ')', '')
+        judgment_dict['Case name'] = soup.find("frbrname")['value']
+        judgment_dict['Medium neutral citation'] = soup.find("uk:cite").getText()
+        judgment_dict['Hyperlink to The National Archives'] = link(soup.find("frbruri")['value'])
+        judgment_dict['Date'] = soup.find("frbrdate")['date']
+        judgment_dict['Court'] = soup.find("uk:court").getText()
+        judgment_dict['Header'] = soup.find('header').getText()
+        if judgment_dict['Header'][0:1] == '\n':
+            judgment_dict['Header'] = judgment_dict['Header'][1: ]
+        judgment_dict['Case number'] = soup.find("docketnumber").getText()
     except:
         pass
-                
-    judgment_dict['Case name'] = case_name
-    judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['Other reports'] = nr_cite
-    judgment_dict['Date'] = date
-    judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
-    judgment_dict['Judgment'] = judgment_text(case_link_pair)
+    
+    for person in soup.find_all("tlcperson"):
+        if 'judge' in str(person):
+            judgment_dict['Judge(s) (non-exhaustiveive)'].append(person["showas"])
+        else:
+            judgment_dict['Parties'].append(person["showas"])
+    
+    #Get judgment content as a list of headings and paras, but not enumeration/paragraph number
+    #for text in soup.find_all('content'):
+    #    judgment_dict['Judgment'].append(text.getText())
 
-#    pause.seconds(np.random.randint(5, 15))
+    #Get judgment
+
+    pause.seconds(np.random.randint(5, 15))
+
+    html_link = judgment_url_xml.replace('/data.xml', '')
+    page_html = requests.get(html_link)
+    soup_html = BeautifulSoup(page_html.content, "lxml")
+    
+    judgment_text = soup_html.get_text(separator="\n", strip=True)
+
+    try:
+        before_end_of_doc = judgment_text.split('End of document')[0]
+        after_skip_to_end = before_end_of_doc.split('Skip to end')[1]
+        judgment_text = after_skip_to_end
+        
+    except:
+        pass
+
+    judgment_dict['Judgment'] = judgment_text
     
     #try:
      #   judgment_text = str(soup.find_all('content'))
@@ -447,7 +567,7 @@ def gpt_output_cost(gpt_model):
 def tokens_cap(gpt_model):
     
     if gpt_model == "gpt-3.5-turbo-0125":
-        tokens_cap = int(16385 - 1500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
+        tokens_cap = int(16385 - 2000) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
     
     if gpt_model == "gpt-4-turbo":
         tokens_cap = int(128000 - 6000) #For GPT-4-turbo, token limit covering both input and output is 128000, while the output limit is 4096.
@@ -515,6 +635,7 @@ def check_edu_gov(email_address):
 #Tokens estimate preliminaries
 #encoding = tiktoken.get_encoding("cl100k_base")
 #encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+
 #Tokens estimate function
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -525,6 +646,7 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 #Define judgment input function for JSON approach
 
 #Token limit covering both GTP input and GPT output is 16385, each token is about 4 characters
+#characters_limit_half = int((16385*4)/2-1500)
 #tokens_cap(gpt_model) = int(16385 - 1500)
 
 def judgment_prompt_json(judgment_json, gpt_model):
@@ -555,7 +677,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in string form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer any of the questions based on the judgment or metadata, do not make up information, but instead write "answer not found".'
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in string form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific paragraph in the judgment, provide the paragraph number as part of your answer. If you cannot answer any of the questions based on the judgment or metadata, do not make up information, but instead write "answer not found".'
 
 intro_for_GPT = [{"role": "system", "content": role_content}]
 
@@ -568,7 +690,6 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
-    
     judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model) + 'you will be given questions to answer in JSON form.'}]
         
     #Create answer format
@@ -578,7 +699,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers in the judgment or specific sections in the metadata.'})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific paragraph numbers in the judgment or specific sections in the metadata.'})
     
     #Create questions, which include the answer format
     
@@ -589,7 +710,6 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     
 #   return messages_for_GPT
 
-            
     #os.environ["OPENAI_API_KEY"] = API_key
 
     openai.api_key = API_key
@@ -712,7 +832,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
 
             other_instructions = role_content + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers in the judgment or specific sections in the metadata.", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific paragraph numbers in the judgment or specific sections in the metadata.", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
@@ -721,7 +841,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
             
             GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
-        #Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
+    	#Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
 
         for question_index in question_keys:
             question_heading = question_index + ': ' + questions_json[question_index]
@@ -751,34 +871,49 @@ def run(df_master):
      
     df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
+    df_master['Courts'] = df_master['Courts'].apply(court_choice)
     
     #Create judgments file
     judgments_file = []
     
     #Conduct search
-
-    url_search_results = kr_search(query= df_master.loc[0, 'Enter search query'], 
-                                   method = df_master.loc[0, 'Find (method)']
+    
+    url_search_results = uk_search(query= df_master.loc[0, 'Free text'], 
+                                   from_day= df_master.loc[0, 'From date'],
+                                   from_month=df_master.loc[0, 'From month'], 
+                                   from_year=df_master.loc[0, 'From year'], 
+                                   to_day=df_master.loc[0, 'To day'], 
+                                   to_month=df_master.loc[0, 'To month'], 
+                                   to_year=df_master.loc[0, 'To year'], 
+                                   court= df_master.loc[0, 'Courts'], 
+                                   party = df_master.loc[0, 'Party'], 
+                                   judge = df_master.loc[0, 'Judge']
                                   )
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
+    judgments_links = search_results_to_judgment_links(url_search_results, judgments_counter_bound)
 
-    for case_link_pair in case_link_pairs:
+    for link in judgments_links:
 
-        judgment_dict = meta_judgment_dict(case_link_pair)
+        judgment_dict = meta_judgment_dict(link)
+
+#        meta_data = meta_dict(link)  
+#        doc_link = link_to_doc(link)
+#        judgment_dict = doc_link_to_dict(doc_link)
+#        judgment_dict = link_to_dict(link)
+#        judgments_all_info = { **meta_data, **judgment_dict}
+#        judgments_file.append(judgments_all_info)
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(5, 15))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
+    
     df_individual = pd.read_json(json_individual)
 
-    #For KR, convert date to string so as to avoid Excel producing random numbers for dates
+    #For UK, convert date to string so as to avoid Excel producing random numbers for dates
     df_individual['Date'] = df_individual['Date'].astype(str)
-
-    #Instruct GPT
     
     #GPT model
 
@@ -786,7 +921,7 @@ def run(df_master):
         gpt_model = "gpt-4-turbo"
     else:        
         gpt_model = "gpt-3.5-turbo-0125"
-            
+    
     #apply GPT_individual to each respondent's judgment spreadsheet
     
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
@@ -797,6 +932,15 @@ def run(df_master):
     df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model)
 
     df_updated.pop('Judgment')
+
+    #Drop metadata if not wanted
+
+    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+        for meta_label in meta_labels_droppable:
+            try:
+                df_updated.pop(meta_label)
+            except:
+                pass
     
     return df_updated
 
@@ -805,12 +949,24 @@ def run(df_master):
 def search_url(df_master):
 
     df_master = df_master.fillna('')
+
+    df_master['Courts'] = df_master['Courts'].apply(court_choice)
+    
+    #Combining catchwords into new column
     
     #Conduct search
     
-    url = kr_search(query= df_master.loc[0, 'Enter search query'],
-                    method= df_master.loc[0, 'Find (method)']
-                   )
+    url = uk_search(query= df_master.loc[0, 'Free text'], 
+                                   from_day= df_master.loc[0, 'From date'],
+                                   from_month=df_master.loc[0, 'From month'], 
+                                   from_year=df_master.loc[0, 'From year'], 
+                                   to_day=df_master.loc[0, 'To day'], 
+                                   to_month=df_master.loc[0, 'To month'], 
+                                   to_year=df_master.loc[0, 'To year'], 
+                                   court= df_master.loc[0, 'Courts'], 
+                                   party = df_master.loc[0, 'Party'], 
+                                   judge = df_master.loc[0, 'Judge']
+                                  )
     return url
 
 
@@ -846,6 +1002,12 @@ def clear_cache_except_validation_df_master():
 # ## Initialize session states
 
 # %%
+#Initialize default_courts
+
+if 'default_courts' not in st.session_state:
+    st.session_state['default_courts'] = []
+
+# %%
 #Initialize default values
 
 if 'gpt_enhancement_entry' not in st.session_state:
@@ -879,32 +1041,68 @@ except:
 # ## Form before AI
 
 # %%
-#Create form
+#Create form for court selection
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[the Kercher Reports].")
+st.header(f"You have selected to study :blue[judgments of select United Kingdom courts and tribunals].")
 
-#    st.header("Judgment Search Criteria")
+#st.header("Judgment Search Criteria")
 
 st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 
-For search tips, please visit AustLII at https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
+For search tips, please visit The National Archives at https://caselaw.nationalarchives.gov.uk/structured_search. This section mimics their case law search function.
 """)
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
+st.subheader("UK courts and tribunals to cover")
+
+default_on = st.checkbox('Prefill the Supreme Court, the Court of Appeal, and the High Court of England and Wales')
+
+if default_on:
+
+    st.session_state.default_courts = uk_courts_default_list
+
+else:
+    st.session_state.default_courts = []
+
+courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to cover', options = uk_courts_list, default = st.session_state.default_courts)
+    
+#st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
+
+#Search terms
+
 st.subheader("Your search terms")
 
-method_entry = st.selectbox('Find', methods_list, index=0)
+query_entry = st.text_input('Free text')
 
-query_entry = st.text_input('Enter search query')
-    
-st.markdown("""You can preview the judgments returned by your search terms on AustLII after you have entered some search terms.
+from_date_entry = st.date_input('From date', value = None, format="DD/MM/YYYY")
+
+to_date_entry = st.date_input('to date', value = None, format="DD/MM/YYYY")
+
+st.caption('For information about judgment availability, please visit https://caselaw.nationalarchives.gov.uk/structured_search.')
+
+judge_entry = st.text_input('Judge name')
+
+party_entry = st.text_input('Party name')
+
+st.markdown("""You can preview the judgments returned by your search terms on the National Archives after you have entered some search terms.
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
 
-preview_button = st.button('PREVIEW on AustLII (in a popped up window)')
+preview_button = st.button('PREVIEW on the National Archives (in a popped up window)')
+
+st.subheader("Judgment metadata collection")
+
+st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the names of the parties and so on. 
+
+Case name and medium neutral citation are always included with your results.
+""")
+
+meta_data_entry = st.checkbox('Include metadata', value = False)
+
+
 
 
 
@@ -937,7 +1135,7 @@ gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_
 st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each judgment.")
 
 if own_account_allowed() > 0:
-    
+
     
     st.subheader(':orange[Enhance program capabilities]')
     
@@ -958,7 +1156,7 @@ if own_account_allowed() > 0:
         email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
-        
+    
         valdity_check = st.button('VALIDATE your API key')
     
         if valdity_check:
@@ -982,7 +1180,7 @@ if own_account_allowed() > 0:
         
             st.session_state.gpt_model = "gpt-4-turbo"
             st.session_state.gpt_enhancement_entry = True
-    
+
         else:
             
             st.session_state.gpt_model = "gpt-3.5-turbo-0125"
@@ -1001,9 +1199,9 @@ if own_account_allowed() > 0:
         st.session_state["own_account"] = False
     
         st.session_state.gpt_model = "gpt-3.5-turbo-0125"
-    
+
         st.session_state.gpt_enhancement_entry = False
-    
+
         st.session_state.judgments_counter_bound = default_judgment_counter_bound
     
         #st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
@@ -1029,7 +1227,6 @@ st.header("Next steps")
 st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
 
 You can also download a record of your responses.
-
 """)
 
 #Warning
@@ -1052,8 +1249,6 @@ if 'need_resetting' in st.session_state:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
 
-
-
 # %% [markdown]
 # ## Previous responses and outputs
 
@@ -1063,18 +1258,18 @@ if 'need_resetting' in st.session_state:
 if (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
 
     #Load previous responses and results
-    
+
     df_master = st.session_state.df_master
     df_individual_output = st.session_state.df_individual_output
 
     #Buttons for downloading responses
 
     st.subheader('Looking for your previous form responses?')
-    
+
     responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
+
     csv = convert_df_to_csv(df_master)
-    
+
     ste.download_button(
         label="Download your previous responses as a CSV (for use in Excel etc)", 
         data = csv,
@@ -1107,7 +1302,6 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
     output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
 
     csv_output = convert_df_to_csv(df_individual_output)
-
     
     ste.download_button(
         label="Download your previous results as a CSV (for use in Excel etc)", 
@@ -1149,19 +1343,36 @@ if preview_button:
     df_master = create_df()
 
     judgments_url = search_url(df_master)
+    
+#    df_master['Courts'] = df_master['Courts'].apply(court_choice)
+
+#    judgments_url =  uk_search(query= df_master.loc[0, 'Free text'], 
+##                                   from_day= df_master.loc[0, 'From date'],
+ #                                  from_month=df_master.loc[0, 'From month'], 
+ #                                  from_year=df_master.loc[0, 'From year'], 
+ #                                  to_day=df_master.loc[0, 'To day'], 
+ #                                  to_month=df_master.loc[0, 'To month'], 
+ #                                  to_year=df_master.loc[0, 'To year'], 
+ #                                  court= df_master.loc[0, 'Courts'], 
+ #                                  party = df_master.loc[0, 'Party'], 
+ #                                  judge = df_master.loc[0, 'Judge']
+ #                                 )
 
     open_page(judgments_url)
 
 
 # %%
 if run_button:
-
-    all_search_terms = str(query_entry)
+    
+    all_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
         
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
-    
+
+    elif len(courts_entry) == 0:
+        st.write('Please select at least one court to cover.')
+        
     elif int(consent) == 0:
         st.warning("You must click on 'Yes, I agree.' to run the program.")
 
@@ -1171,10 +1382,7 @@ if run_button:
         if 'need_resetting' not in st.session_state:
             
             st.session_state['need_resetting'] = 1
-            
-    #elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
-       # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
-    
+                   
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
     
         #if (st.session_state.gpt_api_key_validity == False):
@@ -1182,7 +1390,10 @@ if run_button:
         st.warning('You have not validated your API key. Please do so.')
         #st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
         quit()
-        
+    
+    #elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
+       # st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
+ 
     else:
         
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.""")
@@ -1191,10 +1402,10 @@ if run_button:
         with st.spinner('Running...'):
 
             try:
-            
+        
                 #Create spreadsheet of responses
                 df_master = create_df()
-    
+
                 #Activate user's own key or mine
                 if st.session_state.own_account == True:
                     
@@ -1205,7 +1416,7 @@ if run_button:
                 
                 #Produce results
                 df_individual_output = run(df_master)
-   
+                
                 #Keep results in session state
                 if "df_individual_output" not in st.session_state:
                     st.session_state["df_individual_output"] = df_individual_output
@@ -1213,7 +1424,7 @@ if run_button:
                 if "df_master" not in st.session_state:
                     st.session_state["df_master"] = df_master
                 
-                st.session_state["page_from"] = 'pages/KR.py'
+                st.session_state["page_from"] = 'pages/UK.py'
         
                 #Write results
         
@@ -1251,7 +1462,6 @@ if run_button:
         
                 st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
 
-                 
                 #Keep record on Google sheet
                 #Obtain google spreadsheet       
                 #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
@@ -1261,23 +1471,25 @@ if run_button:
                 #df_master["Processed"] = datetime.now()
                 #df_master.pop("Your GPT API key")
                 #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="KR", data=df_to_update, )
-        
-
+                #conn.update(worksheet="UK", data=df_to_update, )
+            
             except Exception as e:
                 st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
                 st.exception(e)
-
+                
 
 
 # %%
 if keep_button:
 
-    all_search_terms = str(query_entry)
+    all_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
         
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
+
+    elif len(courts_entry) == 0:
+        st.write('Please select at least one court to cover.')
 
     elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
@@ -1308,7 +1520,6 @@ if keep_button:
     #            key='download-csv'
         )
 
-
         xlsx = convert_df_to_excel(df_master)
         
         ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
@@ -1316,7 +1527,7 @@ if keep_button:
                             file_name=responses_output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
                            )
-        
+    
         json = convert_df_to_json(df_master)
         
         ste.download_button(
