@@ -299,7 +299,7 @@ def clear_most_cache():
     keys.remove('gpt_api_key_validity') #These are the keys to KEEP upon clearing
     keys.remove('messages')
     #keys.remove('df_produced')
-    skeys.remove('df_uploaded_key')
+    keys.remove('df_uploaded_key')
     keys.remove('page_from')
     for key in keys:
         st.session_state.pop(key)
