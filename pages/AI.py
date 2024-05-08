@@ -605,7 +605,7 @@ if len(st.session_state.df_to_analyse) > 0:
     
     try:
         link_heading = link_heading_picker(df_to_analyse)       
-        st.session_state.df_to_analyse = convert_links_column(df_to_analyse)
+        df_to_analyse = convert_links_column(df_to_analyse)
         link_heading_config={link_heading: st.column_config.LinkColumn()}       
     
     except Exception as e:
