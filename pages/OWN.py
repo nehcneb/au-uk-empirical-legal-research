@@ -883,7 +883,8 @@ def calculate_image_token_cost(image, detail="auto"):
     #return b64
 
 def image_to_b64(uploaded_image, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : '', 'tokens_raw': 0, 
+    file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : [],
+                   'Page length': '', 'tokens_raw': 0, 
 #                 'Image ID': '', 'Page length': '', 'Page 2': '' #Test page
                   }
 
@@ -896,8 +897,9 @@ def image_to_b64(uploaded_image, language, page_bound):
 
     if extension == 'pdf':
         
-        #try:
         images = pdf2image.convert_from_bytes(bytes_data, timeout=30, fmt="jpeg")
+
+        file_triple['Page length'] = len(images)
 
         #Get page bound
         max_images_number=min(len(images), page_bound)
@@ -925,6 +927,8 @@ def image_to_b64(uploaded_image, language, page_bound):
             #print(f"pdf2image error: {pdf2image_timeout_error}.")
 
     else:
+
+        file_triple['Page length'] = 1
     
         b64 = base64.b64encode(bytes_data).decode('utf-8')
     
@@ -933,15 +937,20 @@ def image_to_b64(uploaded_image, language, page_bound):
         #file_triple['b64_list'] = [b64_to_attach]
         file_triple['b64_list'].append(b64_to_attach)
         
-        #Get dimensions 
-
-        file_triple['Dimensions (width, height)'] = get_image_dims(b64_to_attach)
 
         #Get tokens
     
         #file_triple['tokens_raw'] = calculate_image_token_cost(b64_to_attach, detail="auto")
         
     for image_b64 in file_triple['b64_list']:
+
+        #Get dimensions
+        try:
+
+            file_triple['Dimensions (width, height)'].append(get_image_dims(b64_to_attach))
+        except Exception as e:
+            print(f"Cannot obtain dimensions for {file_triple['File name']}, p {file_triple['b64_list'].index(image_b64)}.")
+            print(e)
         
         file_triple['tokens_raw'] = calculate_image_token_cost(image_b64, detail="auto")
             
@@ -1436,7 +1445,8 @@ if st.session_state.gpt_model == "gpt-4-turbo":
 run_button = st.button('RUN the program')
 
 if st.session_state.gpt_model == "gpt-4-turbo":
-    run_button_b64 = st.button('QUERY complex images with GPT')
+    #st.write('Not getting the best responses for your images? You can try a more costly')
+    run_button_b64 = st.button('GET better answers for "untidy" images')
 
 keep_button = st.button('DOWNLOAD your form responses')
 
