@@ -52,6 +52,7 @@ from pandasai.llm import BambooLLM
 from pandasai.llm.openai import OpenAI
 import pandasai as pai
 from pandasai.responses.streamlit_response import StreamlitResponse
+from pandasai.helpers.openai_info import get_openai_callback
 
 #Excel
 from io import BytesIO
@@ -619,7 +620,7 @@ if len(st.session_state.df_to_analyse) > 0:
         print('No column has hyperlinks.')
 
     st.write('You can directly edit this spreadsheet.')
-    st.caption('To download, search or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
+    st.caption('To download, search within or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
 
     #Try to avoid conflict between PyArrow and numpy by converting columns with both lists and null values to string
 
@@ -713,8 +714,6 @@ if len(st.session_state.df_to_analyse) > 0:
         if not prompt:
             st.warning("Please enter some instruction.")
         else:
-            #Keep record of prompt
-            st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
 
             if int(consent) == 0:
                 st.warning("You must click on 'Yes, I agree.' to run the program.")
@@ -732,14 +731,14 @@ if len(st.session_state.df_to_analyse) > 0:
 
             elif st.session_state.instruction_left == 0:
                 no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
-                st.write(no_more_instructions)
+                st.error(no_more_instructions)
                 
                 #Keep record of response
-                st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": no_more_instructions})
+                st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": no_more_instructions, 'tokens': 0, 'cost (USD)': 0})
             
             else:
                 # call pandas_ai.run(), passing dataframe and prompt
-                with st.spinner("Running..."):
+                with get_openai_callback() as cb, st.spinner("Running..."):
 
                     response = agent.chat(prompt)
 
@@ -749,13 +748,21 @@ if len(st.session_state.df_to_analyse) > 0:
 
                     st.subheader(f'{st.session_state.ai_choice} Response')
                     
+                    st.caption('To download, search within or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
+                    
                     st.write(response)
+
+                    #Display and keep record of tokens and costs
+                    cost_tokens = f'(Cost: USD $ {cb.total_cost} Tokens: {cb.total_tokens})'
+                    st.write(cost_tokens)
+
+                    st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": cb})
+
+                    #Keep record of prompt
+                    st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
 
                     #Keep record of response
                     st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": response})
-
-                    if isinstance(st.session_state.response, pd.DataFrame):
-                        st.write('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
 
                     #Show any figure generated
                     if plt.get_fignums():
@@ -811,7 +818,7 @@ if len(st.session_state.df_to_analyse) > 0:
                         except Exception as e:
                             print('No code generated.')
                             print(e)
-                        
+
                     #Display number of instructionsl left
                     st.session_state.instruction_left -= 1
                     instructions_left_text = f"*You have :orange[{st.session_state.instruction_left}] instructions left.*"
@@ -819,7 +826,6 @@ if len(st.session_state.df_to_analyse) > 0:
 
                     #Keep record of instructions left
                     st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": instructions_left_text})
-            
 
     #Show code and clarification are not working yet
     #if len(st.session_state.messages) > 0:
@@ -863,7 +869,7 @@ if len(st.session_state.df_to_analyse) > 0:
 
             st.write('Instructions and responses are displayed from earliest to latest.')
 
-            st.caption('To download, search or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
+            st.caption('To download, search within or maximise any spreadsheet produced, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
 
             # Display chat messages from history on app rerun
             for message in st.session_state.messages:
