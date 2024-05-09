@@ -569,7 +569,7 @@ def file_prompt(file_triple, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the document or image. Where your answer comes from a specific page or section of the file, provide the page number or section as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page or section of the file, provide the page number or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
 
 intro_for_GPT = [{"role": "system", "content": role_content}]
 
