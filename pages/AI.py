@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Whether users are allowed to use their account
-from own_account import own_account_allowed
+from extra_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -296,11 +296,13 @@ def clear_cache_except_validation():
 # %%
 def clear_most_cache():
     keys = list(st.session_state.keys())
-    keys.remove('gpt_api_key_validity') #These are the keys to KEEP upon clearing
-    keys.remove('messages')
-    #keys.remove('df_produced')
-    keys.remove('df_uploaded_key')
-    keys.remove('page_from')
+    #These are the keys to KEEP upon clearing
+    for key_to_keep in ['gpt_api_key_validity', 'messages', 'df_uploaded_key', 'page_from']: 
+        try:
+            keys.remove('key_to_keep')
+        except:
+            print(f"No {'key_to_keep'} in session state.")
+
     for key in keys:
         st.session_state.pop(key)
 
@@ -464,16 +466,20 @@ else: #if 'df_individual_output' not in st.session_state:
 # %%
 st.subheader('Choose an AI')
 
-st.markdown("""Please choose an AI to help analyse your spreadsheet.
+st.markdown("""Please choose an AI to help with data cleaning, analysis and visualisation.
 """)
-
-st.markdown("""GPT can explain its reasoning. BambooLLM is developed with data analysis in mind (see https://docs.pandas-ai.com/en/stable/).""")
 
 ai_choice = st.selectbox(label = f'{default_ai} is selected by default.', options = ai_list, index=0)
 
 if ai_choice != st.session_state.ai_choice:
     pai.clear_cache()
     st.session_state['ai_choice'] = ai_choice
+
+st.markdown("""GPT can explain its reasoning. BambooLLM is developed with data analysis in mind (see https://docs.pandas-ai.com/en/stable/).""")
+
+if st.toggle('See the instruction given to the chosen AI'):
+    st.write(f"*{agent_description}*")
+
 
 if own_account_allowed() > 0:
 
@@ -693,7 +699,7 @@ if len(st.session_state.df_to_analyse) > 0:
     if st.session_state.ai_choice == 'GPT':
     
         if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-            st.warning('A low-cost AI will respond to your instruction(s). Please be cautious.')
+            st.warning('A low-cost AI will respond to your instruction(s). Beware that it is not designed for data analysis.')
     
         if st.session_state.gpt_model == "gpt-4-turbo":
             st.warning(f'An expensive AI will respond to your instruction(s). Please be cautious.')

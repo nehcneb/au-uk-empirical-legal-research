@@ -1,2 +1,2 @@
 def own_account_allowed():
-	return 0
+	return 1

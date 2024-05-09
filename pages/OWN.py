@@ -65,7 +65,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Whether users are allowed to use their account
-from own_account import own_account_allowed
+from extra_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -543,7 +543,7 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 
 def file_prompt(file_triple, gpt_model):
                 
-    file_content = 'Based on the following document:  """'+ file_triple['Extracted text'] + '""",'
+    file_content = 'Based on the following document:  """'+ file_triple['Extracted text'] + '"""'
 
     file_content_tokens = num_tokens_from_string(file_content, "cl100k_base")
     
@@ -561,7 +561,7 @@ def file_prompt(file_triple, gpt_model):
         #If want to cut out the middle instead
 #        file_string_trimmed = file_triple['Extracted text'][ :int(file_chars_capped/2)] + file_triple['Extracted text'][-int(file_chars_capped/2): ]
         
-        file_content_capped = 'Based on the following document:  """'+ file_string_trimmed + '""",'
+        file_content_capped = 'Based on the following document:  """'+ file_string_trimmed + '"""'
         
         return file_content_capped
 
@@ -569,9 +569,10 @@ def file_prompt(file_triple, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a document or an image. You will be provided with the document or image. Please answer questions based only on information contained in the document or image. Where your answer comes from a specific page or section of the document, provide the page number or section as part of your answer. If you cannot answer any of the questions based on the document, do not make up information, but instead write "answer not found".'
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the document or image. Where your answer comes from a specific page or section of the file, provide the page number or section as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
 
-#intro_for_GPT = [{"role": "system", "content": role_content}]
+intro_for_GPT = [{"role": "system", "content": role_content}]
+
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
@@ -580,8 +581,10 @@ role_content = 'You are a legal research assistant helping an academic researche
 def GPT_json_tokens(questions_json, file_triple, gpt_model):
     #'question_json' variable is a json of questions to GPT
 
-    file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
-        
+    file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model)}]
+
+    json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
+
     #Create answer format
     
     q_keys = [*questions_json]
@@ -600,7 +603,7 @@ def GPT_json_tokens(questions_json, file_triple, gpt_model):
 
     intro_for_GPT = [{"role": "system", "content": role_content + language_content}] 
 
-    messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
+    messages_for_GPT = intro_for_GPT + file_for_GPT + json_direction + question_for_GPT
     
 #   return messages_for_GPT
 
@@ -814,7 +817,10 @@ def run(df_master, uploaded_docs, uploaded_images):
     #Engage GPT
     df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model)
 
-    df_updated.pop('Extracted text')
+    try:
+        df_updated.pop('Extracted text')
+    except:
+        print("No 'Extracted text' columnn.")
     
     return df_updated
     
@@ -952,7 +958,7 @@ def image_to_b64(uploaded_image, language, page_bound):
             print(f"Cannot obtain dimensions for {file_triple['File name']}, p {file_triple['b64_list'].index(image_b64)}.")
             print(e)
         
-        file_triple['tokens_raw'] = calculate_image_token_cost(image_b64, detail="auto")
+        file_triple['tokens_raw'] = file_triple['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
             
     return file_triple
 
@@ -1208,8 +1214,11 @@ def run_b64(df_master, uploaded_images):
 
     #Remove redundant columns
 
-    df_updated.pop('tokens_raw')
-    df_updated.pop('b64_list')
+    for column in ['tokens_raw', 'b64_list']:
+        try:
+            df_updated.pop(column)
+        except:
+            print(f"No {column} column.")
 
     return df_updated
 
@@ -1296,6 +1305,13 @@ st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG*
 """)
 uploaded_images = st.file_uploader("Please choose your image(s).", type = image_types, accept_multiple_files=True)
 
+st.markdown("""By default, this program will first use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT for processing.
+
+If you use your own GPT account, then you can also send images directly to GPT. This alternative approach may yield better answers for "untidy" images, but tends to be costlier than the default approach.
+""")
+
+st.caption("By default, [Python-tesseract](https://pypi.org/project/pytesseract/) will extract text from images. This tool is based on [Google’s Tesseract-OCR Engine](https://github.com/tesseract-ocr/tesseract).")
+
 st.subheader('Language of uploaded files')
 
 st.markdown("""In what language is the text from your uploaded file(s) written?""")
@@ -1325,17 +1341,18 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your question(s) for GPT")
 
-st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
-
-GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).
-""")
+st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**""")
 
 gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
 st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each file.")
 
+st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+
+if st.toggle('See the instruction given to GPT'):
+    st.write(f"*{intro_for_GPT[0]['content']}*")
+
 if own_account_allowed() > 0:
-    
     
     st.subheader(':orange[Enhance program capabilities]')
     
@@ -1413,7 +1430,6 @@ if own_account_allowed() > 0:
         #st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
     
     #file_counter_bound_entry = round(file_counter_bound_entry_raw)
-       
 
 
 # %% [markdown]
@@ -1437,7 +1453,7 @@ You can also download a record of your responses.
 
 #Warning
 if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-    st.warning('A low-cost AI will answer your question(s). Please be cautious.')
+    st.warning('A low-cost AI will answer your question(s). Please check at least some of the answers.')
 
 if st.session_state.gpt_model == "gpt-4-turbo":
     st.warning('An expensive AI will answer your question(s). Please be cautious.')
@@ -1446,7 +1462,8 @@ run_button = st.button('RUN the program')
 
 if st.session_state.gpt_model == "gpt-4-turbo":
     #st.write('Not getting the best responses for your images? You can try a more costly')
-    run_button_b64 = st.button('GET better answers for "untidy" images')
+    #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
+    run_button_b64 = st.button(label = 'IMPROVE performance for "untidy" images')
 
 keep_button = st.button('DOWNLOAD your form responses')
 

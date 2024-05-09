@@ -59,7 +59,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Whether users are allowed to use their account
-from own_account import own_account_allowed
+from extra_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -399,7 +399,7 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
             #Check if stll more results
             if len(links_next_page_raw) > 0:
                 for i in links_next_page_raw:
-                    if 'title=' in str(i):
+                    if (('title=' in str(i)) and (counter <=judgment_counter_bound)):
                         remove_title = str(i).split('" title=')[0]
                         remove_leading_words = remove_title.replace('<a href="', '')
                         if 'a class=' not in remove_leading_words:
@@ -557,15 +557,79 @@ def meta_judgment_dict(judgment_url):
                 if court_i in mnc_raw.lower():
                     mnc_list = mnc_raw.lower().split(court_i)
                     judgment_dict['Medium neutral citation'] = '[' + mnc_list[0] + '] ' + court_i.upper()  + ' ' +  mnc_list[1]
+                    judgment_dict['Medium neutral citation']=judgment_dict['Medium neutral citation']
+
+                    while ' 0' in judgment_dict['Medium neutral citation']:
+                        judgment_dict['Medium neutral citation'] = judgment_dict['Medium neutral citation'].replace(' 0', ' ')
             
             del judgment_dict['MNC']
     
         except:
             pass        
-
+        
+    
     return judgment_dict
 
     
+
+# %%
+#Preliminary function for changing names for any PDF judgments
+def pdf_name_mnc_list(url_search_results, judgment_counter_bound):
+                      
+    #Scrape webpage of search results
+    page = requests.get(url_search_results)
+    soup = BeautifulSoup(page.content, "lxml")
+    
+    #Placeholder
+    name_mnc_list = []
+
+    #Start counter
+    counter = 1
+    # Get links of first 20 results
+    links_raw = soup.find_all("a", href=re.compile("fca"))
+    
+    for i in links_raw:
+        if (('title=' in str(i)) and (counter <=judgment_counter_bound)):
+            name_mnc_list.append(i['title'])
+            counter = counter + 1
+    
+    #Go beyond first 20 results
+    
+    for ending in further_page_ending_list:
+        if counter <=judgment_counter_bound:
+            url_next_page = url_search_results + '&start_rank=' + f"{ending}"
+            page_judgment_next_page = requests.get(url_next_page)
+            soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
+            links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("fca"))
+    
+            #Check if stll more results
+            if len(links_next_page_raw) > 0:
+                for i in links_next_page_raw:
+                    if (('title=' in str(i)) and (counter <=judgment_counter_bound)):
+                        name_mnc_list.append(i['title'])
+                        counter = counter + 1
+    
+            else:
+                break
+    
+    return name_mnc_list
+
+
+# %%
+#Function for changing names for any PDF judgments
+
+def pdf_name(name_mnc_list, mnc):
+    #Placeholder
+    name = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.' 
+    
+    for i in name_mnc_list:
+        if mnc in i:
+            name_raw = i.split(' ' + mnc)[0]
+            name = name_raw.replace('Cached: ', '')
+            
+    return name
+    
+
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -710,7 +774,7 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 
 def judgment_prompt_json(judgment_json, gpt_model):
                 
-    judgment_content = 'Based on the metadata and judgment in the following JSON:  """'+ str(judgment_json) + '""",'
+    judgment_content = 'Based on the metadata and judgment in the following JSON: """'+ str(judgment_json) + '"""'
 
     judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
     
@@ -728,7 +792,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
         judgment_json["Judgment"] = judgment_string_trimmed     
         
-        judgment_content_capped = 'Based on the metadata and judgment in the following JSON:  """'+ str(judgment_json) + '""",'
+        judgment_content_capped = 'Based on the metadata and judgment in the following JSON:  """'+ str(judgment_json) + '"""'
         
         return judgment_content_capped
 
@@ -736,7 +800,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific paragraph in the judgment, provide the paragraph number as part of your answer. If you cannot answer any of the questions based on the judgment or metadata, do not make up information, but instead write "answer not found".'
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific paragraph in the judgment, provide the paragraph number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found".'
 
 intro_for_GPT = [{"role": "system", "content": role_content}]
 
@@ -749,7 +813,9 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
     
-    judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model) + 'you will be given questions to answer in JSON form.'}]
+    judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
+
+    json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
         
     #Create answer format
     
@@ -765,7 +831,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
     
     #Create messages in one prompt for GPT
-    messages_for_GPT = intro_for_GPT + judgment_for_GPT + question_for_GPT
+    messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_for_GPT
     
 #   return messages_for_GPT
 
@@ -986,7 +1052,20 @@ def run(df_master):
 #        df_individual.pop('Hyperlink')
 #    except:
 #        pass
-    
+
+    #Correct case names for any PDFs
+
+    name_mnc_list = pdf_name_mnc_list(url_search_results, judgments_counter_bound)
+
+    for judgment_index in df_individual.index:
+        
+        if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to FCA Digital Law Library']).lower())):
+            try:
+                df_individual.loc[judgment_index, 'Case name'] = pdf_name(name_mnc_list, df_individual.loc[judgment_index, 'Medium neutral citation'])
+            except Exception as e:
+                print(f"{df_individual.loc[judgment_index, 'Medium neutral citation']}: cannot change case name for PDF.")
+                print(e)
+                    
     #Instruct GPT
     
     #GPT model
@@ -1154,7 +1233,7 @@ phrase_entry = st.text_input('Phrase')
 
 proximity_entry  = st.text_input('Proximity')
 
-on_this_date_entry = st.date_input('On this date', value = None, format="DD/MM/YYYY")
+on_this_date_entry = st.date_input('On this date', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
 
 after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY")
 
@@ -1199,14 +1278,16 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your question(s) for GPT")
 
-st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
-
-GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).
-""")
+st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**""")
 
 gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
-st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each judgment.")
+st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each file.")
+
+st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+
+if st.toggle('See the instruction given to GPT'):
+    st.write(f"*{intro_for_GPT[0]['content']}*")
 
 if own_account_allowed() > 0:
 
@@ -1305,7 +1386,7 @@ You can also download a record of your responses.
 
 #Warning
 if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-    st.warning('A low-cost AI will answer your question(s). Please be cautious.')
+    st.warning('A low-cost AI will answer your question(s). Please check at least some of the answers.')
 
 if st.session_state.gpt_model == "gpt-4-turbo":
     st.warning('An expensive AI will answer your question(s). Please be cautious.')

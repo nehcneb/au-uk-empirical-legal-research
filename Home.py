@@ -25,7 +25,7 @@ import streamlit as st
 
 # %%
 #Whether users are allowed to use their account
-from own_account import own_account_allowed
+from extra_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -121,6 +121,7 @@ if source_entry:
     browser_entry = st.checkbox('Yes, I understand.', value = st.session_state['i_understand'])
 
 next_button = st.button('Next')
+
 
 
 # %% [markdown]

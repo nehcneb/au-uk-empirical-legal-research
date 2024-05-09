@@ -39,6 +39,8 @@ from urllib.request import urlretrieve
 import os
 import urllib.request
 import PyPDF2
+import pdf2image
+from PIL import Image
 import io
 
 #Streamlit
@@ -50,6 +52,8 @@ import streamlit_ext as ste
 #OpenAI
 import openai
 import tiktoken
+import math
+from math import ceil
 
 #Google
 from google.oauth2 import service_account
@@ -61,7 +65,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Whether users are allowed to use their account
-from own_account import own_account_allowed
+from extra_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -418,12 +422,6 @@ def is_api_key_valid(key_to_check):
 if 'gpt_model' not in st.session_state:
     st.session_state['gpt_model'] = "gpt-3.5-turbo-0125"
 
-#Upperbound on number of engagements with GPT
-
-#GPT_use_bound = 3
-
-#print(f"\nPrior number of GPT uses is capped at {GPT_use_bound} times.")
-
 #Define input and output costs, token caps and maximum characters
 #each token is about 4 characters
 
@@ -555,9 +553,9 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in string form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer any of the questions based on the judgment or metadata, do not make up information, but instead write "answer not found".'
-
-intro_for_GPT = [{"role": "system", "content": role_content}]
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata as a string or as images. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+role_content_er = 'The string or images given to you may contain judgments for multiple cases. Please provide answers only based on the judgment for the specific case identified in the "Case name" section of the metadata.'
+intro_for_GPT = [{"role": "system", "content": role_content + role_content_er}]
 
 
 # %%
@@ -813,6 +811,441 @@ def search_url(df_master):
 
 
 # %% [markdown]
+# # For GPT-4-turbo vision
+
+# %%
+#Tokens counter
+
+def get_image_dims(image):
+    if re.match(r"data:image\/\w+;base64", image):
+        image = re.sub(r"data:image\/\w+;base64,", "", image)
+        image = Image.open(BytesIO(base64.b64decode(image)))
+        return image.size
+    else:
+        raise ValueError("Image must be a base64 string.")
+
+def calculate_image_token_cost(image, detail="auto"):
+    # Constants
+    LOW_DETAIL_COST = 85
+    HIGH_DETAIL_COST_PER_TILE = 170
+    ADDITIONAL_COST = 85
+
+    if detail == "auto":
+        # assume high detail for now
+        detail = "high"
+
+    if detail == "low":
+        # Low detail images have a fixed cost
+        return LOW_DETAIL_COST
+    elif detail == "high":
+        # Calculate token cost for high detail images
+        width, height = get_image_dims(image)
+        # Check if resizing is needed to fit within a 2048 x 2048 square
+        if max(width, height) > 2048:
+            # Resize the image to fit within a 2048 x 2048 square
+            ratio = 2048 / max(width, height)
+            width = int(width * ratio)
+            height = int(height * ratio)
+        # Further scale down to 768px on the shortest side
+        if min(width, height) > 768:
+            ratio = 768 / min(width, height)
+            width = int(width * ratio)
+            height = int(height * ratio)
+        # Calculate the number of 512px squares
+        num_squares = math.ceil(width / 512) * math.ceil(height / 512)
+        # Calculate the total token cost
+        total_cost = num_squares * HIGH_DETAIL_COST_PER_TILE + ADDITIONAL_COST
+        return total_cost
+    else:
+        # Invalid detail_option
+        raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
+
+
+# %%
+#Convert case-link pairs to judgment text
+
+def judgment_tokens_b64(case_link_pair):
+
+    output_b64 = {'Judgment':[], 'tokens_raw': 0}
+    
+    url = case_link_pair['link_direct']
+    headers = {'User-Agent': 'whatever'}
+    r = requests.get(url, headers=headers)
+    bytes_data = io.BytesIO(r.content)
+    
+    images = pdf2image.convert_from_bytes(bytes_data.read(), timeout=30, fmt="jpeg")
+    
+    for image in images[ : len(images)]:
+
+        output = BytesIO()
+        image.save(output, format='JPEG')
+        im_data = output.getvalue()
+        
+        image_data = base64.b64encode(im_data)
+        if not isinstance(image_data, str):
+            # Python 3, decode from bytes to string
+            image_data = image_data.decode()
+        data_url = 'data:image/jpg;base64,' + image_data
+
+        #b64 = base64.b64encode(image_raw).decode('utf-8')
+
+        b64_to_attach = data_url
+        #b64_to_attach = f"data:image/png;base64,{b64}"
+
+        output_b64['Judgment'].append(b64_to_attach)
+    
+    for image_b64 in output_b64['Judgment']:
+
+        output_b64['tokens_raw'] = output_b64['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
+    
+    return output_b64
+        
+
+
+# %%
+#Meta labels and judgment combined
+
+def meta_judgment_dict_b64(case_link_pair):
+    
+    judgment_dict = {'Case name': '',
+                     'Medium neutral citation' : '', 
+                     'English Reports': '', 
+                     'Nominate Reports': '', 
+                     'Hyperlink to CommonLII': '', 
+                     'Year' : '', 
+                     'Judgment': '', 
+                     'tokens_raw': 0
+                    }
+
+    case_name = case_link_pair['case']
+    year = case_link_pair['link_direct'].split('EngR/')[-1][0:4]
+    case_num = case_link_pair['link_direct'].split('/')[-1].replace('.pdf', '')
+    mnc = '[' + year + ']' + ' EngR ' + case_num
+
+    er_cite = ''
+    nr_cite = ''
+        
+    try:
+        case_name = case_link_pair['case'].split('[')[0][:-1]
+        nr_cite = case_link_pair['case'].split(';')[1][1:]
+        er_cite = case_link_pair['case'].split(';')[2][1:]
+    except:
+        pass
+                
+    judgment_dict['Case name'] = case_name
+    judgment_dict['Medium neutral citation'] = mnc
+    judgment_dict['English Reports'] = er_cite
+    judgment_dict['Nominate Reports'] = nr_cite
+    judgment_dict['Year'] = year
+    judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
+    judgment_dict['Judgment'] = judgment_tokens_b64(case_link_pair)['Judgment']
+    judgment_dict['tokens_raw'] = judgment_tokens_b64(case_link_pair)['tokens_raw']
+
+#    pause.seconds(np.random.randint(5, 15))
+    
+    #try:
+     #   judgment_text = str(soup.find_all('content'))
+    #except:
+      #  judgment_text= soup.get_text(strip=True)
+        
+    return judgment_dict
+
+
+# %%
+#Define GPT answer function for answers in json form, YES TOKENS
+#For gpt-4-turbo vision
+
+def GPT_b64_json_tokens(questions_json, judgment_json, gpt_model):
+    #'question_json' variable is a json of questions to GPT
+
+    #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
+
+    #Add images to messages to GPT
+    image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+
+    for image_b64 in judgment_json['Judgment']:
+        image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+        image_content_value.append(image_message_to_attach)
+
+    image_content = [{"role": "user", 
+                      "content": image_content_value
+                     }
+                  ]
+
+    #Create metadata content
+
+    metadata_content = [{"role": "user", "content": ''}]
+
+    metadata_json_raw = judgment_json
+
+    for key in ['Hyperlink to CommonLII', 'Judgment', 'tokens_raw']:
+        try:
+            metadata_json_raw.pop(key)
+        except:
+            print(f'Unable to remove {key} from metadata_json_raw')
+
+    metadata_json = metadata_json_raw
+
+    if 'Judgment' not in metadata_json.keys():
+        metadata_content = [{"role": "user", "content": 'Based on the following metadata:' + str(metadata_json)}]
+
+    #Create json direction content
+
+    json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
+
+    file_for_GPT = image_content + metadata_content + json_direction
+    
+    #Create answer format
+    
+    q_keys = [*questions_json]
+    
+    answers_json = {}
+    
+    for q_index in q_keys:
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
+    
+    #Create questions, which include the answer format
+    
+    question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
+    
+    #Create messages in one prompt for GPT
+    intro_for_GPT = [{"role": "system", "content": role_content}] 
+
+    messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
+    
+#   return messages_for_GPT
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    try:
+        #completion = client.chat.completions.create(
+        completion = openai.chat.completions.create(
+            model=gpt_model,
+            messages=messages_for_GPT, 
+            response_format={"type": "json_object"}
+        )
+        
+#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
+        
+        #To obtain a json directly, use below
+        answers_dict = json.loads(completion.choices[0].message.content)
+        
+        #Obtain tokens
+        output_tokens = completion.usage.completion_tokens
+        
+        prompt_tokens = completion.usage.prompt_tokens
+        
+        return [answers_dict, output_tokens, prompt_tokens]
+
+    except Exception as error:
+        
+        for q_index in q_keys:
+            answers_json[q_index] = error
+        
+        return [answers_json, 0, 0]
+
+
+
+# %%
+#Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
+#For gpt-4-turbo vision
+
+#The following function DOES NOT check for existence of questions for GPT
+    # To so check, active line marked as #*
+def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gpt_model):
+    # Variable questions_json refers to the json of questions
+    # Variable df_individual refers to each respondent's df
+    # Variable activation refers to status of GPT activation (real or test)
+    # The output is a new JSON for the relevant respondent with new columns re:
+        # f"Length of first 10 pages in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
+        # 'GPT cost estimate (USD excl GST)'
+        # 'GPT time estimate (seconds)'
+        # GPT questions/answers
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    question_keys = [*questions_json]
+
+    for judgment_index in df_individual.index:
+        
+        judgment_json = df_individual.to_dict('index')[judgment_index]
+        
+        #Calculate and append number of tokens of judgment, regardless of whether given to GPT
+        #judgment_json['tokens_raw'] = num_tokens_from_string(str(judgment_json), "cl100k_base")
+
+        df_individual.loc[judgment_index, f"Tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_json['tokens_raw']       
+
+        #Indicate whether judgment truncated
+        
+        df_individual.loc[judgment_index, "judgment truncated (if given to GPT)?"] = ''       
+        
+        if judgment_json['tokens_raw'] <= tokens_cap(gpt_model):
+            
+            df_individual.loc[judgment_index, "judgment truncated (if given to GPT)?"] = 'No'
+            
+        else:
+            
+            df_individual.loc[judgment_index, "judgment truncated (if given to GPT)?"] = 'Yes'
+
+        #Create columns for respondent's GPT cost, time
+        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
+        df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = ''
+                
+        #Calculate GPT start time
+
+        GPT_start_time = datetime.now()
+
+        #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
+
+        if int(GPT_activation) > 0:
+            GPT_judgment_json = GPT_b64_json_tokens(questions_json, judgment_json, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
+            answers_dict = GPT_judgment_json[0]
+
+            #Calculate and append GPT finish time and time difference to individual df
+            GPT_finish_time = datetime.now()
+            
+            GPT_time_difference = GPT_finish_time - GPT_start_time
+    
+            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
+        
+        else:
+            answers_dict = {}    
+            for q_index in question_keys:
+                #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
+                answer = 'Placeholder answer for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
+                answers_dict.update({q_index: answer})
+            
+            #Own calculation of GPT costs for Placeholder answer fors
+
+            #Calculate capped judgment tokens
+
+            judgment_capped_tokens = min(judgment_json['tokens_raw'], tokens_cap(gpt_model))
+
+            #Calculate questions tokens and cost
+
+            questions_tokens = num_tokens_from_string(str(questions_json), "cl100k_base")
+
+            #Calculate metadata tokens
+
+            metadata_tokens = 0
+            
+            metadata_json_for_counting = judgment_json
+
+            for key in ['Hyperlink to CommonLII', 'Judgment', 'tokens_raw']:
+                try:
+                    metadata_json_for_counting.pop(key)
+                except:
+                    print(f'Unable to remove {key} from metadata_json_for_counting')        
+
+            if 'Judgment' not in metadata_json_for_counting.keys():
+                metadata_tokens = metadata_tokens + num_tokens_from_string(str(metadata_json_for_counting), "cl100k_base")
+
+            #Calculate other instructions' tokens
+
+            other_instructions = role_content + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
+
+            #Calculate number of tokens of answers
+            answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+
+            input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
+            
+            GPT_judgment_json = [answers_dict, answers_tokens, input_tokens]
+
+        #Create GPT question headings and append answers to individual spreadsheets
+
+        for question_index in question_keys:
+            question_heading = question_index + ': ' + questions_json[question_index]
+            df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
+
+        #Calculate GPT costs
+
+        GPT_cost = GPT_judgment_json[1]*gpt_output_cost(gpt_model) + GPT_judgment_json[2]*gpt_input_cost(gpt_model)
+
+        #Calculate and append GPT cost to individual df
+        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
+    
+    return df_individual
+    
+
+
+# %%
+#For gpt-4-turbo vision
+
+def run_b64(df_master):
+
+    df_master = df_master.fillna('')
+
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: question_characters_bound].apply(split_by_line)
+    df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
+    
+    #Create judgments file
+    judgments_file = []
+    
+    #Conduct search
+
+    url_search_results = er_search(query= df_master.loc[0, 'Enter search query'], 
+                                   method = df_master.loc[0, 'Find (method)']
+                                  )
+        
+    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+
+    case_link_pairs = search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
+
+    for case_link_pair in case_link_pairs:
+
+        judgment_dict = meta_judgment_dict_b64(case_link_pair)
+        judgments_file.append(judgment_dict)
+        pause.seconds(np.random.randint(5, 15))
+    
+    #Create and export json file with search results
+    json_individual = json.dumps(judgments_file, indent=2)
+    
+    df_individual = pd.read_json(json_individual)
+    
+    #Instruct GPT
+
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+    
+    #GPT model
+
+    if df_master.loc[0, 'Use latest version of GPT'] == True:
+        gpt_model = "gpt-4-turbo"
+    else:        
+        gpt_model = "gpt-3.5-turbo-0125"
+        
+    #apply GPT_individual to each respondent's judgment spreadsheet
+    
+
+    questions_json = df_master.loc[0, 'questions_json']
+            
+    #apply GPT_individual to each respondent's judgment spreadsheet
+
+    df_updated = engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gpt_model)
+
+    #Remove redundant columns
+
+    for column in ['tokens_raw', 'Judgment']:
+        try:
+            df_updated.pop(column)
+        except:
+            print(f"No {column} column.")
+
+    return df_updated
+
+
+# %% [markdown]
 # # Streamlit form, functions and parameters
 
 # %% [markdown]
@@ -926,15 +1359,17 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your question(s) for GPT")
 
-st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**
-
-GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).
-""")
+st.markdown("""You may enter one or more questions. **Please enter one question per line or per paragraph.**""")
 
 gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
-st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each judgment.")
+st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will be instructed to read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each file.")
 
+st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+
+if st.toggle('See the instruction given to GPT'):
+    st.write(f"*{intro_for_GPT[0]['content']}*")
+    
 if own_account_allowed() > 0:
 
     st.subheader(':orange[Enhance program capabilities]')
@@ -1027,11 +1462,10 @@ You can also download a record of your responses.
 
 #Warning
 if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-    st.warning('A low-cost AI will answer your question(s). Please be cautious.')
+    st.warning('A low-cost AI will answer your question(s). Please check at least some of the answers.')
 
 if st.session_state.gpt_model == "gpt-4-turbo":
     st.warning('An expensive AI will answer your question(s). Please be cautious.')
-
 
 run_button = st.button('RUN the program')
 
@@ -1191,10 +1625,14 @@ if run_button:
     
                 else:
                     API_key = st.secrets["openai"]["gpt_api_key"]
-                
             
                 #Produce results
-                df_individual_output = run(df_master)
+
+                if df_master.loc[0, 'Use latest version of GPT'] == True:
+                    df_individual_output = run_b64(df_master)
+
+                else:
+                    df_individual_output = run(df_master)
 
                 #Keep results in session state
                 if "df_individual_output" not in st.session_state:
