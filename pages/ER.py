@@ -1520,7 +1520,7 @@ You can also download a record of your responses.
 
 #Warning
 if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-    st.warning('A low-cost version of GPT will answer your question(s). Please note that this model is *not* designed for processing the file format (PDF) in which the English Reports are available.')
+    st.warning('A low-cost version of GPT will answer your question(s). Please note that this model is *not* designed for processing the file format (PDF) to which the English Reports are encoded.')
 
 #if st.session_state.gpt_model == "gpt-4-turbo":
     #st.warning('An expensive AI will answer your question(s). Please be cautious.')
