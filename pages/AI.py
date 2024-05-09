@@ -710,21 +710,34 @@ if len(st.session_state.df_to_analyse) > 0:
     # Generate output
 
     if st.button("ASK"):
-        if prompt:
+        if not prompt:
+            st.warning("Please enter some instruction.")
+        else:
+            #Keep record of prompt
+            st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
+
             if int(consent) == 0:
                 st.warning("You must click on 'Yes, I agree.' to run the program.")
                 quit()
                 
-            elif st.session_state["own_account"] == True:
-                if (st.session_state.gpt_api_key_validity == False):
+            elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
                     
-                    st.warning('You have not validated your API key. Please do so.')
-                    quit()
+                st.warning('You have not validated your API key.')
+                quit()
+        
+            elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
+        
+                st.warning('You have not entered a valid API key.')
+                quit()  
+
+            elif st.session_state.instruction_left == 0:
+                no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
+                st.write(no_more_instructions)
                 
-            #Keep record of prompt
-            st.session_state.messages.append({"time": str(datetime.now()), "role": "user", "content": prompt})
+                #Keep record of response
+                st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": no_more_instructions})
             
-            if st.session_state.instruction_left > 0:
+            else:
                 # call pandas_ai.run(), passing dataframe and prompt
                 with st.spinner("Running..."):
 
@@ -806,15 +819,7 @@ if len(st.session_state.df_to_analyse) > 0:
 
                     #Keep record of instructions left
                     st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": instructions_left_text})
-
-            else:
-                no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
-                st.write(no_more_instructions)
-                
-                #Keep record of response
-                st.session_state.messages.append({"time": str(datetime.now()), "role": "assistant", "content": no_more_instructions})
-        else:
-            st.warning("Please enter some instruction.")
+            
 
     #Show code and clarification are not working yet
     #if len(st.session_state.messages) > 0:

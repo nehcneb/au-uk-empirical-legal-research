@@ -1536,13 +1536,16 @@ if run_button:
         if 'need_resetting' not in st.session_state:
             st.session_state['need_resetting'] = 1
             
+
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-    
-        #if (st.session_state.gpt_api_key_validity == False):
-        
-        st.warning('You have not validated your API key. Please do so.')
-        #st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+            
+        st.warning('You have not validated your API key.')
         quit()
+
+    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
+
+        st.warning('You have not entered a valid API key.')
+        quit()  
         
     else:
         

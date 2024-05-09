@@ -1305,11 +1305,6 @@ st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG*
 """)
 uploaded_images = st.file_uploader("Please choose your image(s).", type = image_types, accept_multiple_files=True)
 
-st.markdown("""By default, this program will first use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT for processing.
-
-If you use your own GPT account, then you can also send images directly to GPT. This alternative approach may yield better answers for "untidy" images, but tends to be costlier than the default approach.
-""")
-
 st.caption("By default, [Python-tesseract](https://pypi.org/project/pytesseract/) will extract text from images. This tool is based on [Google’s Tesseract-OCR Engine](https://github.com/tesseract-ocr/tesseract).")
 
 st.subheader('Language of uploaded files')
@@ -1446,7 +1441,7 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 
 st.header("Next steps")
 
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes per 10 files.
 
 You can also download a record of your responses.
 """)
@@ -1460,14 +1455,20 @@ if st.session_state.gpt_model == "gpt-4-turbo":
 
 run_button = st.button('RUN the program')
 
-if st.session_state.gpt_model == "gpt-4-turbo":
-    #st.write('Not getting the best responses for your images? You can try a more costly')
-    #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
-    run_button_b64 = st.button(label = 'IMPROVE performance for "untidy" images')
-
 keep_button = st.button('DOWNLOAD your form responses')
 
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
+
+if ((st.session_state.gpt_model == "gpt-4-turbo") and (uploaded_images)):
+
+    st.markdown("""By default, this program will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
+
+Alternatively, you can send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach.
+""")
+    
+    #st.write('Not getting the best responses for your images? You can try a more costly')
+    #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
+    run_button_b64 = st.button(label = 'SEND images to GPT directly')
 
 #test_button = st.button('Test')
 
@@ -1475,7 +1476,6 @@ reset_button = st.button(label='RESET to start afresh', type = 'primary',  help 
 if 'need_resetting' in st.session_state:
 #if st.session_state.need_resetting == 1:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
 
 
 # %% [markdown]
@@ -1578,7 +1578,6 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
         #st.write(output)
 
 
-
 # %%
 if run_button:
 
@@ -1602,16 +1601,18 @@ if run_button:
             st.session_state['need_resetting'] = 1
 
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-    
-        #if (st.session_state.gpt_api_key_validity == False):
-        
-        st.warning('You have not validated your API key. Please do so.')
-        #st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+            
+        st.warning('You have not validated your API key.')
         quit()
+
+    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
+
+        st.warning('You have not entered a valid API key.')
+        quit()  
         
     else:
 
-        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes. """)
+        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 files. """)
 
         with st.spinner('Running...'):
     
@@ -1698,11 +1699,10 @@ if run_button:
             #df_master.pop("Your GPT API key")
             #df_to_update = pd.concat([df_google, df_master])
             #conn.update(worksheet="OWN", data=df_to_update, )
-            
 
 
 # %%
-if st.session_state.gpt_model == "gpt-4-turbo":
+if ((st.session_state.gpt_model == "gpt-4-turbo") and (uploaded_images)):
     
     if run_button_b64:
     
@@ -1734,7 +1734,7 @@ if st.session_state.gpt_model == "gpt-4-turbo":
             
         else:
     
-            st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes. """)
+            st.markdown("""Your results will be available for download soon. The estimated waiting time is about 1-2 minutes per image. """)
     
             with st.spinner('Running...'):
         

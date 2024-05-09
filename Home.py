@@ -116,7 +116,7 @@ if source_entry:
 
         st.session_state.i_understand = False
     
-    st.warning(f"You must be able to evaluate the quality and accruacy of computer-generated information or data about {source_entry[0].lower()}{source_entry[1:]}. Do you understand?")
+    st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accruacy of computer-generated information or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
 
     browser_entry = st.checkbox('Yes, I understand.', value = st.session_state['i_understand'])
 
