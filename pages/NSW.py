@@ -1161,7 +1161,7 @@ st.markdown("""**:green[Please enter your search terms.]** This program will col
 
 For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/search/advanced. This section mimics their Advanced Search function.
 """)
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to Cover more judgments.')
+st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
 st.subheader("NSW courts and tribunals to cover")
 
