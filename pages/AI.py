@@ -699,10 +699,10 @@ if len(st.session_state.df_to_analyse) > 0:
     if st.session_state.ai_choice == 'GPT':
     
         if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-            st.warning('A low-cost AI will respond to your instruction(s). Beware that it is not designed for data analysis.')
+            st.warning('A low-cost version of GPT will respond to your instruction(s). Please note that this version is *not* designed for data analysis.')
     
         if st.session_state.gpt_model == "gpt-4-turbo":
-            st.warning(f'An expensive AI will respond to your instruction(s). Please be cautious.')
+            st.warning(f'An expensive version of GPT will respond to your instruction(s).')
             
     else: #if st.session_state.ai_choice == 'BambooLLM':
         st.warning('An experimental AI will respond to your instruction(s). Please be cautious.')
