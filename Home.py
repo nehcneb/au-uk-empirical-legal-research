@@ -96,9 +96,16 @@ This pilot version can automatically
 (3) use a generative AI as a research assistant to answer your questions about each judgment.
 
 This program can also process your own files or spreadsheet of data.
-
-**Complete this form to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
 """)
+
+if own_account_allowed() > 0:
+    st.markdown("""**Complete this form to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
+""")
+
+else:
+    st.markdown("""**Complete this form to kickstart your project :green[for free]!** The results of the abovementioned tasks will be available for download.
+""")
+
 st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please send any enquiries to Ben at ben.chen@sydney.edu.au.')
 
 st.header("Start")
