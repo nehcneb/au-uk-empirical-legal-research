@@ -674,7 +674,7 @@ if len(st.session_state.df_to_analyse) > 0:
 
     st.subheader(f'Enter your instruction(s) for {st.session_state.ai_choice}')
 
-    st.write(f':green[Please give your instruction(s) one by one.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions.')
+    st.write(f':green[Please give your instruction(s) in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions.')
             
     #prompt = st.text_area(ai_model_description(st.session_state.ai_choice), height= 200, max_chars=1000) 
     prompt = st.text_area(f'Each instruction must not exceed 1000 characters.', height= 200, max_chars=1000) 
