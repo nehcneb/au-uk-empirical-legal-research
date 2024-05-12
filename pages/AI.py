@@ -1161,6 +1161,7 @@ if isinstance(st.session_state.response, pd.DataFrame):
     if st.button('ANALYSE the spreadsheet produced'):
         st.session_state.df_produced = st.session_state.response
         st.session_state.df_uploaded_key += 1
+        st.session_state.response = {}
         st.rerun()
 
 #For Langchain,
@@ -1182,6 +1183,7 @@ if "dataframe" in st.session_state.response_json:
             st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
             st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
             st.session_state.df_uploaded_key += 1
+            st.session_state.response_json["dataframe"] = {}
             st.rerun()
             
 
