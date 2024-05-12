@@ -25,3 +25,5 @@ pandasai
 PyYAML
 openpyxl
 langchain
+langchain_experimental
+langchain_community
