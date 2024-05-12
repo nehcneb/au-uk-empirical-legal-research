@@ -332,6 +332,7 @@ You must not remove the columns entitiled "Case name" and "Medium neutral citati
 """
 
 #If there are values which are "nonetype" objects, you ignore such values first. 
+
 #If there are values which are "list" objects, you convert such values to "string" objects first. 
 
 #visualisation = ' Everytime you are given a question or an instruction, try to provide the code to visualise your answer using Matplotlib.'
@@ -785,8 +786,10 @@ st.header("You have chosen to :blue[analyse your spreadsheet].")
 
 #Open spreadsheet and personal details
 if len(st.session_state.df_individual_output) > 0:
+    
+    if len(st.session_state.df_produced) == 0:
 
-    st.success('Your spreadsheet has been imported. Please scroll down.')
+        st.success('Your spreadsheet has been imported. Please scroll down.')
 
 else: #if len(st.session_state.df_individual_output) == 0:
 
@@ -813,8 +816,11 @@ else: #if len(st.session_state.df_individual_output) == 0:
             df_uploaded = pd.read_json(uploaded_file, orient= 'split')
 
         st.session_state.df_uploaded = df_uploaded
+
+        if len(st.session_state.df_produced) == 0:
         
-        st.success('Your spreadsheet has been imported. Please scroll down.')
+            st.success('Your spreadsheet has been imported. Please scroll down.')
+            
 
 
 # %% [markdown]
@@ -958,16 +964,27 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 # ## Spreadsheet
 
 # %%
-#Determine which spreadsheet to analyse
+#Order of spreadsheet to analyse
+
+#Display spreadsheet
 
 if len(st.session_state.df_produced) > 0:
     st.session_state.df_to_analyse = st.session_state.df_produced
+
+    if ((len(st.session_state.df_individual_output) > 0) or (len(st.session_state.df_uploaded) > 0)):
+        
+        st.warning('You already have a spreadsheet imported. Please :red[REMOVE] that one before you import another one.')
     
-elif len(st.session_state.df_uploaded) > 0:
-    st.session_state.df_to_analyse = st.session_state.df_uploaded
+elif len(st.session_state.df_individual_output) > 0:
     
-else: #elif len(st.session_state.df_individual_output) > 0:
     st.session_state.df_to_analyse = st.session_state.df_individual_output
+    
+    if len(st.session_state.df_uploaded) > 0:
+        
+        st.warning('You already have a spreadsheet imported. Please :red[REMOVE] that one before you import another one.')
+
+else: #len(st.session_state.df_uploaded) > 0:
+    st.session_state.df_to_analyse = st.session_state.df_uploaded
 
 #Start analysing spreadsheet
 if len(st.session_state.df_to_analyse) > 0:
@@ -978,8 +995,6 @@ else:
     st.warning('Please upload a spreadsheet.')
     quit()
 
-
-#Display spreadsheet
 st.subheader('Your spreadsheet')
 
 st.caption('To download, search within or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
@@ -1036,23 +1051,38 @@ except Exception as e:
 
     st.warning(non_textual_error_to_show)
 
-
 #Show list error only if non_textual_error_to_show was not shown
 if not 'non_textual_error_to_show' in globals():
 
     st.warning(list_non_textual_error_to_show)
 
-
 #Note importation of AI produced spreadsheet
 if len(st.session_state.df_produced) > 0:
     st.success('The spreadsheet produced has been imported.')
+    #Remove df_produced after importation
+    #st.session_state.df_produced = {}
 
 #New spreadsheet button
 
-if st.button('UPLOAD a new spreadsheet'):
+#if st.button('UPLOAD a new spreadsheet'):
+    #st.session_state.df_uploaded_key += 1
+    #clear_most_cache()
+    #st.rerun()
+
+if st.button('REMOVE this spreadsheet', type = 'primary'):
+    
     st.session_state.df_uploaded_key += 1
-    clear_most_cache()
-    st.rerun()
+    
+    for df_key in {'df_produced', 'df_individual_output', 'df_uploaded'}:
+        
+        if isinstance(st.session_state[df_key], pd.DataFrame):
+            
+            if st.session_state[df_key].sort_index(inplace=True) == st.session_state.edited_df.sort_index(inplace=True):
+                st.session_state.pop(df_key)
+                st.write(f'{df_key} removed.')
+            
+            st.rerun()
+
 
 
 # %% [markdown]
@@ -1098,6 +1128,8 @@ st.caption('During the pilot stage, the number of instructions and the number of
 if st.session_state.q_and_a_provided == 1:
     st.success('Your clarifying answers have been added to your instructions. Please press ASK again.')
     st.session_state.q_and_a_toggle = False
+    #Remove prefill after importation
+    #st.session_state['prompt_prefill'] = ''
 
 #AI warning
 if st.session_state.ai_choice == 'GPT':
@@ -1155,8 +1187,12 @@ if st.button("ASK"):
         #Keep record of response
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": no_more_instructions, 'tokens': 0, 'cost (USD)': 0})
 
+        quit()
+
     elif len(st.session_state.prompt) == 0:
         st.warning("Please enter some instruction.")
+
+        quit()
 
     else:
         #Close question and answer section 
@@ -1167,6 +1203,8 @@ if st.button("ASK"):
 
         #Change q_and_a_provided status
         st.session_state["q_and_a_provided"] = 0
+        #Close clarifying questions form brielif
+        st.session_state["q_and_a_toggle"] = False
 
         if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
             
@@ -1194,6 +1232,8 @@ if isinstance(st.session_state.response, pd.DataFrame):
     if st.button('ANALYSE the spreadsheet produced'):
         st.session_state.df_produced = st.session_state.response
         st.session_state.df_uploaded_key += 1
+        st.session_state.pop('df_uploaded')
+        st.session_state.pop('df_individual_output')
         st.session_state.response = {}
         st.rerun()
 
@@ -1206,6 +1246,9 @@ if "dataframe" in st.session_state.response_json:
             #df_to_add = pd.DataFrame(data["data"], columns=data["columns"])
             st.session_state.df_produced = pd.DataFrame(data = st.session_state.response_json["dataframe"])
             st.session_state.df_uploaded_key += 1
+            st.session_state.pop('df_uploaded')
+            st.session_state.pop('df_individual_output')
+            st.session_state.response_json["dataframe"] = {}
             st.rerun()
         
         if st.button('MERGE with your spreadsheet'):
@@ -1216,6 +1259,8 @@ if "dataframe" in st.session_state.response_json:
             st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
             st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
             st.session_state.df_uploaded_key += 1
+            st.session_state.pop('df_uploaded')
+            st.session_state.pop('df_individual_output')
             st.session_state.response_json["dataframe"] = {}
             st.rerun()
 
@@ -1235,7 +1280,7 @@ if st.button('RESET to get fresh responses', type = 'primary'):#, help = "Press 
 
 if ((st.session_state.ai_choice != 'LangChain') 
     and 
-    (st.session_state.response != {})
+    (len(str(st.session_state.response)) > 0)
     ):
     
     if st.toggle(label = 'Get clarifying questions', key = 'q_and_a_toggle'):
@@ -1252,7 +1297,7 @@ if ((st.session_state.ai_choice != 'LangChain')
                             
         with st.form("clarifying_questions_form"):
     
-            st.write('Please answer the following clarifying questions from the AI.')
+            st.write('Please consider the following clarifying questions from the AI. You may answer them here or use them to inform the drafting of instructions or questions.')
 
             #Display up to 3 clarifying questions
             if len(st.session_state.clarifying_questions) > 0:
