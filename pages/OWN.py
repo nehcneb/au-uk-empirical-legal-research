@@ -1437,16 +1437,45 @@ if own_account_allowed() > 0:
         
         st.write(f'**:green[You can increase the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
         
-        file_counter_bound_entry = round(st.number_input(label = 'Enter the maximum number of files up to 100', min_value=1, max_value=100, value=default_file_counter_bound))
+        #file_counter_bound_entry = round(st.number_input(label = 'Enter the maximum number of files up to 100', min_value=1, max_value=100, value=default_file_counter_bound))
     
-        st.session_state.file_counter_bound = file_counter_bound_entry
+        #st.session_state.file_counter_bound = file_counter_bound_entry
+
+        file_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_file_counter_bound))
+
+        if file_counter_bound_entry:
+            wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_file_counter_bound} file instead.'
+            try:
+                st.session_state.file_counter_bound = int(file_counter_bound_entry)
+            except:
+                st.warning(wrong_number_warning)
+                st.session_state.file_counter_bound = default_file_counter_bound
+
+            if ((st.session_state.file_counter_bound <= 0) or (st.session_state.file_counter_bound > 100)):
+                st.warning(wrong_number_warning)
+                st.session_state.file_counter_bound = default_file_counter_bound
     
-        st.write(f'**:violet[You can increase the maximum number of pages per file to process.]** The default maximum is {default_file_counter_bound}.')
+        st.write(f'**:violet[You can increase the maximum number of pages to process per file.]** The default maximum is {default_page_bound}.')
     
-        page_bound_entry = round(st.number_input(label = 'Enter the maximum number of pages per file up to 100', min_value=1, max_value=100, value=default_file_counter_bound))
+        #page_bound_entry = round(st.number_input(label = 'Enter the maximum number of pages per file up to 100', min_value=1, max_value=100, value=page_bound_entry))
     
-        st.session_state.page_bound = page_bound_entry
+        #st.session_state.page_bound = page_bound_entry
+
+        page_bound_entry = st.text_input(label = 'You can enter a whole number between 1 and 100.', value=str(default_page_bound))
+        #Different label from cap on number of files because streamlit doesn't allow same labels
+
+        if page_bound_entry:
+            wrong_number_warning_for_page = f'You have not entered a whole number between 1 and 100. The program will process up to {default_page_bound} pages per file instead.'
+            try:
+                st.session_state.page_bound = int(page_bound_entry)
+            except:
+                st.warning(wrong_number_warning_for_page)
+                st.session_state.page_bound = default_page_bound
     
+            if ((st.session_state.page_bound <= 0) or (st.session_state.page_bound > 100)):
+                st.warning(wrong_number_warning_for_page)
+                st.session_state.page_bound = default_page_bound
+        
         st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from the first {st.session_state.page_bound} pages each file, for up to {st.session_state.file_counter_bound} files.*')
     
     else:

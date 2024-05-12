@@ -1030,9 +1030,23 @@ if own_account_allowed() > 0:
         
         st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
         
-        judgments_counter_bound_entry = round(st.number_input(label = 'Enter the maximum number of judgments up to 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
-    
-        st.session_state.judgments_counter_bound = judgments_counter_bound_entry
+        #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
+
+        #st.session_state.judgments_counter_bound = judgments_counter_bound_entry
+
+        judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_judgment_counter_bound))
+
+        if judgments_counter_bound_entry:
+            wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
+            try:
+                st.session_state.judgments_counter_bound = int(judgments_counter_bound_entry)
+            except:
+                st.warning(wrong_number_warning)
+                st.session_state.judgments_counter_bound = default_judgment_counter_bound
+
+            if ((st.session_state.judgments_counter_bound <= 0) or (st.session_state.judgments_counter_bound > 100)):
+                st.warning(wrong_number_warning)
+                st.session_state.judgments_counter_bound = default_judgment_counter_bound
     
         st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
     

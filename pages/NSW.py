@@ -966,7 +966,18 @@ def run(df_master):
     #Check length of judgment text, replace with raw html if smaller than lower boound
 
     for judgment_index in df_individual.index:
-        judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
+
+        #Checking if judgment text has been scrapped
+        try:
+            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
+            
+        except Exception as e:
+            
+            df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
+            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
+            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
+            print(e)
+            
         if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
             html_link = 'https://www.caselaw.nsw.gov.au'+ df_individual.loc[judgment_index, "uri"]
 
@@ -1354,9 +1365,23 @@ if own_account_allowed() > 0:
         
         st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
         
-        judgments_counter_bound_entry = round(st.number_input(label = 'Enter the maximum number of judgments up to 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
-    
-        st.session_state.judgments_counter_bound = judgments_counter_bound_entry
+        #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
+
+        #st.session_state.judgments_counter_bound = judgments_counter_bound_entry
+
+        judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_judgment_counter_bound))
+
+        if judgments_counter_bound_entry:
+            wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
+            try:
+                st.session_state.judgments_counter_bound = int(judgments_counter_bound_entry)
+            except:
+                st.warning(wrong_number_warning)
+                st.session_state.judgments_counter_bound = default_judgment_counter_bound
+
+            if ((st.session_state.judgments_counter_bound <= 0) or (st.session_state.judgments_counter_bound > 100)):
+                st.warning(wrong_number_warning)
+                st.session_state.judgments_counter_bound = default_judgment_counter_bound
     
         st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
     
@@ -1415,7 +1440,7 @@ if st.session_state.need_resetting == 1:
 # %%
 #Create placeholder download buttons if previous entries and results in st.session_state:
 
-if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
+if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output) > 0)):
     
     #Load previous entries and results
     
@@ -1518,9 +1543,6 @@ if run_button:
 
     elif int(consent) == 0:
         st.warning("You must click on 'Yes, I agree.' to run the program.")
-
-   # elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
-        #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
     elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
