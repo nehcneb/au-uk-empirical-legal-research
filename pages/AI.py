@@ -587,18 +587,31 @@ def convert_links_column(df):
 # %%
 # For NSW, function for columns which are lists to strings:
 
-list_columns = ['Catchwords', 'Legislation cited', 'Cases cited', 'Texts cited', 'Parties', 'Representation', 'Decision under appeal'] 
+nsw_list_columns = ['Catchwords', 'Legislation cited', 'Cases cited', 'Texts cited', 'Parties', 'Representation', 'Decision under appeal'] 
 
 #'Decision under appeal' is a dictionary but the values of some keys are lists
 
-def nsw_df_list_columns(df):
+def nsw_df_nsw_list_columns(df):
     df_new = df.copy()
 
-    for heading in list_columns:
+    for heading in nsw_list_columns:
         if heading in df.columns:
             df_new[heading] = df[heading].astype(str)
 
     return df_new
+
+
+# %%
+def list_col_to_str(df):
+
+    columns_to_make_into_string_raw = df.applymap(lambda x: isinstance(x, list)).all()
+
+    columns_to_make_into_string = columns_to_make_into_string_raw.index[columns_to_make_into_string_raw].tolist()
+
+    for column in columns_to_make_into_string:
+        df[column] = df[column].astype(str)
+    
+    return df
 
 
 # %%
@@ -965,6 +978,26 @@ else:
     st.warning('Please upload a spreadsheet.')
     quit()
 
+
+#Display spreadsheet
+st.subheader('Your spreadsheet')
+
+st.caption('To download, search within or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
+
+st.write('You can directly edit this spreadsheet.')
+
+#Convert columns which are list type to string type
+
+try:
+    
+    df_to_analyse = list_col_to_str(df_to_analyse)
+    
+    list_non_textual_error_to_show = 'The lists in your spreadsheet have been converted to text.'
+    
+except Exception as e:
+    print(e)
+    print('Columns which are list type may not have been converted to string type')
+
 #Obtain clolumns with hyperlinks
 link_heading_config = {} 
 
@@ -977,38 +1010,38 @@ except Exception as e:
     print(e)
     print('No column has hyperlinks.')
 
-
-#Display spreadsheet
-st.subheader('Your spreadsheet')
-
-st.caption('To download, search within or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and press the appropriate button.')
-
-st.write('You can directly edit this spreadsheet.')
-
 #Make any column of hyperlinks clickable
 try:
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
 except Exception as e:
 
-    error_to_show = ''
+    #Use the following if list_col_to_str function doesn't work
+    #non_textual_error_to_show = ''
 
-    if st.session_state.page_from == 'pages/NSW.py':
+    #if st.session_state.page_from == 'pages/NSW.py':
         
-        df_to_analyse = nsw_df_list_columns(df_to_analyse)
+        #df_to_analyse = nsw_df_nsw_list_columns(df_to_analyse)
 
-        error_to_show = 'The lists in your spreadsheet have been converted to text.'
+        #non_textual_error_to_show = 'The lists in your spreadsheet have been converted to text.'
 
-    else:
-        df_to_analyse = df_to_analyse.astype(str)
+    #else:
+    df_to_analyse = df_to_analyse.astype(str)
 
-        error_to_show = 'The non-textual data in your spreadsheet have been converted to text.'
+    non_textual_error_to_show = 'The non-textual data in your spreadsheet have been converted to text.'
                 
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
-    st.warning(error_to_show)
-    
     print(f'Error: {e}.')
+
+    st.warning(non_textual_error_to_show)
+
+
+#Show list error only if non_textual_error_to_show was not shown
+if not 'non_textual_error_to_show' in globals():
+
+    st.warning(list_non_textual_error_to_show)
+
 
 #Note importation of AI produced spreadsheet
 if len(st.session_state.df_produced) > 0:
@@ -1020,7 +1053,6 @@ if st.button('UPLOAD a new spreadsheet'):
     st.session_state.df_uploaded_key += 1
     clear_most_cache()
     st.rerun()
-
 
 
 # %% [markdown]
@@ -1127,6 +1159,7 @@ if st.button("ASK"):
         st.warning("Please enter some instruction.")
 
     else:
+        #Close question and answer section 
         
         #Keep record of prompt
         prompt = st.session_state.prompt
@@ -1185,8 +1218,6 @@ if "dataframe" in st.session_state.response_json:
             st.session_state.df_uploaded_key += 1
             st.session_state.response_json["dataframe"] = {}
             st.rerun()
-            
-
 
 # %%
 #Reset button
@@ -1204,7 +1235,7 @@ if st.button('RESET to get fresh responses', type = 'primary'):#, help = "Press 
 
 if ((st.session_state.ai_choice != 'LangChain') 
     and 
-    (len(st.session_state.response) > 0)
+    (st.session_state.response != {})
     ):
     
     if st.toggle(label = 'Get clarifying questions', key = 'q_and_a_toggle'):
