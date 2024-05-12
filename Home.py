@@ -23,15 +23,6 @@
 import streamlit as st
 
 
-# %%
-#Whether users are allowed to use their account
-from extra_functions import own_account_allowed
-
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
 # %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
 st.set_page_config(
@@ -43,6 +34,7 @@ st.set_page_config(
 
 # %%
 #Determine whether to allow user to use own account
+from extra_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -60,6 +52,24 @@ sources_list = ["Judgments of the New South Wales courts and tribunals",
                 "Your own spreadsheet"
                ]
 
+source_pages = ["pages/NSW.py", 
+                "pages/CTH.py", 
+                #"pages/UK.py", 
+                "pages/KR.py", 
+                "pages/ER.py", 
+                "pages/OWN.py", 
+                'pages/AI.py']
+
+
+# %%
+def source_index(source):
+    if source == None:
+        index = None
+    else:
+        index = sources_list.index(source)
+    return index
+
+
 
 # %% editable=true slideshow={"slide_type": ""}
 #Initialize source and understanding
@@ -67,10 +77,10 @@ sources_list = ["Judgments of the New South Wales courts and tribunals",
 if 'source' not in st.session_state:
     st.session_state['source'] = None
 
-if st.session_state.source:
-    default_source_index = sources_list.index(st.session_state['source'])
-else:
-    default_source_index = None
+#if st.session_state.source:
+    #default_source_index = sources_list.index(st.session_state['source'])
+#else:
+    #default_source_index = None
 
 if 'i_understand' not in st.session_state:
     st.session_state['i_understand'] = False
@@ -114,7 +124,7 @@ st.header("Start")
 #    st.subheader("What would you like to study?")
 
 st.markdown("""What would you like to study?""")
-source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = default_source_index)
+source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = source_index(st.session_state.source))
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
 if source_entry:
@@ -122,13 +132,12 @@ if source_entry:
     if source_entry != st.session_state.source:
 
         st.session_state.i_understand = False
-    
+        
     st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated information or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
-
+    
     browser_entry = st.checkbox('Yes, I understand.', value = st.session_state['i_understand'])
 
 next_button = st.button('Next')
-
 
 
 # %% [markdown]
@@ -148,35 +157,12 @@ if next_button:
 
         st.session_state.source = source_entry
 
-        st.session_state.i_understand = True
+        st.session_state.i_understand = browser_entry
 
         st.session_state["page_from"] = "Home.py"
-    
-        if (('New South Wales' in source_entry) and ('Kercher' not in source_entry)):
-            st.switch_page("pages/NSW.py")
-    
-        if 'Federal Court of Australia' in source_entry:
-            
-            st.switch_page("pages/CTH.py")
-    
-        if 'United Kingdom' in source_entry:
-            
-            st.switch_page("pages/UK.py")
-            
-        if 'Kercher' in source_entry:
-            
-            st.switch_page("pages/KR.py")
 
-        if 'English Reports' in source_entry:
-            
-            st.switch_page("pages/ER.py")
-            
-        if ' own files' in source_entry:
+        page_to = source_pages[sources_list.index(st.session_state.source)]
 
-            st.switch_page("pages/OWN.py")
-
-        if ' own spreadsheet' in source_entry:
-            st.switch_page('pages/AI.py')
-
+        st.switch_page(page_to)
 
 

@@ -1073,6 +1073,16 @@ if 'gpt_api_key_validity' not in st.session_state:
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False
 
+if 'need_resetting' not in st.session_state:
+        
+    st.session_state['need_resetting'] = 0
+
+if "df_individual_output" not in st.session_state:
+    st.session_state["df_individual_output"] = []
+
+if "df_master" not in st.session_state:
+    st.session_state["df_master"] = []
+
 # %%
 #Try to carry over previously entered personal details    
 try:
@@ -1177,11 +1187,9 @@ gpt_activation_entry = st.checkbox('Use GPT', value = False)
 
 st.caption("Use of GPT is costly and funded by a grant. For the model used by default, Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
 
-st.subheader("Enter your question(s) for each judgment")
+st.subheader("Enter your questions for each judgment")
 
-st.markdown("""GPT will answer your question(s) for **each** judgment based only on information from **that** judgment. 
-
-*Please enter one question per line or per paragraph.*""")
+st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** judgment based only on information from **that** judgment. """)
 
 gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
@@ -1277,7 +1285,7 @@ if own_account_allowed() > 0:
 # %%
 st.header("Consent")
 
-st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
+st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
 consent =  st.checkbox('Yes, I agree.', value = False)
 
@@ -1285,9 +1293,10 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 
 st.header("Next steps")
 
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download.
 
-You can also download a record of your responses.
+You can also download a record of your entries.
+
 """)
 
 #Warning
@@ -1299,13 +1308,12 @@ You can also download a record of your responses.
 
 run_button = st.button('RUN the program')
 
-keep_button = st.button('DOWNLOAD your form responses')
+keep_button = st.button('DOWNLOAD your entries')
 
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
 
 #Display need resetting message if necessary
-if 'need_resetting' in st.session_state:
-#if st.session_state.need_resetting == 1:
+if st.session_state.need_resetting == 1:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
 
@@ -1313,51 +1321,50 @@ if 'need_resetting' in st.session_state:
 # ## Previous responses and outputs
 
 # %%
-#Create placeholder download buttons if previous responses and results in st.session_state:
+#Create placeholder download buttons if previous entries and results in st.session_state:
 
-if (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
-
-    #Load previous responses and results
-
+if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
+    
+    #Load previous entries and results
+    
     df_master = st.session_state.df_master
     df_individual_output = st.session_state.df_individual_output
 
-    #Buttons for downloading responses
+    #Buttons for downloading entries
+    st.subheader('Looking for your previous entries and results?')
 
-    st.subheader('Looking for your previous form responses?')
+    st.write('Previous entries')
 
-    responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+    entries_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
 
     csv = convert_df_to_csv(df_master)
 
     ste.download_button(
-        label="Download your previous responses as a CSV (for use in Excel etc)", 
+        label="Download your previous entries as a CSV (for use in Excel etc)", 
         data = csv,
-        file_name=responses_output_name + '.csv', 
+        file_name=entries_output_name + '.csv', 
         mime= "text/csv", 
 #            key='download-csv'
     )
 
     xlsx = convert_df_to_excel(df_master)
     
-    ste.download_button(label='Download your previous responses as an Excel spreadsheet (XLSX)',
+    ste.download_button(label='Download your previous entries as an Excel spreadsheet (XLSX)',
                         data=xlsx,
-                        file_name=responses_output_name + '.xlsx', 
+                        file_name=entries_output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
                        )
 
     json = convert_df_to_json(df_master)
     
     ste.download_button(
-        label="Download your previous responses as a JSON", 
+        label="Download your previous entries as a JSON", 
         data = json,
-        file_name= responses_output_name + '.json', 
+        file_name= entries_output_name + '.json', 
         mime= "application/json", 
     )
 
-    #Button for downloading results
-
-    st.subheader('Looking for your previous results?')
+    st.write('Previous results')
 
     output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
 
@@ -1388,9 +1395,7 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
         mime= "application/json", 
     )
 
-    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
-
+    st.page_link('pages/AI.py', label="ANALYSE your previous spreadsheet with an AI", icon = '🤔')
 
 # %% [markdown]
 # # Save and run
@@ -1398,25 +1403,9 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
 # %%
 if preview_button:
 
-    gpt_api_key_entry = ''
-
     df_master = create_df()
 
     judgments_url = search_url(df_master)
-    
-#    df_master['Courts'] = df_master['Courts'].apply(court_choice)
-
-#    judgments_url =  uk_search(query= df_master.loc[0, 'Free text'], 
-##                                   from_day= df_master.loc[0, 'From date'],
- #                                  from_month=df_master.loc[0, 'From month'], 
- #                                  from_year=df_master.loc[0, 'From year'], 
- #                                  to_day=df_master.loc[0, 'To day'], 
- #                                  to_month=df_master.loc[0, 'To month'], 
- #                                  to_year=df_master.loc[0, 'To year'], 
- #                                  court= df_master.loc[0, 'Courts'], 
- #                                  party = df_master.loc[0, 'Party'], 
- #                                  judge = df_master.loc[0, 'Judge']
- #                                 )
 
     open_page(judgments_url)
 
@@ -1436,12 +1425,10 @@ if run_button:
     elif int(consent) == 0:
         st.warning("You must click on 'Yes, I agree.' to run the program.")
 
-    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-        
-        if 'need_resetting' not in st.session_state:
-            
-            st.session_state['need_resetting'] = 1
+                    
+        st.session_state['need_resetting'] = 1
 
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
             
@@ -1461,7 +1448,7 @@ if run_button:
         with st.spinner('Running...'):
 
             try:
-        
+                
                 #Create spreadsheet of responses
                 df_master = create_df()
 
@@ -1477,11 +1464,12 @@ if run_button:
                 df_individual_output = run(df_master)
                 
                 #Keep results in session state
-                if "df_individual_output" not in st.session_state:
-                    st.session_state["df_individual_output"] = df_individual_output
-        
-                if "df_master" not in st.session_state:
-                    st.session_state["df_master"] = df_master
+                st.session_state["df_individual_output"] = df_individual_output
+    
+                st.session_state["df_master"] = df_master
+
+                #Change session states
+                st.session_state['need_resetting'] = 1
                 
                 st.session_state["page_from"] = 'pages/UK.py'
         
@@ -1550,15 +1538,13 @@ if keep_button:
     elif len(courts_entry) == 0:
         st.write('Please select at least one court to cover.')
 
-    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-        
-        if 'need_resetting' not in st.session_state:
-            
-            st.session_state['need_resetting'] = 1
+                    
+        st.session_state['need_resetting'] = 1
             
     else:
-            
+                            
         df_master = create_df()
     
         df_master.pop("Your GPT API key")

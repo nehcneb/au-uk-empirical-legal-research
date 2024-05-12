@@ -218,6 +218,7 @@ nsw_tribunals_positioning = ['Placeholder',
 
 # %%
 #function to create dataframe
+
 def create_df():
 
     #submission time
@@ -481,6 +482,53 @@ def short_judgment(html_link):
         judgment_type = 'html'
 
         return [judgment_type, judgment_text]
+
+
+# %%
+def search_url(df_master):
+    df_master = df_master.fillna('')
+    
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['Courts'] = df_master['Courts'].apply(court_choice)
+    df_master['Tribunals'] = df_master['Tribunals'].apply(tribunal_choice)
+
+    #df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: question_characters_bound].apply(split_by_line)
+    #df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
+    
+    #Combining catchwords into new column
+    
+    search_dict = {'body': df_master.loc[0, 'Free text']}
+    search_dict.update({'title': df_master.loc[0, 'Case name']})
+    search_dict.update({'before': df_master.loc[0, 'Before']})
+    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
+    search_dict.update({'party': df_master.loc[0, 'Party names']})
+    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
+    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
+    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
+    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
+    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
+    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
+    df_master.loc[0, 'SearchCriteria']=[search_dict]
+
+    #Conduct search
+    
+    query = Search(courts=df_master.loc[0, 'Courts'], 
+                   tribunals=df_master.loc[0, 'Tribunals'], 
+                   body = df_master.loc[0, "SearchCriteria"]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
+                   startDate = date(df_master.loc[0, "SearchCriteria"]['startDate']), 
+                   endDate = date(df_master.loc[0, "SearchCriteria"]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
+                   pause = np.random.randint(5, 15)
+                  )
+    return query.url
 
 
 # %% [markdown]
@@ -1031,53 +1079,6 @@ def tidying_up(df_master, df_individual):
     return df_individual
 
 
-# %%
-def search_url(df_master):
-    df_master = df_master.fillna('')
-    
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    df_master['Courts'] = df_master['Courts'].apply(court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(tribunal_choice)
-
-    #df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: question_characters_bound].apply(split_by_line)
-    #df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
-    
-    #Combining catchwords into new column
-    
-    search_dict = {'body': df_master.loc[0, 'Free text']}
-    search_dict.update({'title': df_master.loc[0, 'Case name']})
-    search_dict.update({'before': df_master.loc[0, 'Before']})
-    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
-    search_dict.update({'party': df_master.loc[0, 'Party names']})
-    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
-    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
-    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
-    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
-    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
-    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria']=[search_dict]
-
-    #Conduct search
-    
-    query = Search(courts=df_master.loc[0, 'Courts'], 
-                   tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
-                   pause = np.random.randint(5, 15)
-                  )
-    return query.url
-
-
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
@@ -1086,6 +1087,7 @@ def search_url(df_master):
 
 # %%
 #Function to open url
+
 def open_page(url):
     open_script= """
         <script type="text/javascript">
@@ -1136,24 +1138,6 @@ def tips():
 # ## Initialize session states
 
 # %%
-#Try to carry over previously entered personal details    
-try:
-    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
-except:
-    st.session_state['gpt_api_key_entry'] = ''
-
-try:
-    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
-except:
-    st.session_state['name_entry'] = ''
-
-try:
-    st.session_state['email_entry'] = st.session_state.df_master.loc[0, 'Your email address']
-    
-except:
-    st.session_state['email_entry'] = ''
-
-# %%
 #Initialize default values
 
 if 'default_courts' not in st.session_state:
@@ -1170,6 +1154,34 @@ if 'gpt_api_key_validity' not in st.session_state:
 
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False
+
+if 'need_resetting' not in st.session_state:
+        
+    st.session_state['need_resetting'] = 0
+
+if "df_individual_output" not in st.session_state:
+    st.session_state["df_individual_output"] = []
+
+if "df_master" not in st.session_state:
+    st.session_state["df_master"] = []
+
+# %%
+#Try to carry over previously entered personal details    
+try:
+    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
+except:
+    st.session_state['gpt_api_key_entry'] = ''
+
+try:
+    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
+except:
+    st.session_state['name_entry'] = ''
+
+try:
+    st.session_state['email_entry'] = st.session_state.df_master.loc[0, 'Your email address']
+    
+except:
+    st.session_state['email_entry'] = ''
 
 # %% [markdown]
 # ## Form before AI
@@ -1272,11 +1284,9 @@ gpt_activation_entry = st.checkbox('Use GPT', value = False)
 
 st.caption("Use of GPT is costly and funded by a grant. For the model used by default, Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
 
-st.subheader("Enter your question(s) for each judgment")
+st.subheader("Enter your questions for each judgment")
 
-st.markdown("""GPT will answer your question(s) for **each** judgment based only on information from **that** judgment. 
-
-*Please enter one question per line or per paragraph.*""")
+st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** judgment based only on information from **that** judgment. """)
 
 gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
@@ -1359,7 +1369,6 @@ if own_account_allowed() > 0:
         st.session_state.gpt_enhancement_entry = False
     
         st.session_state.judgments_counter_bound = default_judgment_counter_bound
-   
 
 
 # %% [markdown]
@@ -1368,7 +1377,7 @@ if own_account_allowed() > 0:
 # %%
 st.header("Consent")
 
-st.markdown("""By running the Empirical Legal Research Kickstarter, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
+st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
 consent =  st.checkbox('Yes, I agree.', value = False)
 
@@ -1376,9 +1385,9 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 
 st.header("Next steps")
 
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download in about 2-3 minutes.
+st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download.
 
-You can also download a record of your responses.
+You can also download a record of your entries.
 
 """)
 
@@ -1391,13 +1400,12 @@ You can also download a record of your responses.
 
 run_button = st.button('RUN the program')
 
-keep_button = st.button('DOWNLOAD your form responses')
+keep_button = st.button('DOWNLOAD your entries')
 
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
 
 #Display need resetting message if necessary
-if 'need_resetting' in st.session_state:
-#if st.session_state.need_resetting == 1:
+if st.session_state.need_resetting == 1:
     st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
 
@@ -1405,49 +1413,50 @@ if 'need_resetting' in st.session_state:
 # ## Previous responses and outputs
 
 # %%
-#Create placeholder download buttons if previous responses and results in st.session_state:
+#Create placeholder download buttons if previous entries and results in st.session_state:
 
-if (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
-
-    #Load previous responses and results
+if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
+    
+    #Load previous entries and results
     
     df_master = st.session_state.df_master
     df_individual_output = st.session_state.df_individual_output
 
-    #Buttons for downloading responses
-    st.subheader('Looking for your previous form responses?')
+    #Buttons for downloading entries
+    st.subheader('Looking for your previous entries and results?')
 
-    responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+    st.write('Previous entries')
+
+    entries_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
 
     csv = convert_df_to_csv(df_master)
 
     ste.download_button(
-        label="Download your previous responses as a CSV (for use in Excel etc)", 
+        label="Download your previous entries as a CSV (for use in Excel etc)", 
         data = csv,
-        file_name=responses_output_name + '.csv', 
+        file_name=entries_output_name + '.csv', 
         mime= "text/csv", 
 #            key='download-csv'
     )
 
     xlsx = convert_df_to_excel(df_master)
     
-    ste.download_button(label='Download your previous responses as an Excel spreadsheet (XLSX)',
+    ste.download_button(label='Download your previous entries as an Excel spreadsheet (XLSX)',
                         data=xlsx,
-                        file_name=responses_output_name + '.xlsx', 
+                        file_name=entries_output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
                        )
 
     json = convert_df_to_json(df_master)
     
     ste.download_button(
-        label="Download your previous responses as a JSON", 
+        label="Download your previous entries as a JSON", 
         data = json,
-        file_name= responses_output_name + '.json', 
+        file_name= entries_output_name + '.json', 
         mime= "application/json", 
     )
 
-    #Button for downloading results
-    st.subheader('Looking for your previous results?')
+    st.write('Previous results')
 
     output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
 
@@ -1478,17 +1487,15 @@ if (('df_master' in st.session_state) and ('df_individual_output' in st.session_
         mime= "application/json", 
     )
 
-    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+    st.page_link('pages/AI.py', label="ANALYSE your previous spreadsheet with an AI", icon = '🤔')
 
 # %% [markdown]
 # # Save and run
 
 # %%
 if preview_button:
-
+    
     df_master = create_df()
-
-    df_master.pop("Your GPT API key")
 
     judgments_url = search_url(df_master)
 
@@ -1515,12 +1522,10 @@ if run_button:
    # elif ((int(df_master.loc[0]["Use GPT"]) > 0) & (prior_GPT_uses(df_master.loc[0, "Your email address"], df_google) >= GPT_use_bound)):
         #st.write('At this pilot stage, each user may use GPT at most 3 times. Please feel free to email Ben at ben.chen@gsydney.edu.edu if you would like to use GPT again.')
     
-    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
-        if 'need_resetting' not in st.session_state:
             
-            st.session_state['need_resetting'] = 1
+        st.session_state['need_resetting'] = 1
             
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
             
@@ -1538,7 +1543,7 @@ if run_button:
         #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
 
         with st.spinner('Running...'):
-        
+
             #Create spreadsheet of responses
             df_master = create_df()
             
@@ -1559,12 +1564,13 @@ if run_button:
                 df_individual_output = tidying_up(df_master, df_individual)
 
                 #Keep results in session state
-                if "df_individual_output" not in st.session_state:
-                    st.session_state["df_individual_output"] = df_individual_output#.astype(str)
+                st.session_state["df_individual_output"] = df_individual_output#.astype(str)
         
-                if "df_master" not in st.session_state:
-                    st.session_state["df_master"] = df_master
-                        
+                st.session_state["df_master"] = df_master
+
+                #Change session states
+                st.session_state['need_resetting'] = 1
+                
                 st.session_state["page_from"] = 'pages/NSW.py'
         
                 st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
@@ -1633,7 +1639,7 @@ if keep_button:
     elif (len(courts_entry) == 0) and (len(tribunals_entry) == 0):
         st.write('Please select at least one court or tribunal to cover.')
 
-    elif (('df_master' in st.session_state) and ('df_individual_output' in st.session_state)):
+    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
         st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
         if 'need_resetting' not in st.session_state:
@@ -1641,7 +1647,7 @@ if keep_button:
             st.session_state['need_resetting'] = 1
             
     else:
-            
+        
         df_master = create_df()
 
         #Pop unnecessary columns
