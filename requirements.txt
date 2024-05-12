@@ -24,3 +24,4 @@ pyxlsb
 pandasai
 PyYAML
 openpyxl
+langchain
