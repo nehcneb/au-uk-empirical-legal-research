@@ -346,7 +346,6 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 #Value type <class 'list'> must match with type dataframe
 
 # %%
-
 def pandasai_ask():
     with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
 
@@ -442,11 +441,40 @@ def pandasai_ask():
                 st.warning('No code generated.')
                 print(e)
     
-        #Display tokens and costs
-        total_cost_tokens = f'(This response costed USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
-        st.write(total_cost_tokens)
-        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": total_cost_tokens})
-          
+        #Display tokens and costs if own account activate
+
+        if st.session_state['own_account'] == True:
+            total_cost_tokens = f'(This response costed USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
+            st.write(total_cost_tokens)
+            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": total_cost_tokens})
+              
+
+
+# %%
+#Buttons for importing any df produced    
+
+#For Pandasai
+
+def pandasai_analyse_df_produced():
+    st.session_state.df_produced = st.session_state.response
+    st.session_state.df_uploaded_key += 1
+    st.session_state.df_uploaded = []
+    st.session_state.df_individual_output = []
+    st.session_state.response = {}
+    st.rerun()       
+
+def pandasai_merge_df_produced():
+
+    current_pd = st.session_state.edited_df
+    df_to_add = pd.DataFrame(data = st.session_state.response)
+    st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
+    st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
+    st.session_state.df_uploaded_key += 1
+    st.session_state.df_uploaded = []
+    st.session_state.df_individual_output = []
+    st.session_state.response = []
+    st.rerun()
+
 
 
 # %% [markdown]
@@ -556,6 +584,30 @@ def langchain_ask():
         st.write(cost_tokens)
 
 
+# %%
+#Buttons for importing or merging df produced
+
+def langchain_analyse_df_produced():
+    st.session_state.df_produced = pd.DataFrame(data = st.session_state.response_json["dataframe"])
+    st.session_state.df_uploaded_key += 1
+    st.session_state.df_uploaded = []
+    st.session_state.df_individual_output = []
+    st.session_state.response_json["dataframe"] = []
+    st.rerun()
+
+def langchain_merge_df_produced():
+    
+    current_pd = st.session_state.edited_df
+    df_to_add = pd.DataFrame(data = st.session_state.response_json["dataframe"])
+    st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
+    st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
+    st.session_state.df_uploaded_key += 1
+    st.session_state.df_uploaded = []
+    st.session_state.df_individual_output = []
+    st.session_state.response_json["dataframe"] = []
+    st.rerun()
+
+
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
@@ -645,16 +697,94 @@ def nsw_df_nsw_list_columns(df):
 
 
 # %%
-def list_col_to_str(df):
+def list_cols_picker(df):
 
+    output = [] #Return list of columns which have list types
+    
     columns_to_make_into_string_raw = df.applymap(lambda x: isinstance(x, list)).all()
 
     columns_to_make_into_string = columns_to_make_into_string_raw.index[columns_to_make_into_string_raw].tolist()
 
     for column in columns_to_make_into_string:
+        output.append(column)
+    
+    return output
+    
+def list_col_to_str(df):
+
+    #columns_to_make_into_string_raw = df.applymap(lambda x: isinstance(x, list)).all()
+
+    #columns_to_make_into_string = columns_to_make_into_string_raw.index[columns_to_make_into_string_raw].tolist()
+
+    #for column in columns_to_make_into_string:
+    
+    for column in list_cols_picker(df):
+
         df[column] = df[column].astype(str)
     
     return df
+
+
+# %%
+def num_non_num_headings_picker(df):
+    #Returns dictionary of numerical columns and non-numerical columns
+
+    output = {"Numerical columns": [], "Non-numerical columns": []}
+
+    nums_columns_raw = df.applymap(lambda x: isinstance(x, np.float32) or isinstance(x, float) or isinstance(x, int)).all()
+    
+    nums_columns = nums_columns_raw.index[nums_columns_raw].tolist()
+
+    non_nums_columns_raw = list(df.columns)
+
+    #Fill numerical columns with empty integer type
+    
+    for col in nums_columns:
+        
+        #df[col].fillna(int(), inplace = True) #Activate if wannt to replace nonetype cells in numerical columns with 0
+        
+        non_nums_columns_raw.remove(col)
+
+        output["Numerical columns"].append(col)
+    
+    for column in non_nums_columns_raw:
+
+        output["Non-numerical columns"].append(column)
+        
+    return output
+
+
+
+# %%
+def type_depending_fill_blank(df):
+
+    nums_columns = num_non_num_headings_picker(df)["Numerical columns"]
+
+    non_nums_columns = num_non_num_headings_picker(df)["Non-numerical columns"]  
+    
+    #columns_to_make_into_string_raw = df.applymap(lambda x: isinstance(x, list)).all()
+
+    #nums_columns_raw = df.applymap(lambda x: isinstance(x, np.float32) or isinstance(x, float) or isinstance(x, int)).all()
+    
+    #nums_columns = nums_columns_raw.index[nums_columns_raw].tolist()
+
+    #non_nums_columns = list(df.columns)
+
+    #Fill numerical columns with empty integer type
+    #for col in nums_columns:
+        
+        #df[col].fillna(int(), inplace = True) #Activate if wannt to replace nonetype cells in numerical columns with 0
+        
+        #non_nums_columns.remove(col)
+
+    #Fill non-numerical columns with empty string type
+
+    for column in non_nums_columns:
+        
+        df[column].fillna('', inplace = True)
+
+    return df
+
 
 
 # %%
@@ -929,7 +1059,7 @@ if own_account_allowed() > 0:
         
         if own_account_entry:
             
-            st.session_state["own_account"] = True
+            st.session_state['own_account'] = True
         
             st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage at https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
 """)
@@ -988,7 +1118,7 @@ if own_account_allowed() > 0:
             #st.session_state.instruction_left = st.session_state.instructions_bound
         
         else:
-            st.session_state["own_account"] = False
+            st.session_state['own_account'] = False
         
             st.session_state.gpt_model = "gpt-3.5-turbo-0125"
         
@@ -999,7 +1129,7 @@ if own_account_allowed() > 0:
             print('User GPT API key not entered. Using own API key instead.')
     
     else:
-        st.session_state["own_account"] = False
+        st.session_state['own_account'] = False
         st.session_state.gpt_enhancement_entry = False
     
 else:
@@ -1060,70 +1190,92 @@ st.caption('To download, search within or maximise this spreadsheet, hover your 
 
 st.write('You can directly edit this spreadsheet.')
 
-#Convert columns which are list type to string type
+#Errors to show
 
-try:
+errors_to_show = ''
+
+#Convert columns which are list type to empty string type
     
-    df_to_analyse = list_col_to_str(df_to_analyse)
+df_to_analyse = list_col_to_str(df_to_analyse)
+
+if len(list_cols_picker(df_to_analyse)) > 0:
     
-    list_non_textual_error_to_show = 'The lists in your spreadsheet have been converted to text.'
+    print(errors_to_show)   
+
+    #Activate if want non-technical users to see error
+    #errors_to_show += 'Lists have been converted to strings. '
+
+#Activate below if wants to convert non-numerical columns with nonetype cells to empty string type
+
+#df_to_analyse = type_depending_fill_blank(df_to_analyse)
+
+#if len(num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]) > 0:
+
+    #non_num_cols_error = 'Nonetype cells in non-numerical columns have been converted to empty strings. '
+
+    #print(non_num_cols_error)
     
-except Exception as e:
-    print(e)
-    print('Columns which are list type may not have been converted to string type')
+    #Activate if want non-technical users to see error
+    #errors_to_show += non_num_cols_error
 
 #Obtain clolumns with hyperlinks
+
 link_heading_config = {} 
 
-try:
-    link_headings_list = link_headings_picker(df_to_analyse)
-    
-    for link_heading in link_headings_list:
+link_headings_list = link_headings_picker(df_to_analyse)
+
+if len(link_headings_list) > 0:
+
+    try:
         
-        link_heading_config[link_heading] = st.column_config.LinkColumn()
+        for link_heading in link_headings_list:
+            
+            link_heading_config[link_heading] = st.column_config.LinkColumn()
+    
+        df_to_analyse = convert_link_columns(df_to_analyse)
 
-    df_to_analyse = convert_link_columns(df_to_analyse)
+    except Exception as e:
+        
+        print('Columns with hyperlinks have not been converted.')
+        print(e)        
 
-except Exception as e:
-    print(e)
-    print('No column has hyperlinks.')
-
-#Make any column of hyperlinks clickable
+#Make any column of hyperlinks clickable, without converting everything to string
 try:
+    
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
 except Exception as e:
 
-    #Use the following if list_col_to_str function doesn't work
-    #non_textual_error_to_show = ''
-
-    #if st.session_state.page_from == 'pages/NSW.py':
-        
-        #df_to_analyse = nsw_df_nsw_list_columns(df_to_analyse)
-
-        #non_textual_error_to_show = 'The lists in your spreadsheet have been converted to text.'
-
-    #else:
     df_to_analyse = df_to_analyse.astype(str)
 
-    non_textual_error_to_show = 'The non-textual data in your spreadsheet have been converted to text.'
-                
+    non_textual_error_to_show = 'The non-textual data in your spreadsheet have been converted to text. '
+
+    errors_to_show += non_textual_error_to_show
+
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
     print(f'Error: {e}.')
 
-    st.warning(non_textual_error_to_show)
+    #st.warning(non_textual_error_to_show)
 
 #Show list error only if non_textual_error_to_show was not shown
-if not 'non_textual_error_to_show' in globals():
+#if not 'non_textual_error_to_show' in globals():
 
-    st.warning(list_non_textual_error_to_show)
+    #st.warning(list_non_textual_error_to_show)
 
-#Note importation of AI produced spreadsheet
-if len(st.session_state.df_produced) > 0:
-    st.success('The spreadsheet produced has been imported.')
-    #Remove df_produced after importation
-    #st.session_state.df_produced = {}
+if ((len(errors_to_show) > 0) or (len(st.session_state.df_produced) > 0)):
+
+    if st.toggle(label = 'Show messages', value = True):
+    
+        if len(errors_to_show) > 0:
+            
+            st.warning(errors_to_show)
+    
+        #Note importation of AI produced spreadsheet
+        if len(st.session_state.df_produced) > 0:
+            st.success('The spreadsheet produced has been imported.')
+            #Remove df_produced after importation
+            #st.session_state.df_produced = {}
 
 #New spreadsheet button
 
@@ -1219,6 +1371,7 @@ if st.session_state.ai_choice != 'BambooLLM':
 
 else:
     st.session_state.explain_status = False
+    
 
 
 # %% [markdown]
@@ -1227,6 +1380,11 @@ else:
 # %%
 # Generate output
 
+#if st.button('Test'):
+
+    #st.dataframe(st.session_state.edited_df)
+
+    #st.dataframe(type_depending_fill_blank(st.session_state.edited_df))
 
 if st.button("ASK"):
 
@@ -1291,42 +1449,32 @@ if st.button("ASK"):
 #Buttons for importing any df produced    
 
 #For Pandasai
-if isinstance(st.session_state.response, pd.DataFrame):
-    
-    if st.button('ANALYSE the spreadsheet produced'):
-        st.session_state.df_produced = st.session_state.response
-        st.session_state.df_uploaded_key += 1
-        st.session_state.df_uploaded = []
-        st.session_state.df_individual_output = []
-        st.session_state.response = {}
-        st.rerun()
+if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+
+    if isinstance(st.session_state.response, pd.DataFrame):
+        
+        if st.button('ANALYSE this spreadsheet only'):
+            
+            pandasai_analyse_df_produced()
+
+        if st.button('MERGE with your spreadsheet'):
+
+            pandasai_merge_df_produced()
 
 #For Langchain,
-if "dataframe" in st.session_state.response_json:
-    if st.session_state.response_json["dataframe"]:
+if st.session_state.ai_choice == 'LangChain':
 
-        if st.button('ANALYSE this spreadsheet only'):
-            #data = st.session_state.response_json["table"]
-            #df_to_add = pd.DataFrame(data["data"], columns=data["columns"])
-            st.session_state.df_produced = pd.DataFrame(data = st.session_state.response_json["dataframe"])
-            st.session_state.df_uploaded_key += 1
-            st.session_state.df_uploaded = []
-            st.session_state.df_individual_output = []
-            st.session_state.response_json["dataframe"] = []
-            st.rerun()
+    if "dataframe" in st.session_state.response_json:
         
-        if st.button('MERGE with your spreadsheet'):
-            #data = st.session_state.response_json["table"]
-            #df_to_add = pd.DataFrame(data["data"], columns=data["columns"])
-            current_pd = st.session_state.edited_df
-            df_to_add = pd.DataFrame(data = st.session_state.response_json["dataframe"])
-            st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
-            st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
-            st.session_state.df_uploaded_key += 1
-            st.session_state.df_uploaded = []
-            st.session_state.df_individual_output = []
-            st.session_state.response_json["dataframe"] = []
-            st.rerun()
+        if st.session_state.response_json["dataframe"]:
+
+            if st.button('ANALYSE this spreadsheet only'):
+
+                langchain_analyse_df_produced()
+            
+            if st.button('MERGE with your spreadsheet'):
+
+                langchain_merge_df_produced()
 
 # %%
 #Reset button
@@ -1361,7 +1509,7 @@ if ((st.session_state.ai_choice != 'LangChain')
                             
         with st.form("clarifying_questions_form"):
     
-            st.write('Please consider the following clarifying questions from the AI. You may answer them here or use them to inform the drafting of instructions or questions.')
+            st.write(f'Please consider the following clarifying questions {st.session_state.ai_choice}. You may answer them here or use them to inform the drafting of your questions or instructions.')
 
             #Display up to 3 clarifying questions
             if len(st.session_state.clarifying_questions) > 0:
@@ -1379,10 +1527,12 @@ if ((st.session_state.ai_choice != 'LangChain')
                 st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
                 st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
     
-            #Display and keep record of tokens and costs
-            clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
-            st.write(clarifying_questions_cost_tokens)
-            
+            #Display and keep record of tokens and costs if own account activated
+            if st.session_state['own_account'] == True:
+                clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
+                st.write(clarifying_questions_cost_tokens)
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": clarifying_questions_cost_tokens})
+
             add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
     
             if add_q_a_button:
@@ -1411,7 +1561,7 @@ if ((st.session_state.ai_choice != 'LangChain')
                     st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
 
                 #Add clarifying answers to history
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": st.session_state.clarifying_answers})
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": st.session_state.clarifying_answers})
                 
                 #Change clarifying questions and answers status
                 st.session_state['q_and_a_provided'] = 1
