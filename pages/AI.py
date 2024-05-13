@@ -35,6 +35,7 @@ import pause
 import os
 import io
 import openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 #Streamlit
 import streamlit as st
@@ -564,29 +565,70 @@ def langchain_ask():
 # %%
 #Reverse hyperlink display
 
-def link_heading_picker(df):
-    y = ''
+def link_headings_picker(df):
+    y = []
     for x in df.columns:
         if 'Hyperlink' in str(x):
-            y = x
-    return y
+            y.append(x)
+    return y #A list of headings with hyperlinks
 
 def reverse_link(x):
     value = str(x).replace('=HYPERLINK("', '').replace('")', '')
     return value
 
-def convert_links_column(df):
+def convert_link_columns(df):
+    
     new_df = df.copy()
     
-    link_header = link_heading_picker(df)
-    new_df[link_header] = df[link_header].apply(reverse_link)
+    link_headers_list = link_headings_picker(df)
 
+    for link_header in link_headers_list:
+        new_df[link_header] = df[link_header].apply(reverse_link)
+        
     return new_df
     
 
 
 # %%
+#Excel to df with hyperlinks
+
+def excel_to_df_w_links(uploaded_file):
+
+    df = pd.read_excel(uploaded_file)
+    
+    wb = openpyxl.load_workbook(uploaded_file)
+    
+    sheets = wb.sheetnames
+    
+    ws = wb[sheets[0]]
+
+    columns_w_links = link_headings_picker(df)
+
+    for column in columns_w_links:
+        
+        column_index = list(df.columns).index(column) + 1 #Adding 1 because excel starts with 1 not 0
+        
+        row_length = len(df)
+
+        for row in range(0, row_length):
+            
+            row_index = row + 2 #Adding 1 because excel starts with 2 while pandas at 0
+            
+            try:
+	            new_cell = ws.cell(row=row_index, column=column_index).hyperlink.target
+            
+            except:
+
+	            new_cell = (str(ws.cell(row=row_index, column=column_index).value))
+            
+            df.loc[row, column] = new_cell
+            
+    return df
+    
+
+# %%
 # For NSW, function for columns which are lists to strings:
+#NOT IN USE
 
 nsw_list_columns = ['Catchwords', 'Legislation cited', 'Cases cited', 'Texts cited', 'Parties', 'Representation', 'Decision under appeal'] 
 
@@ -778,6 +820,11 @@ except:
 # ## Form before choosing AI
 
 # %%
+extra_spreadsheet_warning = 'Another spreadsheet has already been imported. Please :red[REMOVE] that one first.'
+spreadsheet_success = 'Your spreadsheet has been imported. Please scroll down.'
+
+
+# %%
 if st.button('RETURN to previous page'):
 
     st.switch_page(st.session_state.page_from)
@@ -785,12 +832,17 @@ if st.button('RETURN to previous page'):
 st.header("You have chosen to :blue[analyse your spreadsheet].")
 
 #Open spreadsheet and personal details
+
 if len(st.session_state.df_individual_output) > 0:
     
     if len(st.session_state.df_produced) == 0:
 
-        st.success('Your spreadsheet has been imported. Please scroll down.')
+        st.success(spreadsheet_success)
 
+    else:
+
+        st.warning(extra_spreadsheet_warning)
+        
 else: #if len(st.session_state.df_individual_output) == 0:
 
     st.markdown("""**:green[Please upload a spreadsheet.]** Supported formats: CSV, XLSX, JSON.""")
@@ -810,18 +862,25 @@ else: #if len(st.session_state.df_individual_output) == 0:
             df_uploaded = pd.read_csv(uploaded_file)
     
         if extension == 'xlsx':
-            df_uploaded = pd.read_excel(uploaded_file)
+            
+            #df_uploaded = pd.read_excel(uploaded_file)
+            
+            df_uploaded = excel_to_df_w_links(uploaded_file)
     
         if extension == 'json':
+            
             df_uploaded = pd.read_json(uploaded_file, orient= 'split')
 
         st.session_state.df_uploaded = df_uploaded
 
         if len(st.session_state.df_produced) == 0:
         
-            st.success('Your spreadsheet has been imported. Please scroll down.')
-            
+            st.success(spreadsheet_success)
 
+        else:
+
+            st.warning(extra_spreadsheet_warning)
+            
 
 # %% [markdown]
 # ## Choice of AI and GPT account
@@ -971,17 +1030,17 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 if len(st.session_state.df_produced) > 0:
     st.session_state.df_to_analyse = st.session_state.df_produced
 
-    if ((len(st.session_state.df_individual_output) > 0) or (len(st.session_state.df_uploaded) > 0)):
+    #if ((len(st.session_state.df_individual_output) > 0) or (len(st.session_state.df_uploaded) > 0)):
         
-        st.warning('You already have a spreadsheet imported. Please :red[REMOVE] that one before you import another one.')
+        #st.warning(extra_spreadsheet_warning)
     
 elif len(st.session_state.df_individual_output) > 0:
     
     st.session_state.df_to_analyse = st.session_state.df_individual_output
     
-    if len(st.session_state.df_uploaded) > 0:
+    #if len(st.session_state.df_uploaded) > 0:
         
-        st.warning('You already have a spreadsheet imported. Please :red[REMOVE] that one before you import another one.')
+        #st.warning(extra_spreadsheet_warning)
 
 else: #len(st.session_state.df_uploaded) > 0:
     st.session_state.df_to_analyse = st.session_state.df_uploaded
@@ -1017,9 +1076,13 @@ except Exception as e:
 link_heading_config = {} 
 
 try:
-    link_heading = link_heading_picker(df_to_analyse)       
-    df_to_analyse = convert_links_column(df_to_analyse)
-    link_heading_config={link_heading: st.column_config.LinkColumn()}       
+    link_headings_list = link_headings_picker(df_to_analyse)
+    
+    for link_heading in link_headings_list:
+        
+        link_heading_config[link_heading] = st.column_config.LinkColumn()
+
+    df_to_analyse = convert_link_columns(df_to_analyse)
 
 except Exception as e:
     print(e)
@@ -1164,6 +1227,7 @@ else:
 # %%
 # Generate output
 
+
 if st.button("ASK"):
 
     if int(consent) == 0:
@@ -1232,8 +1296,8 @@ if isinstance(st.session_state.response, pd.DataFrame):
     if st.button('ANALYSE the spreadsheet produced'):
         st.session_state.df_produced = st.session_state.response
         st.session_state.df_uploaded_key += 1
-        st.session_state.pop('df_uploaded')
-        st.session_state.pop('df_individual_output')
+        st.session_state.df_uploaded = []
+        st.session_state.df_individual_output = []
         st.session_state.response = {}
         st.rerun()
 
@@ -1246,9 +1310,9 @@ if "dataframe" in st.session_state.response_json:
             #df_to_add = pd.DataFrame(data["data"], columns=data["columns"])
             st.session_state.df_produced = pd.DataFrame(data = st.session_state.response_json["dataframe"])
             st.session_state.df_uploaded_key += 1
-            st.session_state.pop('df_uploaded')
-            st.session_state.pop('df_individual_output')
-            st.session_state.response_json["dataframe"] = {}
+            st.session_state.df_uploaded = []
+            st.session_state.df_individual_output = []
+            st.session_state.response_json["dataframe"] = []
             st.rerun()
         
         if st.button('MERGE with your spreadsheet'):
@@ -1259,9 +1323,9 @@ if "dataframe" in st.session_state.response_json:
             st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
             st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
             st.session_state.df_uploaded_key += 1
-            st.session_state.pop('df_uploaded')
-            st.session_state.pop('df_individual_output')
-            st.session_state.response_json["dataframe"] = {}
+            st.session_state.df_uploaded = []
+            st.session_state.df_individual_output = []
+            st.session_state.response_json["dataframe"] = []
             st.rerun()
 
 # %%
