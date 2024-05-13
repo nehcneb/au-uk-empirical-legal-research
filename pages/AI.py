@@ -96,7 +96,7 @@ today_in_nums = str(datetime.now())[0:10]
 # %%
 #Create function for saving responses and results
 def convert_df_to_json(df):
-    return df.to_json(orient = 'split', compression = 'infer')
+    return df.to_json(orient = 'split', compression = 'infer', default_handler=str)
 
 def convert_df_to_csv(df):
    return df.to_csv(index=False).encode('utf-8')
@@ -364,6 +364,13 @@ def pandasai_ask():
             st.error(response)
         else:
             st.write(response)
+
+        #Keep record of cost and tokens
+        response_cost = cb.total_cost
+        response_tokens = cb.total_tokens
+        
+        #Keep record of response, cost and tokens
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": response})
         
         #Show any figure generated
         if plt.get_fignums():
@@ -371,7 +378,10 @@ def pandasai_ask():
                 st.write('**Visualisation**')
                 fig_to_plot = plt.gcf()
                 st.pyplot(fig = fig_to_plot)
-    
+
+                #Keep record of response, cost and tokens
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'figure': fig_to_plot}})
+            
                 #Enable downloading
                 pdf_to_download = io.BytesIO()
                 png_to_download = io.BytesIO()
@@ -402,14 +412,7 @@ def pandasai_ask():
         #st.subheader('Logs')
         #df_logs = agent.logs
         #st.dataframe(df_logs)
-                
-        #Display cost and tokens
-        response_cost = cb.total_cost
-        response_tokens = cb.total_tokens
-        
-        #Keep record of response, cost and tokens
-        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": response})
-    
+                    
         #Explanations
         if st.session_state.explain_status is True:
     
@@ -676,7 +679,7 @@ def excel_to_df_w_links(uploaded_file):
             df.loc[row, column] = new_cell
             
     return df
-    
+
 
 # %%
 # For NSW, function for columns which are lists to strings:
@@ -1010,7 +1013,7 @@ else: #if len(st.session_state.df_individual_output) == 0:
         else:
 
             st.warning(extra_spreadsheet_warning)
-            
+
 
 # %% [markdown]
 # ## Choice of AI and GPT account
@@ -1593,11 +1596,17 @@ if history_on:
                     if isinstance(message["content"], dict):
                     #if "role" == 'assistant':
                         langchain_write(message["content"])
-                    else: #isinstance(message["content"], str)
+                    else: #not isinstance(message["content"], str)
                         st.write(message["content"])
                 else: #if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                     #For pandas ai responses
-                    st.write(message["content"])
+                    if isinstance(message["content"], dict):
+                        if 'figure' in message["content"]:
+                            st.pyplot(fig = message["content"]['figure'])
+                        else:                           
+                            st.write(message["content"])
+                    else:
+                        st.write(message["content"])
 
         #Create and export json file with instructions and responses for downloading
         

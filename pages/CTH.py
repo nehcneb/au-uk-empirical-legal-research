@@ -84,7 +84,7 @@ errors_list = set()
 # %%
 #Create function for saving responses and results
 def convert_df_to_json(df):
-    return df.to_json(orient = 'split', compression = 'infer')
+    return df.to_json(orient = 'split', compression = 'infer', default_handler=str)
 
 def convert_df_to_csv(df):
    return df.to_csv(index=False).encode('utf-8')
