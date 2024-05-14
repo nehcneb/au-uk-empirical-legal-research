@@ -294,7 +294,7 @@ def create_df():
             'Catchwords' : catchwords, 
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
-           'Enter your question(s) for GPT': gpt_questions, 
+           'Enter your questions for GPT': gpt_questions, 
             'Use GPT': gpt_activation_status,
            'Use own account': own_account,
             'Use latest version of GPT' : gpt_enhancement
@@ -995,8 +995,8 @@ def run(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your question(s) for GPT'] = df_master['Enter your question(s) for GPT'][0: question_characters_bound].apply(split_by_line)
-    df_master['questions_json'] = df_master['Enter your question(s) for GPT'].apply(GPT_label_dict)
+    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
+    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create judgments file
     judgments_file = []
@@ -1204,6 +1204,10 @@ if "df_individual_output" not in st.session_state:
 
 if "df_master" not in st.session_state:
     st.session_state["df_master"] = []
+
+#Initialize enhanced prompt
+if 'prompt_prefill' not in st.session_state:
+    st.session_state["prompt_prefill"] = ''
 
 # %%
 #Try to carry over previously entered personal details    
@@ -1441,10 +1445,10 @@ You can also download a record of your entries.
 
 #Warning
 #if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-    #st.warning('A low-cost AI will answer your question(s). Please check at least some of the answers.')
+    #st.warning('A low-cost AI will answer your questions. Please check at least some of the answers.')
 
 #if st.session_state.gpt_model == "gpt-4-turbo":
-    #st.warning('An expensive AI will answer your question(s). Please be cautious.')
+    #st.warning('An expensive AI will answer your questions. Please be cautious.')
 
 run_button = st.button('RUN the program')
 
@@ -1454,7 +1458,8 @@ reset_button = st.button(label='RESET to start afresh', type = 'primary',  help 
 
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:
-    st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output) > 0)):
+        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
 # %% [markdown]
 # ## Previous responses and outputs
