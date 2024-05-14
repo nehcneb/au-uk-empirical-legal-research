@@ -459,13 +459,12 @@ def pandasai_ask():
                 st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
                 print(e)
     
-        #Display tokens and costs if own account activate
-
-        if st.session_state['own_account'] == True:
-            total_cost_tokens = f'(This response costed USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
-            st.write(total_cost_tokens)
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
-              
+        #Acivate if want to display tokens and costs only if own account active
+        #if st.session_state['own_account'] == True:
+        total_cost_tokens = f'(This response costed USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
+        st.write(total_cost_tokens)
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
+          
 
 
 # %%
@@ -1389,17 +1388,19 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
             st.rerun()
 
 #Display error or success messages
-if st.toggle(label = 'Display messages', value = True):
-
-    if len(conversion_msg_to_show) > 0:
-        st.warning(conversion_msg_to_show)
-
-    #Note importation of AI produced spreadsheet
-    if len(st.session_state.df_produced) > 0:
-        st.success(f'The spreadsheet produced by {st.session_state.ai_choice} has been imported.')
-
-    if st.session_state.q_and_a_provided == True:
-        st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
+if ((len(conversion_msg_to_show) > 0) or (len(st.session_state.df_produced) > 0) or ( st.session_state.q_and_a_provided == True)):
+    
+    if st.toggle(label = 'Display messages', value = True):
+    
+        if len(conversion_msg_to_show) > 0:
+            st.warning(conversion_msg_to_show)
+    
+        #Note importation of AI produced spreadsheet
+        if len(st.session_state.df_produced) > 0:
+            st.success(f'The spreadsheet produced by {st.session_state.ai_choice} has been imported.')
+    
+        if st.session_state.q_and_a_provided == True:
+            st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
 
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
@@ -1665,12 +1666,13 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                         st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
                         st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
             
-                    #Display and keep record of tokens and costs if own account activated
-                    if st.session_state['own_account'] == True:
-                        clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
-                        st.write(clarifying_questions_cost_tokens)
-                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
-        
+                    #Acivate if want to display tokens and costs only if own account active
+                    #if st.session_state['own_account'] == True:
+                        
+                    clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
+                    st.write(clarifying_questions_cost_tokens)
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
+    
                     add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
             
                     if add_q_a_button:
