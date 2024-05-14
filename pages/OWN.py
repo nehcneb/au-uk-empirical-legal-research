@@ -1285,11 +1285,13 @@ if 'need_resetting' not in st.session_state:
         
     st.session_state['need_resetting'] = 0
 
-if "df_individual_output" not in st.session_state:
-    st.session_state["df_individual_output"] = []
+if 'df_master' not in st.session_state:
 
-if "df_master" not in st.session_state:
-    st.session_state["df_master"] = []
+    st.session_state['df_master'] = pd.DataFrame([])
+
+if 'df_individual_output' not in st.session_state:
+
+    st.session_state['df_individual_output'] = pd.DataFrame([])
 
 #Initialize enhanced prompt
 if 'prompt_prefill' not in st.session_state:

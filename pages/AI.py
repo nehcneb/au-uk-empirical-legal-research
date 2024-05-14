@@ -487,8 +487,8 @@ def pandasai_ask():
 def pandasai_analyse_df_produced():
     st.session_state.df_produced = st.session_state.response
     st.session_state.df_uploaded_key += 1
-    #st.session_state.df_uploaded = []
-    #st.session_state.df_individual_output = []
+    #st.session_state.df_uploaded = pd.DataFrame([])
+    #st.session_state.df_individual_output = pd.DataFrame([])
     st.session_state.response = {}
     #st.session_state["analyse_df_produced"] = False
     st.rerun()       
@@ -500,8 +500,8 @@ def pandasai_merge_df_produced():
     st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
     st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
     st.session_state.df_uploaded_key += 1
-    #st.session_state.df_uploaded = []
-    #st.session_state.df_individual_output = []
+    #st.session_state.df_uploaded = pd.DataFrame([])
+    #st.session_state.df_individual_output = pd.DataFrame([])
     st.session_state.response = []
     #st.session_state["merge_df_produced"] = False
     st.rerun()
@@ -638,9 +638,9 @@ def langchain_ask():
 def langchain_analyse_df_produced():
     st.session_state.df_produced = pd.DataFrame(data = st.session_state.response_json["dataframe"])
     st.session_state.df_uploaded_key += 1
-    #st.session_state.df_uploaded = []
-    #st.session_state.df_individual_output = []
-    st.session_state.response_json["dataframe"] = []
+    #st.session_state.df_uploaded = pd.DataFrame([])
+    #st.session_state.df_individual_output = pd.DataFrame([])
+    st.session_state.response_json["dataframe"] = pd.DataFrame([])
     st.rerun()
 
 def langchain_merge_df_produced():
@@ -650,9 +650,9 @@ def langchain_merge_df_produced():
     st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
     st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
     st.session_state.df_uploaded_key += 1
-    #st.session_state.df_uploaded = []
-    #st.session_state.df_individual_output = []
-    st.session_state.response_json["dataframe"] = []
+    #st.session_state.df_uploaded = pd.DataFrame([])
+    #st.session_state.df_individual_output = pd.DataFrame([])
+    st.session_state.response_json["dataframe"] = pd.DataFrame([])
     st.rerun()
 
 
@@ -867,20 +867,18 @@ if "messages" not in st.session_state:
 if 'page_from' not in st.session_state:
     st.session_state['page_from'] = 'Home.py'
 
-#Initalize df_individual_output:
 if 'df_master' not in st.session_state:
 
-    st.session_state['df_master'] = []
+    st.session_state['df_master'] = pd.DataFrame([])
 
-#Initalize df_individual_output:
 if 'df_individual_output' not in st.session_state:
 
-    st.session_state['df_individual_output'] = []
+    st.session_state['df_individual_output'] = pd.DataFrame([])
 
 #Initalize df_uploaded:
 if 'df_uploaded' not in st.session_state:
 
-    st.session_state['df_uploaded'] = []
+    st.session_state['df_uploaded'] = pd.DataFrame([])
 
 #Initalize df_uploaded_key
 if "df_uploaded_key" not in st.session_state:
@@ -889,17 +887,17 @@ if "df_uploaded_key" not in st.session_state:
 #Initalize df_produced:
 if 'df_produced' not in st.session_state:
 
-    st.session_state['df_produced'] = []
+    st.session_state['df_produced'] = pd.DataFrame([])
 
 #Initalize df_to_analyse:
 if 'df_to_analyse' not in st.session_state:
 
-    st.session_state['df_to_analyse'] = []
+    st.session_state['df_to_analyse'] = pd.DataFrame([])
 
 #Initalize edited_df:
 if 'edited_df' not in st.session_state:
 
-    st.session_state['edited_df'] = []
+    st.session_state['edited_df'] = pd.DataFrame([])
 
 #Initialize default instructions bound
 
@@ -1074,7 +1072,6 @@ else: #if len(st.session_state.df_individual_output) == 0:
 # ## Choice of AI and GPT account
 
 # %%
-
 if len(ai_list_raw) > 1:
 
     st.subheader('Choose an AI')
@@ -1125,10 +1122,19 @@ if own_account_allowed() > 0:
             name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
     
             st.session_state['name_entry'] = name_entry
+
+            if name_entry:
+                st.session_state.df_master.loc[0, 'Your name'] = name_entry
             
             email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
+
+            if email_entry:
+                st.session_state.df_master.loc[0, 'Your email address'] = email_entry
             
             gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
+
+            if gpt_api_key_entry:
+                st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
             
             valdity_check = st.button('VALIDATE your API key')
         
@@ -1248,7 +1254,7 @@ else:
 
 st.subheader('Your spreadsheet')
 
-spreadsheet_caption = 'To download, search within or maximise this spreadsheet, hover your mouse/pointer over its top right-hand corner and click the appropriate button.'
+spreadsheet_caption = 'To download, search within or maximise any spreadsheet, hover your mouse/pointer over its top right-hand corner and click the appropriate button.'
 
 st.caption(spreadsheet_caption)
 
@@ -1405,12 +1411,14 @@ if st.toggle(label = 'Display messages', value = True):
     if len(st.session_state.df_produced) > 0:
         st.success(f'The spreadsheet produced by {st.session_state.ai_choice} has been imported.')
 
-    #Disable toggle for clarifying questions and answers BEFORE asking AI again
     if st.session_state.q_and_a_provided == True:
         st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
-        st.session_state.q_and_a_toggle = False
-        #Remove prefill after importation
-        #st.session_state['prompt_prefill'] = ''
+
+#Disable toggle for clarifying questions and answers BEFORE asking AI again
+if st.session_state.q_and_a_provided == True:
+    st.session_state.q_and_a_toggle = False
+    #Remove prefill after importation
+    #st.session_state['prompt_prefill'] = ''
 
 
 # %% [markdown]
@@ -1636,15 +1644,15 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
             with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
                 prompt = st.session_state.prompt
 
-                if len(prompt) > 0:
+                #if len(prompt) > 0:
             
-                    clarifying_questions = agent.clarification_questions(prompt)
-        
-                    st.session_state.clarifying_questions = clarifying_questions
-        
-                    #Keep record of clarifying questions
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
-                                
+                clarifying_questions = agent.clarification_questions(prompt)
+    
+                st.session_state.clarifying_questions = clarifying_questions
+    
+                #Keep record of clarifying questions
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
+                            
             if len(clarifying_questions) == 0:
                 st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
             
@@ -1751,6 +1759,7 @@ if history_on:
                             
                         if 'figure' in message["content"]:
                             st.pyplot(fig = message["content"]['figure'])
+                            st.caption('Right click to save this chart.')
                             
                         if 'code' in message["content"]:
                             st.code(message["content"]['code'])
