@@ -35,35 +35,34 @@ import pause
 import os
 import io
 import openpyxl
-from openpyxl.utils.dataframe import dataframe_to_rows
+#from openpyxl.utils.dataframe import dataframe_to_rows
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
-from streamlit.components.v1 import html
+#from streamlit_gsheets import GSheetsConnection
+#from streamlit.components.v1 import html
 import streamlit_ext as ste
 
 #OpenAI
 import openai
 #from openai import OpenAI
-import tiktoken
+#import tiktoken
 
 #PandasAI
 #from dotenv import load _dotenv
 from pandasai import SmartDataframe
 from pandasai import Agent
-from pandasai.llm import BambooLLM
+#from pandasai.llm import BambooLLM
 from pandasai.llm.openai import OpenAI
 import pandasai as pai
 from pandasai.responses.streamlit_response import StreamlitResponse
 from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_openai_callback
 
 #langchain
-from langchain_community.chat_models import ChatOpenAI
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.agents.agent_types import AgentType
-#from langchain_openai import OpenAI
-from langchain_community.callbacks import get_openai_callback as langchain_get_openai_callback
+#from langchain_community.chat_models import ChatOpenAI
+#from langchain_experimental.agents import create_pandas_dataframe_agent
+#from langchain.agents.agent_types import AgentType
+#from langchain_community.callbacks import get_openai_callback as langchain_get_openai_callback
 
 #Excel
 from io import BytesIO
@@ -183,8 +182,8 @@ default_ai_index = ai_list_raw.index(default_ai)
 def llm_setting(ai_choice, key, gpt_model_choice):
 
     if ai_choice == 'GPT': #llm.type == 'GPT':
-        if gpt_model_choice == 'gpt-4-turbo':
-            gpt_model_choice = 'gpt-4-0125-preview'
+        #if gpt_model_choice == 'gpt-4-0125-preview':
+            #gpt_model_choice = 'gpt-4-0125-preview'
         
         llm = OpenAI(api_token=key, model = gpt_model_choice)
 
@@ -234,46 +233,11 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
                       config={"llm": llm, 
                               "verbose": True, 
                               "response_parser": StreamlitResponse, 
-                              'enable_cache': True, 
+                              #'enable_cache': True, 
                               'use_error_correction_framework': True, 
-                              'max_retries': 10
+                              'max_retries': 5
                              }, 
-                      memory_size = instructions_bound, 
-                      description = pandasai_agent_description
-                     )
-        #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
-        
-    if ai_choice == 'LangChain':
-
-        agent_kwargs={"system_message": default_agent_description, #+ langchain_pandasai_further_instructions, 
-                    "handle_parsing_errors": True,
-                      'streaming' : False, 
-                     }
-        
-        agent =  create_pandas_dataframe_agent(llm, df, verbose=True, agent_type=AgentType.OPENAI_FUNCTIONS, agent_executor_kwargs= agent_kwargs)
-
-    return agent
-    
-
-
-# %%
-def agent_alt(llm, ai_choice, instructions_bound, df):
-
-    response = ''
-    
-    #llm = llm_setting(ai_choice, key, gpt_model_choice)
-    
-    if ai_choice in {'GPT', 'BambooLLM'}:            
-        
-        agent = Agent(df, 
-                      config={"llm": llm, 
-                              "verbose": True, 
-                              "response_parser": StreamlitResponse, 
-                              'enable_cache': True, 
-                              'use_error_correction_framework': True, 
-                              'max_retries': 10
-                             }, 
-                      memory_size = instructions_bound, 
+                      memory_size = default_instructions_bound, 
                       description = pandasai_agent_description
                      )
         #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
@@ -325,9 +289,9 @@ pandasai_further_instructions = """
 
 The columns starting with "GPT question" were previously entered by you. These columns likely have the information you need.
 
-If you need to use any modules to execute a code, import such modules first. 
-
 If you are asked to visualise your answer, provide the code for visualisation using Matplotlib. 
+
+If you need to use any modules to execute a code, import such modules first. 
 
 You must not remove the columns entitiled "Case name" and "Medium neutral citation" from the spreadsheet. 
 """
@@ -344,6 +308,31 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 
 #Common errors:
 #Value type <class 'list'> must match with type dataframe
+
+# %%
+def pandasai_ask_test():
+    with st.spinner("Running..."):
+
+        response = agent.chat(prompt)
+        st.session_state.response = response
+    
+        #Show response
+        st.subheader(f'{st.session_state.ai_choice} Response')
+        st.caption(spreadsheet_caption)
+    
+        #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
+
+        if agent.last_error is not None:
+            st.error(response)
+            #Keep record of response, cost and tokens
+            #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'error': response}})
+
+        else:
+            st.write(response)
+            #Keep record of response, cost and tokens
+            #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
+
+
 
 # %%
 def pandasai_ask():
@@ -520,11 +509,11 @@ If you need to use any modules to execute a code, import such modules first.
 
 Your output should be in JSON form with three fields: "text", "dataframe" and "code". These are the only possible fields.
 
-If your output includes a table, format the table as a Pandas dataframe, and then place the dataframe in the "dataframe" field. Specifcially: {"dataframe": the Pandas dataframe from your ouput}.
+If you are required to produce a table, format the table as a Pandas dataframe, and then place the dataframe in the "dataframe" field. Specifcially: {"dataframe": the Pandas dataframe from your ouput}.
 
-If your output includes a code,  provide the code in the "code" field. Specifcially: {"code": the code from your output}.
+If you are required to produce a code,  provide the code in the "code" field. Specifcially: {"code": the code from your output}.
 
-Any other part of your output should be placed in the "text" field. Specifically: {"text": anything that is not a dataframe or a code}.
+Any output that is not a dataframe or a code should be placed in the "text" field. Specifically: {"text": anything that is not a dataframe or a code}.
 
 If you do not know how to answer the questions or instructions given, write {"text": "Answer not found."}.
 
@@ -1150,7 +1139,7 @@ if own_account_allowed() > 0:
                     st.session_state['gpt_api_key_validity'] = True
                     st.success('Your API key is valid.')
         
-            st.markdown("""**:green[You can use the latest version of GPT model (gpt-4-turbo),]** which is :red[20 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
+            st.markdown("""**:green[You can use the latest version of GPT model (gpt-4-0125-preview),]** which is :red[20 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
             
             gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
         
@@ -1160,7 +1149,7 @@ if own_account_allowed() > 0:
                 #Reset AI first
                 pai.clear_cache()
             
-                st.session_state.gpt_model = "gpt-4-turbo"
+                st.session_state.gpt_model = "gpt-4-0125-preview"
                 st.session_state.gpt_enhancement_entry = True
     
             else:
@@ -1246,7 +1235,7 @@ if st.session_state.ai_choice == 'GPT':
     if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
         st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
 
-    if st.session_state.gpt_model == "gpt-4-turbo":
+    if st.session_state.gpt_model == "gpt-4-0125-preview":
         st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
     
 else: #if st.session_state.ai_choice == 'BambooLLM':
@@ -1435,11 +1424,11 @@ if st.session_state.q_and_a_provided == True:
     #quit()
 
 try:
-    agent = agent(st.session_state.ai_choice, 
-                  st.session_state.gpt_api_key, 
-                  st.session_state.gpt_model, 
-                  st.session_state.instructions_bound, 
-                  st.session_state.edited_df
+    agent = agent(ai_choice = st.session_state.ai_choice, 
+                  key = st.session_state.gpt_api_key, 
+                  gpt_model_choice = st.session_state.gpt_model, 
+                  instructions_bound = st.session_state.instructions_bound, 
+                  df = st.session_state.edited_df,
                  )
 
 except Exception as e:
@@ -1506,6 +1495,7 @@ reset_button = st.button('RESET to get fresh responses', type = 'primary')#, hel
 
 #if st.button('Test'):
 
+    #pandasai_ask_test()
 
     #st.dataframe(st.session_state.edited_df)
 

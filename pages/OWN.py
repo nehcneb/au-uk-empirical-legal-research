@@ -447,16 +447,18 @@ def gpt_input_cost(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
         gpt_input_cost = 1/1000000*0.5
         
-    if gpt_model == "gpt-4-turbo":
-        gpt_input_cost = 1/1000000*10
+    if gpt_model == "gpt-4o":
+        gpt_input_cost = 1/1000000*5
     return gpt_input_cost
 
 def gpt_output_cost(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_output_cost = 1/1000000*0.5
+        gpt_output_cost = 1/1000000*1.5
         
-    if gpt_model == "gpt-4-turbo":
-        gpt_output_cost = 1/1000000*10
+    if gpt_model == "gpt-4o":
+        gpt_output_cost = 1/1000000*15
+        
+    return gpt_output_cost
         
     return gpt_output_cost
 
@@ -465,8 +467,8 @@ def tokens_cap(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
         tokens_cap = int(16385 - 2500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
     
-    if gpt_model == "gpt-4-turbo":
-        tokens_cap = int(128000 - 6000) #For GPT-4-turbo, token limit covering both input and output is 128000, while the output limit is 4096.
+    if gpt_model == "gpt-4o":
+        tokens_cap = int(128000 - 6000) #For gpt-4o, token limit covering both input and output is 128000, while the output limit is 4096.
 
     return tokens_cap
     
@@ -804,7 +806,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use latest version of GPT'] == True:
-        gpt_model = "gpt-4-turbo"
+        gpt_model = "gpt-4o"
     else:        
         gpt_model = "gpt-3.5-turbo-0125"
         
@@ -827,7 +829,7 @@ def run(df_master, uploaded_docs, uploaded_images):
 
 
 # %% [markdown]
-# # For GPT-4-turbo vision
+# # For gpt-4o vision
 
 # %%
 #Tokens counter
@@ -965,7 +967,7 @@ def image_to_b64(uploaded_image, language, page_bound):
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
-#For gpt-4-turbo vision
+#For gpt-4o vision
 
 def GPT_b64_json_tokens(questions_json, file_triple, gpt_model):
     #'question_json' variable is a json of questions to GPT
@@ -1047,7 +1049,7 @@ def GPT_b64_json_tokens(questions_json, file_triple, gpt_model):
 
 # %%
 #Define GPT function for each respondent's dataframe, index by file then question, with input and output tokens given by GPT itself
-#For gpt-4-turbo vision
+#For gpt-4o vision
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
@@ -1158,7 +1160,7 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
 
 
 # %%
-#For gpt-4-turbo vision
+#For gpt-4o vision
 
 def run_b64(df_master, uploaded_images):
 
@@ -1200,7 +1202,7 @@ def run_b64(df_master, uploaded_images):
     #GPT model
     if df_master.loc[0, 'Use latest version of GPT'] == True:
         
-        gpt_model = "gpt-4-turbo"
+        gpt_model = "gpt-4o"
 
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -1426,14 +1428,14 @@ if own_account_allowed() > 0:
                 st.session_state['gpt_api_key_validity'] = True
                 st.success('Your API key is valid.')
     
-        st.markdown("""**:green[You can use the latest version of GPT model (gpt-4-turbo),]** which is :red[20 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
+        st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
         st.caption('For more on pricing for different GPT models, please see https://openai.com/api/pricing.')
         
         if gpt_enhancement_entry == True:
         
-            st.session_state.gpt_model = "gpt-4-turbo"
+            st.session_state.gpt_model = "gpt-4o"
             st.session_state.gpt_enhancement_entry = True
 
         else:
@@ -1523,7 +1525,7 @@ You can also download a record of your entries.
 #if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
     #st.warning('A low-cost AI will answer your questions. Please check at least some of the answers.')
 
-#if st.session_state.gpt_model == "gpt-4-turbo":
+#if st.session_state.gpt_model == "gpt-4o":
     #st.warning('An expensive AI will answer your questions. Please be cautious.')
 
 run_button = st.button('RUN the program')
@@ -1532,7 +1534,7 @@ keep_button = st.button('DOWNLOAD your entries')
 
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
     
-if ((st.session_state.gpt_model == "gpt-4-turbo") and (uploaded_images)):
+if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
 
     st.markdown("""By default, this program will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
 
@@ -1690,7 +1692,7 @@ if run_button:
             #GPT model
         
             #if df_master.loc[0, 'Use latest version of GPT'] == True:
-                #gpt_model = "gpt-4-turbo"
+                #gpt_model = "gpt-4o"
             #else:        
                 #gpt_model = "gpt-3.5-turbo-0125"
             
@@ -1769,7 +1771,7 @@ if run_button:
 
 
 # %%
-if ((st.session_state.gpt_model == "gpt-4-turbo") and (uploaded_images)):
+if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
     
     if run_button_b64:
     

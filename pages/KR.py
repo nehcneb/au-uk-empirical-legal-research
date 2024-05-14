@@ -431,16 +431,16 @@ def gpt_input_cost(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
         gpt_input_cost = 1/1000000*0.5
         
-    if gpt_model == "gpt-4-turbo":
-        gpt_input_cost = 1/1000000*10
+    if gpt_model == "gpt-4o":
+        gpt_input_cost = 1/1000000*5
     return gpt_input_cost
 
 def gpt_output_cost(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_output_cost = 1/1000000*0.5
+        gpt_output_cost = 1/1000000*1.5
         
-    if gpt_model == "gpt-4-turbo":
-        gpt_output_cost = 1/1000000*10
+    if gpt_model == "gpt-4o":
+        gpt_output_cost = 1/1000000*15
         
     return gpt_output_cost
 
@@ -449,8 +449,8 @@ def tokens_cap(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
         tokens_cap = int(16385 - 1500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
     
-    if gpt_model == "gpt-4-turbo":
-        tokens_cap = int(128000 - 6000) #For GPT-4-turbo, token limit covering both input and output is 128000, while the output limit is 4096.
+    if gpt_model == "gpt-4o":
+        tokens_cap = int(128000 - 6000) #For gpt-4o, token limit covering both input and output is 128000, while the output limit is 4096.
 
     return tokens_cap
     
@@ -784,7 +784,7 @@ def run(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use latest version of GPT'] == True:
-        gpt_model = "gpt-4-turbo"
+        gpt_model = "gpt-4o"
     else:        
         gpt_model = "gpt-3.5-turbo-0125"
             
@@ -1019,14 +1019,14 @@ if own_account_allowed() > 0:
                 st.session_state['gpt_api_key_validity'] = True
                 st.success('Your API key is valid.')
     
-        st.markdown("""**:green[You can use the latest version of GPT model (gpt-4-turbo),]** which is :red[20 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
+        st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
         st.caption('For more on pricing for different GPT models, please see https://openai.com/api/pricing.')
         
         if gpt_enhancement_entry == True:
         
-            st.session_state.gpt_model = "gpt-4-turbo"
+            st.session_state.gpt_model = "gpt-4o"
             st.session_state.gpt_enhancement_entry = True
     
         else:
@@ -1096,7 +1096,7 @@ You can also download a record of your entries.
 #if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
     #st.warning('A low-cost AI will answer your questions. Please check at least some of the answers.')
 
-#if st.session_state.gpt_model == "gpt-4-turbo":
+#if st.session_state.gpt_model == "gpt-4o":
     #st.warning('An expensive AI will answer your questions. Please be cautious.')
 
 run_button = st.button('RUN the program')
