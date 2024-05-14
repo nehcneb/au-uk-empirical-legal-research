@@ -413,7 +413,7 @@ def pandasai_ask():
                     plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
                     
                     pdf_button = ste.download_button(
-                       label="DOWNLOAD the chart as a PDF",
+                       label="DOWNLOAD as a PDF",
                        data=pdf_to_download,
                        file_name='chart.pdf',
                        mime="image/pdf"
@@ -422,7 +422,7 @@ def pandasai_ask():
                     plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
                     
                     png_button = ste.download_button(
-                       label="DOWNLOAD the chart as a PNG",
+                       label="DOWNLOAD as a PNG",
                        data=png_to_download,
                        file_name='chart.png',
                        mime="image/png"
@@ -971,7 +971,7 @@ if 'prompt_prefill' not in st.session_state:
 
 #Initialize clarifying questions and answers status
 if 'q_and_a_provided' not in st.session_state:
-    st.session_state["q_and_a_provided"] = 0
+    st.session_state['q_and_a_provided'] = False
 
 #Initialize clarifying questions and answers toggle
 if 'q_and_a_toggle' not in st.session_state:
@@ -1193,6 +1193,19 @@ if own_account_allowed() > 0:
 else:
     print('Users are NOT allowed to use their own accounts.')
 
+#AI warning
+if st.session_state.ai_choice == 'GPT':
+
+    if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
+        st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
+
+    if st.session_state.gpt_model == "gpt-4-turbo":
+        st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
+    
+else: #if st.session_state.ai_choice == 'BambooLLM':
+    st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')
+
+
 
 # %% [markdown]
 # ## Consent
@@ -1218,7 +1231,6 @@ if len(st.session_state.df_produced) > 0:
 elif len(st.session_state.df_individual_output) > 0:
     
     st.session_state.df_to_analyse = st.session_state.df_individual_output
-
 
 else: #len(st.session_state.df_uploaded) > 0:
     
@@ -1375,7 +1387,11 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
                 st.session_state.pop(df_key)
                 st.write(f'{df_key} removed.')
 
+            #Disable unnecessary buttons and pre-filled prompt
+            conversion_msg_to_show = ''
             st.session_state['prompt_prefill'] = ''
+            st.session_state['q_and_a_provided'] = False
+            st.session_state.q_and_a_toggle = False
 
             st.rerun()
 
@@ -1390,24 +1406,11 @@ if st.toggle(label = 'Display messages', value = True):
         st.success(f'The spreadsheet produced by {st.session_state.ai_choice} has been imported.')
 
     #Disable toggle for clarifying questions and answers BEFORE asking AI again
-    if st.session_state.q_and_a_provided == 1:
+    if st.session_state.q_and_a_provided == True:
         st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
         st.session_state.q_and_a_toggle = False
         #Remove prefill after importation
         #st.session_state['prompt_prefill'] = ''
-    
-    #AI warning
-    if st.session_state.ai_choice == 'GPT':
-    
-        if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-            st.warning("A low-cost GPT model will process your instructions. This model is *not* designed for data analysis. ")
-            st.caption("Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
-    
-        if st.session_state.gpt_model == "gpt-4-turbo":
-            st.warning(f'An expensive GPT model will process your instructions.')
-        
-    else: #if st.session_state.ai_choice == 'BambooLLM':
-        st.warning('An experimental AI model will respond to your instructions. Please be cautious.')
 
 
 # %% [markdown]
@@ -1441,7 +1444,7 @@ except Exception as e:
 #Area for entering instructions
 st.subheader(f'Enter your instructions for {st.session_state.ai_choice}')
 
-st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions.')
+st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions. It will use **only** the data or information from your spreadsheet.')
 
 prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=1000) 
 
@@ -1546,7 +1549,7 @@ if ask_button:
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": prompt})
 
         #Change q_and_a_provided status
-        st.session_state["q_and_a_provided"] = 0
+        st.session_state['q_and_a_provided'] = False
         #Close clarifying questions form brielif
         st.session_state["q_and_a_toggle"] = False
 
@@ -1632,13 +1635,15 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
         
             with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
                 prompt = st.session_state.prompt
+
+                if len(prompt) > 0:
+            
+                    clarifying_questions = agent.clarification_questions(prompt)
         
-                clarifying_questions = agent.clarification_questions(prompt)
-    
-                st.session_state.clarifying_questions = clarifying_questions
-    
-                #Keep record of clarifying questions
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
+                    st.session_state.clarifying_questions = clarifying_questions
+        
+                    #Keep record of clarifying questions
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
                                 
             if len(clarifying_questions) == 0:
                 st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
@@ -1701,7 +1706,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": st.session_state.clarifying_answers})
                         
                         #Change clarifying questions and answers status
-                        st.session_state['q_and_a_provided'] = 1
+                        st.session_state['q_and_a_provided'] = True
         
                         st.rerun()
                         
