@@ -630,7 +630,7 @@ def langchain_ask():
     
         #Display tokens and costs
         st.write(cost_tokens)
-        
+
 
 # %%
 #Buttons for importing or merging df produced
@@ -1199,19 +1199,6 @@ if own_account_allowed() > 0:
 else:
     print('Users are NOT allowed to use their own accounts.')
 
-#AI warning
-if st.session_state.ai_choice == 'GPT':
-
-    if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-        st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
-
-    if st.session_state.gpt_model == "gpt-4-turbo":
-        st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
-    
-else: #if st.session_state.ai_choice == 'BambooLLM':
-    st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')
-
-
 
 # %% [markdown]
 # ## Consent
@@ -1245,7 +1232,6 @@ else: #len(st.session_state.df_uploaded) > 0:
 #Check if any spreadsheet is available for analysis
 if len(st.session_state.df_to_analyse) > 0:
 
-
     df_to_analyse = st.session_state.df_to_analyse
     
 else:
@@ -1253,6 +1239,18 @@ else:
     quit()
 
 st.subheader('Your spreadsheet')
+
+#AI warning
+if st.session_state.ai_choice == 'GPT':
+
+    if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
+        st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
+
+    if st.session_state.gpt_model == "gpt-4-turbo":
+        st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
+    
+else: #if st.session_state.ai_choice == 'BambooLLM':
+    st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')
 
 spreadsheet_caption = 'To download, search within or maximise any spreadsheet, hover your mouse/pointer over its top right-hand corner and click the appropriate button.'
 
@@ -1488,7 +1486,7 @@ history_on = st.toggle(label = 'See all instructions and responses')
 #else:
     #st.session_state.explain_status = False
     #st.session_state.code_status = False
-    
+
 
 # %% [markdown]
 # ## Buttons
@@ -1501,7 +1499,7 @@ ask_button = st.button("ASK")
 
 #with col2a:
 reset_button = st.button('RESET to get fresh responses', type = 'primary')#, help = f"Get fresh responses from {st.session_state.ai_choice}")
-    
+
 
 # %%
 # Generate output
