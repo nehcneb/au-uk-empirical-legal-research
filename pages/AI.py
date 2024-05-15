@@ -27,15 +27,11 @@ import re
 import datetime
 from datetime import date
 from datetime import datetime
-from dateutil import parser
-from dateutil.relativedelta import *
-from datetime import datetime, timedelta
 import sys
 import pause
 import os
 import io
 import openpyxl
-#from openpyxl.utils.dataframe import dataframe_to_rows
 
 #Streamlit
 import streamlit as st
@@ -126,15 +122,14 @@ def convert_df_to_excel(df):
 
 # %%
 #Check validity of API key
-
 def is_api_key_valid(key_to_check):
     openai.api_key = key_to_check
     
     try:
         completion = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
-            messages=[{"role": "user", "content": 'Who is Taylor Swift?'}], 
-            max_tokens = 5
+            messages=[{"role": "user", "content": '1+1='}], 
+            max_tokens = 1
         )
     except:
         return False
@@ -304,16 +299,17 @@ pandasai_further_instructions = """
 
 The columns starting with "GPT question" were previously entered by you. These columns likely have the information you need.
 
-If you need to use any modules to execute a code, import such modules first. 
-
 You must not remove the columns entitiled "Case name" and "Medium neutral citation" from the spreadsheet. 
 """
+
+#If you need to use any modules to execute a code, import such modules first. 
 
 #If you are asked to visualise your answer, provide the code for visualisation using Matplotlib. 
 
 #If there are values which are "nonetype" objects, you ignore such values first. 
 
 #If there are values which are "list" objects, you convert such values to "string" objects first. 
+
 
 #visualisation = ' Everytime you are given a question or an instruction, try to provide the code to visualise your answer using Matplotlib.'
 
@@ -325,8 +321,10 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 #Value type <class 'list'> must match with type dataframe
 
 # %%
+#For testing purposes
+
 def pandasai_ask_test():
-    
+
     with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
 
         #Get response and keep in session state
@@ -379,9 +377,7 @@ def pandasai_ask():
         st.session_state.response = response
     
         #Show response
-        st.subheader(f'{st.session_state.ai_choice} Response')
-        st.caption(spreadsheet_caption)
-    
+        st.subheader(f'{st.session_state.ai_choice} Response')    
         #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
 
         #Keep record of cost and tokens
@@ -397,6 +393,11 @@ def pandasai_ask():
             st.write(response)
             #Keep record of response, cost and tokens
             st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
+
+        #Display caption if response is a dataframe
+        if isinstance(response, pd.DataFrame):
+            
+            st.caption(spreadsheet_caption)
 
         #Check if any df produced
         #if isinstance(st.session_state.response, pd.DataFrame):
@@ -417,9 +418,9 @@ def pandasai_ask():
                 #pandasai_merge_df_produced()
 
         #For all GPT models, show any figure generated
-        if '.png' in str(response):
+        try:
             
-            st.write('**Visualisation**')
+            #st.write('**Visualisation**')
             
             st.image(response)
             
@@ -427,6 +428,13 @@ def pandasai_ask():
 
             #Keep record of response, cost and tokens
             st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
+
+        except Exception as e:
+            if str(response)[-4:] in {'.png', 'jpeg', '.jpg'}:
+                st.error('Image produced but failed to visualise.')
+                print(e)
+            else:
+                print('No image produced.')
             
         #For GPT-3.5, show any figure generated
         #if plt.get_fignums(): #This returns a list of figure numbers produced
@@ -479,7 +487,6 @@ def pandasai_ask():
         #st.subheader('Logs')
         #df_logs = agent.logs
         #st.dataframe(df_logs)
-
         
         #default explanation/cost cost and tokens
         explanation_cost = float(0)
@@ -930,7 +937,7 @@ if 'df_uploaded' not in st.session_state:
 
     st.session_state['df_uploaded'] = pd.DataFrame([])
 
-#Initalize df_uploaded_key
+#Initalize df_uploaded_key for the purpose of removing uploaded spreadsheets programatically
 if "df_uploaded_key" not in st.session_state:
     st.session_state["df_uploaded_key"] = 0
 
@@ -995,7 +1002,7 @@ if 'gpt_enhancement_entry' not in st.session_state:
 
 #For pandas ai
 if 'response' not in st.session_state:
-    st.session_state["response"] = {}
+    st.session_state["response"] = ''
 
 #For langchain
 if 'response_json' not in st.session_state:
@@ -1173,22 +1180,17 @@ if own_account_allowed() > 0:
     
             if name_entry:
                 st.session_state.df_master.loc[0, 'Your name'] = name_entry
-            #else:
-                #st.session_state.df_master.loc[0, 'Your name'] = ''
             
             email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
 
             if email_entry:
                 st.session_state.df_master.loc[0, 'Your email address'] = email_entry
-            #else:
-                #st.session_state.df_master.loc[0, 'Your name'] = ''
+
             
             gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
 
             if gpt_api_key_entry:
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
-            #else:
-                #st.session_state.df_master.loc[0, 'Your name'] = ''
             
             valdity_check = st.button('VALIDATE your API key')
         
@@ -1506,7 +1508,7 @@ except Exception as e:
 #Area for entering instructions
 st.subheader(f'Enter your instructions for {st.session_state.ai_choice}')
 
-st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions. It will use **only** the data and/or information from your spreadsheet.')
+st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions. It will **only** use  the data and/or information from your spreadsheet.')
 
 prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=1000) 
 
@@ -1536,8 +1538,13 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
             st.session_state.code_status = True
         else:
             st.session_state.code_status = False
-
-history_on = st.toggle(label = 'See all instructions and responses')
+    with col3:
+        #Clarification questions toggle
+        if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+            #if len(str(st.session_state.response)) > 0:
+            clarification_questions_toggle = st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions to help draft your questions or instructions.')
+        
+history_on = st.toggle(label = 'Display all instructions and responses')
 
 #else:
     #st.session_state.explain_status = False
@@ -1615,7 +1622,8 @@ if ask_button:
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
         #Close clarifying questions form brielif
-        st.session_state["q_and_a_toggle"] = False
+        #st.session_state["q_and_a_toggle"] = False
+        clarification_questions_toggle = False
 
         if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
             
@@ -1693,96 +1701,96 @@ if reset_button:
 #Clarifying questions form
 
 if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
-    if len(str(st.session_state.response)) > 0:
+    #if len(str(st.session_state.response)) > 0:
+    #if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
+    if clarification_questions_toggle:
     
-        if st.toggle(label = 'Get clarifying questions', key = 'q_and_a_toggle'):
-        
-            with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
-                prompt = st.session_state.prompt
+        with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+            prompt = st.session_state.prompt
 
-                #if len(prompt) > 0:
-            
-                clarifying_questions = agent.clarification_questions(prompt)
-    
-                st.session_state.clarifying_questions = clarifying_questions
-    
-                #Keep record of clarifying questions
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
-                            
-            if len(clarifying_questions) == 0:
-                st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
-            
-            else: #if len(clarifying_questions) > 0:
-                with st.form("clarifying_questions_form"):
-            
-                    st.write(f'Please consider the following clarifying questions from {st.session_state.ai_choice}. You may answer them here, or redraft your questions or instructions in light of them.')
+            #if len(prompt) > 0:
         
-                    #Display up to 3 clarifying questions
-                    if len(st.session_state.clarifying_questions) > 0:
-            
-                        st.warning(f'Question 1: {st.session_state.clarifying_questions[0]}')
-                        st.session_state.clarifying_answers[0] = st.text_input(label = f'Enter your answer to question 1', max_chars = 250)
-            
-                    if len(st.session_state.clarifying_questions) > 1: 
-            
-                        st.warning(f'Question 2: {st.session_state.clarifying_questions[1]}')
-                        st.session_state.clarifying_answers[1] = st.text_input(label = f'Enter your answer to question 2', max_chars = 250)
-            
-                    if len(st.session_state.clarifying_questions) > 2: 
-            
-                        st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
-                        st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
-            
-                    #Acivate if want to display tokens and costs only if own account active
-                    #if st.session_state['own_account'] == True:
+            clarifying_questions = agent.clarification_questions(prompt)
+
+            st.session_state.clarifying_questions = clarifying_questions
+
+            #Keep record of clarifying questions
+            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
                         
-                    clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
-                    st.write(clarifying_questions_cost_tokens)
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
+        if len(clarifying_questions) == 0:
+            st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
+        
+        else: #if len(clarifying_questions) > 0:
+            with st.form("clarifying_questions_form"):
+        
+                st.write(f'Please consider the following clarifying questions from {st.session_state.ai_choice}. You may answer them here, or redraft your questions or instructions in light of them.')
     
-                    add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
-            
-                    if add_q_a_button:
-                        for question_index in range(0, len(st.session_state.clarifying_answers)):
-                            st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
-                            
-                        intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
-            
-                        q_and_a_pairs = ''
-                        
-                        for question_index in range(0, len(st.session_state.clarifying_answers)):
-                            if len(st.session_state.clarifying_answers[question_index]) > 0:
-                                question_answer_pair = f' Question: ' + st.session_state.clarifying_questions[question_index] + f' Answer: ' + st.session_state.clarifying_answers[question_index]
-                                
-                                if question_answer_pair[-1] != '.':
-                                    question_answer_pair = question_answer_pair + '. '
-                                
-                                q_and_a_pairs = q_and_a_pairs + question_answer_pair            
-            
-                        if intro_q_and_a in st.session_state.prompt_prefill:
-                            
-                            st.session_state.prompt_prefill = st.session_state.prompt + q_and_a_pairs
-                       
-                        else:
-                            
-                            st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
+                #Display up to 3 clarifying questions
+                if len(st.session_state.clarifying_questions) > 0:
         
-                        #Add clarifying answers to history
-                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
-                        
-                        #Change clarifying questions and answers status
-                        st.session_state['q_and_a_provided'] = True
+                    st.warning(f'Question 1: {st.session_state.clarifying_questions[0]}')
+                    st.session_state.clarifying_answers[0] = st.text_input(label = f'Enter your answer to question 1', max_chars = 250)
         
-                        st.rerun()
+                if len(st.session_state.clarifying_questions) > 1: 
+        
+                    st.warning(f'Question 2: {st.session_state.clarifying_questions[1]}')
+                    st.session_state.clarifying_answers[1] = st.text_input(label = f'Enter your answer to question 2', max_chars = 250)
+        
+                if len(st.session_state.clarifying_questions) > 2: 
+        
+                    st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
+                    st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
+        
+                #Acivate if want to display tokens and costs only if own account active
+                #if st.session_state['own_account'] == True:
+                    
+                clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
+                st.write(clarifying_questions_cost_tokens)
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
+
+                add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
+        
+                if add_q_a_button:
+                    for question_index in range(0, len(st.session_state.clarifying_answers)):
+                        st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
                         
+                    intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
+        
+                    q_and_a_pairs = ''
+                    
+                    for question_index in range(0, len(st.session_state.clarifying_answers)):
+                        if len(st.session_state.clarifying_answers[question_index]) > 0:
+                            question_answer_pair = f' Question: ' + st.session_state.clarifying_questions[question_index] + f' Answer: ' + st.session_state.clarifying_answers[question_index]
+                            
+                            if question_answer_pair[-1] != '.':
+                                question_answer_pair = question_answer_pair + '. '
+                            
+                            q_and_a_pairs = q_and_a_pairs + question_answer_pair            
+        
+                    if intro_q_and_a in st.session_state.prompt_prefill:
+                        
+                        st.session_state.prompt_prefill = st.session_state.prompt + q_and_a_pairs
+                   
+                    else:
+                        
+                        st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
+    
+                    #Add clarifying answers to history
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
+                    
+                    #Change clarifying questions and answers status
+                    st.session_state['q_and_a_provided'] = True
+    
+                    st.rerun()
+                    
 
 
 # %%
 #Displaying chat history
-#history_on = st.toggle(label = 'See all instructions and responses')
+#history_on = st.toggle(label = 'Display all instructions and responses')
 
 if history_on:
-#if st.toggle(label = 'See all instructions and responses'):
+#if st.toggle(label = 'Display all instructions and responses'):
 
     #Check if history exists
     if len(st.session_state.messages) == 0:

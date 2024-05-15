@@ -26,7 +26,6 @@ import numpy as np
 import re
 import datetime
 from datetime import date
-from datetime import datetime
 from dateutil import parser
 from dateutil.relativedelta import *
 from datetime import datetime, timedelta
@@ -543,8 +542,8 @@ def is_api_key_valid(key_to_check):
     try:
         completion = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
-            messages=[{"role": "user", "content": 'Who is Taylor Swift?'}], 
-            max_tokens = 5
+            messages=[{"role": "user", "content": '1+1='}], 
+            max_tokens = 1
         )
     except:
         return False
