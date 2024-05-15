@@ -1,0 +1,768 @@
+2024-05-15 09:55:22 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 09:55:22 [INFO] Running PandasAI with openai LLM...
+2024-05-15 09:55:22 [INFO] Prompt ID: 8192b549-8803-4ce8-9ef4-ef37c22af84c
+2024-05-15 09:55:22 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 09:55:22 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 09:55:22 [INFO] Executing Step 1: CacheLookup
+2024-05-15 09:55:22 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 09:55:22 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Japan,5014669299,6.38
+Italy,4385122149,6.94
+Germany,2829148370,7.16
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 09:55:22 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 09:55:22 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2024-05-15 09:55:22 [ERROR] Pipeline failed on step 3: Error code: 401 - {'error': {'message': 'Incorrect API key provided: YOUR_API**OKEN. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2024-05-15 09:55:46 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 09:55:46 [INFO] Running PandasAI with openai LLM...
+2024-05-15 09:55:46 [INFO] Prompt ID: 18576eef-2488-4421-8695-f7ba2836451f
+2024-05-15 09:55:46 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 09:55:46 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 09:55:46 [INFO] Executing Step 1: CacheLookup
+2024-05-15 09:55:46 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 09:55:46 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Spain,19294482071552,6.94
+Germany,1181205135360,5.12
+China,3435817336832,7.07
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 09:55:46 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 09:55:47 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 09:55:47 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Spain,19294482071552,6.94
+Germany,1181205135360,5.12
+China,3435817336832,7.07
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-05-15 09:55:47 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+
+# Declare result var
+result = {
+    "type": "string",
+    "value": f"The 5 happiest countries are: {', '.join(happiest_countries)}"
+}
+            ```
+            
+2024-05-15 09:55:47 [INFO] Executing Step 4: CachePopulation
+2024-05-15 09:55:47 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 09:55:47 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}"}
+        ```
+2024-05-15 09:55:47 [INFO] Executing Step 6: CodeExecution
+2024-05-15 09:55:47 [INFO] Executing Step 7: ResultValidation
+2024-05-15 09:55:47 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States'}
+2024-05-15 09:55:47 [INFO] Executing Step 8: ResultParsing
+2024-05-15 09:56:26 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 09:56:26 [INFO] Running PandasAI with openai LLM...
+2024-05-15 09:56:26 [INFO] Prompt ID: 53564faa-52fd-4b27-a56a-1169e3d02141
+2024-05-15 09:56:26 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 09:56:26 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 09:56:26 [INFO] Executing Step 1: CacheLookup
+2024-05-15 09:56:26 [INFO] Using cached response
+2024-05-15 09:56:26 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 09:56:26 [INFO] Executing Step 2: Skipping...
+2024-05-15 09:56:26 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 09:56:26 [INFO] Executing Step 3: Skipping...
+2024-05-15 09:56:26 [INFO] Executing Step 4: CachePopulation
+2024-05-15 09:56:26 [INFO] Executing Step 4: Skipping...
+2024-05-15 09:56:26 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 09:56:26 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}"}
+        ```
+2024-05-15 09:56:26 [INFO] Executing Step 6: CodeExecution
+2024-05-15 09:56:26 [INFO] Executing Step 7: ResultValidation
+2024-05-15 09:56:26 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States'}
+2024-05-15 09:56:26 [INFO] Executing Step 8: ResultParsing
+2024-05-15 09:57:20 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 09:57:20 [INFO] Running PandasAI with openai LLM...
+2024-05-15 09:57:20 [INFO] Prompt ID: 356ce32a-7f26-459d-848b-356b1f51fcd7
+2024-05-15 09:57:20 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 09:57:20 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 09:57:20 [INFO] Executing Step 1: CacheLookup
+2024-05-15 09:57:20 [INFO] Using cached response
+2024-05-15 09:57:20 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 09:57:20 [INFO] Executing Step 2: Skipping...
+2024-05-15 09:57:20 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 09:57:20 [INFO] Executing Step 3: Skipping...
+2024-05-15 09:57:20 [INFO] Executing Step 4: CachePopulation
+2024-05-15 09:57:20 [INFO] Executing Step 4: Skipping...
+2024-05-15 09:57:20 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 09:57:20 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}"}
+        ```
+2024-05-15 09:57:20 [INFO] Executing Step 6: CodeExecution
+2024-05-15 09:57:20 [INFO] Executing Step 7: ResultValidation
+2024-05-15 09:57:20 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States'}
+2024-05-15 09:57:20 [INFO] Executing Step 8: ResultParsing
+2024-05-15 09:58:13 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 09:58:13 [INFO] Running PandasAI with openai LLM...
+2024-05-15 09:58:13 [INFO] Prompt ID: 9b0b7f45-7f98-419e-890e-48a9f030cb5c
+2024-05-15 09:58:13 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 09:58:13 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 09:58:13 [INFO] Executing Step 1: CacheLookup
+2024-05-15 09:58:13 [INFO] Using cached response
+2024-05-15 09:58:13 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 09:58:13 [INFO] Executing Step 2: Skipping...
+2024-05-15 09:58:13 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 09:58:13 [INFO] Executing Step 3: Skipping...
+2024-05-15 09:58:13 [INFO] Executing Step 4: CachePopulation
+2024-05-15 09:58:13 [INFO] Executing Step 4: Skipping...
+2024-05-15 09:58:13 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 09:58:13 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}"}
+        ```
+2024-05-15 09:58:13 [INFO] Executing Step 6: CodeExecution
+2024-05-15 09:58:13 [INFO] Executing Step 7: ResultValidation
+2024-05-15 09:58:13 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States'}
+2024-05-15 09:58:13 [INFO] Executing Step 8: ResultParsing
+2024-05-15 09:58:34 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 09:58:34 [INFO] Running PandasAI with openai LLM...
+2024-05-15 09:58:34 [INFO] Prompt ID: 5f023083-ddfa-4929-9124-59830dc84672
+2024-05-15 09:58:34 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 09:58:34 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 09:58:34 [INFO] Executing Step 1: CacheLookup
+2024-05-15 09:58:34 [INFO] Using cached response
+2024-05-15 09:58:34 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 09:58:34 [INFO] Executing Step 2: Skipping...
+2024-05-15 09:58:34 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 09:58:34 [INFO] Executing Step 3: Skipping...
+2024-05-15 09:58:34 [INFO] Executing Step 4: CachePopulation
+2024-05-15 09:58:34 [INFO] Executing Step 4: Skipping...
+2024-05-15 09:58:34 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 09:58:34 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}"}
+        ```
+2024-05-15 09:58:34 [INFO] Executing Step 6: CodeExecution
+2024-05-15 09:58:34 [INFO] Executing Step 7: ResultValidation
+2024-05-15 09:58:34 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States'}
+2024-05-15 09:58:34 [INFO] Executing Step 8: ResultParsing
+2024-05-15 10:00:05 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:00:05 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:00:05 [INFO] Prompt ID: ce36453f-b61c-4b20-9504-0a94c0667124
+2024-05-15 10:00:05 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:00:05 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:00:05 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:00:05 [INFO] Using cached response
+2024-05-15 10:00:05 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:00:05 [INFO] Executing Step 2: Skipping...
+2024-05-15 10:00:05 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:00:05 [INFO] Executing Step 3: Skipping...
+2024-05-15 10:00:05 [INFO] Executing Step 4: CachePopulation
+2024-05-15 10:00:05 [INFO] Executing Step 4: Skipping...
+2024-05-15 10:00:05 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 10:00:05 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}"}
+        ```
+2024-05-15 10:00:05 [INFO] Executing Step 6: CodeExecution
+2024-05-15 10:00:05 [INFO] Executing Step 7: ResultValidation
+2024-05-15 10:00:05 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States'}
+2024-05-15 10:00:05 [INFO] Executing Step 8: ResultParsing
+2024-05-15 10:01:30 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:01:30 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:01:30 [INFO] Prompt ID: f4f0f3ce-8314-481d-b4d3-0fec98e9de0f
+2024-05-15 10:01:30 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:01:30 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:01:30 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:01:30 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:01:30 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Germany,8300046911,6.94
+Canada,3109519396,6.38
+United Kingdom,6273616692,5.12
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:01:30 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:01:32 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:01:32 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Germany,8300046911,6.94
+Canada,3109519396,6.38
+United Kingdom,6273616692,5.12
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-05-15 10:01:32 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+
+# Declare result var
+result = { "type": "string", "value": f"The 5 happiest countries are: {', '.join(happiest_countries)}." }
+            ```
+            
+2024-05-15 10:01:32 [INFO] Executing Step 4: CachePopulation
+2024-05-15 10:01:32 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 10:01:32 [INFO] 
+Code running:
+```
+happiest_countries = sorted(dfs[0].nlargest(5, 'happiness_index')['country'])
+result = {'type': 'string', 'value': f"The 5 happiest countries are: {', '.join(happiest_countries)}."}
+        ```
+2024-05-15 10:01:32 [INFO] Executing Step 6: CodeExecution
+2024-05-15 10:01:32 [INFO] Executing Step 7: ResultValidation
+2024-05-15 10:01:32 [INFO] Answer: {'type': 'string', 'value': 'The 5 happiest countries are: Australia, Canada, Germany, United Kingdom, United States.'}
+2024-05-15 10:01:32 [INFO] Executing Step 8: ResultParsing
+2024-05-15 10:01:47 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:01:47 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:01:47 [INFO] Prompt ID: 529d59d3-8779-4751-a5ca-8e5a9366887d
+2024-05-15 10:01:47 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:01:47 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:01:47 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:01:47 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:01:47 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Canada,7292252226,7.16
+Spain,8788888724,6.66
+United Kingdom,9293621640,6.4
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:01:47 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:01:50 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:01:50 [ERROR] Pipeline failed on step 3: Unknown model: gpt-4o-2024-05-13-completion. Please provide a valid OpenAI model name.Known models are: gpt-4, gpt-4-0613, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-1106-preview, gpt-4o, gpt-4o-2024-05-13, gpt-4-32k, gpt-4-32k-0613, gpt-4-completion, gpt-4-0613-completion, gpt-4-turbo-preview-completion, gpt-4-0125-preview-completion, gpt-4-1106-preview-completion, gpt-4-32k-completion, gpt-4-32k-0613-completion, gpt-3.5-turbo, gpt-3.5-turbo-0125, gpt-3.5-turbo-1106, gpt-3.5-turbo-0613, gpt-3.5-turbo-16k, gpt-3.5-turbo-16k-0613, gpt-3.5-turbo-instruct, gpt-3.5-turbo-completion, gpt-3.5-turbo-0125-completion, gpt-3.5-turbo-1106-completion, gpt-3.5-turbo-0613-completion, gpt-3.5-turbo-16k-completion, gpt-3.5-turbo-16k-0613-completion, gpt-3.5-turbo-instruct-completion, gpt-35-turbo, gpt-35-turbo-0613, gpt-35-turbo-instruct, gpt-35-turbo-16k, gpt-35-turbo-16k-0613, gpt-35-turbo-completion, gpt-35-turbo-0613-completion, gpt-35-turbo-instruct-completion, gpt-35-turbo-16k-completion, gpt-35-turbo-16k-0613-completion, gpt-3.5-turbo-0613-finetuned, gpt-3.5-turbo-1106-finetuned, gpt-3.5-turbo-0613-finetuned-completion, gpt-3.5-turbo-1106-finetuned-completion, gpt-35-turbo-0613-azure-finetuned, gpt-35-turbo-0613-azure-finetuned-completion
+2024-05-15 10:02:17 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:02:17 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:02:17 [INFO] Prompt ID: da9d8c7b-8cec-40a4-adcc-1fc35d2ec212
+2024-05-15 10:02:17 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:02:17 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:02:17 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:02:17 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:02:17 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+United States,5812745630,6.66
+Germany,2995378213,7.16
+Japan,2090299089,7.22
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:02:17 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:02:21 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:02:21 [ERROR] Pipeline failed on step 3: Unknown model: gpt-4o-2024-05-13-completion. Please provide a valid OpenAI model name.Known models are: gpt-4, gpt-4-0613, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-1106-preview, gpt-4o, gpt-4o-2024-05-13, gpt-4-32k, gpt-4-32k-0613, gpt-4-completion, gpt-4-0613-completion, gpt-4-turbo-preview-completion, gpt-4-0125-preview-completion, gpt-4-1106-preview-completion, gpt-4-32k-completion, gpt-4-32k-0613-completion, gpt-3.5-turbo, gpt-3.5-turbo-0125, gpt-3.5-turbo-1106, gpt-3.5-turbo-0613, gpt-3.5-turbo-16k, gpt-3.5-turbo-16k-0613, gpt-3.5-turbo-instruct, gpt-3.5-turbo-completion, gpt-3.5-turbo-0125-completion, gpt-3.5-turbo-1106-completion, gpt-3.5-turbo-0613-completion, gpt-3.5-turbo-16k-completion, gpt-3.5-turbo-16k-0613-completion, gpt-3.5-turbo-instruct-completion, gpt-35-turbo, gpt-35-turbo-0613, gpt-35-turbo-instruct, gpt-35-turbo-16k, gpt-35-turbo-16k-0613, gpt-35-turbo-completion, gpt-35-turbo-0613-completion, gpt-35-turbo-instruct-completion, gpt-35-turbo-16k-completion, gpt-35-turbo-16k-0613-completion, gpt-3.5-turbo-0613-finetuned, gpt-3.5-turbo-1106-finetuned, gpt-3.5-turbo-0613-finetuned-completion, gpt-3.5-turbo-1106-finetuned-completion, gpt-35-turbo-0613-azure-finetuned, gpt-35-turbo-0613-azure-finetuned-completion
+2024-05-15 10:02:47 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:02:47 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:02:47 [INFO] Prompt ID: d3370cd4-1b99-48f5-a7fc-6b9f74394224
+2024-05-15 10:02:47 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:02:47 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:02:47 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:02:47 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:02:47 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+United States,19294482071552,6.4
+United Kingdom,2891615567872,7.16
+Germany,1745433788416,7.23
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:02:47 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:02:50 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:02:50 [ERROR] Pipeline failed on step 3: Unknown model: gpt-4o-2024-05-13-completion. Please provide a valid OpenAI model name.Known models are: gpt-4, gpt-4-0613, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-1106-preview, gpt-4o, gpt-4o-2024-05-13, gpt-4-32k, gpt-4-32k-0613, gpt-4-completion, gpt-4-0613-completion, gpt-4-turbo-preview-completion, gpt-4-0125-preview-completion, gpt-4-1106-preview-completion, gpt-4-32k-completion, gpt-4-32k-0613-completion, gpt-3.5-turbo, gpt-3.5-turbo-0125, gpt-3.5-turbo-1106, gpt-3.5-turbo-0613, gpt-3.5-turbo-16k, gpt-3.5-turbo-16k-0613, gpt-3.5-turbo-instruct, gpt-3.5-turbo-completion, gpt-3.5-turbo-0125-completion, gpt-3.5-turbo-1106-completion, gpt-3.5-turbo-0613-completion, gpt-3.5-turbo-16k-completion, gpt-3.5-turbo-16k-0613-completion, gpt-3.5-turbo-instruct-completion, gpt-35-turbo, gpt-35-turbo-0613, gpt-35-turbo-instruct, gpt-35-turbo-16k, gpt-35-turbo-16k-0613, gpt-35-turbo-completion, gpt-35-turbo-0613-completion, gpt-35-turbo-instruct-completion, gpt-35-turbo-16k-completion, gpt-35-turbo-16k-0613-completion, gpt-3.5-turbo-0613-finetuned, gpt-3.5-turbo-1106-finetuned, gpt-3.5-turbo-0613-finetuned-completion, gpt-3.5-turbo-1106-finetuned-completion, gpt-35-turbo-0613-azure-finetuned, gpt-35-turbo-0613-azure-finetuned-completion
+2024-05-15 10:03:15 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:03:15 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:03:15 [INFO] Prompt ID: 8fd9b912-428f-4704-b484-a201a6724251
+2024-05-15 10:03:15 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:03:15 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:03:15 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:03:15 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:03:15 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Australia,0699025590,6.38
+United States,1186239624,7.23
+France,7667561836,7.22
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:03:15 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:03:18 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:03:18 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Australia,0699025590,6.38
+United States,1186239624,7.23
+France,7667561836,7.22
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-05-15 10:03:18 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+# Assuming dfs is already declared and contains the dataframes
+df = dfs[0]
+
+# Sort the dataframe by happiness_index in descending order
+sorted_df = df.sort_values(by='happiness_index', ascending=False)
+
+# Get the top 5 happiest countries
+top_5_happiest_countries = sorted_df.head(5)
+
+# Declare result var:
+result = {
+    "type": "dataframe",
+    "value": top_5_happiest_countries
+}
+            ```
+            
+2024-05-15 10:03:18 [INFO] Executing Step 4: CachePopulation
+2024-05-15 10:03:18 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 10:03:18 [INFO] 
+Code running:
+```
+df = dfs[0]
+sorted_df = df.sort_values(by='happiness_index', ascending=False)
+top_5_happiest_countries = sorted_df.head(5)
+result = {'type': 'dataframe', 'value': top_5_happiest_countries}
+        ```
+2024-05-15 10:03:18 [INFO] Executing Step 6: CodeExecution
+2024-05-15 10:03:18 [INFO] Executing Step 7: ResultValidation
+2024-05-15 10:03:18 [INFO] Answer: {'type': 'dataframe', 'value':           country             gdp  happiness_index
+6          Canada   1607402389504             7.23
+7       Australia   1490967855104             7.22
+1  United Kingdom   2891615567872             7.16
+3         Germany   3435817336832             7.07
+0   United States  19294482071552             6.94}
+2024-05-15 10:03:18 [INFO] Executing Step 8: ResultParsing
+2024-05-15 10:03:37 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:03:37 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:03:37 [INFO] Prompt ID: 42b00c14-d38f-4e22-85c4-901ecbcaf6c1
+2024-05-15 10:03:37 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:03:37 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:03:37 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:03:37 [INFO] Using cached response
+2024-05-15 10:03:37 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:03:37 [INFO] Executing Step 2: Skipping...
+2024-05-15 10:03:37 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:03:37 [INFO] Executing Step 3: Skipping...
+2024-05-15 10:03:37 [INFO] Executing Step 4: CachePopulation
+2024-05-15 10:03:37 [INFO] Executing Step 4: Skipping...
+2024-05-15 10:03:37 [INFO] Executing Step 5: CodeCleaning
+2024-05-15 10:03:37 [INFO] 
+Code running:
+```
+df = dfs[0]
+sorted_df = df.sort_values(by='happiness_index', ascending=False)
+top_5_happiest_countries = sorted_df.head(5)
+result = {'type': 'dataframe', 'value': top_5_happiest_countries}
+        ```
+2024-05-15 10:03:37 [INFO] Executing Step 6: CodeExecution
+2024-05-15 10:03:37 [INFO] Executing Step 7: ResultValidation
+2024-05-15 10:03:37 [INFO] Answer: {'type': 'dataframe', 'value':           country             gdp  happiness_index
+6          Canada   1607402389504             7.23
+7       Australia   1490967855104             7.22
+1  United Kingdom   2891615567872             7.16
+3         Germany   3435817336832             7.07
+0   United States  19294482071552             6.94}
+2024-05-15 10:03:37 [INFO] Executing Step 8: ResultParsing
+2024-05-15 10:03:47 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:03:47 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:03:47 [INFO] Prompt ID: b8fdb6a4-47f6-456d-9510-a412473884ea
+2024-05-15 10:03:47 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:03:47 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:03:47 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:03:47 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:03:47 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Germany,9287023592,7.22
+China,6083756796,6.38
+Canada,0195726218,6.4
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:03:47 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:03:53 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:03:53 [ERROR] Pipeline failed on step 3: Unknown model: gpt-4o-2024-05-13-completion. Please provide a valid OpenAI model name.Known models are: gpt-4, gpt-4-0613, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-1106-preview, gpt-4o, gpt-4o-2024-05-13, gpt-4-32k, gpt-4-32k-0613, gpt-4-completion, gpt-4-0613-completion, gpt-4-turbo-preview-completion, gpt-4-0125-preview-completion, gpt-4-1106-preview-completion, gpt-4-32k-completion, gpt-4-32k-0613-completion, gpt-3.5-turbo, gpt-3.5-turbo-0125, gpt-3.5-turbo-1106, gpt-3.5-turbo-0613, gpt-3.5-turbo-16k, gpt-3.5-turbo-16k-0613, gpt-3.5-turbo-instruct, gpt-3.5-turbo-completion, gpt-3.5-turbo-0125-completion, gpt-3.5-turbo-1106-completion, gpt-3.5-turbo-0613-completion, gpt-3.5-turbo-16k-completion, gpt-3.5-turbo-16k-0613-completion, gpt-3.5-turbo-instruct-completion, gpt-35-turbo, gpt-35-turbo-0613, gpt-35-turbo-instruct, gpt-35-turbo-16k, gpt-35-turbo-16k-0613, gpt-35-turbo-completion, gpt-35-turbo-0613-completion, gpt-35-turbo-instruct-completion, gpt-35-turbo-16k-completion, gpt-35-turbo-16k-0613-completion, gpt-3.5-turbo-0613-finetuned, gpt-3.5-turbo-1106-finetuned, gpt-3.5-turbo-0613-finetuned-completion, gpt-3.5-turbo-1106-finetuned-completion, gpt-35-turbo-0613-azure-finetuned, gpt-35-turbo-0613-azure-finetuned-completion
+2024-05-15 10:04:37 [INFO] Question: Which are the 5 happiest countries?
+2024-05-15 10:04:37 [INFO] Running PandasAI with openai LLM...
+2024-05-15 10:04:37 [INFO] Prompt ID: ad82aa71-a4f2-4fed-96b3-43c29c3bc0e8
+2024-05-15 10:04:37 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-05-15 10:04:37 [INFO] Executing Step 0: ValidatePipelineInput
+2024-05-15 10:04:37 [INFO] Executing Step 1: CacheLookup
+2024-05-15 10:04:37 [INFO] Executing Step 2: PromptGeneration
+2024-05-15 10:04:37 [INFO] Using prompt: <dataframe>
+dfs[0]:10x3
+country,gdp,happiness_index
+Canada,0184539224,7.22
+Spain,9164748535,7.23
+United Kingdom,7488869087,6.38
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Which are the 5 happiest countries?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-05-15 10:04:37 [INFO] Executing Step 3: CodeGenerator
+2024-05-15 10:04:41 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2024-05-15 10:04:41 [ERROR] Pipeline failed on step 3: Unknown model: gpt-4o-2024-05-13-completion. Please provide a valid OpenAI model name.Known models are: gpt-4, gpt-4-0613, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-1106-preview, gpt-4o, gpt-4o-2024-05-13, gpt-4-32k, gpt-4-32k-0613, gpt-4-completion, gpt-4-0613-completion, gpt-4-turbo-preview-completion, gpt-4-0125-preview-completion, gpt-4-1106-preview-completion, gpt-4-32k-completion, gpt-4-32k-0613-completion, gpt-3.5-turbo, gpt-3.5-turbo-0125, gpt-3.5-turbo-1106, gpt-3.5-turbo-0613, gpt-3.5-turbo-16k, gpt-3.5-turbo-16k-0613, gpt-3.5-turbo-instruct, gpt-3.5-turbo-completion, gpt-3.5-turbo-0125-completion, gpt-3.5-turbo-1106-completion, gpt-3.5-turbo-0613-completion, gpt-3.5-turbo-16k-completion, gpt-3.5-turbo-16k-0613-completion, gpt-3.5-turbo-instruct-completion, gpt-35-turbo, gpt-35-turbo-0613, gpt-35-turbo-instruct, gpt-35-turbo-16k, gpt-35-turbo-16k-0613, gpt-35-turbo-completion, gpt-35-turbo-0613-completion, gpt-35-turbo-instruct-completion, gpt-35-turbo-16k-completion, gpt-35-turbo-16k-0613-completion, gpt-3.5-turbo-0613-finetuned, gpt-3.5-turbo-1106-finetuned, gpt-3.5-turbo-0613-finetuned-completion, gpt-3.5-turbo-1106-finetuned-completion, gpt-35-turbo-0613-azure-finetuned, gpt-35-turbo-0613-azure-finetuned-completion

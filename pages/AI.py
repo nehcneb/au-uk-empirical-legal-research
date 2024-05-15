@@ -22,7 +22,6 @@ import json
 import pandas as pd
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
 import re
 import datetime
 from datetime import date
@@ -32,6 +31,12 @@ import pause
 import os
 import io
 import openpyxl
+
+#Import matplotlib for use in Streamlit
+import matplotlib
+#matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+# #echo "backend: TkAgg" >> ~/.matplotlib/matplotlibrc
 
 #Streamlit
 import streamlit as st
@@ -418,23 +423,28 @@ def pandasai_ask():
                 #pandasai_merge_df_produced()
 
         #For all GPT models, show any figure generated
-        try:
-            
-            #st.write('**Visualisation**')
-            
-            st.image(response)
-            
-            st.caption('Right click to save this image.')
-
-            #Keep record of response, cost and tokens
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
-
-        except Exception as e:
-            if str(response)[-4:] in {'.png', 'jpeg', '.jpg'}:
+        if '.png' in str(response)[-4:]:
+            try:
+                #st.write('**Visualisation**')
+        
+                fig_to_plot = plt.gcf()
+                st.pyplot(fig = fig_to_plot)
+                
+                #Keep record of response, cost and tokens
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
+    
+                #st.write('image')
+                
+                #st.image(response, use_column_width = "never")
+                
+                st.caption('Right click to save this image.')
+    
+                #Keep record of response, cost and tokens
+                #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
+    
+            except Exception as e:
                 st.error('Image produced but failed to visualise.')
                 print(e)
-            else:
-                print('No image produced.')
             
         #For GPT-3.5, show any figure generated
         #if plt.get_fignums(): #This returns a list of figure numbers produced
@@ -1180,17 +1190,22 @@ if own_account_allowed() > 0:
     
             if name_entry:
                 st.session_state.df_master.loc[0, 'Your name'] = name_entry
+            else:
+                st.session_state.df_master.loc[0, 'Your name'] = st.session_state.name_entry
             
             email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
 
             if email_entry:
                 st.session_state.df_master.loc[0, 'Your email address'] = email_entry
+            else:
+                st.session_state.df_master.loc[0, 'Your email address'] = st.session_state.email_entry
 
-            
             gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
 
             if gpt_api_key_entry:
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
+            else:
+                st.session_state.df_master.loc[0, 'Your GPT API key'] = st.session_state.gpt_api_key_entry
             
             valdity_check = st.button('VALIDATE your API key')
         
@@ -1826,7 +1841,7 @@ if history_on:
                             st.error(message["content"]['error'])
 
                         if 'image' in message["content"]:                           
-                            st.image(message["content"]['image'])
+                            st.image(message["content"]['image'], use_column_width = "never")
                             st.caption('Right click to save this image.')
 
                         if 'matplotlib figure' in message["content"]:
