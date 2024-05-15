@@ -724,7 +724,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
             df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
             
             if 'Your answer to the question with index GPT question' in str(answers_dict[question_index]):
-                df_individual.loc[judgment_index, question_heading] = f'Error for judgment {str(int(judgment_index)+2)}, GPT question {question_index}. Please try again.'
+                df_individual.loc[judgment_index, question_heading] = 'Error for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(question_index) + ' Please try again.'
         
         #Calculate GPT costs
 
