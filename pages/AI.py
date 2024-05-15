@@ -228,25 +228,40 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
     llm = llm_setting(ai_choice, key, gpt_model_choice)
     
     if ai_choice in {'GPT', 'BambooLLM'}:            
-        
-        agent = Agent(df, 
-                      config={"llm": llm, 
-                              "verbose": True, 
-                              "response_parser": StreamlitResponse, 
-                              #'enable_cache': True, 
-                              'use_error_correction_framework': True, 
-                              'max_retries': 5
-                             }, 
-                      memory_size = default_instructions_bound, 
-                      description = pandasai_agent_description
-                     )
-        #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
-        
+
+        if gpt_model_choice == 'gpt-3.5-turbo-0125':
+            
+            agent = Agent(df, 
+                          config={"llm": llm, 
+                                  "verbose": True, 
+                                  "response_parser": StreamlitResponse, 
+                                  'enable_cache': True, 
+                                  'use_error_correction_framework': True, 
+                                  'max_retries': 5
+                                 }, 
+                          memory_size = default_instructions_bound, 
+                          description = pandasai_agent_description
+                         )
+            #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
+
+        else: #For GPT 4, StreamlitResponse doesn't 'hold' images
+            agent = Agent(df, 
+                          config={"llm": llm, 
+                                  "verbose": True, 
+                                  #"response_parser": StreamlitResponse, 
+                                  'enable_cache': True, 
+                                  'use_error_correction_framework': True, 
+                                  'max_retries': 5
+                                 }, 
+                          memory_size = default_instructions_bound, 
+                          description = pandasai_agent_description
+                         )
+            
     if ai_choice == 'LangChain':
 
         agent_kwargs={"system_message": default_agent_description, #+ langchain_pandasai_further_instructions, 
                     "handle_parsing_errors": True,
-                      'streaming' : False, 
+                      'streaming' : True, 
                      }
         
         agent =  create_pandas_dataframe_agent(llm, df, verbose=True, agent_type=AgentType.OPENAI_FUNCTIONS, agent_executor_kwargs= agent_kwargs)
@@ -289,12 +304,12 @@ pandasai_further_instructions = """
 
 The columns starting with "GPT question" were previously entered by you. These columns likely have the information you need.
 
-If you are asked to visualise your answer, provide the code for visualisation using Matplotlib. 
-
 If you need to use any modules to execute a code, import such modules first. 
 
 You must not remove the columns entitiled "Case name" and "Medium neutral citation" from the spreadsheet. 
 """
+
+#If you are asked to visualise your answer, provide the code for visualisation using Matplotlib. 
 
 #If there are values which are "nonetype" objects, you ignore such values first. 
 
@@ -311,7 +326,10 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 
 # %%
 def pandasai_ask_test():
-    with st.spinner("Running..."):
+    
+    with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+
+        #Get response and keep in session state
 
         response = agent.chat(prompt)
         st.session_state.response = response
@@ -320,18 +338,32 @@ def pandasai_ask_test():
         st.subheader(f'{st.session_state.ai_choice} Response')
         st.caption(spreadsheet_caption)
     
-        #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
-
         if agent.last_error is not None:
             st.error(response)
-            #Keep record of response, cost and tokens
-            #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'error': response}})
 
         else:
             st.write(response)
-            #Keep record of response, cost and tokens
-            #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
 
+        #Show any figure generated
+        st.write('**Visualisation**')
+
+        st.write('List')
+        st.write(plt.get_fignums())
+        
+        for fig_num in plt.get_fignums():
+            
+            fig_to_plot = plt.figure(fig_num)
+            
+            st.pyplot(fig = fig_to_plot)
+
+        st.write('Labels')
+        st.write(plt.get_figlabels())
+
+        for fig_label in plt.get_figlabels():
+            
+            fig_to_plot = plt.figure(fig_label)
+
+            st.pyplot(fig = fig_to_plot)
 
 
 # %%
@@ -382,11 +414,17 @@ def pandasai_ask():
                 #pandasai_merge_df_produced()
         
         #Show any figure generated
-        if plt.get_fignums():
+        if plt.get_fignums(): #This returns a list of figure numbers produced
             try:
                 st.write('**Visualisation**')
+                st.write('Charts may appear in a popped up window. ')
                 fig_to_plot = plt.gcf()
                 st.pyplot(fig = fig_to_plot)
+
+                #for fig_num in plt.get_fignums(): #Use this if wants to show every figure produced. Can be repetitive.
+                    #fig_num = plt.get_fignums()
+                    #fig_to_plot = plt.figure(fig_num)                
+                    #st.pyplot(fig = fig_to_plot)
 
                 #Keep record of response, cost and tokens
                 st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'figure': fig_to_plot}})
@@ -425,14 +463,20 @@ def pandasai_ask():
         #st.subheader('Logs')
         #df_logs = agent.logs
         #st.dataframe(df_logs)
-                    
+
+        
+        #default explanation_cost and tokens
+        explanation_cost = float(0)
+        explanation_tokens = float(0)
+        
         #Explanations
         if st.session_state.explain_status is True:
     
             explanation = agent.explain()
             st.write('**Explanation**')
             st.write(explanation)
-    
+
+            
             #Display cost and tokens
             explanation_cost = cb.total_cost - response_cost
             explanation_tokens = cb.total_tokens - response_tokens
@@ -450,7 +494,7 @@ def pandasai_ask():
     
                 #Display cost and tokens
                 code_cost = cb.total_cost - response_cost - explanation_cost
-                code_tokens = cb.total_tokens - response_tokens  - explanation_tokens
+                code_tokens = cb.total_tokens - response_tokens - explanation_tokens
     
                 #Keep record of code
                 st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
@@ -1505,6 +1549,7 @@ reset_button = st.button('RESET to get fresh responses', type = 'primary')#, hel
     #st.session_state.edited_df[non_num_cols] = st.session_state.edited_df[non_num_cols].astype(str)
 
     #st.dataframe(st.session_state.edited_df)
+
 
 #if st.button("ASK"):
 
