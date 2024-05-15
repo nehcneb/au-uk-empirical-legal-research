@@ -417,7 +417,7 @@ def pandasai_ask():
                 #pandasai_merge_df_produced()
 
         #For all GPT models, show any figure generated
-        if '.png' in response:
+        if '.png' in str(response):
             
             st.write('**Visualisation**')
             
@@ -1171,26 +1171,24 @@ if own_account_allowed() > 0:
                 
             name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
     
-            st.session_state['name_entry'] = name_entry
-
             if name_entry:
                 st.session_state.df_master.loc[0, 'Your name'] = name_entry
-            else:
-                st.session_state.df_master.loc[0, 'Your name'] = ''
+            #else:
+                #st.session_state.df_master.loc[0, 'Your name'] = ''
             
             email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
 
             if email_entry:
                 st.session_state.df_master.loc[0, 'Your email address'] = email_entry
-            else:
-                st.session_state.df_master.loc[0, 'Your name'] = ''
+            #else:
+                #st.session_state.df_master.loc[0, 'Your name'] = ''
             
             gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
 
             if gpt_api_key_entry:
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
-            else:
-                st.session_state.df_master.loc[0, 'Your name'] = ''
+            #else:
+                #st.session_state.df_master.loc[0, 'Your name'] = ''
             
             valdity_check = st.button('VALIDATE your API key')
         
@@ -1695,7 +1693,7 @@ if reset_button:
 #Clarifying questions form
 
 if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
-    if len(st.session_state.response) > 0:
+    if len(str(st.session_state.response)) > 0:
     
         if st.toggle(label = 'Get clarifying questions', key = 'q_and_a_toggle'):
         
