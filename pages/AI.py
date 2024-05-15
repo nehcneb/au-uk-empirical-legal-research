@@ -229,33 +229,33 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
     
     if ai_choice in {'GPT', 'BambooLLM'}:            
 
-        if gpt_model_choice == 'gpt-3.5-turbo-0125':
+        #if gpt_model_choice == 'gpt-3.5-turbo-0125':
             
-            agent = Agent(df, 
-                          config={"llm": llm, 
-                                  "verbose": True, 
-                                  "response_parser": StreamlitResponse, 
-                                  'enable_cache': True, 
-                                  'use_error_correction_framework': True, 
-                                  'max_retries': 5
-                                 }, 
-                          memory_size = default_instructions_bound, 
-                          description = pandasai_agent_description
-                         )
+        agent = Agent(df, 
+                      config={"llm": llm, 
+                              "verbose": True, 
+                              "response_parser": StreamlitResponse, 
+                              'enable_cache': True, 
+                              'use_error_correction_framework': True, 
+                              'max_retries': 5
+                             }, 
+                      memory_size = default_instructions_bound, 
+                      description = pandasai_agent_description
+                     )
             #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
 
-        else: #For GPT 4, StreamlitResponse doesn't 'hold' images
-            agent = Agent(df, 
-                          config={"llm": llm, 
-                                  "verbose": True, 
+        #else: #For GPT 4, StreamlitResponse doesn't 'hold' images
+            #agent = Agent(df, 
+                          #config={"llm": llm, 
+                                  #"verbose": True, 
                                   #"response_parser": StreamlitResponse, 
-                                  'enable_cache': True, 
-                                  'use_error_correction_framework': True, 
-                                  'max_retries': 5
-                                 }, 
-                          memory_size = default_instructions_bound, 
-                          description = pandasai_agent_description
-                         )
+                                  #'enable_cache': True, 
+                                  #'use_error_correction_framework': True, 
+                                  #'max_retries': 5
+                                 #}, 
+                          #memory_size = default_instructions_bound, 
+                          #description = pandasai_agent_description
+                         #)
             
     if ai_choice == 'LangChain':
 
@@ -344,6 +344,9 @@ def pandasai_ask_test():
         else:
             st.write(response)
 
+        if '.png' in response:
+            st.image(response)
+
         #Show any figure generated
         st.write('**Visualisation**')
 
@@ -412,52 +415,65 @@ def pandasai_ask():
             #if pandasai_merge_button:
                 
                 #pandasai_merge_df_produced()
-        
-        #Show any figure generated
-        if plt.get_fignums(): #This returns a list of figure numbers produced
-            try:
-                st.write('**Visualisation**')
-                st.write('Charts may appear in a popped up window. ')
-                fig_to_plot = plt.gcf()
-                st.pyplot(fig = fig_to_plot)
 
-                #for fig_num in plt.get_fignums(): #Use this if wants to show every figure produced. Can be repetitive.
+        #For all GPT models, show any figure generated
+        if '.png' in response:
+            
+            st.write('**Visualisation**')
+            
+            st.image(response)
+            
+            st.caption('Right click to save this image.')
+
+            #Keep record of response, cost and tokens
+            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
+            
+        #For GPT-3.5, show any figure generated
+        #if plt.get_fignums(): #This returns a list of figure numbers produced
+            #try:
+                #st.write('**Visualisation**')
+                #st.write('Charts may appear in a popped up window. ')
+                #fig_to_plot = plt.gcf()
+                #st.pyplot(fig = fig_to_plot)
+
+                 
+                #for fig_num in plt.get_fignums(): #Alternatively, use this if wants to show every figure produced. Can be repetitive.
                     #fig_num = plt.get_fignums()
                     #fig_to_plot = plt.figure(fig_num)                
                     #st.pyplot(fig = fig_to_plot)
 
                 #Keep record of response, cost and tokens
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'figure': fig_to_plot}})
+                #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
             
                 #Enable downloading
-                pdf_to_download = io.BytesIO()
-                png_to_download = io.BytesIO()
+                #pdf_to_download = io.BytesIO()
+                #png_to_download = io.BytesIO()
 
-                col1e, col2e = st.columns(2, gap = 'small')
+                #col1e, col2e = st.columns(2, gap = 'small')
                 
-                with col1e:
+                #with col1e:
             
-                    plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
+                    #plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
                     
-                    pdf_button = ste.download_button(
-                       label="DOWNLOAD as a PDF",
-                       data=pdf_to_download,
-                       file_name='chart.pdf',
-                       mime="image/pdf"
-                    )
-                with col2e:
-                    plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
+                    #pdf_button = ste.download_button(
+                       #label="DOWNLOAD as a PDF",
+                       #data=pdf_to_download,
+                       #file_name='chart.pdf',
+                       #mime="image/pdf"
+                    #)
+                #with col2e:
+                    #plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
                     
-                    png_button = ste.download_button(
-                       label="DOWNLOAD as a PNG",
-                       data=png_to_download,
-                       file_name='chart.png',
-                       mime="image/png"
-                    )
+                    #png_button = ste.download_button(
+                       #label="DOWNLOAD as a PNG",
+                       #data=png_to_download,
+                       #file_name='chart.png',
+                       #mime="image/png"
+                    #)
     
-            except Exception as e:
-                st.error('An error with visualisation has occured.')
-                print(e)
+            #except Exception as e:
+                #st.error('An error with visualisation has occured.')
+                #print(e)
     
         #For displaying logs
         #st.subheader('Logs')
@@ -465,9 +481,11 @@ def pandasai_ask():
         #st.dataframe(df_logs)
 
         
-        #default explanation_cost and tokens
+        #default explanation/cost cost and tokens
         explanation_cost = float(0)
         explanation_tokens = float(0)
+        code_cost = float(0)
+        code_tokens = float(0)
         
         #Explanations
         if st.session_state.explain_status is True:
@@ -1157,16 +1175,22 @@ if own_account_allowed() > 0:
 
             if name_entry:
                 st.session_state.df_master.loc[0, 'Your name'] = name_entry
+            else:
+                st.session_state.df_master.loc[0, 'Your name'] = ''
             
             email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
 
             if email_entry:
                 st.session_state.df_master.loc[0, 'Your email address'] = email_entry
+            else:
+                st.session_state.df_master.loc[0, 'Your name'] = ''
             
             gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
 
             if gpt_api_key_entry:
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
+            else:
+                st.session_state.df_master.loc[0, 'Your name'] = ''
             
             valdity_check = st.button('VALIDATE your API key')
         
@@ -1588,7 +1612,7 @@ if ask_button:
         
         #Keep record of prompt
         prompt = st.session_state.prompt
-        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": prompt})
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": {"prompt": prompt}})
 
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
@@ -1746,7 +1770,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                             st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
         
                         #Add clarifying answers to history
-                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": st.session_state.clarifying_answers})
+                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
                         
                         #Change clarifying questions and answers status
                         st.session_state['q_and_a_provided'] = True
@@ -1785,16 +1809,23 @@ if history_on:
                 if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                     
                     if isinstance(message["content"], dict):
+
+                        if 'prompt' in message["content"]:
+                            st.write(message["content"]['prompt'])
                         
                         if 'answer' in message["content"]:                           
                             st.write(message["content"]['answer'])
 
                         if 'error' in message["content"]:                           
                             st.error(message["content"]['error'])
-                            
-                        if 'figure' in message["content"]:
-                            st.pyplot(fig = message["content"]['figure'])
-                            st.caption('Right click to save this chart.')
+
+                        if 'image' in message["content"]:                           
+                            st.image(message["content"]['image'])
+                            st.caption('Right click to save this image.')
+
+                        if 'matplotlib figure' in message["content"]:
+                            st.pyplot(fig = message["content"]['matplotlib figure'])
+                            st.caption('Right click to save this image.')
                             
                         if 'code' in message["content"]:
                             st.code(message["content"]['code'])
