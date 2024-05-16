@@ -126,6 +126,28 @@ def convert_df_to_excel(df):
 # ## Applicable to all AIs
 
 # %%
+#Per token cost
+
+def gpt_input_cost(gpt_model):
+    
+    if gpt_model == "gpt-3.5-turbo-0125":
+        gpt_input_cost = 1/1000000*0.5
+        
+    if gpt_model == "gpt-4o":
+        gpt_input_cost = 1/1000000*5
+    return gpt_input_cost
+
+def gpt_output_cost(gpt_model):
+    if gpt_model == "gpt-3.5-turbo-0125":
+        gpt_output_cost = 1/1000000*1.5
+        
+    if gpt_model == "gpt-4o":
+        gpt_output_cost = 1/1000000*15
+        
+    return gpt_output_cost
+
+
+# %%
 #Check validity of API key
 def is_api_key_valid(key_to_check):
     openai.api_key = key_to_check
@@ -182,8 +204,8 @@ default_ai_index = ai_list_raw.index(default_ai)
 def llm_setting(ai_choice, key, gpt_model_choice):
 
     if ai_choice == 'GPT': #llm.type == 'GPT':
-        #if gpt_model_choice == 'gpt-4-0125-preview':
-            #gpt_model_choice = 'gpt-4-0125-preview'
+        #if gpt_model_choice == 'gpt-4o':
+            #gpt_model_choice = 'gpt-4o'
         
         llm = OpenAI(api_token=key, model = gpt_model_choice)
 
@@ -374,21 +396,31 @@ def pandasai_ask_test():
 
 # %%
 def pandasai_ask():
+    
     with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+
+        #Proess prompt
+        
+        prompt = st.session_state.prompt
 
         #Get response and keep in session state
 
         response = agent.chat(prompt)
         st.session_state.response = response
-    
+
+        #Keep record of prompt cost and tokens
+        prompt_tokens = cb.prompt_tokens
+        prompt_cost = prompt_tokens*gpt_input_cost(st.session_state.gpt_model)
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": prompt_cost, "tokens": prompt_tokens,   "role": "user", "content": {"prompt": prompt}})
+        
+        #Obtain response cost and tokens
+        response_cost = cb.total_cost - prompt_cost
+        response_tokens = cb.completion_tokens
+
         #Show response
         st.subheader(f'{st.session_state.ai_choice} Response')    
         #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
 
-        #Keep record of cost and tokens
-        response_cost = cb.total_cost
-        response_tokens = cb.total_tokens
-        
         if agent.last_error is not None:
             st.error(response)
             #Keep record of response, cost and tokens
@@ -423,7 +455,10 @@ def pandasai_ask():
                 #pandasai_merge_df_produced()
 
         #For all GPT models, show any figure generated
-        if '.png' in str(response)[-4:]:
+        #st.write(f'The number of figures is {plt.get_fignums()}')
+
+        #if '.png' in str(response)[-4:]:
+        if plt.get_fignums():
             try:
                 #st.write('**Visualisation**')
         
@@ -431,13 +466,39 @@ def pandasai_ask():
                 st.pyplot(fig = fig_to_plot)
                 
                 #Keep record of response, cost and tokens
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
-    
-                #st.write('image')
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
+
+                #Enable downloading
+                pdf_to_download = io.BytesIO()
+                png_to_download = io.BytesIO()
+
+                col1e, col2e = st.columns(2, gap = 'small')
                 
-                #st.image(response, use_column_width = "never")
+                with col1e:
+            
+                    plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
+                    
+                    pdf_button = ste.download_button(
+                       label="DOWNLOAD as a PDF",
+                       data=pdf_to_download,
+                       file_name='chart.pdf',
+                       mime="image/pdf"
+                    )
+                with col2e:
+                    plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
+                    
+                    png_button = ste.download_button(
+                       label="DOWNLOAD as a PNG",
+                       data=png_to_download,
+                       file_name='chart.png',
+                       mime="image/png"
+                    )
                 
-                st.caption('Right click to save this image.')
+                #st.write('image') #If st.pyplot doesn't work
+                
+                #st.image(response)
+                
+                #st.caption('Right click to save this image.')
     
                 #Keep record of response, cost and tokens
                 #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
@@ -454,7 +515,6 @@ def pandasai_ask():
                 #fig_to_plot = plt.gcf()
                 #st.pyplot(fig = fig_to_plot)
 
-                 
                 #for fig_num in plt.get_fignums(): #Alternatively, use this if wants to show every figure produced. Can be repetitive.
                     #fig_num = plt.get_fignums()
                     #fig_to_plot = plt.figure(fig_num)                
@@ -511,11 +571,10 @@ def pandasai_ask():
             st.write('**Explanation**')
             st.write(explanation)
 
-            
             #Display cost and tokens
-            explanation_cost = cb.total_cost - response_cost
-            explanation_tokens = cb.total_tokens - response_tokens
-                
+            explanation_cost = cb.total_cost - response_cost - prompt_cost
+            explanation_tokens = cb.total_tokens - response_tokens - prompt_tokens
+            
             #Keep record of explanation
             st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": explanation_cost, "tokens": explanation_tokens,   "role": "assistant", "content": {'answer': explanation}})
 
@@ -528,8 +587,8 @@ def pandasai_ask():
                 st.code(code)
     
                 #Display cost and tokens
-                code_cost = cb.total_cost - response_cost - explanation_cost
-                code_tokens = cb.total_tokens - response_tokens - explanation_tokens
+                code_cost = cb.total_cost - explanation_cost - response_cost - prompt_cost
+                code_tokens = cb.total_tokens -  explanation_tokens  - response_tokens - prompt_tokens
     
                 #Keep record of code
                 st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
@@ -540,10 +599,10 @@ def pandasai_ask():
     
         #Acivate if want to display tokens and costs only if own account active
         #if st.session_state['own_account'] == True:
-        total_cost_tokens = f'(This response costed USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
+        total_cost_tokens = f'(This exchange costed approximately USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
         st.write(total_cost_tokens)
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
-          
+        
 
 
 # %%
@@ -650,6 +709,10 @@ def langchain_write(response_json):
 def langchain_ask():
     with langchain_get_openai_callback() as cb, st.spinner("Running..."):
 
+        #Process prompt
+
+        prompt = st.session_state.prompt
+
         prompt_to_process = langchain_further_instructions + prompt
 
         if st.session_state.explain_status == True:
@@ -668,6 +731,9 @@ def langchain_ask():
         st.subheader(f'{st.session_state.ai_choice} Response')
 
         #st.session_state.response = response.__str__()
+
+        #Keep record of prompt
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": {"prompt": prompt}})
 
         try:
 
@@ -1084,6 +1150,8 @@ if st.button('RETURN to previous page'):
 
 st.header("You have chosen to :blue[analyse your spreadsheet].")
 
+st.caption(f'PandasAI, [an open-source Python library](https://github.com/Sinaptik-AI/pandas-ai), provides the framework for analysing your spreadsheet with AI.')
+
 #Open spreadsheet and personal details
 
 if len(st.session_state.df_individual_output) > 0:
@@ -1221,7 +1289,7 @@ if own_account_allowed() > 0:
                     st.session_state['gpt_api_key_validity'] = True
                     st.success('Your API key is valid.')
         
-            st.markdown("""**:green[You can use the latest version of GPT model (gpt-4-0125-preview),]** which is :red[20 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
+            st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
             
             gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
         
@@ -1231,7 +1299,7 @@ if own_account_allowed() > 0:
                 #Reset AI first
                 pai.clear_cache()
             
-                st.session_state.gpt_model = "gpt-4-0125-preview"
+                st.session_state.gpt_model = "gpt-4o"
                 st.session_state.gpt_enhancement_entry = True
     
             else:
@@ -1317,7 +1385,7 @@ if st.session_state.ai_choice == 'GPT':
     if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
         st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
 
-    if st.session_state.gpt_model == "gpt-4-0125-preview":
+    if st.session_state.gpt_model == "gpt-4o":
         st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
     
 else: #if st.session_state.ai_choice == 'BambooLLM':
@@ -1631,10 +1699,6 @@ if ask_button:
 
     else:
         #Close question and answer section 
-        
-        #Keep record of prompt
-        prompt = st.session_state.prompt
-        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": {"prompt": prompt}})
 
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
@@ -1838,6 +1902,11 @@ if history_on:
                         
                         if 'answer' in message["content"]:                           
                             st.write(message["content"]['answer'])
+
+                            #Display caption if response is a dataframe
+                            if isinstance(message["content"]['answer'], pd.DataFrame):
+                                
+                                st.caption(spreadsheet_caption)
 
                         if 'error' in message["content"]:                           
                             st.error(message["content"]['error'])

@@ -1211,11 +1211,9 @@ st.header("You have selected to study :blue[judgments of the New South Wales cou
 
 #Search terms
 
-st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+st.write(f'**:green[Please enter your search terms.]** This program will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms.')
 
-For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/search/advanced. This section mimics their Advanced Search function.
-""")
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+st.caption(f"[An open-source Python library](https://github.com/Sydney-Informatics-Hub/nswcaselaw) will scrape judgments. During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
 
 st.subheader("NSW courts and tribunals to cover")
 
@@ -1235,6 +1233,8 @@ tribunals_entry = st.multiselect(label = 'Select or type in the tribunals to cov
 #st.caption(f"All courts and tribunals listed in these menus will be covered if left blank.")
 
 st.subheader("Your search terms")
+
+st.markdown("""For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/search/advanced. This section mimics their Advanced Search function.""")
 
 catchwords_entry = st.text_input("Catchwords")
 

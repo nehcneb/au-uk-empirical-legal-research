@@ -444,6 +444,7 @@ if 'gpt_model' not in st.session_state:
 #each token is about 4 characters
 
 def gpt_input_cost(gpt_model):
+    
     if gpt_model == "gpt-3.5-turbo-0125":
         gpt_input_cost = 1/1000000*0.5
         
@@ -457,8 +458,6 @@ def gpt_output_cost(gpt_model):
         
     if gpt_model == "gpt-4o":
         gpt_output_cost = 1/1000000*15
-        
-    return gpt_output_cost
         
     return gpt_output_cost
 
