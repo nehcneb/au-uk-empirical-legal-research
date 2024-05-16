@@ -1457,18 +1457,20 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
     for df_key in {'df_produced', 'df_individual_output', 'df_uploaded'}:
         
         if isinstance(st.session_state[df_key], pd.DataFrame):
-            
-            if st.session_state[df_key].sort_index(inplace=True) == st.session_state.edited_df.sort_index(inplace=True):
+
+            if st.session_state[df_key].equals(st.session_state.edited_df):
+            #if st.session_state[df_key].sort_index(inplace=True) == st.session_state.edited_df.sort_index(inplace=True):
                 st.session_state.pop(df_key)
                 st.write(f'{df_key} removed.')
+                #pause.seconds(5)
 
-            #Disable unnecessary buttons and pre-filled prompt
-            conversion_msg_to_show = ''
-            st.session_state['prompt_prefill'] = ''
-            st.session_state['q_and_a_provided'] = False
-            st.session_state.q_and_a_toggle = False
+    #Disable unnecessary buttons and pre-filled prompt
+    conversion_msg_to_show = ''
+    st.session_state['prompt_prefill'] = ''
+    st.session_state['q_and_a_provided'] = False
+    st.session_state.q_and_a_toggle = False
 
-            st.rerun()
+    st.rerun()
 
 #Display error or success messages
 if ((len(conversion_msg_to_show) > 0) or (len(st.session_state.df_produced) > 0) or ( st.session_state.q_and_a_provided == True)):
