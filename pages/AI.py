@@ -358,6 +358,7 @@ def pandasai_ask_test():
 
         #Get response and keep in session state
 
+        #prompt_to_process = prompt + " Variables 'eval', 'ast' are already declared. "
         response = agent.chat(prompt)
         st.session_state.response = response
     
@@ -1404,21 +1405,6 @@ conversion_msg_to_show = ''
 #Last resort error, unlikely displayed
 everything_error_to_show = 'Failed to make spreadsheet editable. '
 
-#Convert columns which are list type to string type
-#Must do this, or pandasai won't work
-#try:
-df_to_analyse = list_col_to_str(df_to_analyse)
-
-#if len(list_cols_picker(df_to_analyse)) > 0:
-    
-    #conversion_msg_to_show += 'Lists have been converted to plain text. '
-    
-#except Exception_list as e_list:
-
-    #print('Cannot display df without converting non-numeric data to string.' )
-
-    #print(e_list)
-
 #Obtain clolumns with hyperlinks
 
 link_heading_config = {} 
@@ -1443,63 +1429,87 @@ df_to_analyse = clean_link_columns(df_to_analyse)
         
         #print(e)
 
-#Try to display df without further conversion to string
+#Try to display df without some conversion to string
 try:
     
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
 except Exception as e:
 
-    print('Cannot display df without further conversion.' )
+    print('Cannot display df without some conversion.' )
     
     print(e)
 
-    #Try to convert all numerical data to string type
+    #Convert columns which are list type to string type
     try:
+        #Must do this, or pandasai won't work with lists? Not true since v 2.040
 
-        non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
+        list_cols = list_cols_picker(df_to_analyse)
+        
+        df_to_analyse = list_col_to_str(df_to_analyse)
 
-        df_to_analyse[non_num_cols] = df_to_analyse[non_num_cols].astype(str)
+        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+
+        if len(list_cols) > 0:
+
+            list_cols_error_msg = 'Lists have been converted to plain text. '
+            
+            conversion_msg_to_show += list_cols_error_msg
+            
+    except Exception as e_list:
     
-        non_num_error_msg ='Non-numeric data have been converted to plain text. '
-
-        conversion_msg_to_show += non_num_error_msg
-
-        #Activate below if wants to convert non-numerical columns with nonetype cells to empty string type
-        
-        #df_to_analyse = non_num_fill_blank(df_to_analyse)
-        
-        #if len(num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]) > 0:
+        print('Cannot display df without converting non-numeric data to string.' )
     
-            #non_num_cols_error = 'Nonetype cells in non-numerical columns have been converted to empty strings. '
-                    
-            #conversion_msg_to_show += non_num_cols_error
-
-    except Exception as e_numeric:
-        
-        print('Cannot display df without converting everything to string.' )
-
-        print(e_numeric)
-
+        print(e_list)
+    
+        #Try to convert all numerical data to string type
         try:
-        
-            df_to_analyse = df_to_analyse.astype(str)
     
-            st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+            non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
     
-            non_textual_error_to_show = 'Non-textual data have been converted to plain text. '
+            df_to_analyse[non_num_cols] = df_to_analyse[non_num_cols].astype(str)
+
+            if len(non_num_cols) > 0:
+            
+                non_num_error_msg ='Non-numeric data have been converted to plain text. '
         
-            conversion_msg_to_show += non_textual_error_to_show
-
-        except Exception as e_non_text:
-
-            print('Cannot make df editable at all.' )
+                conversion_msg_to_show += non_num_error_msg
+        
+            #Activate below if wants to convert non-numerical columns with nonetype cells to empty string type
+            
+            #df_to_analyse = non_num_fill_blank(df_to_analyse)
+            
+            #if len(num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]) > 0:
+        
+                #non_num_cols_error = 'Nonetype cells in non-numerical columns have been converted to empty strings. '
+                        
+                #conversion_msg_to_show += non_num_cols_error
+    
+        except Exception as e_numeric:
+            
+            print('Cannot display df without converting everything to string.' )
     
             print(e_numeric)
-
-            st.session_state["edited_df"] = st.dataframe(df_to_analyse,  column_config=link_heading_config)
     
-            conversion_msg_to_show += everything_error_to_show
+            try:
+            
+                df_to_analyse = df_to_analyse.astype(str)
+        
+                st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+        
+                non_textual_error_to_show = 'Non-textual data have been converted to plain text. '
+            
+                conversion_msg_to_show += non_textual_error_to_show
+    
+            except Exception as e_non_text:
+    
+                print('Cannot make df editable at all.' )
+        
+                print(e_numeric)
+    
+                st.session_state["edited_df"] = st.dataframe(df_to_analyse,  column_config=link_heading_config)
+        
+                conversion_msg_to_show += everything_error_to_show
 
 #Tell users that the spreadsheet is editable if it indeed is
 
@@ -1523,7 +1533,11 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
         
         if isinstance(st.session_state[df_key], pd.DataFrame):
 
-            if st.session_state[df_key].equals(st.session_state.edited_df):
+            if st.session_state[df_key].sort_index(inplace=True) == (st.session_state.edited_df.sort_index(inplace=True)):
+            #(
+                #st.session_state[df_key].equals(st.session_state.edited_df) or
+                #(st.session_state[df_key].sort_index(inplace=True) == (st.session_state.edited_df.sort_index(inplace=True)))
+               #):
                 st.session_state.pop(df_key)
                 st.write(f'{df_key} removed.')
                 #pause.seconds(5)
