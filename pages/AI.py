@@ -33,7 +33,7 @@ import io
 import openpyxl
 
 #Import matplotlib for use in Streamlit
-import matplotlib
+#import matplotlib
 #matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 # #echo "backend: TkAgg" >> ~/.matplotlib/matplotlibrc
@@ -58,6 +58,7 @@ from pandasai.llm.openai import OpenAI
 import pandasai as pai
 from pandasai.responses.streamlit_response import StreamlitResponse
 from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_openai_callback
+import ast
 
 #langchain
 #from langchain_community.chat_models import ChatOpenAI
@@ -257,11 +258,12 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
                       config={"llm": llm, 
                               "verbose": True, 
                               "response_parser": StreamlitResponse, 
+                              "custom_whitelisted_dependencies": ["ast"], 
                               'enable_cache': True, 
                               'use_error_correction_framework': True, 
                               'max_retries': 5
                              }, 
-                      memory_size = default_instructions_bound, 
+                      memory_size = default_instructions_bound, #change to instructions_bound if want to maximize memory
                       description = pandasai_agent_description
                      )
             #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
@@ -1395,15 +1397,20 @@ spreadsheet_caption = 'To download, search within or maximise any spreadsheet, h
 
 st.caption(spreadsheet_caption)
 
+#Errors to show later
+
+conversion_msg_to_show = ''
+
+#Last resort error, unlikely displayed
+everything_error_to_show = 'Failed to make spreadsheet editable. '
+
 #Convert columns which are list type to string type
 #Must do this, or pandasai won't work
 #try:
 df_to_analyse = list_col_to_str(df_to_analyse)
 
-if len(list_cols_picker(df_to_analyse)) > 0:
+#if len(list_cols_picker(df_to_analyse)) > 0:
     
-    st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
-
     #conversion_msg_to_show += 'Lists have been converted to plain text. '
     
 #except Exception_list as e_list:
@@ -1412,22 +1419,13 @@ if len(list_cols_picker(df_to_analyse)) > 0:
 
     #print(e_list)
 
-#Errors to show later
-
-conversion_msg_to_show = ''
-
-#Last resort error, unlikely displayed
-everything_error_to_show = 'Failed to make spreadsheet editable. '
-
 #Obtain clolumns with hyperlinks
 
 link_heading_config = {} 
 
 link_headings_list = link_headings_picker(df_to_analyse)
 
-#if len(link_headings_list) > 0:
-
-    #try:
+#try:
         
 for link_heading in link_headings_list:
     
@@ -1445,19 +1443,18 @@ df_to_analyse = clean_link_columns(df_to_analyse)
         
         #print(e)
 
-#Try to display df without converting lists or everything to string
+#Try to display df without further conversion to string
 try:
     
     st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
 
 except Exception as e:
 
-    print('Cannot display df without some conversion.' )
+    print('Cannot display df without further conversion.' )
     
     print(e)
 
     #Try to convert all numerical data to string type
-
     try:
 
         non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
@@ -1496,7 +1493,7 @@ except Exception as e:
 
         except Exception as e_non_text:
 
-            print('Cannot display df at all.' )
+            print('Cannot make df editable at all.' )
     
             print(e_numeric)
 
@@ -1527,7 +1524,6 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
         if isinstance(st.session_state[df_key], pd.DataFrame):
 
             if st.session_state[df_key].equals(st.session_state.edited_df):
-            #if st.session_state[df_key].sort_index(inplace=True) == st.session_state.edited_df.sort_index(inplace=True):
                 st.session_state.pop(df_key)
                 st.write(f'{df_key} removed.')
                 #pause.seconds(5)
@@ -1698,11 +1694,10 @@ if ask_button:
         quit()
 
     else:
-        #Close question and answer section 
 
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
-        #Close clarifying questions form brielif
+        #Close clarifying questions form
         #st.session_state["q_and_a_toggle"] = False
         clarification_questions_toggle = False
 
