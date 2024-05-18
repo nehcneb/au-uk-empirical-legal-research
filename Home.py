@@ -34,7 +34,7 @@ st.set_page_config(
 
 # %%
 #Determine whether to allow user to use own account
-from extra_functions import own_account_allowed
+from common_functions import own_account_allowed
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')

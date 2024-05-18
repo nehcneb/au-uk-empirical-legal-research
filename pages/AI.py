@@ -72,13 +72,19 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
-#Whether users are allowed to use their account
-from extra_functions import own_account_allowed
+#Import functions
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+#Import variables
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
 else:
     print(f'By default, users are NOT allowed to use their own account')
+
+print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
+
+print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %%
 #Title of webpage
@@ -89,37 +95,6 @@ st.set_page_config(
    initial_sidebar_state="collapsed",
 )
 
-# %%
-#today and time
-today_in_nums = str(datetime.now())[0:10]
-
-
-# %%
-#Create function for saving responses and results
-def convert_df_to_json(df):
-    return df.to_json(orient = 'split', compression = 'infer', default_handler=str)
-
-def convert_df_to_csv(df):
-   return df.to_csv(index=False).encode('utf-8')
-
-#Excel metadata
-excel_author = 'The Empirical Legal Research Kickstarter'
-excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize partially funded the development of the Empirical Legal Research Kickstarter, which generated this spreadsheet.'
-
-def convert_df_to_excel(df):
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
-    workbook = writer.book
-    workbook.set_properties({"author": excel_author, "comments": excel_description})
-    worksheet = writer.sheets['Sheet1']
-#    format1 = workbook.add_format({'num_format': '0.00'}) 
-    worksheet.set_column('A:A', None)#, format1)  
-    writer.save()
-    processed_data = output.getvalue()
-    return processed_data
-
-
 # %% [markdown]
 # # AI model and context
 
@@ -127,42 +102,10 @@ def convert_df_to_excel(df):
 # ## Applicable to all AIs
 
 # %%
-#Per token cost
-
-def gpt_input_cost(gpt_model):
-    
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_input_cost = 1/1000000*0.5
-        
-    if gpt_model == "gpt-4o":
-        gpt_input_cost = 1/1000000*5
-    return gpt_input_cost
-
-def gpt_output_cost(gpt_model):
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_output_cost = 1/1000000*1.5
-        
-    if gpt_model == "gpt-4o":
-        gpt_output_cost = 1/1000000*15
-        
-    return gpt_output_cost
-
-
-# %%
-#Check validity of API key
-def is_api_key_valid(key_to_check):
-    openai.api_key = key_to_check
-    
-    try:
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[{"role": "user", "content": '1+1='}], 
-            max_tokens = 1
-        )
-    except:
-        return False
-    else:
-        return True
+#Import functions
+from gpt_functions import is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
+#Import variables
+from gpt_functions import question_characters_bound
 
 
 # %%

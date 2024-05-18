@@ -64,52 +64,18 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
-#Whether users are allowed to use their account
-from extra_functions import own_account_allowed
+#Import functions
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+#Import variables
+from common_functions import today_in_nums, errors_list, scraper_pause_mean
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
 else:
     print(f'By default, users are NOT allowed to use their own account')
 
-# %%
-#Get current directory
-current_dir = os.getcwd()
+print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
-
-# %%
-#today
-today_in_nums = str(datetime.now())[0:10]
-
-# %%
-# Generate placeholder list of errors
-errors_list = set()
-
-
-# %%
-#Create function for saving responses and results
-def convert_df_to_json(df):
-    return df.to_json(orient = 'split', compression = 'infer', default_handler=str)
-
-def convert_df_to_csv(df):
-   return df.to_csv(index=False).encode('utf-8')
-
-#Excel metadata
-excel_author = 'The Empirical Legal Research Kickstarter'
-excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize partially funded the development of the Empirical Legal Research Kickstarter, which generated this spreadsheet.'
-
-def convert_df_to_excel(df):
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
-    workbook = writer.book
-    workbook.set_properties({"author": excel_author, "comments": excel_description})
-    worksheet = writer.sheets['Sheet1']
-#    format1 = workbook.add_format({'num_format': '0.00'}) 
-    worksheet.set_column('A:A', None)#, format1)  
-    writer.save()
-    processed_data = output.getvalue()
-    return processed_data
 
 # %%
 #Title of webpage
@@ -119,23 +85,6 @@ st.set_page_config(
    layout="centered",
    initial_sidebar_state="collapsed",
 )
-
-# %%
-#Pause
-
-scraper_pause = 5
-
-print(f"\nThe pause between GPT prompting is {scraper_pause} second.")
-
-# %%
-#Page bound
-
-default_page_bound = 10
-
-print(f"\nThe maximum number of pages per file is {default_page_bound}.")
-
-if 'page_bound' not in st.session_state:
-    st.session_state['page_bound'] = default_page_bound
 
 
 # %% [markdown]
@@ -409,139 +358,29 @@ def image_to_text(uploaded_image, language, page_bound):
 # # GPT functions and parameters
 
 # %%
-#Check validity of API key
-
-def is_api_key_valid(key_to_check):
-    openai.api_key = key_to_check
-    
-    try:
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[{"role": "user", "content": '1+1='}], 
-            max_tokens = 1
-        )
-    except:
-        return False
-    else:
-        return True
+#Import functions
+from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
+#Import variables
+from gpt_functions import question_characters_bound, default_judgment_counter_bound
 
 
 # %%
-#Module, costs and upperbounds
+print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
+print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
 
+# %%
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
     st.session_state['gpt_model'] = "gpt-3.5-turbo-0125"
-
-#Upperbound on number of engagements with GPT
-
-#GPT_use_bound = 3
-
-#print(f"\nPrior number of GPT uses is capped at {GPT_use_bound} times.")
-
-#Define input and output costs, token caps and maximum characters
-#each token is about 4 characters
-
-def gpt_input_cost(gpt_model):
-    
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_input_cost = 1/1000000*0.5
-        
-    if gpt_model == "gpt-4o":
-        gpt_input_cost = 1/1000000*5
-    return gpt_input_cost
-
-def gpt_output_cost(gpt_model):
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_output_cost = 1/1000000*1.5
-        
-    if gpt_model == "gpt-4o":
-        gpt_output_cost = 1/1000000*15
-        
-    return gpt_output_cost
-
-def tokens_cap(gpt_model):
-    
-    if gpt_model == "gpt-3.5-turbo-0125":
-        tokens_cap = int(16385 - 2500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
-    
-    if gpt_model == "gpt-4o":
-        tokens_cap = int(128000 - 6000) #For gpt-4o, token limit covering both input and output is 128000, while the output limit is 4096.
-
-    return tokens_cap
     
 #Initialize API key
 if 'gpt_api_key' not in st.session_state:
 
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
-#Upperbound on the length of questions for GPT
-#if 'question_characters_bound' not in st.session_state:
-#    st.session_state['question_characters_bound'] = 1000
-
-question_characters_bound = 1000
-
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-
-#Upperbound on number of files to scrape
-
-#Default file counter bound
-
-default_file_counter_bound = 10
-
-if 'file_counter_bound' not in st.session_state:
-    st.session_state['file_counter_bound'] = default_file_counter_bound
-
-print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
 # %%
-#Define function to determine eligibility for GPT use
-
-#Define a list of privileged email addresses with unlimited GPT uses
-
-privileged_emails = st.secrets["secrets"]["privileged_emails"].replace(' ', '').split(',')
-
-def prior_GPT_uses(email_address, df_online):
-    # df_online variable should be the online df_online
-    prior_use_counter = 0
-    for i in df_online.index:
-        if ((df_online.loc[i, "Your email address"] == email_address) 
-            and (len(df_online.loc[i, "Processed"])>0)
-           ):
-            prior_use_counter += 1
-    if email_address in privileged_emails:
-        return 0
-    else:
-        return prior_use_counter
-
-#Define function to check whether email is educational or government
-def check_edu_gov(email_address):
-    #Return 1 if educational or government, return 0 otherwise
-    end=email_address.split('@')[1]
-    if (('.gov' in end) or ('.edu' in end) or ('.ac' in end)):
-        return 1
-    else:
-        return 0
-
-
-
-# %%
-#Tokens estimate preliminaries
-#encoding = tiktoken.get_encoding("cl100k_base")
-#encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-#Tokens estimate function
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    """Returns the number of tokens in a text string."""
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
-
-#Define file input function for JSON approach
-
-#Token limit covering both GTP input and GPT output is 16385, each token is about 4 characters
-#tokens_cap(gpt_model) = int(16385 - 3000)
-
 def file_prompt(file_triple, gpt_model):
                 
     file_content = 'Based on the following document:  """'+ file_triple['Extracted text'] + '"""'
@@ -570,16 +409,16 @@ def file_prompt(file_triple, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page or section of the file, provide the page number or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
+role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page or section of the file, provide the page number or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
 
-intro_for_GPT = [{"role": "system", "content": role_content}]
+intro_for_GPT = [{"role": "system", "content": role_content_own}]
 
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens(questions_json, file_triple, gpt_model):
+def GPT_json_tokens_own(questions_json, file_triple, gpt_model):
     #'question_json' variable is a json of questions to GPT
 
     file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model)}]
@@ -602,7 +441,7 @@ def GPT_json_tokens(questions_json, file_triple, gpt_model):
     #Create messages in one prompt for GPT
     language_content = f"The file is written in {file_triple['Language choice']}."
 
-    intro_for_GPT = [{"role": "system", "content": role_content + language_content}] 
+    intro_for_GPT = [{"role": "system", "content": role_content_own + language_content}] 
 
     messages_for_GPT = intro_for_GPT + file_for_GPT + json_direction + question_for_GPT
     
@@ -610,7 +449,7 @@ def GPT_json_tokens(questions_json, file_triple, gpt_model):
 
     #os.environ["OPENAI_API_KEY"] = API_key
 
-    openai.api_key = API_key
+    #openai.api_key = API_key
     
     #client = OpenAI()
     
@@ -649,7 +488,7 @@ def GPT_json_tokens(questions_json, file_triple, gpt_model):
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model):
+def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -661,7 +500,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
 
     #os.environ["OPENAI_API_KEY"] = API_key
 
-    openai.api_key = API_key
+    #openai.api_key = API_key
     
     #client = OpenAI()
     
@@ -698,7 +537,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_file_triple = GPT_json_tokens(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_json_tokens_own(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -727,7 +566,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = role_content_own + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
@@ -816,7 +655,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     questions_json = df_master.loc[0, 'questions_json']
         
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model)
+    df_updated = engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model)
 
     try:
         df_updated.pop('Extracted text')
@@ -828,54 +667,11 @@ def run(df_master, uploaded_docs, uploaded_images):
 
 
 # %% [markdown]
-# # For gpt-4o vision
+# # For gpt-4o vision, own file only
 
 # %%
-#Tokens counter
-
-def get_image_dims(image):
-    if re.match(r"data:image\/\w+;base64", image):
-        image = re.sub(r"data:image\/\w+;base64,", "", image)
-        image = Image.open(BytesIO(base64.b64decode(image)))
-        return image.size
-    else:
-        raise ValueError("Image must be a base64 string.")
-
-def calculate_image_token_cost(image, detail="auto"):
-    # Constants
-    LOW_DETAIL_COST = 85
-    HIGH_DETAIL_COST_PER_TILE = 170
-    ADDITIONAL_COST = 85
-
-    if detail == "auto":
-        # assume high detail for now
-        detail = "high"
-
-    if detail == "low":
-        # Low detail images have a fixed cost
-        return LOW_DETAIL_COST
-    elif detail == "high":
-        # Calculate token cost for high detail images
-        width, height = get_image_dims(image)
-        # Check if resizing is needed to fit within a 2048 x 2048 square
-        if max(width, height) > 2048:
-            # Resize the image to fit within a 2048 x 2048 square
-            ratio = 2048 / max(width, height)
-            width = int(width * ratio)
-            height = int(height * ratio)
-        # Further scale down to 768px on the shortest side
-        if min(width, height) > 768:
-            ratio = 768 / min(width, height)
-            width = int(width * ratio)
-            height = int(height * ratio)
-        # Calculate the number of 512px squares
-        num_squares = math.ceil(width / 512) * math.ceil(height / 512)
-        # Calculate the total token cost
-        total_cost = num_squares * HIGH_DETAIL_COST_PER_TILE + ADDITIONAL_COST
-        return total_cost
-    else:
-        # Invalid detail_option
-        raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
+#Import functions
+from gpt_functions import get_image_dims, calculate_image_token_cost
 
 
 # %%
@@ -889,7 +685,7 @@ def calculate_image_token_cost(image, detail="auto"):
     #b64 = base64.b64encode(file_buffer).decode('utf-8')
     #return b64
 
-def image_to_b64(uploaded_image, language, page_bound):
+def image_to_b64_own(uploaded_image, language, page_bound):
     file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : [],
                    'Page length': '', 'tokens_raw': 0, 
 #                 'Image ID': '', 'Page length': '', 'Page 2': '' #Test page
@@ -968,7 +764,7 @@ def image_to_b64(uploaded_image, language, page_bound):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-def GPT_b64_json_tokens(questions_json, file_triple, gpt_model):
+def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -1005,7 +801,7 @@ def GPT_b64_json_tokens(questions_json, file_triple, gpt_model):
     #Create messages in one prompt for GPT
     language_content = f"The file is written in {file_triple['Language choice']}."
 
-    intro_for_GPT = [{"role": "system", "content": role_content + language_content}] 
+    intro_for_GPT = [{"role": "system", "content": role_content_own + language_content}] 
 
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
     
@@ -1013,7 +809,7 @@ def GPT_b64_json_tokens(questions_json, file_triple, gpt_model):
 
     #os.environ["OPENAI_API_KEY"] = API_key
 
-    openai.api_key = API_key
+    #openai.api_key = API_key
     
     #client = OpenAI()
     
@@ -1052,7 +848,7 @@ def GPT_b64_json_tokens(questions_json, file_triple, gpt_model):
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gpt_model):
+def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -1064,7 +860,7 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
 
     #os.environ["OPENAI_API_KEY"] = API_key
 
-    openai.api_key = API_key
+    #openai.api_key = API_key
     
     #client = OpenAI()
     
@@ -1101,7 +897,7 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_file_triple = GPT_b64_json_tokens(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -1130,7 +926,7 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = role_content_own + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
@@ -1161,7 +957,7 @@ def engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gp
 # %%
 #For gpt-4o vision
 
-def run_b64(df_master, uploaded_images):
+def run_b64_own(df_master, uploaded_images):
 
     df_master = df_master.fillna('')
 
@@ -1188,7 +984,7 @@ def run_b64(df_master, uploaded_images):
     #Convert images to b64, then send to GPT
     for uploaded_image in uploaded_images:
         if file_counter <= file_counter_bound:
-            file_triple = image_to_b64(uploaded_image, language, page_bound)
+            file_triple = image_to_b64_own(uploaded_image, language, page_bound)
             Files_file.append(file_triple)
             file_counter += 1
 
@@ -1211,7 +1007,7 @@ def run_b64(df_master, uploaded_images):
 
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = engage_GPT_b64_json_tokens(questions_json, df_individual, GPT_activation, gpt_model)
+    df_updated = engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model)
 
     #Remove redundant columns
 
@@ -1223,52 +1019,35 @@ def run_b64(df_master, uploaded_images):
 
     return df_updated
 
-
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
-# %% [markdown]
-# ## Function definitions
-
 # %%
-def clear_cache_except_validation_df_master():
-    keys = list(st.session_state.keys())
-    if 'gpt_api_key_validity' in keys:
-        keys.remove('gpt_api_key_validity')
-    if 'df_master' in keys:
-        keys.remove('df_master')
-    for key in keys:
-        st.session_state.pop(key)
-
-
-# %%
-def tips():
-    st.markdown(""":green[**DO's**:]
-- :green[Do break down complex tasks into simple sub-tasks.]
-- :green[Do give clear and detailed instructions (eg specify steps required to complete a task).]
-- :green[Do use the same terminology as the relevant files themselves.]
-- :green[Do give exemplar answers.]
-- :green[Do manually check some or all answers.]
-- :green[Do revise questions to get better answers.]
-- :green[Do evaluate answers on the same sample of files (ie the "training" sample).]
-""")
-
-    st.markdown(""":red[**Don'ts**:]
-- :red[Don't ask questions which go beyond the relevant file itself.]
-- :red[Don't ask difficult maths questions.]
-- :red[Don't skip manual evaluation.]
-""")
-
-    st.markdown(""":orange[**Maybe's**:]
-- :orange[Maybe ask for reasoning.]
-- :orange[Maybe re-run the same questions and manually check for inconsistency.]
-""")
-
-    st.caption('For more tips, please see https://platform.openai.com/docs/guides/prompt-engineering.')
+#Import functions and variables
+from common_functions import open_page, clear_cache_except_validation_df_master, tips
 
 
 # %% [markdown]
 # ## Initialize session states
+
+# %%
+#Page bound
+
+default_page_bound = 10
+
+print(f"\nThe maximum number of pages per file is {default_page_bound}.")
+
+if 'page_bound' not in st.session_state:
+    st.session_state['page_bound'] = default_page_bound
+
+#Default file counter bound
+
+default_file_counter_bound = 10
+
+if 'file_counter_bound' not in st.session_state:
+    st.session_state['file_counter_bound'] = default_file_counter_bound
+
+print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
 # %%
 #Initialize default values
@@ -1646,7 +1425,7 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
 #        st.write(output)
 
     #for uploaded_image in uploaded_images:
-        #output = image_to_b64(uploaded_image, language_entry, st.session_state.page_bound)
+        #output = image_to_b64_own(uploaded_image, language_entry, st.session_state.page_bound)
         #st.write(output)
 
 
@@ -1703,7 +1482,7 @@ if run_button:
             else:
                 API_key = st.secrets["openai"]["gpt_api_key"]
 
-            #
+            openai.api_key = API_key
             
             df_individual_output = run(df_master, uploaded_docs, uploaded_images)
 
@@ -1825,9 +1604,9 @@ if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
                 else:
                     API_key = st.secrets["openai"]["gpt_api_key"]
     
-                #
+                openai.api_key = API_key
                 
-                df_individual_output = run_b64(df_master, uploaded_images)
+                df_individual_output = run_b64_own(df_master, uploaded_images)
     
                 #Keep results in session state
                 st.session_state["df_individual_output"] = df_individual_output
