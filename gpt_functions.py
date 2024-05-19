@@ -13,7 +13,6 @@
 # ---
 
 # %%
-#Preliminaries
 #Preliminary modules
 import base64 
 import json
@@ -24,24 +23,43 @@ import re
 import datetime
 from datetime import date
 from datetime import datetime
-from dateutil import parser
-from dateutil.relativedelta import *
-from datetime import timedelta
 import sys
 import pause
 import os
 import io
+from io import BytesIO
+from dateutil import parser
+from dateutil.relativedelta import *
+from datetime import timedelta
 from PIL import Image
 import math
 from math import ceil
-from io import BytesIO
-
+import matplotlib.pyplot as plt
+import ast
 
 #OpenAI
 import openai
 import tiktoken
 
+#Streamlit
+import streamlit as st
+#from streamlit_gsheets import GSheetsConnection
+#from streamlit.components.v1 import html
+import streamlit_ext as ste
 
+#PandasAI
+#from dotenv import load _dotenv
+from pandasai import SmartDataframe
+from pandasai import Agent
+#from pandasai.llm import BambooLLM
+from pandasai.llm.openai import OpenAI
+import pandasai as pai
+from pandasai.responses.streamlit_response import StreamlitResponse
+from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_openai_callback
+
+#Excel
+import openpyxl
+from pyxlsb import open_workbook as open_xlsb
 
 # %% [markdown]
 # # gpt-3.5 and 4o

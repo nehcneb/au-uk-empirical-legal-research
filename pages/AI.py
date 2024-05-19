@@ -30,13 +30,9 @@ import sys
 import pause
 import os
 import io
-import openpyxl
-
-#Import matplotlib for use in Streamlit
-#import matplotlib
-#matplotlib.use('TkAgg')
+from io import BytesIO
 import matplotlib.pyplot as plt
-# #echo "backend: TkAgg" >> ~/.matplotlib/matplotlibrc
+import ast
 
 #Streamlit
 import streamlit as st
@@ -46,8 +42,7 @@ import streamlit_ext as ste
 
 #OpenAI
 import openai
-#from openai import OpenAI
-#import tiktoken
+import tiktoken
 
 #PandasAI
 #from dotenv import load _dotenv
@@ -58,7 +53,6 @@ from pandasai.llm.openai import OpenAI
 import pandasai as pai
 from pandasai.responses.streamlit_response import StreamlitResponse
 from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_openai_callback
-import ast
 
 #langchain
 #from langchain_community.chat_models import ChatOpenAI
@@ -67,7 +61,7 @@ import ast
 #from langchain_community.callbacks import get_openai_callback as langchain_get_openai_callback
 
 #Excel
-from io import BytesIO
+import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 

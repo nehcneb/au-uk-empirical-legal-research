@@ -38,6 +38,7 @@ from urllib.request import urlretrieve
 import os
 import PyPDF2
 import io
+from io import BytesIO
 
 #Streamlit
 import streamlit as st
@@ -53,7 +54,6 @@ import tiktoken
 from google.oauth2 import service_account
 
 #Excel
-from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
 # %%

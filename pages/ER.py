@@ -41,6 +41,9 @@ import PyPDF2
 import pdf2image
 from PIL import Image
 import io
+from io import BytesIO
+import math
+from math import ceil
 
 #Streamlit
 import streamlit as st
@@ -51,14 +54,11 @@ import streamlit_ext as ste
 #OpenAI
 import openai
 import tiktoken
-import math
-from math import ceil
 
 #Google
 from google.oauth2 import service_account
 
 #Excel
-from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
 

@@ -34,6 +34,8 @@ import sys
 import pause
 import os
 import io
+import math
+from math import ceil
 
 #Conversion to text
 import fitz
@@ -53,8 +55,6 @@ import streamlit_ext as ste
 #OpenAI
 import openai
 import tiktoken
-import math
-from math import ceil
 
 #Google
 from google.oauth2 import service_account
