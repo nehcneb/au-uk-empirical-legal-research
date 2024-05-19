@@ -1508,11 +1508,6 @@ if ((len(conversion_msg_to_show) > 0) or (len(st.session_state.df_produced) > 0)
         if st.session_state.q_and_a_provided == True:
             st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
 
-#Disable toggle for clarifying questions and answers BEFORE asking AI again
-if st.session_state.q_and_a_provided == True:
-    st.session_state.q_and_a_toggle = False
-    #Remove prefill after importation
-    #st.session_state['prompt_prefill'] = ''
 
 
 # %% [markdown]
@@ -1554,6 +1549,13 @@ st.session_state.prompt = prompt
 
 st.caption("Please reach out to Ben at ben.chen@sydney.edu.au if you'd like give more or longer instructions.")
 
+#Disable toggle for clarifying questions and answers BEFORE asking AI again
+if st.session_state.q_and_a_provided == True:
+    st.session_state.q_and_a_toggle = False
+    #Remove prefill after importation
+    #st.session_state['prompt_prefill'] = ''
+
+
 #Generate explain button
 if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 
@@ -1577,12 +1579,13 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
         else:
             st.session_state.code_status = False
     with col3:
+        history_on = st.toggle(label = 'Chat history', help = 'Display all instructions and responses.')
+
         #Clarification questions toggle
-        if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+        #if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
             #if len(str(st.session_state.response)) > 0:
-            clarification_questions_toggle = st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions to help draft your questions or instructions.')
+            #clarification_questions_toggle = st.toggle(label = 'Suggestions', value = 'q_and_a_toggle', help = f'Get clarifying questions to help draft your questions or instructions.')
         
-history_on = st.toggle(label = 'Display all instructions and responses')
 
 #else:
     #st.session_state.explain_status = False
@@ -1655,8 +1658,8 @@ if ask_button:
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
         #Close clarifying questions form
-        #st.session_state["q_and_a_toggle"] = False
-        clarification_questions_toggle = False
+        st.session_state["q_and_a_toggle"] = False
+        #clarification_questions_toggle = False
 
         if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
             
@@ -1734,88 +1737,90 @@ if reset_button:
 #Clarifying questions form
 
 if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
-    #if len(str(st.session_state.response)) > 0:
-    #if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
-    if clarification_questions_toggle:
+    if ((len(str(st.session_state.response)) > 0) and 
+        (st.session_state.q_and_a_provided == False)
+       ):
+        if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
+        #if clarification_questions_toggle:
+        
+            with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+                prompt = st.session_state.prompt
     
-        with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
-            prompt = st.session_state.prompt
-
-            #if len(prompt) > 0:
-        
-            clarifying_questions = agent.clarification_questions(prompt)
-
-            st.session_state.clarifying_questions = clarifying_questions
-
-            #Keep record of clarifying questions
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
-                        
-        if len(clarifying_questions) == 0:
-            st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
-        
-        else: #if len(clarifying_questions) > 0:
-            with st.form("clarifying_questions_form"):
-        
-                st.write(f'Please consider the following clarifying questions from {st.session_state.ai_choice}. You may answer them here, or redraft your questions or instructions in light of them.')
+                #if len(prompt) > 0:
+            
+                clarifying_questions = agent.clarification_questions(prompt)
     
-                #Display up to 3 clarifying questions
-                if len(st.session_state.clarifying_questions) > 0:
-        
-                    st.warning(f'Question 1: {st.session_state.clarifying_questions[0]}')
-                    st.session_state.clarifying_answers[0] = st.text_input(label = f'Enter your answer to question 1', max_chars = 250)
-        
-                if len(st.session_state.clarifying_questions) > 1: 
-        
-                    st.warning(f'Question 2: {st.session_state.clarifying_questions[1]}')
-                    st.session_state.clarifying_answers[1] = st.text_input(label = f'Enter your answer to question 2', max_chars = 250)
-        
-                if len(st.session_state.clarifying_questions) > 2: 
-        
-                    st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
-                    st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
-        
-                #Acivate if want to display tokens and costs only if own account active
-                #if st.session_state['own_account'] == True:
-                    
-                clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
-                st.write(clarifying_questions_cost_tokens)
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
-
-                add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
-        
-                if add_q_a_button:
-                    for question_index in range(0, len(st.session_state.clarifying_answers)):
-                        st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
-                        
-                    intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
-        
-                    q_and_a_pairs = ''
-                    
-                    for question_index in range(0, len(st.session_state.clarifying_answers)):
-                        if len(st.session_state.clarifying_answers[question_index]) > 0:
-                            question_answer_pair = f' Question: ' + st.session_state.clarifying_questions[question_index] + f' Answer: ' + st.session_state.clarifying_answers[question_index]
+                st.session_state.clarifying_questions = clarifying_questions
+    
+                #Keep record of clarifying questions
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
                             
-                            if question_answer_pair[-1] != '.':
-                                question_answer_pair = question_answer_pair + '. '
-                            
-                            q_and_a_pairs = q_and_a_pairs + question_answer_pair            
+            if len(clarifying_questions) == 0:
+                st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
+            
+            else: #if len(clarifying_questions) > 0:
+                with st.form("clarifying_questions_form"):
+            
+                    st.write(f'Please consider the following clarifying questions from {st.session_state.ai_choice}. You may answer them here, or redraft your questions or instructions in light of them.')
         
-                    if intro_q_and_a in st.session_state.prompt_prefill:
+                    #Display up to 3 clarifying questions
+                    if len(st.session_state.clarifying_questions) > 0:
+            
+                        st.warning(f'Question 1: {st.session_state.clarifying_questions[0]}')
+                        st.session_state.clarifying_answers[0] = st.text_input(label = f'Enter your answer to question 1', max_chars = 250)
+            
+                    if len(st.session_state.clarifying_questions) > 1: 
+            
+                        st.warning(f'Question 2: {st.session_state.clarifying_questions[1]}')
+                        st.session_state.clarifying_answers[1] = st.text_input(label = f'Enter your answer to question 2', max_chars = 250)
+            
+                    if len(st.session_state.clarifying_questions) > 2: 
+            
+                        st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
+                        st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
+            
+                    #Acivate if want to display tokens and costs only if own account active
+                    #if st.session_state['own_account'] == True:
                         
-                        st.session_state.prompt_prefill = st.session_state.prompt + q_and_a_pairs
-                   
-                    else:
+                    clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
+                    st.write(clarifying_questions_cost_tokens)
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
+    
+                    add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
+            
+                    if add_q_a_button:
+                        for question_index in range(0, len(st.session_state.clarifying_answers)):
+                            st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
+                            
+                        intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
+            
+                        q_and_a_pairs = ''
                         
-                        st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
-    
-                    #Add clarifying answers to history
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
-                    
-                    #Change clarifying questions and answers status
-                    st.session_state['q_and_a_provided'] = True
-    
-                    st.rerun()
-                    
+                        for question_index in range(0, len(st.session_state.clarifying_answers)):
+                            if len(st.session_state.clarifying_answers[question_index]) > 0:
+                                question_answer_pair = f' Question: ' + st.session_state.clarifying_questions[question_index] + f' Answer: ' + st.session_state.clarifying_answers[question_index]
+                                
+                                if question_answer_pair[-1] != '.':
+                                    question_answer_pair = question_answer_pair + '. '
+                                
+                                q_and_a_pairs = q_and_a_pairs + question_answer_pair            
+            
+                        if intro_q_and_a in st.session_state.prompt_prefill:
+                            
+                            st.session_state.prompt_prefill = st.session_state.prompt + q_and_a_pairs
+                       
+                        else:
+                            
+                            st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
+        
+                        #Add clarifying answers to history
+                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
+                        
+                        #Change clarifying questions and answers status
+                        st.session_state['q_and_a_provided'] = True
+        
+                        st.rerun()
+                        
 
 
 # %%
