@@ -152,48 +152,43 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 
 
 # %%
-#Define judgment input function for JSON approach
-
-#characters_limit_half = tokens_cap(gpt_model)*4/2
-
 def judgment_prompt_json(judgment_json, gpt_model):
 
     judgment_to_string = judgment_json["judgment"]
-        
+                
     judgment_content = 'Based on the metadata and judgment in the following JSON: """'+ str(judgment_json) + '"""'
 
-    if len(judgment_content) <= tokens_cap(gpt_model):
+    judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
+    
+    if judgment_content_tokens <= tokens_cap(gpt_model):
         
         return judgment_content
 
     else:
         
-        meta_data_len=len(judgment_content) - len(judgment_to_string)
+        meta_data_len = judgment_content_tokens - num_tokens_from_string(judgment_to_string, "cl100k_base")
         
-        judgment_char_capped = int((tokens_cap(gpt_model) - meta_data_len)*4)
+        judgment_chars_capped = int((tokens_cap(gpt_model) - meta_data_len)*4)
         
-        judgment_string_trimmed = judgment_to_string[ : int(judgment_char_capped/2)] + judgment_to_string[-int(judgment_char_capped/2): ]
+        judgment_string_trimmed = judgment_to_string[ :int(judgment_chars_capped/2)] + judgment_to_string[-int(judgment_chars_capped/2): ]
 
-        judgment_json["judgment"] = judgment_string_trimmed        
+        judgment_json["judgment"] = judgment_string_trimmed     
         
         judgment_content_capped = 'Based on the metadata and judgment in the following JSON:  """'+ str(judgment_json) + '"""'
         
         return judgment_content_capped
 
 
-
 # %%
 #Define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific paragraph in the judgment, provide the paragraph number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found".'
-
-intro_for_GPT = [{"role": "system", "content": role_content}]
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific paragraph in the judgment, provide the paragraph number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens(questions_json, judgment_json, gpt_model):
+def GPT_json_tokens(questions_json, judgment_json, gpt_model, specific_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
@@ -215,6 +210,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
     question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
     
     #Create messages in one prompt for GPT
+    intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
     messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_for_GPT
     
 #   return messages_for_GPT
@@ -261,7 +257,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model):
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
-def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model):
+def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -310,7 +306,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_output_list = GPT_json_tokens(questions_json, judgment_json, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = GPT_json_tokens(questions_json, judgment_json, gpt_model, specific_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
             #Calculate and append GPT finish time and time difference to individual df
