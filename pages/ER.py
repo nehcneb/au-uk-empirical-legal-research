@@ -320,7 +320,7 @@ def meta_judgment_dict(case_link_pair):
 #Import functions
 from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string, judgment_prompt_json, GPT_json_tokens, engage_GPT_json_tokens  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound, role_content
+from gpt_functions import question_characters_bound, default_judgment_counter_bound
 
 
 # %%
@@ -329,9 +329,13 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 
 # %%
 #Jurisdiction specific instruction
-specific_instruction = 'The string or images given to you may contain judgments for multiple cases. Please provide answers only for the specific case identified in the "Case name" section of the metadata.'
 
-intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
+role_content_er = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+
+specific_instruction = 'The "judgment" field of the JSON given to you sometimes contains judgments for multiple cases. If you detect multiple judgments in the "judgment" field, please provide answers only for the specific case identified in the "Case name" field of the JSON given to you.'
+
+intro_for_GPT = [{"role": "system", "content": role_content_er + specific_instruction}]
+
 
 # %%
 #Initialize default GPT settings
@@ -580,7 +584,7 @@ def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_in
     #Create messages in one prompt for GPT
     #ER specific intro
 
-    intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
+    intro_for_GPT = [{"role": "system", "content": role_content_er + specific_instruction}]
 
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
     
@@ -721,7 +725,7 @@ def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation,
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = role_content_er + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
 
