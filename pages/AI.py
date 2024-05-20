@@ -33,6 +33,8 @@ import io
 from io import BytesIO
 import matplotlib.pyplot as plt
 import ast
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 
 #Streamlit
 import streamlit as st
@@ -446,52 +448,6 @@ def pandasai_ask():
             except Exception as e:
                 st.error('Image produced but failed to visualise.')
                 print(e)
-            
-        #For GPT-3.5, show any figure generated
-        #if plt.get_fignums(): #This returns a list of figure numbers produced
-            #try:
-                #st.write('**Visualisation**')
-                #st.write('Charts may appear in a popped up window. ')
-                #fig_to_plot = plt.gcf()
-                #st.pyplot(fig = fig_to_plot)
-
-                #for fig_num in plt.get_fignums(): #Alternatively, use this if wants to show every figure produced. Can be repetitive.
-                    #fig_num = plt.get_fignums()
-                    #fig_to_plot = plt.figure(fig_num)                
-                    #st.pyplot(fig = fig_to_plot)
-
-                #Keep record of response, cost and tokens
-                #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
-            
-                #Enable downloading
-                #pdf_to_download = io.BytesIO()
-                #png_to_download = io.BytesIO()
-
-                #col1e, col2e = st.columns(2, gap = 'small')
-                
-                #with col1e:
-            
-                    #plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
-                    
-                    #pdf_button = ste.download_button(
-                       #label="DOWNLOAD as a PDF",
-                       #data=pdf_to_download,
-                       #file_name='chart.pdf',
-                       #mime="image/pdf"
-                    #)
-                #with col2e:
-                    #plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
-                    
-                    #png_button = ste.download_button(
-                       #label="DOWNLOAD as a PNG",
-                       #data=png_to_download,
-                       #file_name='chart.png',
-                       #mime="image/png"
-                    #)
-    
-            #except Exception as e:
-                #st.error('An error with visualisation has occured.')
-                #print(e)
     
         #For displaying logs
         #st.subheader('Logs')
@@ -1331,7 +1287,7 @@ if st.session_state.ai_choice == 'GPT':
 else: #if st.session_state.ai_choice == 'BambooLLM':
     st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')
 
-spreadsheet_caption = 'To download, search within or maximise any spreadsheet, hover your mouse/pointer over its top right-hand corner and click the appropriate button.'
+spreadsheet_caption = 'To download, search within or maximise any spreadsheet, hover your mouse/pointer over its top right-hand corner.' # and click the appropriate button.'
 
 st.caption(spreadsheet_caption)
 
@@ -1541,7 +1497,7 @@ prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.sess
 
 st.session_state.prompt = prompt
 
-st.caption("Please reach out to Ben at ben.chen@sydney.edu.au if you'd like give more or longer instructions.")
+st.caption("Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like give more or longer instructions.")
 
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
