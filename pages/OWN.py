@@ -1110,7 +1110,7 @@ st.write(f'**:green[Please upload your documents or images.]** By default, this 
 
 st.write('This program works only if the text from your file(s) is displayed horizontally and neatly.')
 
-st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
+st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
 
 st.subheader('Upload documents')
 
@@ -1135,7 +1135,7 @@ st.markdown("""In what language is the text from your uploaded file(s) written?"
     
 language_entry = st.selectbox("Please choose a language.", languages_list, index=0)
 
-st.caption('During the pilot stage, the languages supported are limited. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to choose a language which is not available under this menu.')
+st.caption('During the pilot stage, the languages supported are limited. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to choose a language which is not available under this menu.')
 
 
 

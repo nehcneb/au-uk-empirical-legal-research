@@ -31,8 +31,9 @@ import pause
 import os
 import io
 from io import BytesIO
-import matplotlib.pyplot as plt
 import ast
+#from dotenv import load _dotenv
+import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from sklearn.ensemble import RandomForestClassifier
@@ -50,8 +51,8 @@ from sklearn.model_selection import train_test_split
 
 #Streamlit
 import streamlit as st
-#from streamlit_gsheets import GSheetsConnection
-#from streamlit.components.v1 import html
+from streamlit_gsheets import GSheetsConnection
+from streamlit.components.v1 import html
 import streamlit_ext as ste
 
 #OpenAI
@@ -59,7 +60,6 @@ import openai
 import tiktoken
 
 #PandasAI
-#from dotenv import load _dotenv
 from pandasai import SmartDataframe
 from pandasai import Agent
 #from pandasai.llm import BambooLLM

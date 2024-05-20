@@ -524,7 +524,7 @@ def meta_judgment_dict_b64(case_link_pair):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-def GPT_b64_er_json_tokens(questions_json, judgment_json, gpt_model, specific_instruction):
+def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -627,7 +627,7 @@ def GPT_b64_er_json_tokens(questions_json, judgment_json, gpt_model, specific_in
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_b64_er_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction):
+def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -677,7 +677,7 @@ def engage_GPT_b64_er_json_tokens(questions_json, df_individual, GPT_activation,
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_judgment_json = GPT_b64_er_json_tokens(questions_json, judgment_json, gpt_model, specific_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_judgment_json = GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_judgment_json[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -803,7 +803,7 @@ def run_b64_er(df_master):
             
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = engage_GPT_b64_er_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
+    df_updated = engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
 
     #Remove redundant columns
 
@@ -887,12 +887,14 @@ st.header(f"You have selected to study :blue[the English Reports].")
 #    st.header("Judgment Search Criteria")
 
 st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
-
-For search tips, please visit CommonLII at http://www.commonlii.org/form/search1.html?mask=uk/cases/EngR. This section mimics their search function.
 """)
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+
+st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
 st.subheader("Your search terms")
+
+st.markdown("""For search tips, please visit CommonLII at http://www.commonlii.org/form/search1.html?mask=uk/cases/EngR. This section mimics their search function.
+""")
 
 method_entry = st.selectbox('Find', methods_list, index=1)
 
