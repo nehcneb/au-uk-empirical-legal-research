@@ -28,3 +28,4 @@ openpyxl
 #langchain_experimental
 #langchain_community
 statsmodels
+sklearn
