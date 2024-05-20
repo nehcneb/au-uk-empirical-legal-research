@@ -12,6 +12,9 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # Preliminaries
+
 # %%
 #Preliminary modules
 import base64 
@@ -48,7 +51,7 @@ import streamlit as st
 import streamlit_ext as ste
 
 #PandasAI
-#from dotenv import load _dotenv
+#from dotenv import load_dotenv
 from pandasai import SmartDataframe
 from pandasai import Agent
 #from pandasai.llm import BambooLLM
@@ -172,8 +175,13 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 # %%
 def judgment_prompt_json(judgment_json, gpt_model):
 
-    judgment_to_string = judgment_json["judgment"]
-                
+    if isinstance(judgment_json["judgment"], list):
+        judgment_to_string = '\n'.join(judgment_json["judgment"])
+    elif isinstance(judgment_json["judgment"], str):
+        judgment_to_string = judgment_json["judgment"]
+    else:
+        judgment_to_string = str(judgment_json["judgment"])
+        
     judgment_content = 'Based on the metadata and judgment in the following JSON: """'+ str(judgment_json) + '"""'
 
     judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
