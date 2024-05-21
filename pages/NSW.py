@@ -630,7 +630,7 @@ def run(df_master):
     df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
     
     return df_updated
-    
+
 
 # %%
 #function to tidy up output
@@ -760,7 +760,7 @@ st.header("You have selected to study :blue[judgments of the New South Wales cou
 
 st.write(f'**:green[Please enter your search terms.]** This program will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms.')
 
-st.caption(f"[An open-source Python library](https://github.com/Sydney-Informatics-Hub/nswcaselaw) will scrape judgments. During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
+st.caption(f"[An open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) will scrape NSW judgments. During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
 
 st.subheader("NSW courts and tribunals to cover")
 
