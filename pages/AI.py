@@ -48,6 +48,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import train_test_split
+import seaborn as sns
 
 #Streamlit
 import streamlit as st
