@@ -12,6 +12,9 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # Preliminaries
+
 # %%
 #Preliminaries
 import datetime
@@ -31,9 +34,6 @@ from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 
-
-# %% [markdown]
-# # Preliminaries
 
 # %%
 def own_account_allowed():
@@ -119,7 +119,6 @@ def check_edu_gov(email_address):
 
 # %%
 #Tidy up medium neutral citation
-
 def mnc_cleaner(x):
     if '[' in x:
         x_clean=str(x).split("[")
@@ -129,11 +128,13 @@ def mnc_cleaner(x):
         return x
 
 
+
 # %%
 #Tidy up hyperlink
 def link(x):
     value = '=HYPERLINK("' + str(x) + '")'
     return value
+
 
 
 # %% [markdown]

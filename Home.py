@@ -120,7 +120,6 @@ st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike
 
 st.header("Start")
 
-
 #    st.subheader("What would you like to study?")
 
 st.markdown("""What would you like to study?""")
