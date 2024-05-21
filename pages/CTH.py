@@ -795,12 +795,14 @@ st.header(f"You have selected to study :blue[judgments of the Federal Court of A
 #    st.header("Judgment Search Criteria")
 
 st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
-
-For search tips, please visit the Federal Court Digital Law Library at https://www.fedcourt.gov.au/digital-law-library/judgments/search. This section mimics their judgments search function.
 """)
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+
+st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
 st.subheader("Your search terms")
+
+st.markdown("""For search tips, please visit the Federal Court Digital Law Library at https://www.fedcourt.gov.au/digital-law-library/judgments/search. This section mimics their judgments search function.
+""")
 
 catchwords_entry = st.text_input('Catchwords')
 

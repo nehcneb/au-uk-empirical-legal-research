@@ -482,12 +482,13 @@ st.header(f"You have selected to study :blue[the Kercher Reports].")
 #    st.header("Judgment Search Criteria")
 
 st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
-
-For search tips, please visit AustLII at https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
 """)
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
 st.subheader("Your search terms")
+
+st.markdown("""For search tips, please visit AustLII at https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/. This section mimics their search function.
+""")
 
 method_entry = st.selectbox('Find', methods_list, index=0)
 
