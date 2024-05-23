@@ -899,7 +899,7 @@ def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_file_triple = GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
