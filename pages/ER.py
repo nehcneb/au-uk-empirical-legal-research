@@ -330,11 +330,11 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 # %%
 #Jurisdiction specific instruction
 
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+role_content_er = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". The "judgment" field of the JSON given to you sometimes contains judgments for multiple cases. If you detect multiple judgments in the "judgment" field, please provide answers only for the specific case identified in the "Case name" field of the JSON given to you.'
 
-specific_instruction = 'The "judgment" field of the JSON given to you sometimes contains judgments for multiple cases. If you detect multiple judgments in the "judgment" field, please provide answers only for the specific case identified in the "Case name" field of the JSON given to you.'
+system_instruction = role_content_er
 
-intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
+intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 
 
@@ -407,7 +407,7 @@ def run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
+    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     df_updated.pop('judgment')
     
@@ -529,7 +529,7 @@ def meta_judgment_dict_b64(case_link_pair):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_instruction):
+def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -580,12 +580,12 @@ def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_in
     
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     #ER specific intro
 
-    intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
+    intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
     
@@ -632,7 +632,7 @@ def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_in
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction):
+def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -682,7 +682,7 @@ def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation,
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_judgment_json = GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, specific_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_judgment_json = GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_judgment_json[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -707,7 +707,7 @@ def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation,
 
             #Calculate questions tokens and cost
 
-            questions_tokens = num_tokens_from_string(str(questions_json), "cl100k_base")
+            questions_tokens = num_tokens_from_string(json.dumps(questions_json), "cl100k_base")
 
             #Calculate metadata tokens
 
@@ -726,7 +726,7 @@ def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation,
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
 
@@ -808,7 +808,7 @@ def run_b64_er(df_master):
             
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
+    df_updated = engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     #Remove redundant columns
 

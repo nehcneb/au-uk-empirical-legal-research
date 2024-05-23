@@ -565,9 +565,9 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 
 # %%
 #Jurisdiction specific instruction
-specific_instruction = ''
+system_instruction = role_content
 
-intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
+intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Initialize default GPT settings
@@ -681,7 +681,7 @@ def run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
+    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     df_updated.pop('judgment')
 

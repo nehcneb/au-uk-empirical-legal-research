@@ -409,16 +409,18 @@ def file_prompt(file_triple, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page or section of the file, provide the page number or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
+role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page, paragraph or section of the file, provide the page or pagraph number, or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
 
-intro_for_GPT = [{"role": "system", "content": role_content_own}]
+system_instruction = role_content_own
+
+intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens_own(questions_json, file_triple, gpt_model):
+def GPT_json_tokens_own(questions_json, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model)}]
@@ -436,12 +438,12 @@ def GPT_json_tokens_own(questions_json, file_triple, gpt_model):
     
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     language_content = f"The file is written in {file_triple['Language choice']}."
 
-    intro_for_GPT = [{"role": "system", "content": role_content_own + language_content}] 
+    intro_for_GPT = [{"role": "system", "content": system_instruction + language_content}] 
 
     messages_for_GPT = intro_for_GPT + file_for_GPT + json_direction + question_for_GPT
     
@@ -488,7 +490,7 @@ def GPT_json_tokens_own(questions_json, file_triple, gpt_model):
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model):
+def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -562,11 +564,11 @@ def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gp
 
             #Calculate questions tokens and cost
 
-            questions_tokens = num_tokens_from_string(str(questions_json), "cl100k_base")
+            questions_tokens = num_tokens_from_string(json.dumps(questions_json), "cl100k_base")
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content_own + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
@@ -655,7 +657,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     questions_json = df_master.loc[0, 'questions_json']
         
     #Engage GPT
-    df_updated = engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model)
+    df_updated = engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     try:
         df_updated.pop('Extracted text')
@@ -764,7 +766,7 @@ def image_to_b64_own(uploaded_image, language, page_bound):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model):
+def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -796,12 +798,12 @@ def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model):
     
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": str(questions_json).replace("\'", '"') + ' Give responses in the following JSON form: ' + str(answers_json).replace("\'", '"')}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     language_content = f"The file is written in {file_triple['Language choice']}."
 
-    intro_for_GPT = [{"role": "system", "content": role_content_own + language_content}] 
+    intro_for_GPT = [{"role": "system", "content": system_instruction + language_content}] 
 
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
     
@@ -848,7 +850,7 @@ def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model):
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model):
+def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -922,11 +924,11 @@ def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation
 
             #Calculate questions tokens and cost
 
-            questions_tokens = num_tokens_from_string(str(questions_json), "cl100k_base")
+            questions_tokens = num_tokens_from_string(json.dumps(questions_json), "cl100k_base")
 
             #Calculate other instructions' tokens
 
-            other_instructions = role_content_own + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
@@ -1007,7 +1009,7 @@ def run_b64_own(df_master, uploaded_images):
 
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model)
+    df_updated = engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     #Remove redundant columns
 

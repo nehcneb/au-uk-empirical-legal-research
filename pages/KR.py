@@ -309,7 +309,7 @@ def meta_judgment_dict(case_link_pair):
 #Import functions
 from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string, judgment_prompt_json, GPT_json_tokens, engage_GPT_json_tokens  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound, role_content#, intro_for_GPT
+from gpt_functions import question_characters_bound, default_judgment_counter_bound
 
 
 # %%
@@ -318,9 +318,11 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 
 # %%
 #Jurisdiction specific instruction
-specific_instruction = ''
+role_content_kr = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific page in the judgment, provide the page number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
-intro_for_GPT = [{"role": "system", "content": role_content + specific_instruction}]
+system_instruction = role_content_kr
+
+intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Initialize default GPT settings
@@ -392,7 +394,7 @@ def run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, specific_instruction)
+    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     df_updated.pop('judgment')
     
