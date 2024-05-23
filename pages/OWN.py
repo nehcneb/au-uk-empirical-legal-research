@@ -1192,7 +1192,7 @@ if own_account_allowed() > 0:
         
         email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
         
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key", value = st.session_state.gpt_api_key_entry)
+        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
         
         valdity_check = st.button('VALIDATE your API key')
     

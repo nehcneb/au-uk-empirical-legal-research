@@ -93,6 +93,7 @@ search_criteria = ['Free text', 'Case name', 'Before', 'Catchwords', 'Party name
 meta_labels_droppable = ["Catchwords", "Before", "Decision date(s)", "Hearing date(s)", "Date(s) of order",  "Jurisdiction", "Decision", "Legislation cited", "Cases cited", "Texts cited", "Category", "Parties", "File number", "Representation", "Decision under appeal"]
 
 
+
 # %%
 #List of nsw courts
 
