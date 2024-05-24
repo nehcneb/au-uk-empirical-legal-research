@@ -459,7 +459,7 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 #Jurisdiction specific instruction
 system_instruction = role_content
 
-intro_for_GPT = [{"role": "system", "content": role_content}]
+intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Module, costs and upperbounds
