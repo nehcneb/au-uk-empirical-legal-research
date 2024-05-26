@@ -148,10 +148,10 @@ def gpt_output_cost(gpt_model):
 def tokens_cap(gpt_model):
     
     if gpt_model == "gpt-3.5-turbo-0125":
-        tokens_cap = int(16385 - 2000) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
+        tokens_cap = int(16385 - 2500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
     
     if gpt_model == "gpt-4o":
-        tokens_cap = int(128000 - 6000) #For gpt-4o, token limit covering both input and output is 128000, while the output limit is 4096.
+        tokens_cap = int(128000 - 4500) #For gpt-4o, token limit covering both input and output is 128000, while the output limit is 4096.
 
     return tokens_cap
     
@@ -231,7 +231,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model, system_instruction
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific paragraph numbers in the judgment or specific sections in the metadata.'})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. The paragraph or page numbers in the judgment, or sections in the metadata from which you obtained your answer. '})
     
     #Create questions, which include the answer format
     
@@ -365,7 +365,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
 
             other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific paragraph numbers in the judgment or specific sections in the metadata.", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers in the judgment, or sections in the metadata from which you obtained your answer. ", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
