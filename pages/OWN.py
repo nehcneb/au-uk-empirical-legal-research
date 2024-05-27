@@ -409,7 +409,7 @@ def file_prompt(file_triple, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page, paragraph or section of the file, provide the page or pagraph number, or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
+role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file is a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page, paragraph or section of the file, provide the page or pagraph number, or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
 
 system_instruction = role_content_own
 
@@ -434,7 +434,7 @@ def GPT_json_tokens_own(questions_json, file_triple, gpt_model, system_instructi
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. The paragraph or page numbers or sections of the file from which you obtained your answer. '})
     
     #Create questions, which include the answer format
     
@@ -570,7 +570,7 @@ def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gp
 
             other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers or sections of the file from which you obtained your answer. ", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
@@ -794,7 +794,7 @@ def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instr
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. The paragraph or page numbers or sections of the file from which you obtained your answer. '})
     
     #Create questions, which include the answer format
     
@@ -930,7 +930,7 @@ def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation
 
             other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers or sections of the file from which you obtained your answer. ", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
