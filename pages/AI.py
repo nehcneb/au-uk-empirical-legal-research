@@ -474,7 +474,8 @@ def pandasai_ask():
         code_tokens = float(0)
         
         #Explanations
-        if st.session_state.explain_status is True:
+        #if st.session_state.explain_status is True:
+        if explain_toggle:
     
             explanation = agent.explain()
             st.write('**Explanation**')
@@ -488,7 +489,8 @@ def pandasai_ask():
             st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": explanation_cost, "tokens": explanation_tokens,   "role": "assistant", "content": {'answer': explanation}})
 
         #Code
-        if st.session_state.code_status is True:
+        #if st.session_state.code_status is True:
+        if code_toggle:
             try:
                 code = agent.generate_code(prompt)
                 
@@ -960,13 +962,13 @@ if 'instruction_left' not in st.session_state:
 
 #Initialize default explain status
 
-if 'explain_status' not in st.session_state:
-    st.session_state["explain_status"] = False
+#if 'explain_status' not in st.session_state:
+    #st.session_state["explain_status"] = False
 
 #Initialize default show code status
 
-if 'code_status' not in st.session_state:
-    st.session_state["code_status"] = False
+#if 'code_status' not in st.session_state:
+    #st.session_state["code_status"] = False
 
 #Initialize default own account status
 
@@ -1528,19 +1530,20 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
         #Explain 
         explain_toggle = st.toggle('Explain', help = f'Get {st.session_state.ai_choice} to explain its response.')
     
-        if explain_toggle:
-            st.session_state.explain_status = True
-        else:
-            st.session_state.explain_status = False
+        #if explain_toggle:
+            #st.session_state.explain_status = True
+        #else:
+            #st.session_state.explain_status = False
 
     with col2:
         #Get code 
         code_toggle = st.toggle('Code', help = f'Get {st.session_state.ai_choice} to produce a code.')
     
-        if code_toggle:
-            st.session_state.code_status = True
-        else:
-            st.session_state.code_status = False
+        #if code_toggle:
+            #st.session_state.code_status = True
+        #else:
+            #st.session_state.code_status = False
+    
     with col3:
         history_on = st.toggle(label = 'Chat history', help = 'Display all instructions and responses.')
 
@@ -1549,7 +1552,6 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
             #if len(str(st.session_state.response)) > 0:
             #clarification_questions_toggle = st.toggle(label = 'Suggestions', value = 'q_and_a_toggle', help = f'Get clarifying questions to help draft your questions or instructions.')
         
-
 #else:
     #st.session_state.explain_status = False
     #st.session_state.code_status = False
