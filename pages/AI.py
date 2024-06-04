@@ -1341,6 +1341,30 @@ df_to_analyse = clean_link_columns(df_to_analyse)
         
         #print(e)
 
+#Convert columns which are list type to string type
+try:
+    #Must do this because pandasai won't work with lists
+
+    list_cols = list_cols_picker(df_to_analyse)
+    
+    df_to_analyse = list_col_to_str(df_to_analyse)
+
+    #st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+
+    if len(list_cols) > 0:
+
+        list_cols_error_msg = 'Lists have been converted to string (ie plain text). '
+        
+        conversion_msg_to_show += list_cols_error_msg
+        
+except Exception as e_list:
+
+    #print('Cannot display df without converting non-numeric data to string.' )
+
+    print('Cannot convert list columns to string.' )
+
+    print(e_list)
+
 #Try to display df without some conversion to string
 try:
     
@@ -1351,77 +1375,55 @@ except Exception as e:
     print('Cannot display df without some conversion.' )
     
     print(e)
-
-    #Convert columns which are list type to string type
+    
+    #Try to convert all numerical data to string type
     try:
-        #Must do this, or pandasai won't work with lists? Not true since v 2.040
 
-        list_cols = list_cols_picker(df_to_analyse)
+        non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
+
+        df_to_analyse[non_num_cols] = df_to_analyse[non_num_cols].astype(str)
+
+        if len(non_num_cols) > 0:
         
-        df_to_analyse = list_col_to_str(df_to_analyse)
-
-        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
-
-        if len(list_cols) > 0:
-
-            list_cols_error_msg = 'Lists have been converted to plain text. '
-            
-            conversion_msg_to_show += list_cols_error_msg
-            
-    except Exception as e_list:
+            non_num_error_msg ='Non-numeric data have been converted to plain text. '
     
-        print('Cannot display df without converting non-numeric data to string.' )
+            conversion_msg_to_show += non_num_error_msg
     
-        print(e_list)
+        #Activate below if wants to convert non-numerical columns with nonetype cells to empty string type
+        
+        #df_to_analyse = non_num_fill_blank(df_to_analyse)
+        
+        #if len(num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]) > 0:
     
-        #Try to convert all numerical data to string type
+            #non_num_cols_error = 'Nonetype cells in non-numerical columns have been converted to empty strings. '
+                    
+            #conversion_msg_to_show += non_num_cols_error
+
+    except Exception as e_numeric:
+        
+        print('Cannot display df without converting everything to string.' )
+
+        print(e_numeric)
+
         try:
+        
+            df_to_analyse = df_to_analyse.astype(str)
     
-            non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
+            st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
     
-            df_to_analyse[non_num_cols] = df_to_analyse[non_num_cols].astype(str)
+            non_textual_error_to_show = 'Non-textual data have been converted to plain text. '
+        
+            conversion_msg_to_show += non_textual_error_to_show
 
-            if len(non_num_cols) > 0:
-            
-                non_num_error_msg ='Non-numeric data have been converted to plain text. '
-        
-                conversion_msg_to_show += non_num_error_msg
-        
-            #Activate below if wants to convert non-numerical columns with nonetype cells to empty string type
-            
-            #df_to_analyse = non_num_fill_blank(df_to_analyse)
-            
-            #if len(num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]) > 0:
-        
-                #non_num_cols_error = 'Nonetype cells in non-numerical columns have been converted to empty strings. '
-                        
-                #conversion_msg_to_show += non_num_cols_error
-    
-        except Exception as e_numeric:
-            
-            print('Cannot display df without converting everything to string.' )
+        except Exception as e_non_text:
+
+            print('Cannot make df editable at all.' )
     
             print(e_numeric)
+
+            st.session_state["edited_df"] = st.dataframe(df_to_analyse,  column_config=link_heading_config)
     
-            try:
-            
-                df_to_analyse = df_to_analyse.astype(str)
-        
-                st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
-        
-                non_textual_error_to_show = 'Non-textual data have been converted to plain text. '
-            
-                conversion_msg_to_show += non_textual_error_to_show
-    
-            except Exception as e_non_text:
-    
-                print('Cannot make df editable at all.' )
-        
-                print(e_numeric)
-    
-                st.session_state["edited_df"] = st.dataframe(df_to_analyse,  column_config=link_heading_config)
-        
-                conversion_msg_to_show += everything_error_to_show
+            conversion_msg_to_show += everything_error_to_show
 
 #Tell users that the spreadsheet is editable if it indeed is
 
