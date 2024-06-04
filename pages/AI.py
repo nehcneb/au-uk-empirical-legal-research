@@ -700,6 +700,7 @@ def langchain_merge_df_produced():
     st.rerun()
 
 
+
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
@@ -1051,7 +1052,6 @@ except:
 # %%
 extra_spreadsheet_warning = 'Another spreadsheet has already been imported. Please :red[REMOVE] that one first.'
 spreadsheet_success = 'Your spreadsheet has been imported. Please scroll down.'
-
 
 
 # %%

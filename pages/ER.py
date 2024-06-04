@@ -1209,7 +1209,7 @@ if run_button:
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.""")
         #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
 
-        with st.spinner('Running...'):
+        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
 
             try:
 
@@ -1328,7 +1328,7 @@ if st.session_state.gpt_model == "gpt-4o":
             st.markdown("""Your results will be available for download soon. The estimated waiting time is about 1-2 minutes per judgment.""")
             #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
     
-            with st.spinner('Running...'):
+            with st.spinner("Running... Please :red[don't change] your entries (yet)."):
     
                 try:
 

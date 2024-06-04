@@ -1464,7 +1464,7 @@ if run_button:
 
         st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 files. """)
 
-        with st.spinner('Running...'):
+        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
                 
             #Create spreadsheet of responses
             df_master = create_df()
@@ -1583,7 +1583,7 @@ if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
     
             st.markdown("""Your results will be available for download soon. The estimated waiting time is about 1-2 minutes per image. """)
     
-            with st.spinner('Running...'):
+            with st.spinner("Running... Please :red[don't change] your entries (yet)."):
                     
                 #Create spreadsheet of responses
                 df_master = create_df()
