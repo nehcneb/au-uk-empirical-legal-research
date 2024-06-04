@@ -1508,19 +1508,6 @@ st.subheader(f'Enter your instructions for {st.session_state.ai_choice}')
 
 st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions. It will **only** use  the data and/or information from your spreadsheet.')
 
-prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=1000) 
-
-st.session_state.prompt = prompt
-
-st.caption("Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like give more or longer instructions.")
-
-#Disable toggle for clarifying questions and answers BEFORE asking AI again
-if st.session_state.q_and_a_provided == True:
-    st.session_state.q_and_a_toggle = False
-    #Remove prefill after importation
-    #st.session_state['prompt_prefill'] = ''
-
-
 #Generate explain button
 if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 
@@ -1555,6 +1542,19 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 #else:
     #st.session_state.explain_status = False
     #st.session_state.code_status = False
+
+prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=1000) 
+
+st.session_state.prompt = prompt
+
+st.caption("Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like give more or longer instructions.")
+
+#Disable toggle for clarifying questions and answers BEFORE asking AI again
+if st.session_state.q_and_a_provided == True:
+    st.session_state.q_and_a_toggle = False
+    #Remove prefill after importation
+    #st.session_state['prompt_prefill'] = ''
+
 
 
 # %% [markdown]
