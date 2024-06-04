@@ -1383,6 +1383,8 @@ except Exception as e:
 
         df_to_analyse[non_num_cols] = df_to_analyse[non_num_cols].astype(str)
 
+        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+
         if len(non_num_cols) > 0:
         
             non_num_error_msg ='Non-numeric data have been converted to plain text. '
