@@ -318,7 +318,7 @@ def meta_judgment_dict(case_link_pair):
 
 # %%
 #Import functions
-from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string, judgment_prompt_json, GPT_json_tokens, engage_GPT_json_tokens  
+from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
 from gpt_functions import question_characters_bound, default_judgment_counter_bound
 
@@ -335,7 +335,6 @@ role_content_er = 'You are a legal research assistant helping an academic resear
 system_instruction = role_content_er
 
 intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
 
 
 # %%
@@ -407,7 +406,7 @@ def run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     df_updated.pop('judgment')
     
@@ -473,7 +472,7 @@ def judgment_tokens_b64(case_link_pair):
         output_b64['tokens_raw'] = output_b64['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
     
     return output_b64
-        
+    
 
 
 # %%
@@ -529,7 +528,7 @@ def meta_judgment_dict_b64(case_link_pair):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_instruction):
+def GPT_b64_json_er(questions_json, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -576,7 +575,7 @@ def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_inst
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the judgment.'})
     
     #Create questions, which include the answer format
     
@@ -602,7 +601,9 @@ def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_inst
         completion = openai.chat.completions.create(
             model=gpt_model,
             messages=messages_for_GPT, 
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"}, 
+            max_tokens = max_output(answers_json), 
+            temperature = 0.2
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -632,7 +633,7 @@ def GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_inst
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_b64_json_er(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -682,7 +683,7 @@ def engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation,
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_judgment_json = GPT_b64_json_tokens_er(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_judgment_json = GPT_b64_json_er(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_judgment_json[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -808,7 +809,7 @@ def run_b64_er(df_master):
             
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = engage_GPT_b64_json_tokens_er(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_b64_json_er(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     #Remove redundant columns
 

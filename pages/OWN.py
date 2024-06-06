@@ -359,7 +359,7 @@ def image_to_text(uploaded_image, language, page_bound):
 
 # %%
 #Import functions
-from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
+from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
 from gpt_functions import question_characters_bound, default_judgment_counter_bound
 
@@ -420,7 +420,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens_own(questions_json, file_triple, gpt_model, system_instruction):
+def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model)}]
@@ -460,7 +460,9 @@ def GPT_json_tokens_own(questions_json, file_triple, gpt_model, system_instructi
         completion = openai.chat.completions.create(
             model=gpt_model,
             messages=messages_for_GPT, 
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"}, 
+            max_tokens = max_output(answers_json), 
+            temperature = 0.2
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -490,7 +492,7 @@ def GPT_json_tokens_own(questions_json, file_triple, gpt_model, system_instructi
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -539,7 +541,7 @@ def engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gp
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_file_triple = GPT_json_tokens_own(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_json_own(questions_json, file_triple, gpt_model) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -657,7 +659,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     questions_json = df_master.loc[0, 'questions_json']
         
     #Engage GPT
-    df_updated = engage_GPT_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     try:
         df_updated.pop('Extracted text')
@@ -766,7 +768,7 @@ def image_to_b64_own(uploaded_image, language, page_bound):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instruction):
+def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -820,7 +822,9 @@ def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instr
         completion = openai.chat.completions.create(
             model=gpt_model,
             messages=messages_for_GPT, 
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"}, 
+            max_tokens = max_output(answers_json), 
+            temperature = 0.2
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -850,7 +854,7 @@ def GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instr
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
-def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -899,7 +903,7 @@ def engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_file_triple = GPT_b64_json_tokens_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -1009,7 +1013,7 @@ def run_b64_own(df_master, uploaded_images):
 
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = engage_GPT_b64_json_tokens_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     #Remove redundant columns
 

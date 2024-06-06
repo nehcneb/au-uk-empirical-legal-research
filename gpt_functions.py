@@ -145,15 +145,25 @@ def gpt_output_cost(gpt_model):
         
     return gpt_output_cost
 
+#As of 2024-06-07, questions are capped at about 1000 characters ~ 250 tokens, role_content/system_instruction is about 115 tokens, json_direction is about 11 tokens, answers_json is about 8 tokens plus 30 tokens per question 
+
 def tokens_cap(gpt_model):
+    #This is the global cap for each model, which will be shown to users
     
     if gpt_model == "gpt-3.5-turbo-0125":
-        tokens_cap = int(16385 - 2500) #For GPT-3.5-turbo, token limit covering both input and output is 16385,  while the output limit is 4096.
+        
+        tokens_cap = int(16385 - 3000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
     if gpt_model == "gpt-4o":
-        tokens_cap = int(128000 - 4500) #For gpt-4o, token limit covering both input and output is 128000, while the output limit is 4096.
+        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
     return tokens_cap
+
+def max_output(answers_json):
+
+    max_output_tokens = int(round(3000 - 250 - 115 - 11 - len(answers_json)*30 - 100)) #Leaving 100 tokens as spare just in case
+    
+    return max_output_tokens
     
 
 
@@ -205,18 +215,19 @@ def judgment_prompt_json(judgment_json, gpt_model):
         judgment_content_capped = f'Based on the metadata and judgment in the following JSON:  """ {json.dumps(judgment_json)} """'
         
         return judgment_content_capped
+        
 
 
 # %%
 #For modern judgments, define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a specific paragraph in the judgment, provide the paragraph number as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs in the judgment, provide the paragraph numbers as part of your answer. Where your answer comes from specific sections of the metadata, provide the section names as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-def GPT_json_tokens(questions_json, judgment_json, gpt_model, system_instruction):
+def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
@@ -231,7 +242,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model, system_instruction
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. The paragraph or page numbers in the judgment, or sections in the metadata from which you obtained your answer. '})
+        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. The paragraph or page numbers in the judgment, or sections of the metadata from which you obtained your answer. '})
     
     #Create questions, which include the answer format
     
@@ -252,9 +263,11 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model, system_instruction
     try:
         #completion = client.chat.completions.create(
         completion = openai.chat.completions.create(
-            model=gpt_model,
-            messages=messages_for_GPT, 
-            response_format={"type": "json_object"}
+            model = gpt_model,
+            messages = messages_for_GPT, 
+            response_format = {"type": "json_object"}, 
+            max_tokens = max_output(answers_json), 
+            temperature = 0.2
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -285,7 +298,7 @@ def GPT_json_tokens(questions_json, judgment_json, gpt_model, system_instruction
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
-def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -334,7 +347,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if int(GPT_activation) > 0:
-            GPT_output_list = GPT_json_tokens(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = GPT_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -365,7 +378,7 @@ def engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_mo
 
             other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers in the judgment, or sections in the metadata from which you obtained your answer. ", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers in the judgment, or sections of the metadata from which you obtained your answer. ", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
@@ -443,3 +456,4 @@ def calculate_image_token_cost(image, detail="auto"):
     else:
         # Invalid detail_option
         raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
+

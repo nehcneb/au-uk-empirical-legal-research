@@ -554,7 +554,7 @@ def pdf_name(name_mnc_list, mnc):
 
 # %%
 #Import functions
-from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string, judgment_prompt_json, GPT_json_tokens, engage_GPT_json_tokens  
+from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
 from gpt_functions import question_characters_bound, default_judgment_counter_bound, role_content#, intro_for_GPT
 
@@ -681,7 +681,7 @@ def run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json_tokens(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     df_updated.pop('judgment')
 
