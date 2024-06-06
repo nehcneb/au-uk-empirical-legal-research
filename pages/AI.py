@@ -193,7 +193,7 @@ def ai_model_printing(ai_choice, gpt_model_choice):
 #"""
 
 default_agent_description = 'You are a data analyst. Your main goal is to help clean, analyse and visualise data. You will be given a spreadsheet of data. You will be given questions or instructions about the spreadsheet. You think step by step to answer these questions or instructions.'
-#
+
 
 # %%
 def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
@@ -514,6 +514,9 @@ def pandasai_ask():
         st.write(total_cost_tokens)
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
         
+        #Keep last processed prompt for input disabling purpose
+        st.session_state['last_prompt'] = prompt
+
 
 
 # %%
@@ -1028,6 +1031,10 @@ if 'q_and_a_toggle' not in st.session_state:
 #if 'merge_df_produced' not in st.session_state:
     #st.session_state["merge_df_produced"] = False
 
+#Last prompt
+if 'last_prompt' not in st.session_state:
+    st.session_state['last_prompt'] = ''
+
 #Disable toggles
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
@@ -1520,9 +1527,13 @@ prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.sess
 
 st.session_state.prompt = prompt
 
-#Disable toggles while prompt is not entered
+#Disable toggles while prompt is not entered or the same as the last processed prompt
 if prompt:
-    st.session_state['disable_input'] = False
+    if prompt != st.session_state.last_prompt:
+        st.session_state['disable_input'] = False
+    
+    else:
+        st.session_state['disable_input'] = True
 
 else:
     st.session_state['disable_input'] = True
@@ -1732,7 +1743,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                 st.session_state.clarifying_questions = clarifying_questions
     
                 #Keep record of clarifying questions
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions}})
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": cb.total_tokens,   "role": "assistant", "content": {'answer': clarifying_questions}})
                             
             if len(clarifying_questions) == 0:
                 st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
@@ -1763,7 +1774,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                         
                     clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
                     st.write(clarifying_questions_cost_tokens)
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
     
                     add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
             
@@ -1793,7 +1804,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                             st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
         
                         #Add clarifying answers to history
-                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": {cb.total_tokens},   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
+                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
                         
                         #Change clarifying questions and answers status
                         st.session_state['q_and_a_provided'] = True
