@@ -1578,7 +1578,7 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 #col1a, col2a, col3a, col4a = st.columns(4, gap = 'small')
 
 #with col1a:
-ask_button = st.button("ASK")
+ask_button = st.button("ASK", disabled = st.session_state.disable_input)
 
 #with col2a:
 reset_button = st.button('RESET to get fresh responses', type = 'primary')#, help = f"Get fresh responses from {st.session_state.ai_choice}")
