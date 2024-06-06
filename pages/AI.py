@@ -1719,6 +1719,7 @@ if st.session_state.ai_choice == 'LangChain':
 if reset_button:
     pai.clear_cache()
     st.session_state['response'] = '' #Adding this to hide clarifying questions and answers toggle upon resetting
+    st.session_state['last_prompt'] = '' #Adding this to allow asking the same question again
     #clear_most_cache()
     st.rerun()
 
