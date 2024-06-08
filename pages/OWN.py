@@ -462,7 +462,8 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
             messages=messages_for_GPT, 
             response_format={"type": "json_object"}, 
             max_tokens = max_output(answers_json), 
-            temperature = 0.2
+            temperature = 0.2, 
+            top_p = 0.2
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -824,7 +825,8 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
             messages=messages_for_GPT, 
             response_format={"type": "json_object"}, 
             max_tokens = max_output(answers_json), 
-            temperature = 0.2
+            temperature = 0.2, 
+            top_p = 0.2
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
