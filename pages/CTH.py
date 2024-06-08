@@ -999,11 +999,11 @@ You can also download a record of your entries.
 """)
 
 #Warning
-#if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
-    #st.warning('A low-cost AI will answer your questions. Please check at least some of the answers.')
+if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
+    st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the latest model instead.')
 
-#if st.session_state.gpt_model == "gpt-4o":
-    #st.warning('An expensive AI will answer your questions. Please be cautious.')
+if st.session_state.gpt_model == "gpt-4o":
+    st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
 run_button = st.button('RUN the program')
 
