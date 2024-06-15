@@ -546,7 +546,7 @@ def run(df_master):
             judgments_file.append(decision_v)
             counter +=1
     
-            pause.seconds(np.random.randint(5, 15))
+            #pause.seconds(np.random.randint(5, 15))
             
         else:
             break
