@@ -149,19 +149,20 @@ def gpt_output_cost(gpt_model):
 
 def tokens_cap(gpt_model):
     #This is the global cap for each model, which will be shown to users
+    #Leaving 1000 tokens to spare
     
     if gpt_model == "gpt-3.5-turbo-0125":
         
-        tokens_cap = int(16385 - 3000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
+        tokens_cap = int(16385 - 4000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
     if gpt_model == "gpt-4o":
-        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
+        tokens_cap = int(128000 - 4000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
     return tokens_cap
 
 def max_output(answers_json):
 
-    max_output_tokens = int(round(3000 - 250 - 115 - 11 - len(answers_json)*30 - 100)) #Leaving 100 tokens as spare just in case
+    max_output_tokens = int(round(3000 - 250 - 115 - 11 - len(answers_json)*30))
     
     return max_output_tokens
     

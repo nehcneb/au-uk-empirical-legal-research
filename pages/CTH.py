@@ -117,7 +117,6 @@ def create_df():
         gpt_api_key = gpt_api_key_entry
     except:
         print('API key not entered')
-
     
     #Own account status
     own_account = st.session_state.own_account
@@ -127,6 +126,14 @@ def create_df():
 
     #GPT enhancement
     gpt_enhancement = st.session_state.gpt_enhancement_entry
+
+
+    #Courts
+    #courts_list = courts_entry
+    #court_string = ', '.join(courts_list)
+    #court = court_string
+
+    court = courts_entry
     
     #dates
     
@@ -202,6 +209,7 @@ def create_df():
            'Your name': name, 
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
+           'Courts' : court, 
            'Case name or medium neutral citation': case_name_mnc, 
            'Judge' : judge, 
             'Reported citation' : reported_citation, 
@@ -232,8 +240,27 @@ def create_df():
 
 
 # %%
+#Define format functions for courts choice, and GPT questions
+
+#auxiliary lists and variables
+
+fca_courts = {'Federal Court': 'fca', 
+              'Industrial Relations Court of Australia': 'irc', 
+              'Australian Competition Tribunal': 'tribunals%2Facompt', 
+              'Copyright Tribunal': 'tribunals%2Facopyt', 
+              'Defence Force Discipline Appeal Tribunal': 'tribunals%2Fadfdat', 
+              'Federal Police Discipline Tribunal': 'tribunals%2Ffpdt', 
+              'Trade Practices Tribunal': 'tribunals%2Fatpt', 
+              'Supreme Court of Norfold Island': 'nfsc',
+             'All of the above': ''}
+
+fca_courts_list = list(fca_courts.keys())
+
+
+# %%
 #Function turning search terms to search results url
-def fca_search(case_name_mnc= '', 
+def fca_search(court = '', 
+               case_name_mnc= '', 
                judge ='', 
                reported_citation ='', 
                file_number ='', 
@@ -249,7 +276,13 @@ def fca_search(case_name_mnc= '',
                legislation = '', 
                cases_cited = '', 
                catchwords = ''):
-    base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2Ffca"
+
+    #If only searching FCA
+    #base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2Ffca"
+
+    #If allowing users to search which court
+    base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2F" + fca_courts[court]
+    
     params = {'meta_2' : case_name_mnc, 
               'meta_A' : judge, 
               'meta_z' : reported_citation, 
@@ -295,7 +328,9 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
     counter = 1
     
     # Get links of first 20 results
-    links_raw = soup.find_all("a", href=re.compile("fca"))
+    #links_raw = soup.find_all("a", href=re.compile("fca")) #If want to search FCA only
+    
+    links_raw = soup.find_all("a", href=re.compile("judgments"))
     links = []
     
     for i in links_raw:
@@ -313,7 +348,8 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
             url_next_page = url_search_results + '&start_rank=' + f"{ending}"
             page_judgment_next_page = requests.get(url_next_page)
             soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
-            links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("fca"))
+            #links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("fca"))  #If want to search FCA only
+            links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("judgments"))
 
             #Check if stll more results
             if len(links_next_page_raw) > 0:
@@ -370,7 +406,7 @@ meta_labels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dat
 def meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
-                'Hyperlink to FCA Digital Law Library' : '', 
+                'Hyperlink to Federal Court Digital Law Library' : '', 
                 'MNC' : '',  
                  'Year' : '',  
                  'Appeal' : '',  
@@ -402,7 +438,7 @@ def meta_judgment_dict(judgment_url):
     
     #Attach hyperlink
 
-    judgment_dict['Hyperlink to FCA Digital Law Library'] = link(judgment_url)
+    judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
     
     page = requests.get(judgment_url)
     soup = BeautifulSoup(page.content, "lxml")
@@ -472,7 +508,8 @@ def meta_judgment_dict(judgment_url):
         try:
             mnc_raw = judgment_url.split('/')[-1].replace('.pdf', '')
 
-            for court_i in ['fca', 'fcafc']:
+            #for court_i in ['fca', 'fcafc']: #If want to search FCA only
+            for court_i in ['fca', 'fcafc', 'irc', 'acompt', 'acopyt', 'adfdat', 'fpdt', 'atpt', 'nfsc']:
                 if court_i in mnc_raw.lower():
                     mnc_list = mnc_raw.lower().split(court_i)
                     judgment_dict['Medium neutral citation'] = '[' + mnc_list[0] + '] ' + court_i.upper()  + ' ' +  mnc_list[1]
@@ -504,7 +541,8 @@ def pdf_name_mnc_list(url_search_results, judgment_counter_bound):
     #Start counter
     counter = 1
     # Get links of first 20 results
-    links_raw = soup.find_all("a", href=re.compile("fca"))
+    #links_raw = soup.find_all("a", href=re.compile("fca")) #If want to search FCA only
+    links_raw = soup.find_all("a", href=re.compile("judgments"))
     
     for i in links_raw:
         if (('title=' in str(i)) and (counter <=judgment_counter_bound)):
@@ -518,7 +556,8 @@ def pdf_name_mnc_list(url_search_results, judgment_counter_bound):
             url_next_page = url_search_results + '&start_rank=' + f"{ending}"
             page_judgment_next_page = requests.get(url_next_page)
             soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
-            links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("fca"))
+            #links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("fca")) #If want to search FCA only
+            links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("judgments"))
     
             #Check if stll more results
             if len(links_next_page_raw) > 0:
@@ -602,7 +641,8 @@ def run(df_master):
     
     #Conduct search
     
-    url_search_results = fca_search(case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
+    url_search_results = fca_search(court = df_master.loc[0, 'Courts'], 
+                     case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
                      file_number  = df_master.loc[0, 'File number'],
@@ -658,7 +698,7 @@ def run(df_master):
 
     for judgment_index in df_individual.index:
         
-        if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to FCA Digital Law Library']).lower())):
+        if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to Federal Court Digital Law Library']).lower())):
             try:
                 df_individual.loc[judgment_index, 'Case name'] = pdf_name(name_mnc_list, df_individual.loc[judgment_index, 'Medium neutral citation'])
             except Exception as e:
@@ -705,7 +745,8 @@ def search_url(df_master):
     
     #Conduct search
     
-    url = fca_search(case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
+    url = fca_search(court = df_master.loc[0, 'Courts'], 
+                     case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
                      file_number  = df_master.loc[0, 'File number'],
@@ -760,9 +801,9 @@ if 'df_individual_output' not in st.session_state:
 
     st.session_state['df_individual_output'] = pd.DataFrame([])
 
-#Initialize enhanced prompt
-if 'prompt_prefill' not in st.session_state:
-    st.session_state["prompt_prefill"] = ''
+#Disable toggles
+if 'disable_input' not in st.session_state:
+    st.session_state["disable_input"] = True
 
 # %%
 #Try to carry over previously entered personal details    
@@ -790,7 +831,7 @@ except:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[judgments of the Federal Court of Australia].")
+st.header(f"You have selected to study :blue[judgments of select Australian federal courts and tribunals].")
 
 #    st.header("Judgment Search Criteria")
 
@@ -798,6 +839,10 @@ st.markdown("""**:green[Please enter your search terms.]** This program will col
 """)
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+
+st.subheader("Federal courts and tribunals to cover")
+
+courts_entry = st.selectbox(label = 'Select or type in the courts or tribunals to cover', options = fca_courts_list, index = fca_courts_list.index('Federal Court'))
 
 st.subheader("Your search terms")
 
@@ -877,10 +922,6 @@ st.subheader("Enter your questions for each judgment")
 
 st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** judgment based only on information from **that** judgment. """)
 
-gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
-
-st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each judgment.")
-
 st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
 if st.toggle('See the instruction given to GPT'):
@@ -889,14 +930,29 @@ if st.toggle('See the instruction given to GPT'):
 if st.toggle('Tips for using GPT'):
     tips()
 
-if own_account_allowed() > 0:
+gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
 
+#Disable toggles while prompt is not entered or the same as the last processed prompt
+if gpt_activation_entry:
+    
+    if gpt_questions_entry:
+        st.session_state['disable_input'] = False
+        
+    else:
+        st.session_state['disable_input'] = True
+else:
+    st.session_state['disable_input'] = False
+    
+st.caption(f"By default, answers to your questions will be generated by model gpt-3.5-turbo-0125. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-3.5-turbo-0125')*3/4)} words from each judgment.")
+
+if own_account_allowed() > 0:
+    
     st.subheader(':orange[Enhance program capabilities]')
     
     st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of judgments to process? You can do so with your own GPT account.
     """)
     
-    own_account_entry = st.toggle('Use my own GPT account')
+    own_account_entry = st.toggle('Use my own GPT account',  disabled = st.session_state.disable_input)
     
     if own_account_entry:
     
@@ -906,7 +962,7 @@ if own_account_allowed() > 0:
     """)
             
         name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
-        
+    
         email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
@@ -971,12 +1027,6 @@ if own_account_allowed() > 0:
         st.session_state.gpt_enhancement_entry = False
     
         st.session_state.judgments_counter_bound = default_judgment_counter_bound
-    
-        #st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
-    
-    #judgments_counter_bound_entry = round(judgments_counter_bound_entry_raw)
-       
-
 
 # %% [markdown]
 # ## Consent and next steps
@@ -986,7 +1036,7 @@ st.header("Consent")
 
 st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
-consent =  st.checkbox('Yes, I agree.', value = False)
+consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
 
 st.markdown("""If you do not agree, then please feel free to close this form.""")
 
@@ -1294,3 +1344,5 @@ if return_button:
 if reset_button:
     clear_cache_except_validation_df_master()
     st.rerun()
+
+# %%
