@@ -153,18 +153,24 @@ def tokens_cap(gpt_model):
     
     if gpt_model == "gpt-3.5-turbo-0125":
         
-        tokens_cap = int(16385 - 4000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
+        tokens_cap = int(16385 - 3000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
     if gpt_model == "gpt-4o":
-        tokens_cap = int(128000 - 4000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
+        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
     return tokens_cap
 
-def max_output(answers_json):
+def max_output(gpt_model, messages_for_GPT):
 
-    max_output_tokens = int(round(3000 - 250 - 115 - 11 - len(answers_json)*30))
+    if gpt_model == "gpt-3.5-turbo-0125":
+        
+        max_output_tokens = int(16385 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
-    return max_output_tokens
+    if gpt_model == "gpt-4o":
+        
+        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
+
+    return min(4096, max_output_tokens)
     
 
 
@@ -267,7 +273,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
             model = gpt_model,
             messages = messages_for_GPT, 
             response_format = {"type": "json_object"}, 
-            max_tokens = max_output(answers_json), 
+            max_tokens = max_output(gpt_model, messages_for_GPT), 
             temperature = 0.2, 
             top_p = 0.2
         )

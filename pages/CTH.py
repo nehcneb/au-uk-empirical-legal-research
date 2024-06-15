@@ -251,7 +251,7 @@ fca_courts = {'Federal Court': 'fca',
               'Defence Force Discipline Appeal Tribunal': 'tribunals%2Fadfdat', 
               'Federal Police Discipline Tribunal': 'tribunals%2Ffpdt', 
               'Trade Practices Tribunal': 'tribunals%2Fatpt', 
-              'Supreme Court of Norfold Island': 'nfsc',
+              'Supreme Court of Norfolk Island': 'nfsc',
              'All of the above': ''}
 
 fca_courts_list = list(fca_courts.keys())

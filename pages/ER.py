@@ -602,7 +602,7 @@ def GPT_b64_json_er(questions_json, judgment_json, gpt_model, system_instruction
             model=gpt_model,
             messages=messages_for_GPT, 
             response_format={"type": "json_object"}, 
-            max_tokens = max_output(answers_json), 
+            max_tokens = max_output(gpt_model, messages_for_GPT), 
             temperature = 0.2, 
             top_p = 0.2
         )
