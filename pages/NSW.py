@@ -436,7 +436,7 @@ def search_url(df_master):
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
-                   pause = np.random.randint(5, 15)
+                   pause = 0
                   )
     return query.url
 
@@ -523,7 +523,7 @@ def run(df_master):
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
-                   pause = np.random.randint(5, 15)
+                   pause = 0
                   )
 
     #Create judgments file
