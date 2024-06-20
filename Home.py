@@ -95,7 +95,7 @@ if 'i_understand' not in st.session_state:
 st.title("The Empirical Legal Research Kickstarter")
 st.header("An Anglo-Australian Pilot")
 
-st.markdown("""*The Empirical Legal Research Kickstarter* is a web-based program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
+st.markdown("""*The Empirical Legal Research Kickstarter* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research/tree/main) program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
 
 This pilot version can automatically
 

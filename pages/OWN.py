@@ -409,7 +409,7 @@ def file_prompt(file_triple, gpt_model):
 
 # %%
 #Define system role content for GPT
-role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from a specific page, paragraph or section of the file, provide the page or pagraph number, or section reference as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
+role_content_own = 'You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. Please answer questions based only on information contained in the file. Where your answer comes from specific pages, paragraphs or sections of the file, provide the page or pagraph numbers, or section names as part of your answer. If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".'
 
 system_instruction = role_content_own
 
@@ -1154,10 +1154,7 @@ st.header("Use GPT as your research assistant")
 
 #    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
 
-st.markdown("**:green[Would you like GPT to answer questions about the judgments returned by your search terms?]**")
-
-st.markdown("""Please consider trying this program without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
-""")
+st.markdown("**:green[Would you like GPT to answer questions about your files?]**")
 
 gpt_activation_entry = st.checkbox('Use GPT', value = False)
 
