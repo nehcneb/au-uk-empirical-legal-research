@@ -48,8 +48,8 @@ sources_list = ["Judgments of the New South Wales courts and tribunals",
                 #"Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
-                "Your own files", 
-                "Your own spreadsheet"
+                "Your files", 
+                "Your spreadsheet"
                ]
 
 source_pages = ["pages/NSW.py", 
@@ -95,7 +95,7 @@ if 'i_understand' not in st.session_state:
 st.title("The Empirical Legal Research Kickstarter")
 st.header("An Anglo-Australian Pilot")
 
-st.markdown("""*The Empirical Legal Research Kickstarter* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research/tree/main) program designed to help kickstart empirical research involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
+st.markdown("""*The Empirical Legal Research Kickstarter* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research/tree/main) program designed to help kickstart empirical projects involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
 
 This pilot version can automatically
 
