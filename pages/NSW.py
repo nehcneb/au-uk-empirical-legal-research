@@ -759,9 +759,9 @@ st.header("You have selected to study :blue[judgments of the New South Wales cou
 
 #Search terms
 
-st.write(f'**:green[Please enter your search terms.]** This program will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms.')
+st.write(f'**:green[Please enter your search terms.]** This program will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms, using [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw).')
 
-st.caption(f"[An open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) will scrape NSW judgments. During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
+st.caption("During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
 
 st.subheader("NSW courts and tribunals to cover")
 
@@ -782,7 +782,7 @@ tribunals_entry = st.multiselect(label = 'Select or type in the tribunals to cov
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit NSW Caselaw at https://www.caselaw.nsw.gov.au/search/advanced. This section mimics their Advanced Search function.""")
+st.markdown("""For search tips, please visit [NSW Caselaw](https://www.caselaw.nsw.gov.au/search/advanced). This section mimics their Advanced Search function.""")
 
 catchwords_entry = st.text_input("Catchwords")
 
@@ -802,7 +802,7 @@ st.caption("Must include square brackets eg [2022] NSWSC 922")
 
 startDate_entry = st.date_input("Decision date from (01/01/1999 the earliest)", value = None, format="DD/MM/YYYY")
 
-st.caption("Pre-1999 decisions are usually not available at NSW Caselaw and will unlikely to be collected (see https://www.caselaw.nsw.gov.au/about).")
+st.caption("Pre-1999 decisions are usually [not available](https://www.caselaw.nsw.gov.au/about) from NSW Caselaw and will unlikely to be collected.")
 
 endDate_entry = st.date_input("Decision date to", value = None,  format="DD/MM/YYYY")
 
@@ -846,7 +846,7 @@ st.markdown("""Please consider trying this program without asking GPT any questi
 
 gpt_activation_entry = st.checkbox('Use GPT', value = False)
 
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default, Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The exact cost for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced (as elaborated at https://openai.com/pricing for model gpt-3.5-turbo-0125). You will be given ex-post cost estimates.")
+st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-3.5-turbo-0125), Ben's own experience suggests that it costs approximately USD \$0.003-\$0.008 (excl GST) per judgment. The [exact cost](https://openai.com/pricing) for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced. You will be given ex-post cost estimates.")
 
 st.subheader("Enter your questions for each judgment")
 
@@ -888,7 +888,7 @@ if own_account_allowed() > 0:
     
         st.session_state["own_account"] = True
     
-        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage at https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
+        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
     """)
             
         name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
@@ -914,7 +914,7 @@ if own_account_allowed() > 0:
         st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
-        st.caption('For more on pricing for different GPT models, please see https://openai.com/api/pricing.')
+        st.caption('Click [here](https://openai.com/api/pricing) for pricing for different GPT models.')
         
         if gpt_enhancement_entry == True:
         

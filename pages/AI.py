@@ -1072,7 +1072,7 @@ if st.button('RETURN to previous page'):
 
 st.header("You have chosen to :blue[analyse your spreadsheet].")
 
-st.caption(f'PandasAI, [an open-source Python library](https://github.com/Sinaptik-AI/pandas-ai), provides the framework for analysing your spreadsheet with AI.')
+st.caption(f'[PandasAI](https://github.com/Sinaptik-AI/pandas-ai) provides the framework for analysing your spreadsheet with AI.')
 
 #Open spreadsheet and personal details
 
@@ -1173,7 +1173,7 @@ if own_account_allowed() > 0:
             
             st.session_state['own_account'] = True
         
-            st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage at https://platform.openai.com/signup. You can then find your API key at https://platform.openai.com/api-keys.
+            st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
 """)
                 
             name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
@@ -1214,8 +1214,7 @@ if own_account_allowed() > 0:
             st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
             
             gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
-        
-            st.caption('For more on pricing for different GPT models, please see https://openai.com/api/pricing.')
+            st.caption('Click [here](https://openai.com/api/pricing) for pricing for different GPT models.')
             
             if gpt_enhancement_entry == True:
                 #Reset AI first

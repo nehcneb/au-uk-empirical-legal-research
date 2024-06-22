@@ -167,15 +167,15 @@ def tips():
     st.markdown(""":green[**DO's**:]
 - :green[Do break down complex tasks into simple sub-tasks.]
 - :green[Do give clear and detailed instructions (eg specify steps required to complete a task).]
-- :green[Do use the same terminology as the relevant judgments themselves.]
+- :green[Do use the same terminology as the relevant judgments or files themselves.]
 - :green[Do give exemplar answers.]
 - :green[Do manually check some or all answers.]
 - :green[Do revise questions to get better answers.]
-- :green[Do evaluate answers on the same sample of judgments (ie the "training" sample).]
+- :green[Do evaluate answers on the same sample of judgments or files (ie the "training" sample).]
 """)
 
     st.markdown(""":red[**Don'ts**:]
-- :red[Don't ask questions which go beyond the relevant judgment itself.]
+- :red[Don't ask questions which go beyond the relevant judgments or files themselves.]
 - :red[Don't ask difficult maths questions.]
 - :red[Don't skip manual evaluation.]
 """)
@@ -185,4 +185,4 @@ def tips():
 - :orange[Maybe re-run the same questions and manually check for inconsistency.]
 """)
 
-    st.caption('For more tips, please see https://platform.openai.com/docs/guides/prompt-engineering.')
+    st.caption('Click [here](https://platform.openai.com/docs/guides/prompt-engineering) for more tips.')
