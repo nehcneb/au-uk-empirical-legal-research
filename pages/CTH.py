@@ -984,7 +984,7 @@ if own_account_allowed() > 0:
         st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
-        st.caption('Click [here](https://openai.com/api/pricing) for pricing for different GPT models.')
+        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
         
         if gpt_enhancement_entry == True:
         
