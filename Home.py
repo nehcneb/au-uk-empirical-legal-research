@@ -48,8 +48,8 @@ sources_list = ["Judgments of the New South Wales courts and tribunals",
                 #"Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
-                "Your files", 
-                "Your spreadsheet"
+                "Your own files", 
+                "Your own spreadsheet"
                ]
 
 source_pages = ["pages/NSW.py", 

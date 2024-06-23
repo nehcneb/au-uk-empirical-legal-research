@@ -759,7 +759,7 @@ st.header("You have selected to study :blue[judgments of the New South Wales cou
 
 #Search terms
 
-st.write(f'**:green[Please enter your search terms.]** This program will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms, using [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw).')
+st.write(f'**:green[Please enter your search terms.]** This program will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms, using [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo.')
 
 st.caption("During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
 
