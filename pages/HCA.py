@@ -962,9 +962,9 @@ preview_button = st.button('PREVIEW on the High Court Judgments Database (in a p
     
     #if hca_results_num_button:
 
-results_num_toggle = st.toggle(label = 'Display/refresh the number of judgments found')
+results_num_button = st.button(label = 'SHOW the number of judgments found')
 
-if results_num_toggle:
+if results_num_button:
 
     if len(st.session_state.df_master) > 0:
 
