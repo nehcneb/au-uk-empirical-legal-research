@@ -21,7 +21,7 @@ pytesseract
 pdf2image
 mammoth
 pyxlsb
-pandasai
+pandasai==2.2.5
 PyYAML
 openpyxl
 #langchain
