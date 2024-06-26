@@ -34,21 +34,21 @@ from io import BytesIO
 import ast
 #from dotenv import load _dotenv
 import matplotlib.pyplot as plt
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.datasets import make_regression
-from sklearn.model_selection import cross_validate
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.model_selection import train_test_split
-import seaborn as sns
+#import statsmodels.api as sm
+#import statsmodels.formula.api as smf
+#from sklearn.ensemble import RandomForestClassifier
+#from sklearn.preprocessing import StandardScaler
+#from sklearn.linear_model import LogisticRegression
+#from sklearn.pipeline import make_pipeline
+#from sklearn.datasets import load_iris
+#from sklearn.model_selection import train_test_split
+#from sklearn.metrics import accuracy_score
+#from sklearn.datasets import make_regression
+#from sklearn.model_selection import cross_validate
+#from sklearn.ensemble import RandomForestRegressor
+#from sklearn.model_selection import RandomizedSearchCV
+#from sklearn.model_selection import train_test_split
+#import seaborn as sns
 
 #Streamlit
 import streamlit as st

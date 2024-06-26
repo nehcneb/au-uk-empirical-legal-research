@@ -27,6 +27,6 @@ openpyxl
 #langchain
 #langchain_experimental
 #langchain_community
-statsmodels
-scikit-learn
-seaborn
+#statsmodels
+#scikit-learn
+#seaborn
