@@ -888,27 +888,31 @@ def judgment_to_exclude(case_info = {},
             
             print('Potential year value is not integer')
 
-    year_decided = potential_year_list[-1]
+    if len(potential_year_list) > 0:
+    #Defining year_decided here to avoid the possibility of year not being picked up
+        year_decided = potential_year_list[-1]
 
-    if len(own_min_year) >= 4:
-
-        try:        
-            if year_decided < int(own_min_year):
+        if len(own_min_year) >= 4:
     
-                exclude_status = True
+            try:       
+    
+                if year_decided < int(own_min_year):
         
-        except:
-            print('Case not excluded for earlier than min year')
-
-    if len(own_max_year) >= 4:
-
-        try:        
-            if year_decided > int(own_max_year):
+                    exclude_status = True
+            
+            except:
+                print('Case not excluded for earlier than min year')
     
-                exclude_status = True
+        if len(own_max_year) >= 4:
     
-        except:
-            print('Case not excluded for later than max year')
+            try:        
+    
+                if year_decided > int(own_max_year):
+        
+                    exclude_status = True
+    
+            except:
+                print('Case not excluded for later than max year')
 
     #Exclude judges
 
