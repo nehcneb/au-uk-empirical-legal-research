@@ -52,7 +52,7 @@ import openai
 import tiktoken
 
 #Google
-#from google.oauth2 import service_account
+from google.oauth2 import service_account
 
 #Excel
 from pyxlsb import open_workbook as open_xlsb
@@ -144,7 +144,7 @@ def create_df():
     except:
         print('Full text not entered.')
 
-    #Can't figure out how to add the following
+    #Can't figure out how to add the following based on the HCA's filtered search function
     #parties_include = parties_include_entry
     #parties_not_include = parties_not_include_entry
     #year_is = year_is_entry
@@ -152,6 +152,82 @@ def create_df():
     #case_number = case_number_entry
     #judges_include = judges_include_entry
     #judges_not_include = judges_not_include_entry
+
+    #The following are based on my own filter
+
+    own_parties_include = ''
+
+    try:
+        own_parties_include = own_parties_include_entry
+    
+    except:
+        
+        print('Parties to include not entered.')
+
+    own_parties_exclude = ''
+
+    try:
+        own_parties_exclude = own_parties_exclude_entry
+
+    except:
+        print('Parties to exclude not entered.')
+
+    own_min_year = ''
+
+    try:
+        own_min_year = own_min_year_entry
+
+    except:
+        print('Minimum year not entered.')
+
+    own_max_year = ''
+
+    try:
+        own_max_year = own_max_year_entry
+    
+    except:
+        print('Maximum year not entered.')
+
+    #own_case_numbers_include = ['']
+
+    #try:
+        #own_case_numbers_include_list = own_case_numbers_include_entry.replace(';', ',').split(',')
+
+        #for case_number in own_case_numbers_include_list:
+            
+            #own_case_numbers_include.append(case_number)
+        
+    #except:
+        #print('Case numbers to include not entered.')
+
+    #own_case_numbers_exclude = ['']
+
+    #try:
+        #own_case_numbers_exclude_list = own_case_numbers_exclude_entry.replace(';', ',').split(',')
+
+        #for case_number in own_case_numbers_exclude_list:
+            
+            #own_case_numbers_exclude.append(case_number)
+        
+    #except:
+        
+        #print('Case numbers to exclude not entered.')
+        
+    own_judges_include = ''
+
+    try:
+        own_judges_include = own_judges_include_entry
+    
+    except:
+        print('judges to include not entered.')
+
+    own_judges_exclude = ''
+
+    try:
+        own_judges_exclude = own_judges_exclude_entry
+
+    except:
+        print('judges to exclude not entered.')
     
     #GPT choice and entry
     gpt_activation_status = False
@@ -190,8 +266,7 @@ def create_df():
             'Quick search': quick_search, 
             'Search for medium neutral citation citation': citation, 
              'Full text search': full_text, 
-            
-            #Can't figure out how to add the following
+            #Can't figure out how to add the following based on the HCA's filtered search function
            #'Parties include': parties_include, 
             #'Parties do not include': parties_not_include, 
             #'Year is': year_is, 
@@ -199,6 +274,16 @@ def create_df():
             #'Case number': case_number, 
             #'Judges include': judges_include, 
             #'Judges do not include': judges_not_include, 
+               #The following are based on my own filter
+           'Parties include': own_parties_include, 
+            'Parties do not include': own_parties_exclude, 
+            'Before this year': own_min_year, 
+            'After this year': own_max_year, 
+           #'Case numbers include': own_case_numbers_include, 
+            #'Case numbers do not include': own_case_numbers_exclude, 
+            'Judges include': own_judges_include, 
+            'Judges do not include': own_judges_exclude, 
+           #The following are common to all pages
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': gpt_questions, 
@@ -310,6 +395,7 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
                             counter += 1
                         else:
                             break
+
     return links
 
 
@@ -678,6 +764,284 @@ def mnc_to_link(collection, mnc):
 
 
 
+# %%
+#Functions for minimum and maximum year
+
+def min_max_year(collection):
+    
+    if collection == 'Judgments 2000-present':
+
+        min_year = int(2000)
+
+        max_year = datetime.now().year
+
+    if collection == 'Judgments 1948-1999':
+        
+        min_year = int(1948)
+
+        max_year = int(1999)
+    
+    if collection == '1 CLR - 100 CLR (judgments 1903-1958)':
+
+        min_year = int(1903)
+
+        max_year = int(1958)
+
+    return {'min_year': min_year, 'max_year': max_year}
+
+def year_check(year_entry):
+
+    #Default validity
+    validity = False
+    
+    try:
+        
+        if (len(str(int(year_entry))) == 4):     
+            
+            validity = True
+
+    except:
+        print('Year entry invalid.')
+        
+    return validity
+
+def min_year_validity(collection, min_year_entry):
+    #NOT IN USE
+
+    if year_check(min_year_entry) == False:
+        
+        return False
+    
+    elif int(min_year_entry) <= min_max_year(collection)['min_year']:
+        
+        return False
+        
+    else:
+        
+        return True
+
+def max_year_validity(collection, max_year_entry):
+    #NOT IN USE
+
+    if year_check(max_year_entry) == False:
+        
+        return False
+    
+    elif int(max_year_entry) >= min_max_year(collection)['max_year']:
+        
+        return False
+        
+    else:
+        return True
+        
+
+
+# %%
+#Function to excluding unwanted jugdments
+
+def judgment_to_exclude(case_info = {}, 
+                        own_parties_include = '', 
+                        own_parties_exclude = '', 
+                        own_min_year = '', 
+                        own_max_year = '', 
+                        #own_case_numbers_include = [], 
+                        #own_case_numbers_exclude = [], 
+                        own_judges_include = '', 
+                        own_judges_exclude = ''
+                       ):
+
+    #Default status is not to exclude
+    exclude_status = False
+
+    #Exclude parties
+
+    for party in own_parties_include.replace(';', ',').split(','):
+        
+        if ((len(party) > 0) and (party.lower() not in case_info['name'].lower())):
+        
+            exclude_status = True
+        
+            break
+
+    for party in own_parties_exclude.replace(';', ',').split(','):
+        
+        if ((len(party) > 0) and (party.lower() in case_info['name'].lower())):
+        
+            exclude_status = True
+        
+            break
+
+    #Exclude year
+
+    potentil_year_list = []
+
+    potentil_year_raw_list = case_info['name'].split('[')
+
+    for potential_year in potentil_year_raw_list:
+
+        try:
+            year_decided_raw = int(potential_year[0:4])
+            
+            potentil_year_list.append(year_decided_raw)
+
+        except:
+            
+            print('Potential year value is not integer')
+
+    year_decided = potentil_year_list[-1]
+
+    if len(own_min_year) >= 4:
+
+        try:        
+            if year_decided < int(own_min_year):
+    
+                exclude_status = True
+        
+        except:
+            print('Case not excluded for earlier than min year')
+
+    if len(own_max_year) >= 4:
+
+        try:        
+            if year_decided > int(own_max_year):
+    
+                exclude_status = True
+    
+        except:
+            print('Case not excluded for later than max year')
+
+    #Exclude judges
+
+    if len(case_info['before']) > 2:
+
+        for judge in own_judges_include.replace(';', ',').split(','):
+            
+            if ((len(judge) > 0) and (judge.lower() not in case_info['before'].lower())):
+            
+                exclude_status = True
+            
+                break
+    
+        for judge in own_judges_exclude.replace(';', ',').split(','):
+            
+            if ((len(judge) > 0) and (judge.lower() in case_info['before'].lower())):
+            
+                exclude_status = True
+            
+                break
+    
+    return exclude_status
+
+
+
+# %%
+#Function to get judgment links with filters
+
+def search_results_to_judgment_links_filtered(url_search_results, 
+                                     judgment_counter_bound,
+                                    own_parties_include, 
+                                    own_parties_exclude, 
+                                    own_min_year, 
+                                    own_max_year, 
+                                    #own_case_numbers_include, 
+                                    #own_case_numbers_exclude, 
+                                    own_judges_include, 
+                                    own_judges_exclude):
+    
+    page = requests.get(url_search_results)
+    soup = BeautifulSoup(page.content, "lxml")
+        
+    #Start counter
+    
+    counter = 1
+    
+    #Get number of pages
+    #There are up to 20 pages per page
+    number_of_pages = soup.find("span", id="lastItem").text
+
+    #Start links list
+    links = []
+            
+    for page_raw in range(0, int(number_of_pages)):
+        
+        if counter <= judgment_counter_bound:
+                        
+            page = page_raw + 1
+            
+            url_search_results_page = url_search_results + f'&page={page}'
+    
+            page_page = requests.get(url_search_results_page)
+    
+            soup_page = BeautifulSoup(page_page.content, "lxml")
+    
+            #Get citation, judge pairs with some extra unnecessaries
+            
+            citation_judge_pairs_raw = soup_page.find_all('h5')
+    
+            #Get raw links and names of cases
+            
+            raw_links = soup_page.find_all(class_='case')
+    
+            #Start empty citation-judge pairs and case_info list
+            
+            citation_judge_pairs = []
+            
+            case_infos = []
+    
+            #Get all cases with info, judge names, links and citations from this pager
+                    
+            if ((len(citation_judge_pairs_raw) > 0) and (len(raw_links)>0)):
+    
+                for h5 in citation_judge_pairs_raw:
+                    h5_index = citation_judge_pairs_raw.index(h5)
+                    if len(h5.text)> 0: 
+                        if h5.text[-1] == 'J':
+                            citation_value = citation_judge_pairs_raw[h5_index-1].text
+                            
+                            citation_judge_pair = {'citation': citation_value, 'before': h5.text}
+                            
+                            citation_judge_pairs.append(citation_judge_pair)
+                
+                for raw_link in raw_links:
+                    index = raw_links.index(raw_link)
+                    case_info = {'name': raw_link.text, 
+                                 'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
+                                 'citation': citation_judge_pairs[index]['citation'], 
+                                 'before': citation_judge_pairs[index]['before']
+                                }
+                    case_infos.append(case_info)
+    
+            #Add cases from case_infos unless filtered out or counter reached
+            
+            for case_info in case_infos:
+                if counter <= judgment_counter_bound:
+                    if judgment_to_exclude(case_info, 
+                            own_parties_include, 
+                            own_parties_exclude, 
+                            own_min_year, 
+                            own_max_year, 
+                            #own_case_numbers_include = [], 
+                            #own_case_numbers_exclude = [], 
+                            own_judges_include, 
+                            own_judges_exclude
+                           ) == False:
+                        
+                        links.append(case_info['url'])
+                        
+                        counter += 1
+                        
+                else:
+                    break
+            
+            pause.seconds(np.random.randint(5, 15))
+
+        else:
+            break    
+
+    
+    return links
+
+
 # %% [markdown]
 # # GPT functions and parameters
 
@@ -739,7 +1103,20 @@ def run(df_master):
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    #Use the following if don't want to filter results
+    #judgments_links = search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+
+    #Use the following if want to filter results. Will be slow.
+    judgments_links = search_results_to_judgment_links_filtered(url_search_results, 
+                                     judgments_counter_bound,
+                                    df_master.loc[0, 'Parties include'], 
+                                    df_master.loc[0, 'Parties do not include'], 
+                                    df_master.loc[0, 'Before this year'], 
+                                    df_master.loc[0, 'After this year'], 
+                                    #df_master.loc[0, 'Case numbers include'], 
+                                    #df_master.loc[0, 'Case numbers do not include'], 
+                                    df_master.loc[0, 'Judges include'], 
+                                    df_master.loc[0, 'Judges do not include'])
 
     for link in judgments_links:
 
@@ -928,10 +1305,10 @@ collection_entry = st.selectbox(label = 'Select or type in the collection of jud
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section mimics their judgments search function *except* the filtered search function.
+st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). During the pilot stage, this section mimics their judgments search function except the filter function.
 """)
 
-quick_search_entry = st.text_input('Quick search (search party names, catchwords and year decided)')
+quick_search_entry = st.text_input('Quick search (search party names and catchwords)')
 
 citation_entry = st.text_input('Search for medium neutral citation (eg [2014] HCA 1)')
 
@@ -984,6 +1361,62 @@ if results_num_button:
         
     #hca_results_num()
 
+#The following filters are not based on HCA's filter at https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=
+
+filter_toggle = st.toggle("Filter your search results")
+
+if filter_toggle:
+
+    #st.subheader("Filter your search results")
+    
+    st.warning("The following is *not* based on the filtered search function of the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). The PREVIEW and SHOW buttons will *not* reflect your search filters.")
+    
+    own_parties_include_entry = st.text_input('Parties include (separate parties by comma or semi-colon)')
+    st.caption('If entered, then this program will only process cases that include at least one of the parties entered.')
+    
+    own_parties_exclude_entry = st.text_input('Parties do not include (separate parties by comma or semi-colon)')
+    st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
+    
+    own_min_year_entry = st.text_input('After this year')
+    
+    if own_min_year_entry:
+
+        own_min_year_validity = year_check(own_min_year_entry)
+    
+        if not own_min_year_validity:
+                
+            st.error('You have not entered a year.')
+        
+    own_max_year_entry = st.text_input('Before this year')
+    
+    if own_max_year_entry:
+
+        own_max_year_validity = year_check(own_max_year_entry)
+
+        if not own_max_year_validity:
+    
+            st.error('You have not entered a year.')
+    
+    if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
+    
+        #own_case_numbers_include_entry = st.text_input('Case numbers include (separate case numbers by comma or semi-colon)') 
+        #st.caption('If entered, then this program will only process cases with at least one of the case numbers entered.')
+    
+        #own_case_numbers_exclude_entry = st.text_input('Case numbers do not include (separate case numbers by comma or semi-colon)') 
+        #st.caption('If entered, then this program will only process cases without any of the case numbers entered.')
+    
+        own_judges_include_entry = st.text_input('Judges include (separate judges by comma or semi-colon)')
+        st.caption('If entered, then this program will only process cases heared by at least one of the judges entered.')
+        
+        own_judges_exclude_entry = st.text_input('Judges do not include (separate judges by comma or semi-colon)')
+        st.caption('If entered, then this program will only process cases not heared by any of the judges entered.')
+    
+    else:
+        #own_case_numbers_include_entry = ''
+        #own_case_numbers_exclude_entry = ''
+        own_judges_include_entry = ''
+        own_judges_exclude_entry = ''
+    
 st.subheader("Judgment metadata collection")
 
 st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
