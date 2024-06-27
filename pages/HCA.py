@@ -933,9 +933,9 @@ st.markdown("""For search tips, please visit the [High Court Judgments Database]
 
 st.caption("During the pilot stage, the filter search function does not work.")
 
-quick_search_entry = st.text_input('**Quick search** (search party names and the catchwords of the judgments)')
+quick_search_entry = st.text_input('Quick search (search party names, catchwords and year decided)')
 
-citation_entry = st.text_input('**Search for medium neutral citation** (eg [2014] HCA 1)')
+citation_entry = st.text_input('Search for medium neutral citation (eg [2014] HCA 1)')
 
 if citation_entry:
     if 'hca' not in citation_entry.lower():
@@ -944,7 +944,7 @@ if citation_entry:
 
 if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
 
-    full_text_entry = st.text_input('**Full text search** (search the full text of the cases)')
+    full_text_entry = st.text_input('Full text search')
 
 else:
     full_text_entry = ''
