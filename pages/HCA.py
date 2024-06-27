@@ -833,7 +833,7 @@ def max_year_validity(collection, max_year_entry):
         
     else:
         return True
-        
+
 
 
 # %%
@@ -873,22 +873,22 @@ def judgment_to_exclude(case_info = {},
 
     #Exclude year
 
-    potentil_year_list = []
+    potential_year_list = []
 
-    potentil_year_raw_list = case_info['name'].split('[')
+    potential_year_raw_list = case_info['name'].split('[')
 
-    for potential_year in potentil_year_raw_list:
+    for potential_year in potential_year_raw_list:
 
         try:
             year_decided_raw = int(potential_year[0:4])
             
-            potentil_year_list.append(year_decided_raw)
+            potential_year_list.append(year_decided_raw)
 
         except:
             
             print('Potential year value is not integer')
 
-    year_decided = potentil_year_list[-1]
+    year_decided = potential_year_list[-1]
 
     if len(own_min_year) >= 4:
 
