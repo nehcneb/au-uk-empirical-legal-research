@@ -441,7 +441,7 @@ def is_date(string, fuzzy=False):
 # %%
 #Meta labels and judgment combined
 #IN USE
-meta_labels_droppable = ['Decision date', 'Case number', 'Before', 'Catchwords']
+meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catchwords', 'Order']
 
 
 # %%
@@ -768,6 +768,7 @@ def mnc_to_link(collection, mnc):
 #Functions for minimum and maximum year
 
 def min_max_year(collection):
+#NOT IN USE
     
     if collection == 'Judgments 2000-present':
 
