@@ -56,7 +56,7 @@ import openai
 import tiktoken
 
 #Google
-from google.oauth2 import service_account
+#from google.oauth2 import service_account
 
 #Excel
 from pyxlsb import open_workbook as open_xlsb
