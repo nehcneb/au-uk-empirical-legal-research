@@ -939,6 +939,7 @@ def judgment_to_exclude(case_info = {},
 
 def search_results_to_judgment_links_filtered(url_search_results, 
                                      judgment_counter_bound,
+                                      collection, 
                                     own_parties_include, 
                                     own_parties_exclude, 
                                     own_min_year, 
@@ -991,25 +992,50 @@ def search_results_to_judgment_links_filtered(url_search_results,
             #Get all cases with info, judge names, links and citations from this pager
                     
             if ((len(citation_judge_pairs_raw) > 0) and (len(raw_links)>0)):
-    
-                for h5 in citation_judge_pairs_raw:
-                    h5_index = citation_judge_pairs_raw.index(h5)
-                    if len(h5.text)> 0: 
-                        if h5.text[-1] == 'J':
-                            citation_value = citation_judge_pairs_raw[h5_index-1].text
+
+                if collection != '1 CLR - 100 CLR (judgments 1903-1958)':
+
+                    for h5 in citation_judge_pairs_raw:
+                        h5_index = citation_judge_pairs_raw.index(h5)
+                        if len(h5.text)> 0: 
+                            if h5.text[-1] == 'J':
+                                citation_value = citation_judge_pairs_raw[h5_index-1].text
+                                
+                                citation_judge_pair = {'citation': citation_value, 'before': h5.text}
+                                
+                                citation_judge_pairs.append(citation_judge_pair)
+                    
+                    for raw_link in raw_links:
+                        index = raw_links.index(raw_link)
+                        case_info = {'name': raw_link.text, 
+                                     'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
+                                     'citation': citation_judge_pairs[index]['citation'], 
+                                     'before': citation_judge_pairs[index]['before']
+                                    }
+                        case_infos.append(case_info)
+
+                else: #if collection = '1 CLR - 100 CLR (judgments 1903-1958)':
+
+                    for h5 in citation_judge_pairs_raw:
+                        if 'clr' in h5.text.lower():
                             
-                            citation_judge_pair = {'citation': citation_value, 'before': h5.text}
+                            citation_value = h5.text
                             
+                            citation_judge_pair = {'citation': citation_value, 'before': ''}
+                                
                             citation_judge_pairs.append(citation_judge_pair)
-                
-                for raw_link in raw_links:
-                    index = raw_links.index(raw_link)
-                    case_info = {'name': raw_link.text, 
-                                 'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
-                                 'citation': citation_judge_pairs[index]['citation'], 
-                                 'before': citation_judge_pairs[index]['before']
-                                }
-                    case_infos.append(case_info)
+
+                    for raw_link in raw_links:
+                        
+                        index = raw_links.index(raw_link)
+                        
+                        case_info = {'name': raw_link.text, 
+                                     'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
+                                     'citation': citation_judge_pairs[index]['citation'], 
+                                     'before': citation_judge_pairs[index]['before']
+                                    }
+                        
+                        case_infos.append(case_info)
     
             #Add cases from case_infos unless filtered out or counter reached
             
@@ -1109,6 +1135,7 @@ def run(df_master):
     #Use the following if want to filter results. Will be slow.
     judgments_links = search_results_to_judgment_links_filtered(url_search_results, 
                                      judgments_counter_bound,
+                                    df_master.loc[0, 'Collection'], 
                                     df_master.loc[0, 'Parties include'], 
                                     df_master.loc[0, 'Parties do not include'], 
                                     df_master.loc[0, 'Before this year'], 
