@@ -928,10 +928,8 @@ collection_entry = st.selectbox(label = 'Select or type in the collection of jud
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section mimics their judgments search function.
+st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section mimics their judgments search function *except* the filtered search function.
 """)
-
-st.caption("During the pilot stage, the filter search function does not work.")
 
 quick_search_entry = st.text_input('Quick search (search party names, catchwords and year decided)')
 
