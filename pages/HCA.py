@@ -40,6 +40,8 @@ import os
 import PyPDF2
 import io
 from io import BytesIO
+from io import StringIO
+
 
 #Streamlit
 import streamlit as st
@@ -264,7 +266,7 @@ def create_df():
            'Your GPT API key': gpt_api_key, 
             'Collection' : collection, 
             'Quick search': quick_search, 
-            'Search for medium neutral citation citation': citation, 
+            'Search for medium neutral citation': citation, 
              'Full text search': full_text, 
             #Can't figure out how to add the following based on the HCA's filtered search function
            #'Parties include': parties_include, 
@@ -711,8 +713,135 @@ def mnc_to_link_browse(collection, year, num):
 
 
 # %%
+#Load hca_data
+
+hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/hca_data.csv'
+
+response = requests.get(hca_data_url)
+
+hca_df = pd.read_csv(StringIO(response.text))
+
+
+# %%
+citation = '175 CLR 1'
+
+try:
+    index = np.where(hca_df['reported'].str.contains(citation, case=False))[0][0]
+except:
+    try:
+        index = np.where(hca_df['date'].str.contains(citation, case=False))[0][0]
+    except Exception as e:
+        print('Citation entered but not found.')
+        print(e)
+
+# %%
+index_list = hca_df.index[hca_df['reported'].str.contains(citation, case=False, na=False)].tolist()
+index = index_list[0]
+
+
+# %%
+#Function for turning citation to judgment_url
+def citation_to_link(collection, citation):
+
+    #Placeholder error url
+    judgment_url = f'https://eresources.hcourt.gov.au/showCase/1900/HCA/1'
+    
+    #Use mnc if entered
+    if 'hca' in citation.lower():
+       
+        try:
+            citation_formatted = citation.replace(' ', '').replace('[', '').replace(']', '')
+
+            year = citation_formatted.lower().split('hca')[0]
+            
+            num = citation_formatted.lower().split('hca')[1]
+            
+            #Checking if year and num are indeed integers
+            year_int = int(year)
+            num_int = int(num)
+            
+            judgment_url = f'https://eresources.hcourt.gov.au/showCase/{year_int}/HCA/{num_int}'
+
+        except Exception as e:
+            print('MNC entered but error.')
+            print(e)
+
+    else: #Get mnc from hca_df if not entered
+        try:
+            index_list = hca_df.index[hca_df['reported'].str.contains(citation, case=False, na=False)].tolist()
+            index = index_list[0]            
+        except:
+            try:
+                index_list = hca_df.index[hca_df['name'].str.contains(citation, case=False, na=False)].tolist()
+                index = index_list[0]
+            except:
+                try:
+                    index_list = hca_df.index[hca_df['date'].str.contains(citation, case=False, na=False)].tolist()
+                    index = index_list[0]
+                
+                except Exception as e:
+                    print('Citation entered but not found.')
+                    print(e)
+                
+        try:
+            mnc = hca_df.loc[index, 'mnc']
+    
+            citation_formatted = mnc.replace(' ', '').replace('[', '').replace(']', '')
+    
+            year = citation_formatted.lower().split('hca')[0]
+            
+            num = citation_formatted.lower().split('hca')[1]
+    
+            #Checking if year and num are indeed integers
+            year_int = int(year)
+            num_int = int(num)
+    
+            judgment_url = f'https://eresources.hcourt.gov.au/showCase/{year_int}/HCA/{num_int}'
+            
+            return judgment_url
+        
+        except Exception as e:
+            print('Citation entered but error.')
+            print(e)
+
+
+    #Check if judgment_url works
+    page = requests.get(judgment_url)
+    soup = BeautifulSoup(page.content, "lxml")
+
+    if (('The case could not be found on the database.' not in soup.text) and ('There were no matching cases.'  not in soup.text)):
+
+        return judgment_url
+
+    else:
+        #Check if direct link to PDF works
+        try:
+            pdf_url = judgment_url.replace('showCase', 'downloadPdf')
+            
+            page = requests.get(pdf_url)
+        
+            soup = BeautifulSoup(page.content, "lxml")
+    
+            if (('The case could not be found on the database.' not in soup.text) and ('There were no matching cases.'  not in soup.text)):
+    
+                return pdf_url
+    
+            else:
+                #Try to use HCA's browse function to get link to case
+                judgment_url = mnc_to_link_browse(collection, year, num)
+    
+                return judgment_url
+    
+        except Exception as e:
+            print("Can't get case url for citation")
+            print(e)
+            return ''
+
+
+# %%
 #Function for turning mnc to judgment_url
 def mnc_to_link(collection, mnc):
+#NOT in use
     
     mnc_formatted = mnc.replace(' ', '').replace('[', '').replace(']', '')
     
@@ -1166,8 +1295,10 @@ def run(df_master):
 
     #Add judgment if mnc entered
 
-    if len(df_master.loc[0, 'Search for medium neutral citation citation']) > 0:
-        direct_link = mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation citation'])
+    if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
+        #direct_link = mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        direct_link = citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+
         if len(direct_link) > 0:
             
             judgment_dict_direct = meta_judgment_dict(direct_link)
@@ -1237,9 +1368,10 @@ def search_url(df_master):
     
     #If mnc entered
 
-    if len(df_master.loc[0, 'Search for medium neutral citation citation']) > 0:
-        direct_link = mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation citation'])
-        
+    if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
+        #direct_link = mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        direct_link = citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+
         if len(direct_link) > 0:
             
             url = direct_link
@@ -1337,17 +1469,18 @@ collection_entry = st.selectbox(label = 'Select or type in the collection of jud
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). During the pilot stage, this section mimics their judgments search function except the filter function.
+st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section largely mimics their judgments search function except the filter function.
 """)
 
 quick_search_entry = st.text_input('Quick search (search party names and catchwords)')
 
 citation_entry = st.text_input('Search for medium neutral citation (eg [2014] HCA 1)')
+st.caption('CLR or other citations may work only up to 2014.')
 
-if citation_entry:
-    if 'hca' not in citation_entry.lower():
+#if citation_entry:
+    #if 'hca' not in citation_entry.lower():
         
-        st.error('Sorry, this pilot program only searches for medium neutral citation (eg [2014] HCA 1).')
+        #st.error('Sorry, this pilot program only searches for medium neutral citation (eg [2014] HCA 1).')
 
 if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
 
