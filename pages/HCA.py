@@ -26,7 +26,7 @@ import numpy as np
 import re
 import datetime
 from datetime import date
-#from dateutil import parser
+from dateutil import parser
 from dateutil.parser import parse
 from dateutil.relativedelta import *
 from datetime import datetime, timedelta
@@ -174,22 +174,6 @@ def create_df():
     except:
         print('Parties to exclude not entered.')
 
-    own_min_year = ''
-
-    try:
-        own_min_year = own_min_year_entry
-
-    except:
-        print('Minimum year not entered.')
-
-    own_max_year = ''
-
-    try:
-        own_max_year = own_max_year_entry
-    
-    except:
-        print('Maximum year not entered.')
-
     #own_case_numbers_include = ['']
 
     #try:
@@ -230,6 +214,27 @@ def create_df():
 
     except:
         print('judges to exclude not entered.')
+
+    #Dates
+    
+    before_date = ''
+
+    try:
+
+        before_date = str(before_date_entry.strftime('%d')) + '-' + str(before_date_entry.strftime('%B'))[:3] + '-' + str(before_date_entry.strftime('%Y'))
+
+    except:
+        print('Before date not entered')
+        pass
+
+    
+    after_date = ''
+    
+    try:
+        after_date = str(after_date_entry.strftime('%d'))  + '-' + str(after_date_entry.strftime('%B'))[:3]  + '-' + str(after_date_entry.strftime('%Y'))
+        
+    except:
+        print('After date not entered')
     
     #GPT choice and entry
     gpt_activation_status = False
@@ -279,8 +284,10 @@ def create_df():
                #The following are based on my own filter
            'Parties include': own_parties_include, 
             'Parties do not include': own_parties_exclude, 
-            'Before this year': own_min_year, 
-            'After this year': own_max_year, 
+            #'Before this year': own_min_year, 
+            #'After this year': own_max_year, 
+           'After date': after_date,
+            'Before date': before_date, 
            #'Case numbers include': own_case_numbers_include, 
             #'Case numbers do not include': own_case_numbers_exclude, 
             'Judges include': own_judges_include, 
@@ -498,7 +505,7 @@ def meta_judgment_dict(judgment_url):
     
             else:
                 continue
-
+    
     #Case number
 
     case_number_list = soup.find_all(string=re.compile('Case Number'))
@@ -507,6 +514,57 @@ def meta_judgment_dict(judgment_url):
         
         judgment_dict['Case number'] = case_number_list[0].split('Case Number')[1].replace(': ', '')
 
+    #Checking
+
+    if len(str(judgment_dict['Reported'])) < 5:
+
+        try:
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Reported'] = hca_df.loc[int(index), 'reported']
+
+        except:
+            print(f"Can't get reported for {judgment_dict['Medium neutral citation']}")
+
+    if is_date(str(judgment_dict['Date']), fuzzy=False) == False:
+
+        try:
+            
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Date'] = hca_df.loc[index, 'date']
+
+        except:
+            print(f"Can't get date for {judgment_dict['Medium neutral citation']}")
+
+    if len(str(judgment_dict['Before'])) < 3:
+
+        try:
+    
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Before'] = hca_df.loc[int(index), 'before']
+
+    
+        except:
+            print(f"Can't get before for {judgment_dict['Medium neutral citation']}")
+
+    if len(str(judgment_dict['Case number'])) < 3:
+
+        try:
+
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Case number'] = hca_df.loc[int(index), 'case_number']
+
+    
+        except:
+            print(f"Can't get case number for {judgment_dict['Medium neutral citation']}")
+    
     #Catchwords
 
     catchwords_list = soup.find_all('div', class_='well')
@@ -637,6 +695,57 @@ def meta_judgment_dict_alt(judgment_url):
     
             else:
                 continue
+
+    #Checking
+
+    if len(str(judgment_dict['Reported'])) < 5:
+
+        try:
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Reported'] = hca_df.loc[int(index), 'reported']
+
+        except:
+            print(f"Can't get reported for {judgment_dict['Medium neutral citation']}")
+
+    if is_date(str(judgment_dict['Date']), fuzzy=False) == False:
+
+        try:
+            
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Date'] = hca_df.loc[index, 'date']
+
+        except:
+            print(f"Can't get date for {judgment_dict['Medium neutral citation']}")
+
+    if len(str(judgment_dict['Before'])) < 3:
+
+        try:
+    
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Before'] = hca_df.loc[int(index), 'before']
+
+    
+        except:
+            print(f"Can't get before for {judgment_dict['Medium neutral citation']}")
+
+    if len(str(judgment_dict['Case number'])) < 3:
+
+        try:
+
+            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+            index = index_list[0]
+    
+            judgment_dict['Case number'] = hca_df.loc[int(index), 'case_number']
+
+    
+        except:
+            print(f"Can't get case number for {judgment_dict['Medium neutral citation']}")
     
     return judgment_dict
 
@@ -713,33 +822,6 @@ def mnc_to_link_browse(collection, year, num):
 
 
 # %%
-#Load hca_data
-
-hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/hca_data.csv'
-
-response = requests.get(hca_data_url)
-
-hca_df = pd.read_csv(StringIO(response.text))
-
-
-# %%
-citation = '175 CLR 1'
-
-try:
-    index = np.where(hca_df['reported'].str.contains(citation, case=False))[0][0]
-except:
-    try:
-        index = np.where(hca_df['date'].str.contains(citation, case=False))[0][0]
-    except Exception as e:
-        print('Citation entered but not found.')
-        print(e)
-
-# %%
-index_list = hca_df.index[hca_df['reported'].str.contains(citation, case=False, na=False)].tolist()
-index = index_list[0]
-
-
-# %%
 #Function for turning citation to judgment_url
 def citation_to_link(collection, citation):
 
@@ -784,7 +866,7 @@ def citation_to_link(collection, citation):
                     print(e)
                 
         try:
-            mnc = hca_df.loc[index, 'mnc']
+            mnc = hca_df.loc[int(index), 'mnc']
     
             citation_formatted = mnc.replace(' ', '').replace('[', '').replace(']', '')
     
@@ -967,13 +1049,24 @@ def max_year_validity(collection, max_year_entry):
 
 
 # %%
+#Load hca_data
+
+hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/hca_data.csv'
+
+response = requests.get(hca_data_url)
+
+hca_df = pd.read_csv(StringIO(response.text))
+
+
+# %%
 #Function to excluding unwanted jugdments
 
-def judgment_to_exclude(case_info = {}, 
+def judgment_to_exclude(case_info = {},
+                        collection = '', 
                         own_parties_include = '', 
                         own_parties_exclude = '', 
-                        own_min_year = '', 
-                        own_max_year = '', 
+                        before_date = '', 
+                        after_date = '', 
                         #own_case_numbers_include = [], 
                         #own_case_numbers_exclude = [], 
                         own_judges_include = '', 
@@ -1001,64 +1094,97 @@ def judgment_to_exclude(case_info = {},
         
             break
 
+    #Exclude date
+
+    if is_date(case_info['date'], fuzzy=False):
+        
+        date_datetime = parser.parse(case_info['date'], dayfirst=True)
+        
+        #if collection != 'Judgments 2000-present':
+            #Reducing 100 because if year is 2 digits, parser assumes current century
+            
+            #date_datetime = date_datetime - relativedelta(years = 100) 
+
+        if is_date(before_date, fuzzy=False):
+
+            before_date_datetime = parser.parse(before_date, dayfirst=True)
+    
+            if date_datetime > before_date_datetime:
+    
+                exclude_status = True
+
+        if is_date(after_date, fuzzy=False):
+
+            after_date_datetime = parser.parse(after_date,dayfirst=True)
+    
+            if date_datetime < after_date_datetime:
+    
+                exclude_status = True
+
     #Exclude year
 
-    potential_year_list = []
+    #potential_year_list = []
 
-    potential_year_raw_list = case_info['name'].split('[')
+    #potential_year_raw_list = case_info['name'].split('[')
 
-    for potential_year in potential_year_raw_list:
+    #for potential_year in potential_year_raw_list:
 
-        try:
-            year_decided_raw = int(potential_year[0:4])
+        #try:
+            #year_decided_raw = int(potential_year[0:4])
             
-            potential_year_list.append(year_decided_raw)
+            #potential_year_list.append(year_decided_raw)
 
-        except:
+        #except:
             
-            print('Potential year value is not integer')
+            #print('Potential year value is not integer')
 
-    if len(potential_year_list) > 0:
+    #if len(potential_year_list) > 0:
     #Defining year_decided here to avoid the possibility of year not being picked up
-        year_decided = potential_year_list[-1]
+        #year_decided = potential_year_list[-1]
 
-        if len(own_min_year) >= 4:
+        #if len(own_min_year) >= 4:
     
-            try:       
+            #try:       
     
-                if year_decided < int(own_min_year):
+                #if year_decided < int(own_min_year):
         
-                    exclude_status = True
+                    #exclude_status = True
             
-            except:
-                print('Case not excluded for earlier than min year')
+            #except:
+                #print('Case not excluded for earlier than min year')
     
-        if len(own_max_year) >= 4:
+        #if len(own_max_year) >= 4:
     
-            try:        
+            #try:        
     
-                if year_decided > int(own_max_year):
+                #if year_decided > int(own_max_year):
         
-                    exclude_status = True
+                    #exclude_status = True
     
-            except:
-                print('Case not excluded for later than max year')
+            #except:
+                #print('Case not excluded for later than max year')
 
     #Exclude judges
 
-    if len(case_info['before']) > 2:
-
+    if type(case_info['before']) == str:
+        
+        #if len(case_info['before']) > 2:
+    
         for judge in own_judges_include.replace(';', ',').split(','):
+
+            judge = judge.replace('.', '').replace(' J', '').replace(' CJ', '').replace(' ACJ', '').replace(' JJ', '')
             
-            if ((len(judge) > 0) and (judge.lower() not in case_info['before'].lower())):
+            if ((len(judge) > 2) and (judge.lower() not in case_info['before'].lower())):
             
                 exclude_status = True
             
                 break
     
         for judge in own_judges_exclude.replace(';', ',').split(','):
+
+            judge = judge.replace('.', '').replace(' J', '').replace(' CJ', '').replace(' ACJ', '').replace(' JJ', '')
             
-            if ((len(judge) > 0) and (judge.lower() in case_info['before'].lower())):
+            if ((len(judge) > 2) and (judge.lower() in case_info['before'].lower())):
             
                 exclude_status = True
             
@@ -1071,17 +1197,21 @@ def judgment_to_exclude(case_info = {},
 # %%
 #Function to get judgment links with filters
 
-def search_results_to_judgment_links_filtered(url_search_results, 
+def search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgment_counter_bound,
                                       collection, 
+                                    #hca_df, 
                                     own_parties_include, 
                                     own_parties_exclude, 
-                                    own_min_year, 
-                                    own_max_year, 
+                                    #own_min_year, 
+                                    #own_max_year, 
+                                    before_date, 
+                                    after_date, 
                                     #own_case_numbers_include, 
                                     #own_case_numbers_exclude, 
                                     own_judges_include, 
-                                    own_judges_exclude):
+                                    own_judges_exclude
+                                                ):
     
     page = requests.get(url_search_results)
     soup = BeautifulSoup(page.content, "lxml")
@@ -1109,77 +1239,44 @@ def search_results_to_judgment_links_filtered(url_search_results,
     
             soup_page = BeautifulSoup(page_page.content, "lxml")
     
-            #Get citation, judge pairs with some extra unnecessaries
-            
-            citation_judge_pairs_raw = soup_page.find_all('h5')
-    
             #Get raw links and names of cases
             
             raw_links = soup_page.find_all(class_='case')
-    
-            #Start empty citation-judge pairs and case_info list
-            
-            citation_judge_pairs = []
-            
+
             case_infos = []
-    
-            #Get all cases with info, judge names, links and citations from this pager
+
+            for raw_link in raw_links:
+                index = raw_links.index(raw_link)
+                mnc = '[' + raw_link.text.split('[')[-1]
+
+                #Try to get case info from hca_df
+                try:
+                    index_list = hca_df.index[hca_df['mnc'].str.contains(mnc, case=False, na=False, regex=False)].tolist()
+                    index = index_list[0]
                     
-            if ((len(citation_judge_pairs_raw) > 0) and (len(raw_links)>0)):
-
-                if collection != '1 CLR - 100 CLR (judgments 1903-1958)':
-
-                    for h5 in citation_judge_pairs_raw:
-                        h5_index = citation_judge_pairs_raw.index(h5)
-                        if len(h5.text)> 0: 
-                            if h5.text[-1] == 'J':
-                                citation_value = citation_judge_pairs_raw[h5_index-1].text
-                                
-                                citation_judge_pair = {'citation': citation_value, 'before': h5.text}
-                                
-                                citation_judge_pairs.append(citation_judge_pair)
+                    case_info = {'name': hca_df.loc[int(index), 'case'], 
+                                 'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
+                                 'reported': hca_df.loc[int(index), 'reported'],
+                                 'before': hca_df.loc[int(index), 'before'],
+                                 'date': hca_df.loc[index, 'date']
+                                }
                     
-                    for raw_link in raw_links:
-                        index = raw_links.index(raw_link)
-                        case_info = {'name': raw_link.text, 
-                                     'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
-                                     'citation': citation_judge_pairs[index]['citation'], 
-                                     'before': citation_judge_pairs[index]['before']
-                                    }
-                        case_infos.append(case_info)
-
-                else: #if collection = '1 CLR - 100 CLR (judgments 1903-1958)':
-
-                    for h5 in citation_judge_pairs_raw:
-                        if 'clr' in h5.text.lower():
-                            
-                            citation_value = h5.text
-                            
-                            citation_judge_pair = {'citation': citation_value, 'before': ''}
-                                
-                            citation_judge_pairs.append(citation_judge_pair)
-
-                    for raw_link in raw_links:
-                        
-                        index = raw_links.index(raw_link)
-                        
-                        case_info = {'name': raw_link.text, 
-                                     'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
-                                     'citation': citation_judge_pairs[index]['citation'], 
-                                     'before': citation_judge_pairs[index]['before']
-                                    }
-                        
-                        case_infos.append(case_info)
+                    case_infos.append(case_info)
+                    
+                except Exception as e:
+                    print(f"Can't get case info for {mnc}.")
+                    print(e)
     
             #Add cases from case_infos unless filtered out or counter reached
             
             for case_info in case_infos:
                 if counter <= judgment_counter_bound:
                     if judgment_to_exclude(case_info, 
+                            collection, 
                             own_parties_include, 
                             own_parties_exclude, 
-                            own_min_year, 
-                            own_max_year, 
+                            before_date, 
+                            after_date, 
                             #own_case_numbers_include = [], 
                             #own_case_numbers_exclude = [], 
                             own_judges_include, 
@@ -1198,7 +1295,6 @@ def search_results_to_judgment_links_filtered(url_search_results,
         else:
             break    
 
-    
     return links
 
 
@@ -1265,15 +1361,16 @@ def run(df_master):
 
     #Use the following if don't want to filter results
     #judgments_links = search_results_to_judgment_links(url_search_results, judgments_counter_bound)
-
+    
     #Use the following if want to filter results. Will be slow.
-    judgments_links = search_results_to_judgment_links_filtered(url_search_results, 
+    judgments_links = search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgments_counter_bound,
+                                    #hca_df, 
                                     df_master.loc[0, 'Collection'], 
                                     df_master.loc[0, 'Parties include'], 
                                     df_master.loc[0, 'Parties do not include'], 
-                                    df_master.loc[0, 'Before this year'], 
-                                    df_master.loc[0, 'After this year'], 
+                                   df_master.loc[0, 'Before date'], 
+                                    df_master.loc[0, 'After date'], 
                                     #df_master.loc[0, 'Case numbers include'], 
                                     #df_master.loc[0, 'Case numbers do not include'], 
                                     df_master.loc[0, 'Judges include'], 
@@ -1446,6 +1543,11 @@ if 'number_of_results' not in st.session_state:
     st.session_state['number_of_results'] = '0'
 
 
+# %%
+#Filtering message status
+#if 'filtering_message' not in st.session_state:
+    #st.session_state['filtering_message'] = False
+
 # %% [markdown]
 # ## Form before AI
 
@@ -1534,7 +1636,7 @@ if filter_toggle:
 
     #st.subheader("Filter your search results")
     
-    st.warning("The following is *not* based on the filtered search function of the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). The PREVIEW and SHOW buttons will *not* reflect your search filters.")
+    st.warning("Filtering your search results may *significantly* prolong the program processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
     
     own_parties_include_entry = st.text_input('Parties include (separate parties by comma or semi-colon)')
     st.caption('If entered, then this program will only process cases that include at least one of the parties entered.')
@@ -1542,25 +1644,37 @@ if filter_toggle:
     own_parties_exclude_entry = st.text_input('Parties do not include (separate parties by comma or semi-colon)')
     st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
     
-    own_min_year_entry = st.text_input('After this year')
+    after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
     
-    if own_min_year_entry:
+    before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
 
-        own_min_year_validity = year_check(own_min_year_entry)
+    #own_min_year_entry = st.text_input('After this year')
     
-        if not own_min_year_validity:
+    #if own_min_year_entry:
+
+        #own_min_year_validity = year_check(own_min_year_entry)
+    
+        #if not own_min_year_validity:
                 
-            st.error('You have not entered a year.')
+            #st.error('You have not entered a year.')
         
-    own_max_year_entry = st.text_input('Before this year')
+    #own_max_year_entry = st.text_input('Before this year')
     
-    if own_max_year_entry:
+    #if own_max_year_entry:
 
-        own_max_year_validity = year_check(own_max_year_entry)
+        #own_max_year_validity = year_check(own_max_year_entry)
 
-        if not own_max_year_validity:
+        #if not own_max_year_validity:
     
-            st.error('You have not entered a year.')
+            #st.error('You have not entered a year.')
+
+    #if ((own_parties_include_entry) or (own_parties_exclude_entry) or (bool(after_date_entry) == True) or (bool(before_date_entry) == True)):
+        
+        #st.session_state['filtering_message'] = True
+        
+    #else:
+        #st.session_state['filtering_message'] = False
+
     
     if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
     
@@ -1575,12 +1689,22 @@ if filter_toggle:
         
         own_judges_exclude_entry = st.text_input('Judges do not include (separate judges by comma or semi-colon)')
         st.caption('If entered, then this program will only process cases not heared by any of the judges entered.')
+        
+        #if ((own_judges_include_entry) or (own_judges_exclude_entry)):
+            #st.session_state['filtering_message'] = True
+
+        #else:
+            #st.session_state['filtering_message'] = False
     
     else:
         #own_case_numbers_include_entry = ''
         #own_case_numbers_exclude_entry = ''
         own_judges_include_entry = ''
         own_judges_exclude_entry = ''
+
+#if st.session_state.filtering_message == True:
+    
+    #st.warning("Filtering your search results may significantly prolong the program processing time.")
     
 st.subheader("Judgment metadata collection")
 
@@ -1864,7 +1988,7 @@ if run_button:
 
     #Check whether search terms entered
 
-    all_search_terms = str(collection_entry) + str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
+    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
     
     if all_search_terms.replace('None', '') == "":
 
@@ -1981,7 +2105,7 @@ if keep_button:
 
     #Check whether search terms entered
 
-    all_search_terms = str(collection_entry) + str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
+    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
     
     if all_search_terms.replace('None', '') == "":
 

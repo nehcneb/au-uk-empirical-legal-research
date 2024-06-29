@@ -875,11 +875,11 @@ phrase_entry = st.text_input('Phrase')
 
 proximity_entry  = st.text_input('Proximity')
 
-on_this_date_entry = st.date_input('On this date', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+on_this_date_entry = st.date_input('On this date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
 
-after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY")
+after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
 
-before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY")
+before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
 
 st.caption('[Relatively earlier](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) judgments will not be collected.')
 

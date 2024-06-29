@@ -800,11 +800,11 @@ mnc_entry = st.text_input("Medium neutral citation")
 
 st.caption("Must include square brackets eg [2022] NSWSC 922")
 
-startDate_entry = st.date_input("Decision date from (01/01/1999 the earliest)", value = None, format="DD/MM/YYYY")
+startDate_entry = st.date_input("Decision date from (01/01/1999 the earliest)", value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
 
 st.caption("Pre-1999 decisions are usually [not available](https://www.caselaw.nsw.gov.au/about) from NSW Caselaw and will unlikely to be collected.")
 
-endDate_entry = st.date_input("Decision date to", value = None,  format="DD/MM/YYYY")
+endDate_entry = st.date_input("Decision date to", value = None,  format="DD/MM/YYYY", min_value = date(1900, 1, 1))
 
 fileNumber_entry = st.text_input("File number")
 
