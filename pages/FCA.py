@@ -252,7 +252,7 @@ fca_courts = {'Federal Court': 'fca',
               'Federal Police Discipline Tribunal': 'tribunals%2Ffpdt', 
               'Trade Practices Tribunal': 'tribunals%2Fatpt', 
               'Supreme Court of Norfolk Island': 'nfsc',
-             'All of the above': ''}
+             'All': ''}
 
 fca_courts_list = list(fca_courts.keys())
 
@@ -831,7 +831,7 @@ except:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[judgments of select Australian federal courts and tribunals].")
+st.header(f"You have selected to study :blue[judgments of the Federal Court of Australia].")
 
 #    st.header("Judgment Search Criteria")
 
@@ -840,9 +840,11 @@ st.markdown("""**:green[Please enter your search terms.]** This program will col
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
-st.subheader("Federal court or tribunal to cover")
+st.subheader("Court or tribunal to cover")
 
 courts_entry = st.selectbox(label = 'Select or type in the court or tribunal to cover', options = fca_courts_list, index = fca_courts_list.index('Federal Court'))
+
+st.write('You may select the Federal Court, tribunals administered by the Court, the Supreme Court of Norfolk Island and the Industrial Relations Court of Australia.')
 
 st.subheader("Your search terms")
 

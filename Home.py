@@ -44,8 +44,8 @@ else:
 # %% editable=true slideshow={"slide_type": ""}
 #List of sources of information
 sources_list = ["Judgments of the High Court of Australia", 
+                 "Judgments of the Federal Court of Australia", 
                 "Judgments of the New South Wales courts and tribunals", 
-                "Judgments of select Australian federal courts and tribunals", 
                 #"Judgments of select United Kingdom courts and tribunals", 
                 "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
@@ -54,8 +54,8 @@ sources_list = ["Judgments of the High Court of Australia",
                ]
 
 source_pages = ["pages/HCA.py",
-                "pages/NSW.py", 
                 "pages/FCA.py", 
+                "pages/NSW.py", 
                 #"pages/UK.py", 
                 "pages/KR.py", 
                 "pages/ER.py", 

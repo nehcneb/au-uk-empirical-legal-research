@@ -1,3 +1,5 @@
+chromium
+chromium-driver
 poppler-utils
 tesseract-ocr-eng
 tesseract-ocr-enm
