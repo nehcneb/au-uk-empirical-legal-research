@@ -221,8 +221,8 @@ def create_df():
             'Phrase': phrase,
             'Proximity': proximity,
             'On this date': on_this_date,
-            'After date': after_date,
-            'Before date': before_date,
+            'Decision date is after': after_date,
+            'Decision date is before': before_date,
             'Legislation': legislation,
             'Cases cited': cases_cited,
             'Catchwords' : catchwords, 
@@ -653,8 +653,8 @@ def run(df_master):
                      phrase  = df_master.loc[0, 'Phrase'], 
                      proximity = df_master.loc[0, 'Proximity'], 
                      on_this_date = df_master.loc[0, 'On this date'], 
-                     after_date = df_master.loc[0, 'After date'], 
-                     before_date = df_master.loc[0, 'Before date'], 
+                     after_date = df_master.loc[0, 'Decision date is after'], 
+                     before_date = df_master.loc[0, 'Decision date is before'], 
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
@@ -757,8 +757,8 @@ def search_url(df_master):
                      phrase  = df_master.loc[0, 'Phrase'], 
                      proximity = df_master.loc[0, 'Proximity'], 
                      on_this_date = df_master.loc[0, 'On this date'], 
-                     after_date = df_master.loc[0, 'After date'], 
-                     before_date = df_master.loc[0, 'Before date'], 
+                     after_date = df_master.loc[0, 'Decision date is after'], 
+                     before_date = df_master.loc[0, 'Decision date is before'], 
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
@@ -879,9 +879,9 @@ proximity_entry  = st.text_input('Proximity')
 
 on_this_date_entry = st.date_input('On this date', value = None, format="DD/MM/YYYY")
 
-after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY")
+after_date_entry = st.date_input('Decision date is after', value = None, format="DD/MM/YYYY")
 
-before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY")
+before_date_entry = st.date_input('Decision date is before', value = None, format="DD/MM/YYYY")
 
 st.caption('[Relatively earlier](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) judgments will not be collected.')
 

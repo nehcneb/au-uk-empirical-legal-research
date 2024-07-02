@@ -763,7 +763,7 @@ st.write(f'**:green[Please enter your search terms.]** This program will collect
 
 st.caption("During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
 
-st.subheader("NSW courts and tribunals to cover")
+st.subheader("Courts and tribunals to cover")
 
 default_on_courts = st.checkbox('Prefill the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court')
 

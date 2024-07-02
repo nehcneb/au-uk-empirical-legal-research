@@ -224,7 +224,7 @@ def create_df():
         before_date = str(before_date_entry.strftime('%d')) + '-' + str(before_date_entry.strftime('%B'))[:3] + '-' + str(before_date_entry.strftime('%Y'))
 
     except:
-        print('Before date not entered')
+        print('Decision date is before not entered')
         pass
 
     
@@ -234,7 +234,7 @@ def create_df():
         after_date = str(after_date_entry.strftime('%d'))  + '-' + str(after_date_entry.strftime('%B'))[:3]  + '-' + str(after_date_entry.strftime('%Y'))
         
     except:
-        print('After date not entered')
+        print('Decision date is after not entered')
     
     #GPT choice and entry
     gpt_activation_status = False
@@ -286,8 +286,8 @@ def create_df():
             'Parties do not include': own_parties_exclude, 
             #'Before this year': own_min_year, 
             #'After this year': own_max_year, 
-           'After date': after_date,
-            'Before date': before_date, 
+           'Decision date is after': after_date,
+            'Decision date is before': before_date, 
            #'Case numbers include': own_case_numbers_include, 
             #'Case numbers do not include': own_case_numbers_exclude, 
             'Judges include': own_judges_include, 
@@ -1369,8 +1369,8 @@ def run(df_master):
                                     df_master.loc[0, 'Collection'], 
                                     df_master.loc[0, 'Parties include'], 
                                     df_master.loc[0, 'Parties do not include'], 
-                                   df_master.loc[0, 'Before date'], 
-                                    df_master.loc[0, 'After date'], 
+                                   df_master.loc[0, 'Decision date is before'], 
+                                    df_master.loc[0, 'Decision date is after'], 
                                     #df_master.loc[0, 'Case numbers include'], 
                                     #df_master.loc[0, 'Case numbers do not include'], 
                                     df_master.loc[0, 'Judges include'], 
@@ -1644,9 +1644,9 @@ if filter_toggle:
     own_parties_exclude_entry = st.text_input('Parties do not include (separate parties by comma or semi-colon)')
     st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
     
-    after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY")
+    after_date_entry = st.date_input('Decision date is after', value = None, format="DD/MM/YYYY")
     
-    before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY")
+    before_date_entry = st.date_input('Decision date is before', value = None, format="DD/MM/YYYY")
 
     #own_min_year_entry = st.text_input('After this year')
     
