@@ -1644,9 +1644,9 @@ if filter_toggle:
     own_parties_exclude_entry = st.text_input('Parties do not include (separate parties by comma or semi-colon)')
     st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
     
-    after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
+    after_date_entry = st.date_input('After date', value = None, format="DD/MM/YYYY")
     
-    before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY", min_value = date(1900, 1, 1))
+    before_date_entry = st.date_input('Before date', value = None, format="DD/MM/YYYY")
 
     #own_min_year_entry = st.text_input('After this year')
     
