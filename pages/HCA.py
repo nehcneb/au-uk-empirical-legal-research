@@ -1051,11 +1051,18 @@ def max_year_validity(collection, max_year_entry):
 # %%
 #Load hca_data
 
+@st.cache_data
+def load_data(url):
+    df = pd.read_csv(url)
+    return df
+
 hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/hca_data.csv'
 
-response = requests.get(hca_data_url)
+#response = requests.get(hca_data_url)
 
-hca_df = pd.read_csv(StringIO(response.text))
+#hca_df = pd.read_csv(StringIO(response.text))
+
+hca_df = load_data(hca_data_url)
 
 
 # %%
@@ -1449,6 +1456,7 @@ def run(df_master):
 
 # %%
 #Function to get link to search results and number of results
+
 def search_url(df_master):
     df_master = df_master.fillna('')
     
