@@ -39,6 +39,38 @@ import streamlit_ext as ste
 def own_account_allowed():
 	return 0
 
+
+# %%
+#Check if string is date
+
+#From https://stackoverflow.com/questions/25341945/check-if-string-has-date-any-format
+
+def is_date(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
+
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try: 
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
+
+
+
+# %%
+def date_parser(string):
+    try:
+        date = parser.parse(string, dayfirst=True)
+        return date
+    except:
+        return None
+    
+
+
 # %%
 #today
 today_in_nums = str(datetime.now())[0:10]

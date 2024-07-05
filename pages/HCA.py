@@ -87,7 +87,7 @@ st.set_page_config(
 # # High Court of Australia search engine
 
 # %%
-from common_functions import link
+from common_functions import link, is_date
 
 # %%
 #Collections available
@@ -423,27 +423,6 @@ def pdf_judgment(url):
         text_list.append(page.extract_text())
     
     return str(text_list)
-
-
-
-# %%
-#Check if string is date
-
-#From https://stackoverflow.com/questions/25341945/check-if-string-has-date-any-format
-
-def is_date(string, fuzzy=False):
-    """
-    Return whether the string can be interpreted as a date.
-
-    :param string: str, string to check for date
-    :param fuzzy: bool, ignore unknown tokens in string if True
-    """
-    try: 
-        parse(string, fuzzy=fuzzy)
-        return True
-
-    except ValueError:
-        return False
 
 
 
