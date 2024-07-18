@@ -111,7 +111,7 @@ def get_driver():
 
 browser = get_driver()
 
-browser.implicitly_wait(10)
+browser.implicitly_wait(30)
 
 # %%
 from common_functions import link
