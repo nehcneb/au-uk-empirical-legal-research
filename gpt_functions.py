@@ -65,7 +65,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %% [markdown]
-# # gpt-3.5 and 4o
+# # gpt-3.5, 4o-mini and 4o
 
 # %%
 #Upperbound on the length of questions for GPT
@@ -114,7 +114,8 @@ def is_api_key_valid(key_to_check):
     
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
+            #model="gpt-3.5-turbo-0125",
+            model = 'gpt-4o-mini', 
             messages=[{"role": "user", "content": '1+1='}], 
             max_tokens = 1
         )
@@ -134,6 +135,9 @@ def gpt_input_cost(gpt_model):
         
     if gpt_model == "gpt-4o":
         gpt_input_cost = 1/1000000*5
+
+    if gpt_model == "gpt-4o-mini":
+        gpt_input_cost = 1/1000000*0.15
     return gpt_input_cost
 
 def gpt_output_cost(gpt_model):
@@ -142,7 +146,10 @@ def gpt_output_cost(gpt_model):
         
     if gpt_model == "gpt-4o":
         gpt_output_cost = 1/1000000*15
-        
+
+    if gpt_model == "gpt-4o-mini":
+        gpt_output_cost = 1/1000000*0.6
+    
     return gpt_output_cost
 
 #As of 2024-06-07, questions are capped at about 1000 characters ~ 250 tokens, role_content/system_instruction is about 115 tokens, json_direction is about 11 tokens, answers_json is about 8 tokens plus 30 tokens per question 
@@ -158,6 +165,9 @@ def tokens_cap(gpt_model):
     if gpt_model == "gpt-4o":
         tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
+    if gpt_model == "gpt-4o-mini":
+        tokens_cap = int(128000 - 3000) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 4096.
+
     return tokens_cap
 
 def max_output(gpt_model, messages_for_GPT):
@@ -169,6 +179,10 @@ def max_output(gpt_model, messages_for_GPT):
     if gpt_model == "gpt-4o":
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
+    
+    if gpt_model == "gpt-4o-mini":
+        
+        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
     return min(4096, max_output_tokens)
     

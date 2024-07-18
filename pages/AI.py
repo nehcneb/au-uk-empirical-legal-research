@@ -204,7 +204,7 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
     
     if ai_choice in {'GPT', 'BambooLLM'}:            
 
-        #if gpt_model_choice == 'gpt-3.5-turbo-0125':
+        #if gpt_model_choice == 'gpt-4o-mini':
             
         agent = Agent(df, 
                       config={"llm": llm, 
@@ -256,7 +256,7 @@ def ai_model_description(ai_choice):
     
     if ai_choice == 'GPT': #llm.type == 'GPT':
     
-        model_description = "GPT model gpt-3.5-turbo-0125 is selected by default. This model can explain its reasoning."
+        model_description = "GPT model gpt-4o-mini is selected by default. This model can explain its reasoning."
     
     if ai_choice == 'BambooLLM': #llm.type == 'Bamboollm':
     
@@ -982,7 +982,7 @@ if 'own_account' not in st.session_state:
 #Initilize default gpt model
 
 if 'gpt_model' not in st.session_state:
-    st.session_state['gpt_model'] = "gpt-3.5-turbo-0125"
+    st.session_state['gpt_model'] = "gpt-4o-mini"
 
 #Initialize default gpt enhacement status
 
@@ -1211,9 +1211,9 @@ if own_account_allowed() > 0:
                     st.session_state['gpt_api_key_validity'] = True
                     st.success('Your API key is valid.')
         
-            st.markdown("""**:green[You can use the latest version of GPT model (gpt-4o),]** which is :red[10 times more expensive, per character] than the default model (gpt-3.5-turbo) which you can use for free.""")  
+            st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
             
-            gpt_enhancement_entry = st.checkbox('Use the latest GPT model', value = False)
+            gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
             st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
             
             if gpt_enhancement_entry == True:
@@ -1227,7 +1227,7 @@ if own_account_allowed() > 0:
                 #Reset AI first
                 pai.clear_cache()
                 
-                st.session_state.gpt_model = "gpt-3.5-turbo-0125"
+                st.session_state.gpt_model = "gpt-4o-mini"
                 st.session_state.gpt_enhancement_entry = False
             
             st.write(f'**:green[You can remove the cap on the number of instructions to process.]** The default cap is {default_instructions_bound}.')
@@ -1244,7 +1244,7 @@ if own_account_allowed() > 0:
         else:
             st.session_state['own_account'] = False
         
-            st.session_state.gpt_model = "gpt-3.5-turbo-0125"
+            st.session_state.gpt_model = "gpt-4o-mini"
         
             st.session_state.instructions_bound = default_instructions_bound
         
@@ -1303,7 +1303,7 @@ st.subheader('Your spreadsheet')
 #AI warning
 if st.session_state.ai_choice == 'GPT':
 
-    if st.session_state.gpt_model == 'gpt-3.5-turbo-0125':
+    if st.session_state.gpt_model == 'gpt-4o-mini':
         st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
 
     if st.session_state.gpt_model == "gpt-4o":
@@ -1832,7 +1832,7 @@ if len(str(st.session_state.response)) > 0:
     
             st.subheader('Conversation')
     
-            st.write('Instructions and responses are displayed from earliest to latest.')
+            st.write('Instructions and responses are displayed from earliest to flagship.')
     
             st.caption(spreadsheet_caption)
     

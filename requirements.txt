@@ -21,8 +21,9 @@ pytesseract
 pdf2image
 mammoth
 pyxlsb
-pandasai==2.2.5
+pandasai
 PyYAML
 openpyxl
 selenium
 webdriver-manager
+#undetected-chromedriver
