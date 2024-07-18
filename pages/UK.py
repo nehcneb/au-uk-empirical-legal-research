@@ -360,7 +360,7 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
             else:
                 break
             
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(10, 20))
 
     return links
 
@@ -417,7 +417,7 @@ def meta_judgment_dict(judgment_url_xml):
 
     #Get judgment
 
-    pause.seconds(np.random.randint(5, 15))
+    pause.seconds(np.random.randint(10, 20))
 
     html_link = judgment_url_xml.replace('/data.xml', '')
     page_html = requests.get(html_link)
@@ -523,7 +523,7 @@ def run(df_master):
 #        judgments_all_info = { **meta_data, **judgment_dict}
 #        judgments_file.append(judgments_all_info)
         judgments_file.append(judgment_dict)
-        pause.seconds(np.random.randint(5, 15))
+        pause.seconds(np.random.randint(10, 20))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

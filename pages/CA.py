@@ -1109,7 +1109,7 @@ def run(df_master):
         judgment_dict = meta_judgment_dict(link)
 
         judgments_file.append(judgment_dict)
-        pause.seconds(np.random.randint(5, 15))
+        pause.seconds(np.random.randint(10, 20))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
