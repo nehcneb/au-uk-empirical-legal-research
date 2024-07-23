@@ -1077,15 +1077,16 @@ keep_button = st.button('DOWNLOAD your entries')
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
 
 #if st.session_state.gpt_model == "gpt-4o":
-
-st.markdown("""The English Reports are available as PDFs. By default, this program will use an Optical Character Recognition (OCR) engine to extract text from the relevant PDFs, and then send such text to GPT.
-
+if st.session_state.own_account == True:
+    
+    st.markdown("""The English Reports are available as PDFs. By default, this program will use an Optical Character Recognition (OCR) engine to extract text from the relevant PDFs, and then send such text to GPT.
+    
 Alternatively, you can send the relevant PDFs to GPT as images. This alternative approach may produce better responses for "untidy" PDFs, but tends to be slower and costlier than the default approach.
 """)
-
-#st.write('Not getting the best responses for your images? You can try a more costly')
-#b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
-run_button_b64 = st.button(label = 'SEND PDFs to GPT as images')
+    
+    #st.write('Not getting the best responses for your images? You can try a more costly')
+    #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
+    run_button_b64 = st.button(label = 'SEND PDFs to GPT as images')
 
 #test_button = st.button('Test')
 
@@ -1308,121 +1309,122 @@ if run_button:
 
 # %%
 #if st.session_state.gpt_model == "gpt-4o":
+if st.session_state.own_account == True:
 
-if run_button_b64:
-
-    all_search_terms = str(query_entry)
-        
-    if all_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
-
-    elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
-
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-                
-        st.session_state['need_resetting'] = 1
-
-    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-            
-        st.warning('You have not validated your API key.')
-        quit()
-
-    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
-
-        st.warning('You have not entered a valid API key.')
-        quit()  
-        
-    else:
-        
-        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 1-2 minutes per judgment.""")
-        #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-
-        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
-
-            try:
-
-                #Create spreadsheet of responses
-                df_master = create_df()
+    if run_button_b64:
     
-                #Activate user's own key or mine
-                if st.session_state.own_account == True:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
-    
-                else:
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-
-                openai.api_key = API_key
-                
-                #Produce results
-
-                df_individual_output = run_b64_er(df_master)
-
-                #Keep results in session state
-                st.session_state["df_individual_output"] = df_individual_output#.astype(str)
-        
-                st.session_state["df_master"] = df_master
-
-                #Change session states
-                st.session_state['need_resetting'] = 1
+        all_search_terms = str(query_entry)
             
-                st.session_state["page_from"] = 'pages/ER.py'
-        
-                #Write results
-        
-                st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
-                
-                #Button for downloading results
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-                csv_output = convert_df_to_csv(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a CSV (for use in Excel etc)", 
-                    data = csv_output,
-                    file_name= output_name + '.csv', 
-                    mime= "text/csv", 
-        #            key='download-csv'
-                )
-        
-                excel_xlsx = convert_df_to_excel(df_individual_output)
-                
-                ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
-                                    data=excel_xlsx,
-                                    file_name= output_name + '.xlsx', 
-                                    mime='application/vnd.ms-excel',
-                                   )
-        
-                json_output = convert_df_to_json(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a JSON", 
-                    data = json_output,
-                    file_name= output_name + '.json', 
-                    mime= "application/json", 
-                )
-        
-                st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
+        if all_search_terms.replace('None', '') == "":
+    
+            st.warning('You must enter some search terms.')
+    
+        elif int(consent) == 0:
+            st.warning("You must click on 'Yes, I agree.' to run the program.")
+    
+        elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
+            st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
                     
-                #Keep record on Google sheet
-                #Obtain google spreadsheet       
-                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
-                #df_master["Processed"] = datetime.now()
-                #df_master.pop("Your GPT API key")
-                #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="ER", data=df_to_update, )
-        
-            except Exception as e:
-                st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
-                st.exception(e)
+            st.session_state['need_resetting'] = 1
+    
+        elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
                 
+            st.warning('You have not validated your API key.')
+            quit()
+    
+        elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
+    
+            st.warning('You have not entered a valid API key.')
+            quit()  
+            
+        else:
+            
+            st.markdown("""Your results will be available for download soon. The estimated waiting time is about 1-2 minutes per judgment.""")
+            #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
+    
+            with st.spinner("Running... Please :red[don't change] your entries (yet)."):
+    
+                try:
+
+                    #Create spreadsheet of responses
+                    df_master = create_df()
+        
+                    #Activate user's own key or mine
+                    if st.session_state.own_account == True:
+                        
+                        API_key = df_master.loc[0, 'Your GPT API key']
+        
+                    else:
+                        API_key = st.secrets["openai"]["gpt_api_key"]
+
+                    openai.api_key = API_key
+                    
+                    #Produce results
+    
+                    df_individual_output = run_b64_er(df_master)
+    
+                    #Keep results in session state
+                    st.session_state["df_individual_output"] = df_individual_output#.astype(str)
+            
+                    st.session_state["df_master"] = df_master
+
+                    #Change session states
+                    st.session_state['need_resetting'] = 1
+                
+                    st.session_state["page_from"] = 'pages/ER.py'
+            
+                    #Write results
+            
+                    st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
+                    
+                    #Button for downloading results
+                    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
+            
+                    csv_output = convert_df_to_csv(df_individual_output)
+                    
+                    ste.download_button(
+                        label="Download your results as a CSV (for use in Excel etc)", 
+                        data = csv_output,
+                        file_name= output_name + '.csv', 
+                        mime= "text/csv", 
+            #            key='download-csv'
+                    )
+            
+                    excel_xlsx = convert_df_to_excel(df_individual_output)
+                    
+                    ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
+                                        data=excel_xlsx,
+                                        file_name= output_name + '.xlsx', 
+                                        mime='application/vnd.ms-excel',
+                                       )
+            
+                    json_output = convert_df_to_json(df_individual_output)
+                    
+                    ste.download_button(
+                        label="Download your results as a JSON", 
+                        data = json_output,
+                        file_name= output_name + '.json', 
+                        mime= "application/json", 
+                    )
+            
+                    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+    
+                        
+                    #Keep record on Google sheet
+                    #Obtain google spreadsheet       
+                    #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+                    #df_google = conn.read()
+                    #df_google = df_google.fillna('')
+                    #df_google=df_google[df_google["Processed"]!='']
+                    #df_master["Processed"] = datetime.now()
+                    #df_master.pop("Your GPT API key")
+                    #df_to_update = pd.concat([df_google, df_master])
+                    #conn.update(worksheet="ER", data=df_to_update, )
+            
+                except Exception as e:
+                    st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
+                    st.exception(e)
+                    
 
 
 # %%

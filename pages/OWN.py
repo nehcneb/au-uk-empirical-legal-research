@@ -1331,7 +1331,7 @@ keep_button = st.button('DOWNLOAD your entries')
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
     
 #if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
-if uploaded_images:
+if ((st.session_state.own_account == True) and (uploaded_images)):
 
     st.markdown("""By default, this program will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
 
@@ -1569,7 +1569,7 @@ if run_button:
 
 # %%
 #if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
-if uploaded_images:
+if ((st.session_state.own_account == True) and (uploaded_images)):
     
     if run_button_b64:
     
