@@ -34,6 +34,7 @@ from io import BytesIO
 import ast
 #from dotenv import load _dotenv
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import RendererAgg
 #import statsmodels.api as sm
 #import statsmodels.formula.api as smf
 #from sklearn.ensemble import RandomForestClassifier
