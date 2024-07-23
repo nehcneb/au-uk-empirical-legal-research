@@ -34,7 +34,7 @@ from io import BytesIO
 import ast
 #from dotenv import load _dotenv
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import RendererAgg
+#from matplotlib.backends.backend_agg import RendererAgg
 #import statsmodels.api as sm
 #import statsmodels.formula.api as smf
 #from sklearn.ensemble import RandomForestClassifier
@@ -413,55 +413,58 @@ def pandasai_ask():
         #For all GPT models, show any figure generated
         #st.write(f'The number of figures is {plt.get_fignums()}')
 
-        #if '.png' in str(response)[-4:]:
-        if plt.get_fignums():
-            try:
-                #st.write('**Visualisation**')
-        
-                fig_to_plot = plt.gcf()
-                st.pyplot(fig = fig_to_plot)
-                
-                #Keep record of response, cost and tokens
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
-
-                #Enable downloading
-                pdf_to_download = io.BytesIO()
-                png_to_download = io.BytesIO()
-
-                col1e, col2e = st.columns(2, gap = 'small')
-                
-                with col1e:
+        if (('.png' in str(response)[-4:]) or (plt.get_fignums())):
+            if plt.get_fignums():
+                try:
+                    #st.write('**Visualisation**')
             
-                    plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
+                    fig_to_plot = plt.gcf()
+                    st.pyplot(fig = fig_to_plot)
                     
-                    pdf_button = ste.download_button(
-                       label="DOWNLOAD as a PDF",
-                       data=pdf_to_download,
-                       file_name='chart.pdf',
-                       mime="image/pdf"
-                    )
-                with col2e:
-                    plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
+                    #Keep record of response, cost and tokens
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
+    
+                    #Enable downloading
+                    pdf_to_download = io.BytesIO()
+                    png_to_download = io.BytesIO()
+    
+                    col1e, col2e = st.columns(2, gap = 'small')
                     
-                    png_button = ste.download_button(
-                       label="DOWNLOAD as a PNG",
-                       data=png_to_download,
-                       file_name='chart.png',
-                       mime="image/png"
-                    )
+                    with col1e:
                 
-                #st.write('image') #If st.pyplot doesn't work
+                        plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
+                        
+                        pdf_button = ste.download_button(
+                           label="DOWNLOAD as a PDF",
+                           data=pdf_to_download,
+                           file_name='chart.pdf',
+                           mime="image/pdf"
+                        )
+                    with col2e:
+                        plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
+                        
+                        png_button = ste.download_button(
+                           label="DOWNLOAD as a PNG",
+                           data=png_to_download,
+                           file_name='chart.png',
+                           mime="image/png"
+                        )
+                    
+                    #Keep record of response, cost and tokens
+                    #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
+        
+                except Exception as e:
+                        
+                    print(e)     
+
+
+            else: #If st.pyplot doesn't work
+                #st.write('image')
+                st.warning('Image produced but may not visualise properly.')
                 
-                #st.image(response)
+                st.image(image = response) #, use_column_width = 'never', output_format='png')                
                 
-                #st.caption('Right click to save this image.')
-    
-                #Keep record of response, cost and tokens
-                #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
-    
-            except Exception as e:
-                st.error('Image produced but failed to visualise.')
-                print(e)
+                st.caption('Right click to save this image.')
     
         #For displaying logs
         #st.subheader('Logs')
@@ -1598,9 +1601,9 @@ reset_button = st.button('RESET to get fresh responses', type = 'primary')#, hel
 # %%
 # Generate output
 
-#if st.button('Test'):
+if st.button('Test'):
 
-    #pandasai_ask_test()
+    pandasai_ask_test()
 
     #st.dataframe(st.session_state.edited_df)
 
