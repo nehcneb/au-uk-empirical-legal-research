@@ -675,7 +675,7 @@ def run(df_master, uploaded_docs, uploaded_images):
 
 
 # %% [markdown]
-# # For gpt-4o vision, own file only
+# # For vision, own file only
 
 # %%
 #Import functions
@@ -1003,15 +1003,18 @@ def run_b64_own(df_master, uploaded_images):
     
     df_individual = pd.read_json(json_individual)
 
+    #Instruct GPT
+
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
     
     #GPT model
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        
-        gpt_model = "gpt-4o"
 
-    #apply GPT_individual to each respondent's file spreadsheet
-    
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+    if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        gpt_model = "gpt-4o"
+    else:        
+        gpt_model = "gpt-4o-mini"
+        
+    #apply GPT_individual to each respondent's judgment spreadsheet
 
     questions_json = df_master.loc[0, 'questions_json']
 
@@ -1028,6 +1031,8 @@ def run_b64_own(df_master, uploaded_images):
             print(f"No {column} column.")
 
     return df_updated
+    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -1325,7 +1330,8 @@ keep_button = st.button('DOWNLOAD your entries')
 
 reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
     
-if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
+#if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
+if uploaded_images:
 
     st.markdown("""By default, this program will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
 
@@ -1562,7 +1568,8 @@ if run_button:
 
 
 # %%
-if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
+#if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
+if uploaded_images:
     
     if run_button_b64:
     

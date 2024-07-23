@@ -431,7 +431,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
 
 # %% [markdown]
-# # gpt-4o vision
+# # Vision
 
 # %%
 #Tokens counter
