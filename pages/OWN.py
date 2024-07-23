@@ -1043,7 +1043,7 @@ from common_functions import open_page, clear_cache_except_validation_df_master,
 # %%
 #Page bound
 
-default_page_bound = 50
+default_page_bound = 100
 
 print(f"\nThe maximum number of pages per file is {default_page_bound}.")
 
@@ -1247,23 +1247,23 @@ if own_account_allowed() > 0:
 
         #st.session_state.file_counter_bound = file_counter_bound_entry
 
-        file_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_file_counter_bound), key = 'file_counter_upper_bound')
+        file_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_file_counter_bound))
 
         if file_counter_bound_entry:
-            wrong_number_files_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_file_counter_bound} files instead.'
+            wrong_number_files_warning = f'You have not entered a whole number between 1 and 200. The program will process up to {default_file_counter_bound} files instead.'
             try:
                 st.session_state.file_counter_bound = int(file_counter_bound_entry)
             except:
                 st.warning(wrong_number_files_warning)
                 st.session_state.file_counter_bound = default_file_counter_bound
 
-            if ((st.session_state.file_counter_bound <= 0) or (st.session_state.file_counter_bound > 100)):
+            if ((st.session_state.file_counter_bound <= 0) or (st.session_state.file_counter_bound > 200)):
                 st.warning(wrong_number_files_warning)
                 st.session_state.file_counter_bound = default_file_counter_bound
     
         st.write(f'**:orange[You can increase the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
         
-        page_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_page_bound), key = 'page_upper_bound')
+        page_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_page_bound))
 
         if page_bound_entry:
             wrong_number_page_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_page_bound} files instead.'
