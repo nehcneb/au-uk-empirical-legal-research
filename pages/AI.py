@@ -941,10 +941,10 @@ if 'df_produced' not in st.session_state:
 
     st.session_state['df_produced'] = pd.DataFrame([])
 
-#Initalize df_to_analyse:
-if 'df_to_analyse' not in st.session_state:
+#Initalize st.session_state.df_to_analyse:
+if 'st.session_state.df_to_analyse' not in st.session_state:
 
-    st.session_state['df_to_analyse'] = pd.DataFrame([])
+    st.session_state['st.session_state.df_to_analyse'] = pd.DataFrame([])
 
 #Initalize edited_df:
 if 'edited_df' not in st.session_state:
@@ -1294,11 +1294,8 @@ else: #len(st.session_state.df_uploaded) > 0:
     st.session_state.df_to_analyse = st.session_state.df_uploaded
 
 #Check if any spreadsheet is available for analysis
-if len(st.session_state.df_to_analyse) > 0:
+if len(st.session_state.df_to_analyse) == 0:
 
-    df_to_analyse = st.session_state.df_to_analyse
-    
-else:
     st.warning('Please upload a spreadsheet.')
     quit()
 
@@ -1331,7 +1328,7 @@ everything_error_to_show = 'Failed to make spreadsheet editable. '
 
 link_heading_config = {} 
 
-link_headings_list = link_headings_picker(df_to_analyse)
+link_headings_list = link_headings_picker(st.session_state.df_to_analyse)
 
 #try:
         
@@ -1339,7 +1336,7 @@ for link_heading in link_headings_list:
     
     link_heading_config[link_heading] = st.column_config.LinkColumn(display_text = 'Click')
 
-df_to_analyse = clean_link_columns(df_to_analyse)
+st.session_state.df_to_analyse = clean_link_columns(st.session_state.df_to_analyse)
 
     #except Exception as e:
 
@@ -1355,11 +1352,11 @@ df_to_analyse = clean_link_columns(df_to_analyse)
 try:
     #Must do this because pandasai won't work with lists
 
-    list_cols = list_cols_picker(df_to_analyse)
+    list_cols = list_cols_picker(st.session_state.df_to_analyse)
     
-    df_to_analyse = list_col_to_str(df_to_analyse)
+    st.session_state.df_to_analyse = list_col_to_str(st.session_state.df_to_analyse)
 
-    #st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+    #st.session_state["edited_df"] = st.data_editor(st.session_state.df_to_analyse,  column_config=link_heading_config)
 
     if len(list_cols) > 0:
 
@@ -1378,7 +1375,7 @@ except Exception as e_list:
 #Try to display df without some conversion to string
 try:
     
-    st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+    st.session_state["edited_df"] = st.data_editor(st.session_state.df_to_analyse,  column_config=link_heading_config)
 
 except Exception as e:
 
@@ -1389,11 +1386,11 @@ except Exception as e:
     #Try to convert all numerical data to string type
     try:
 
-        non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
+        non_num_cols = num_non_num_headings_picker(st.session_state.df_to_analyse)["Non-numerical columns"]
 
-        df_to_analyse[non_num_cols] = df_to_analyse[non_num_cols].astype(str)
+        st.session_state.df_to_analyse[non_num_cols] = st.session_state.df_to_analyse[non_num_cols].astype(str)
 
-        st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+        st.session_state["edited_df"] = st.data_editor(st.session_state.df_to_analyse,  column_config=link_heading_config)
 
         if len(non_num_cols) > 0:
         
@@ -1403,9 +1400,9 @@ except Exception as e:
     
         #Activate below if wants to convert non-numerical columns with nonetype cells to empty string type
         
-        #df_to_analyse = non_num_fill_blank(df_to_analyse)
+        #st.session_state.df_to_analyse = non_num_fill_blank(st.session_state.df_to_analyse)
         
-        #if len(num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]) > 0:
+        #if len(num_non_num_headings_picker(st.session_state.df_to_analyse)["Non-numerical columns"]) > 0:
     
             #non_num_cols_error = 'Nonetype cells in non-numerical columns have been converted to empty strings. '
                     
@@ -1419,9 +1416,9 @@ except Exception as e:
 
         try:
         
-            df_to_analyse = df_to_analyse.astype(str)
+            st.session_state.df_to_analyse = st.session_state.df_to_analyse.astype(str)
     
-            st.session_state["edited_df"] = st.data_editor(df_to_analyse,  column_config=link_heading_config)
+            st.session_state["edited_df"] = st.data_editor(st.session_state.df_to_analyse,  column_config=link_heading_config)
     
             non_textual_error_to_show = 'Non-textual data have been converted to plain text. '
         
@@ -1433,7 +1430,7 @@ except Exception as e:
     
             print(e_numeric)
 
-            st.session_state["edited_df"] = st.dataframe(df_to_analyse,  column_config=link_heading_config)
+            st.session_state["edited_df"] = st.dataframe(st.session_state.df_to_analyse,  column_config=link_heading_config)
     
             conversion_msg_to_show += everything_error_to_show
 
@@ -1607,7 +1604,7 @@ reset_button = st.button('RESET to get fresh responses', type = 'primary')#, hel
 
     #st.dataframe(st.session_state.edited_df)
 
-    #non_num_cols = num_non_num_headings_picker(df_to_analyse)["Non-numerical columns"]
+    #non_num_cols = num_non_num_headings_picker(st.session_state.df_to_analyse)["Non-numerical columns"]
 
     #st.session_state.edited_df[non_num_cols] = st.session_state.edited_df[non_num_cols].astype(str)
 
