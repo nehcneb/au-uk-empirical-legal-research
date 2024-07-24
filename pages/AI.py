@@ -1601,9 +1601,9 @@ reset_button = st.button('RESET to get fresh responses', type = 'primary')#, hel
 # %%
 # Generate output
 
-if st.button('Test'):
+#if st.button('Test'):
 
-    pandasai_ask_test()
+    #pandasai_ask_test()
 
     #st.dataframe(st.session_state.edited_df)
 
