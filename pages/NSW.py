@@ -369,7 +369,7 @@ def short_judgment(html_link):
     judgment_type = ''
 
     #Check if judgment contains PDF link
-    PDF_raw_link = soup_html.find('a', text='See Attachment (PDF)')
+    PDF_raw_link = soup_html.find('a', string='See Attachment (PDF)')
     
     if str(PDF_raw_link).lower() != 'none':
         PDF_link = 'https://www.caselaw.nsw.gov.au' + PDF_raw_link.get('href')    
