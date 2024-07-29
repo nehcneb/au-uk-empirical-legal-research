@@ -241,7 +241,11 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
 # %%
 #For modern judgments, define system role content for GPT
-role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment or metadata, include a reference to those paragraphs, pages or sections. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+role_content_raw = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment or metadata, include a reference to those paragraphs, pages or sections. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+
+safeguards = "Where you are asked to identity personal information or violate anyone's privacy, answer 'potential privacy violation'. " 
+
+role_content = role_content_raw + safeguards
 
 #role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
