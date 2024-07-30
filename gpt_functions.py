@@ -116,7 +116,7 @@ def is_api_key_valid(key_to_check):
         completion = openai.chat.completions.create(
             #model="gpt-3.5-turbo-0125",
             model = 'gpt-4o-mini', 
-            messages=[{"role": "user", "content": '1+1='}], 
+            messages=[{"role": "user", "content": 'Hi'}], 
             max_tokens = 1
         )
     except:
