@@ -267,8 +267,7 @@ def create_df():
     if date_from_entry != 'None':
         
         try:
-            after_date = date_from_entry.strftime("%d/%m/%Y")
-            new_row['Date from'] = after_date
+            new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
 
         except:
             print('Date from not entered.')
@@ -277,8 +276,7 @@ def create_df():
 
         try:
 
-            before_date = date_to_entry.strftime("%d/%m/%Y")
-            new_row['Date to'] = before_date
+            new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
             
         except:
             print('Date to not entered.')
