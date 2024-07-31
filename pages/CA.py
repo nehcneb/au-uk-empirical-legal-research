@@ -1685,7 +1685,7 @@ if run_button:
                 #Change session states
                 st.session_state['need_resetting'] = 1
                 
-                st.session_state["page_from"] = 'pages/FCA.py'
+                st.session_state["page_from"] = 'pages/CA.py'
         
                 #Write results
         

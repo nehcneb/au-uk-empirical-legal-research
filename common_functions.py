@@ -38,7 +38,7 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-	return 0
+	return 1
 
 
 # %%
@@ -91,7 +91,7 @@ scraper_pause_mean = int((15-5)/2)
 # %%
 #Lowerbound on length of judgment text to proccess, in tokens
 
-judgment_text_lower_bound = 1000
+judgment_text_lower_bound = 5000
 
 
 # %%
