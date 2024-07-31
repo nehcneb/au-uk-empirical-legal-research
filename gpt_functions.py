@@ -215,7 +215,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
     else:
         judgment_to_string = str(judgment_json["judgment"])
         
-    judgment_content = f'Based on the metadata and judgment in the following JSON: """ {json.dumps(judgment_json)} """'
+    judgment_content = f'Based on the metadata and judgment in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
 
     judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
     
@@ -233,7 +233,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
         judgment_json["judgment"] = judgment_string_trimmed     
         
-        judgment_content_capped = f'Based on the metadata and judgment in the following JSON:  """ {json.dumps(judgment_json)} """'
+        judgment_content_capped = f'Based on the metadata and judgment in the following JSON:  """ {json.dumps(judgment_json, default=str)} """'
         
         return judgment_content_capped
         
@@ -272,7 +272,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Give responses in the following JSON form: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -399,7 +399,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
             #Calculate questions tokens and cost
 
-            questions_tokens = num_tokens_from_string(json.dumps(questions_json), "cl100k_base")
+            questions_tokens = num_tokens_from_string(json.dumps(questions_json, default = str), "cl100k_base")
 
             #Calculate other instructions' tokens
 

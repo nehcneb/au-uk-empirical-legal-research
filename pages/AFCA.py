@@ -219,6 +219,7 @@ def create_df():
             'Issue': '', 
             'Date from': '',
             'Date to': '',
+            'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': '', 
             'Use GPT': False,
@@ -295,6 +296,14 @@ def create_df():
     
     except:
         print('GPT questions not entered.')
+
+    #metadata choice
+    try:
+        meta_data_choice = meta_data_entry
+        new_row['Metadata inclusion'] = meta_data_choice
+    
+    except:
+        print('Metadata choice not entered.')
 
     df_master_new = pd.DataFrame(new_row, index = [0])
             
@@ -1373,22 +1382,51 @@ def afca_search(keywordsearch_input = '',
     #Get search results
     submit_button.click()
 
-    urls = []
+    #Get links only
+    #urls = []
+    #try:
+        #a_tags = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'kb-article')]")))
+        #for tag in a_tags:
+            #url = tag.get_attribute('href')
+            #if 'searchpublisheddecisions' in str(url):
+                #urls.append(url)
+    #except Exception as e:
+        #print('Search terms returned no results.')
+        #print(e)
+
+    #return {'url_sum': len(set(urls)), 'urls': list(set(urls))}   
+
+    #Get metadata
+
+    case_list = [] #For preview
+
+    urls = [] #For actual scraping
 
     try:
-        #all_href = browser.find_elements(By.XPATH,  "//*[contains(@href, 'kb-article')]")
-        a_tags = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'kb-article')]")))
+    
+        raw_cases = browser.find_elements(By.XPATH, "//div[@class='kb_record panel panel-default container']")
+    
+        raw_links = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'searchpublisheddecisions/kb-article/')]")))
         
-        for tag in a_tags:
-            url = tag.get_attribute('href')
-            if 'searchpublisheddecisions' in str(url):
-                urls.append(url)
+        #The above gets twice as many raw links as cases, in an ordered way.
+        for raw_case in raw_cases:
+            raw_case_index = raw_cases.index(raw_case)
+            raw_link_index = int(raw_case_index)*2 #There are twice as many raw links as cases, in an ordered way.
+            case_name = raw_case.text.split('\n')[0]
+            case_number = raw_case.text.split('\n')[1].replace('Case number: ', '').replace('Case Number: ', '')
+            firm = raw_case.text.split('\n')[2].replace('Financial Firm: ', '').replace('Financial firm: ', '')
+            date = raw_case.text.split('\n')[3].replace('Date: ', '')
+            url = raw_links[raw_link_index].get_attribute("href")
+            case_meta = {#'Case name': case_name, #Bijective function between case name and number
+                'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA portal': url}
+            case_list.append(case_meta)
+            urls.append(url)
     except Exception as e:
         print('Search terms returned no results.')
         print(e)
-        
-    return {'url_sum': len(set(urls)), 'urls': list(set(urls))}   
-    #return {'url_sum': len(url), 'urls': urls}   
+
+    return {'case_sum': len(case_list), 'case_list': case_list, 'urls': urls}
+
 
 
 # %%
@@ -1398,7 +1436,7 @@ def meta_judgment_dict(judgment_url):
     page = requests.get(judgment_url, headers=headers)
     soup = BeautifulSoup(page.content, "lxml")
     
-    judgment_dict = {'Case': '', 'Hyperlink to AFCA portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Decision date': '', 'judgment': ''}
+    judgment_dict = {'Case name': '', 'Hyperlink to AFCA portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
 
     #Attach 
 
@@ -1407,7 +1445,7 @@ def meta_judgment_dict(judgment_url):
     if case_name[0]== ' ':
         case_name = case_name[1:]
 
-    judgment_dict['Case'] = case_name  
+    judgment_dict['Case name'] = case_name  
     
     judgment_text = soup.get_text(separator="\n", strip=True)
 
@@ -1425,11 +1463,15 @@ def meta_judgment_dict(judgment_url):
         print('Case number not found.')
 
     try:
-        judgment_dict['Decision date'] = judgment_text.split(f'{case_number}\n')[3].split('\n')[0]
+        judgment_dict['Date'] = judgment_text.split(f'{case_number}\n')[3].split('\n')[0]
     except:
-        print('Decision date not found.')
+        print('Date not found.')
     
     return judgment_dict
+
+
+# %%
+meta_labels_droppable = ["Case number", "Financial firm", 'Date']
 
 # %%
 #Example for dropdown menu with value
@@ -1588,9 +1630,18 @@ def run(df_master):
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
     df_updated.pop('judgment')
-    
-    return df_updated
 
+
+    #Drop metadata if not wanted
+
+    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+        for meta_label in meta_labels_droppable:
+            try:
+                df_updated.pop(meta_label)
+            except:
+                pass
+                
+    return df_updated
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -1719,32 +1770,31 @@ if preview_button:
                     date_from_input = df_master.loc[0, 'Date from'], 
                     date_to_input = df_master.loc[0, 'Date to'])
     
-        if search_results['url_sum'] > 0:
-                
-            display_counter = 0
-            
-            urls_to_display = []
-        
-            for url in search_results['urls']:
-                if display_counter < 10:
-                    urls_to_display.append({'Hyperlink to AFCA portal': url})
-                    display_counter += 1
-                else:
-                    break
+        if search_results['case_sum'] > 0:
 
-            df_preview = pd.DataFrame(urls_to_display)
+            df_preview = pd.DataFrame(search_results['case_list'])
             
             link_heading_config = {} 
       
-            link_heading_config['Hyperlink to AFCA portal'] = st.column_config.LinkColumn(display_text = None)
+            link_heading_config['Hyperlink to AFCA portal'] = st.column_config.LinkColumn(display_text = 'Click')
     
-            st.success(f'Your search terms returned {search_results["url_sum"]} results. Please see below for the hyperlinks for the top {min(search_results["url_sum"], 10)} results.')
+            st.success(f'Your search terms returned {search_results["case_sum"]} results. Please see below for the top {min(search_results["case_sum"], 10)} results.')
                         
-            st.dataframe(df_preview,  column_config=link_heading_config)
+            st.dataframe(df_preview.head(10),  column_config=link_heading_config)
     
         else:
             st.warning('Your search terms returned 0 results. Please change your search terms and try again.')
 
+
+# %%
+st.subheader("Judgment metadata collection")
+
+st.markdown("""Would you like to obtain judgment metadata? Such data include the case number, the financial firm involved, and the decision date. 
+
+Case name and hyperlinks to the AFCA portal are always included with your results.
+""")
+
+meta_data_entry = st.checkbox('Include metadata', value = False)
 
 # %% [markdown]
 # ## Form for AI and account
