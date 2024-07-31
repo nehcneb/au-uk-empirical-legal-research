@@ -1652,7 +1652,7 @@ st.caption('During the pilot stage, the number of judgments to scrape is capped.
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit [the AFCA Portal](https://my.afca.org.au/searchpublisheddecisions/). This section largely mimics their search function.
+st.markdown("""For search tips, please visit [the AFCA Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
 """)
 
 keywordsearch_entry = st.text_input('Search for published decisions')
