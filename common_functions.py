@@ -38,7 +38,7 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-	return 1
+	return 0
 
 
 # %%
