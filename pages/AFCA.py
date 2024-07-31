@@ -310,7 +310,7 @@ def create_df():
     return df_master_new
 
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ### Definitions of menu items
 
 # %%
@@ -1283,11 +1283,9 @@ def afca_search(keywordsearch_input = '',
     #Obtaina and input elements
     
     #'Search for published decisions'
-    #keywordsearch = browser.find_element(By.ID, 'keywordsearch')
     keywordsearch = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'keywordsearch')))
 
     #'Search for a financial firm'
-    #ffsearch = browser.find_element(By.ID, 'ffsearch')
     ffsearch = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'ffsearch')))
     
     #product_line = browser.find_element(By.ID, 'plsearch')
@@ -1306,20 +1304,16 @@ def afca_search(keywordsearch_input = '',
     issue = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'issearch')))
 
     #'date_from'
-    #date_from = browser.find_element(By.ID, 'date_from')
     date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
     
     #data-date-format="DD/MM/YYYY"
     #eg date_input.send_keys("07/07/2023")
     
     #'date_to'
-    #date_to = browser.find_element(By.ID, 'date_to')
     date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_to')))
 
     #Buttons
-    #submit_button = browser.find_element(By.ID, 'submitsearch')
     submit_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'submitsearch')))
-    #clear_button = browser.find_element(By.ID, 'clearsearch')
     clear_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'clearsearch')))
 
     #Enter input
@@ -1381,22 +1375,6 @@ def afca_search(keywordsearch_input = '',
 
     #Get search results
     submit_button.click()
-
-    #Get links only
-    #urls = []
-    #try:
-        #a_tags = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'kb-article')]")))
-        #for tag in a_tags:
-            #url = tag.get_attribute('href')
-            #if 'searchpublisheddecisions' in str(url):
-                #urls.append(url)
-    #except Exception as e:
-        #print('Search terms returned no results.')
-        #print(e)
-
-    #return {'url_sum': len(set(urls)), 'urls': list(set(urls))}   
-
-    #Get metadata
 
     case_list = [] #For preview
 
@@ -1472,45 +1450,6 @@ def meta_judgment_dict(judgment_url):
 
 # %%
 meta_labels_droppable = ["Case number", "Financial firm", 'Date']
-
-# %%
-#Example for dropdown menu with value
-#dropdown = Select(product_name)
-#dropdown.select_by_value("c5139d98-3fc2-ed11-b597-00224892f51a")
-#submit_button.click()
-
-
-# %%
-#Example for dropdown menu with visible text
-
-#dropdown = Select(product_line)
-#dropdown.select_by_visible_text('Credit')
-#submit_button.click()
-
-
-# %%
-#Example for keyword search
-
-#keywordsearch.send_keys('Superannuation')
-#submit_button.click()
-
-
-# %%
-#Example for date search
-
-#date_from.send_keys('01/01/2023')
-#submit_button.click()
-
-
-# %%
-#Get search results with no waiting
-#a_tags = browser.find_elements(By.TAG_NAME,"a")
-#urls = []
-#for tag in a_tags:
-    #url = tag.get_attribute('href')
-    #if 'kb-article' in str(url):
-        #urls.append(url)
-#set(urls)
 
 # %% [markdown]
 # # GPT functions and parameters
