@@ -1305,7 +1305,6 @@ def afca_search(keywordsearch_input = '',
     date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
     
     #data-date-format="DD/MM/YYYY"
-    #eg date_input.send_keys("07/07/2023")
     
     #'date_to'
     date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_to')))
