@@ -1398,7 +1398,7 @@ def meta_judgment_dict(judgment_url):
     page = requests.get(judgment_url, headers=headers)
     soup = BeautifulSoup(page.content, "lxml")
     
-    judgment_dict = {'Case': '', 'Hyperlink to AFCA portal': link(judgment_url), 'judgment': ''}
+    judgment_dict = {'Case': '', 'Hyperlink to AFCA portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Decision date': '', 'judgment': ''}
 
     #Attach 
 
@@ -1412,6 +1412,22 @@ def meta_judgment_dict(judgment_url):
     judgment_text = soup.get_text(separator="\n", strip=True)
 
     judgment_dict['judgment'] = judgment_text  
+
+    try:
+        case_number = judgment_text.split('Case number\n')[1].split('\n')[0]
+        judgment_dict['Case number'] = case_number
+    except:
+        print('Case number not found.')
+
+    try:
+        judgment_dict['Financial firm'] = judgment_text.split('Financial firm\n')[1].split('\n')[0]
+    except:
+        print('Case number not found.')
+
+    try:
+        judgment_dict['Decision date'] = judgment_text.split(f'{case_number}\n')[3].split('\n')[0]
+    except:
+        print('Decision date not found.')
     
     return judgment_dict
 
