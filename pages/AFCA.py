@@ -180,7 +180,7 @@ def create_df():
             'Product name': '', 
             'Issue type': '', 
             'Issue': '', 
-            'Date from': '01/01/1800',
+            'Date from': '01/01/1900',
             'Date to': today,
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
@@ -227,22 +227,22 @@ def create_df():
         
     #dates
 
-    #if date_from_entry != 'None':
-        
-    try:
-        new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
+    if date_from_entry != 'None':
+            
+        try:
+            new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
+    
+        except:
+            print('Date from not entered.')
 
-    except:
-        print('Date from not entered.')
-
-    #if date_to_entry != 'None':
-
-    try:
-
-        new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
-        
-    except:
-        print('Date to not entered.')
+    if date_to_entry != 'None':
+    
+        try:
+    
+            new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
+            
+        except:
+            print('Date to not entered.')
 
     #GPT choice and entry
     try:
@@ -1238,7 +1238,7 @@ def afca_search(keywordsearch_input = '',
                 product_name_input = '', 
                 issue_type_input = '', 
                 issue_input = '', 
-                date_from_input = '01/01/1800', 
+                date_from_input = '01/01/1900', 
                 date_to_input = today):
 
     #Open browser
@@ -1333,11 +1333,9 @@ def afca_search(keywordsearch_input = '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
     if ((date_from_input != None) and (len(date_from_input) > 4)):
-
         date_from.send_keys(date_from_input)
 
-    if ((date_to_input != None) and (len(date_from_input) > 4)):
-
+    if ((date_to_input != None) and (len(date_to_input) > 4)):
         date_to.send_keys(date_to_input)
 
     #Get search results
@@ -1688,9 +1686,7 @@ if preview_button:
         #quit()
 
     else:
-        
-        search_results = {'case_sum': 0}
-        
+                
         search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
                     ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
                     product_line_input = df_master.loc[0, 'Product line'], 
