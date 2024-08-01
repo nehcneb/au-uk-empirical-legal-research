@@ -1277,6 +1277,8 @@ def afca_search(keywordsearch_input = '',
 
     #Open browser
     browser.get('https://my.afca.org.au/searchpublisheddecisions/')
+    browser.delete_all_cookies()
+    browser.refresh()
 
     #Obtaina and input elements
     
@@ -1286,28 +1288,31 @@ def afca_search(keywordsearch_input = '',
     #'Search for a financial firm'
     ffsearch = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'ffsearch')))
     
-    #product_line = browser.find_element(By.ID, 'plsearch')
+    #'Product line'
     product_line = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'plsearch')))
     
-    #product_category = browser.find_element(By.ID, 'pcsearch')
+    #'Product category'
     product_category = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pcsearch')))
 
-    #product_name = browser.find_element(By.ID, 'pnsearch')
+    #'Product cate'
     product_name = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pnsearch')))
-    
-    #issue_type = browser.find_element(By.ID, 'itsearch')
+
+    #'Issue type'
     issue_type = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'itsearch')))
-    
-    #issue = browser.find_element(By.ID, 'issearch')
+
+    #'Issue'
     issue = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'issearch')))
 
-    #'date_from'
-    date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
-    
+    #'Date from'
+    #date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
+    date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='date_from']")))
+
     #data-date-format="DD/MM/YYYY"
+    #eg date_input.send_keys("07/07/2023")
     
-    #'date_to'
-    date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_to')))
+    #'Date to'
+    #date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_to')))
+    date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='date_to']")))
 
     #Buttons
     submit_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'submitsearch')))
