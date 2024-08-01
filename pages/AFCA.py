@@ -124,43 +124,6 @@ from common_functions import link
 # %% [markdown]
 # ## [NOT WORKING] Pre 14 June 2024
 
-# %%
-#browser.get('https://www.afca.org.au/what-to-expect/search-published-decisions')
-
-# %%
-#search_boxes = browser.find_elements("xpath", "//*[@class='search-input-button hide-this-elem form-text form-control']")
-
-# %%
-#buttons = browser.find_elements(By.ID, "edit-submit-search-box")
-
-# %%
-#search_boxes[0].send_keys("death benefit") 
-
-# %%
-#elements = browser.find_elements(By.ID, "edit-keyword-views-exposed-form-search-box-page-1")
-
-# %%
-#elements[0].clear()
-#elements[0].send_keys("death benefit")
-
-# %%
-#classes = browser.find_elements(By.CLASS_NAME, "search-input-button hide-this-elem form-text form-control")
-
-# %%
-#keywords = browser.find_elements(By.NAME, "keyword")
-
-# %%
-#keywords[0].send_keys("death benefit")
-
-# %%
-#actions = ActionChains(browser)
-#actions.move_to_element(search_boxes[1])
-#actions.send_keys("death benefit")
-#actions.send_keys_to_element(keywords[0], "death benefit")
-#actions.move_to_element(buttons[0])
-#actions.click(buttons[0])
-#actions.perform()
-
 # %% [markdown]
 # ## Post 14 June 2024
 
@@ -218,7 +181,7 @@ def create_df():
             'Issue type': '', 
             'Issue': '', 
             'Date from': '',
-            'Date to': '',
+            'Date to': today,
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': '', 
@@ -264,22 +227,22 @@ def create_df():
         
     #dates
 
-    if date_from_entry != 'None':
+    #if date_from_entry != 'None':
         
-        try:
-            new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
+    try:
+        new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
 
-        except:
-            print('Date from not entered.')
+    except:
+        print('Date from not entered.')
 
-    if date_to_entry != 'None':
+    #if date_to_entry != 'None':
 
-        try:
+    try:
 
-            new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
-            
-        except:
-            print('Date to not entered.')
+        new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
+        
+    except:
+        print('Date to not entered.')
 
     #GPT choice and entry
     try:
@@ -1258,9 +1221,12 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
  'Unregulated contract financial difficulty': {'value': '0df81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '90e98e3d-3d0f-ee11-8f6e-002248927eb4'}}
 
-
 # %% [markdown]
 # ### Obtain search results
+
+# %%
+today = datetime.now().strftime("%d/%m/%Y")
+
 
 # %%
 #Define search boxes
@@ -1273,12 +1239,12 @@ def afca_search(keywordsearch_input = '',
                 issue_type_input = '', 
                 issue_input = '', 
                 date_from_input = '', 
-                date_to_input = ''):
+                date_to_input = today):
 
     #Open browser
     browser.get('https://my.afca.org.au/searchpublisheddecisions/')
-    browser.delete_all_cookies()
-    browser.refresh()
+    #browser.delete_all_cookies()
+    #browser.refresh()
 
     #Obtaina and input elements
     
@@ -1290,18 +1256,23 @@ def afca_search(keywordsearch_input = '',
     
     #'Product line'
     product_line = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'plsearch')))
-    
+    dropdown_product_line = Select(product_line)
+
     #'Product category'
     product_category = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pcsearch')))
+    dropdown_product_category = Select(product_category)
 
     #'Product cate'
     product_name = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pnsearch')))
+    dropdown_product_name = Select(product_name)
 
     #'Issue type'
     issue_type = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'itsearch')))
+    dropdown_issue_type = Select(issue_type)
 
     #'Issue'
     issue = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'issearch')))
+    dropdown_issue = Select(issue)
 
     #'Date from'
     #date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
@@ -1317,11 +1288,10 @@ def afca_search(keywordsearch_input = '',
     #Buttons
     submit_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'submitsearch')))
     clear_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'clearsearch')))
-
-    #Enter input
-
-    clear_button.click()
     
+    #Enter input
+    clear_button.click()
+
     if ((keywordsearch_input != None) and (keywordsearch_input != '')):
         keywordsearch.send_keys(keywordsearch_input)
 
@@ -1329,13 +1299,11 @@ def afca_search(keywordsearch_input = '',
         ffsearch.send_keys(ffsearch_input)
 
     if ((product_line_input != None) and (product_line_input != '')):
-        dropdown_product_line = Select(product_line)
         product_line_value = product_line_options[product_line_input]["value"]
         dropdown_product_line.select_by_value(product_line_value)
 
     if ((product_category_input != None) and (product_category_input != '')):
 
-        dropdown_product_category = Select(product_category)
         product_category_value = product_category_options[product_category_input]["value"]
         dropdown_product_category.select_by_value(product_category_value)
         #If parent value not automatically updated
@@ -1346,19 +1314,16 @@ def afca_search(keywordsearch_input = '',
     
     if ((product_name_input != None) and (product_name_input != '')):
 
-        dropdown_product_name = Select(product_name)
         product_name_value = product_name_options[product_name_input]["value"]
         dropdown_product_name.select_by_value(product_name_value)
 
     if ((issue_type_input != None) and (issue_type_input != '')):
 
-        dropdown_issue_type = Select(issue_type)
         issue_type_value = issue_type_options[issue_type_input]["value"]
         dropdown_issue_type.select_by_value(issue_type_value)
 
     if ((issue_input != None) and (issue_input != '')):
 
-        dropdown_issue = Select(issue)
         issue_value = issue_options[issue_input]["value"]
         dropdown_issue.select_by_value(issue_value)
         #If parent value not automatically updated
@@ -1383,27 +1348,49 @@ def afca_search(keywordsearch_input = '',
     urls = [] #For actual scraping
 
     try:
-    
-        raw_cases = browser.find_elements(By.XPATH, "//div[@class='kb_record panel panel-default container']")
-    
-        raw_links = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'searchpublisheddecisions/kb-article/')]")))
-        
-        #The above gets twice as many raw links as cases, in an ordered way.
+        raw_cases= Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='kb_record panel panel-default container']")))
+            
         for raw_case in raw_cases:
-            raw_case_index = raw_cases.index(raw_case)
-            raw_link_index = int(raw_case_index)*2 #There are twice as many raw links as cases, in an ordered way.
             case_name = raw_case.text.split('\n')[0]
             case_number = raw_case.text.split('\n')[1].replace('Case number: ', '').replace('Case Number: ', '')
             firm = raw_case.text.split('\n')[2].replace('Financial Firm: ', '').replace('Financial firm: ', '')
             date = raw_case.text.split('\n')[3].replace('Date: ', '')
-            url = raw_links[raw_link_index].get_attribute("href")
+
+            inner_html = raw_case.get_attribute('innerHTML')
+            soup_case = BeautifulSoup(inner_html, "lxml")            
+            url = 'https://my.afca.org.au' + soup_case.find_all('a', href=True)[0]['href']
+            
             case_meta = {#'Case name': case_name, #Bijective function between case name and number
                 'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA portal': url}
             case_list.append(case_meta)
             urls.append(url)
+                    
     except Exception as e:
         print('Search terms returned no results.')
         print(e)
+
+    #Alternative method of getting cases
+    #try:
+        #raw_cases= Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='kb_record panel panel-default container']")))
+    
+        #raw_links = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'searchpublisheddecisions/kb-article/')]")))
+        
+        #The above gets twice as many raw links as cases, in an ordered way.
+        #for raw_case in raw_cases:
+            #raw_case_index = raw_cases.index(raw_case)
+            #raw_link_index = int(raw_case_index)*2 #There are twice as many raw links as cases, in an ordered way.
+            #case_name = raw_case.text.split('\n')[0]
+            #case_number = raw_case.text.split('\n')[1].replace('Case number: ', '').replace('Case Number: ', '')
+            #firm = raw_case.text.split('\n')[2].replace('Financial Firm: ', '').replace('Financial firm: ', '')
+            #date = raw_case.text.split('\n')[3].replace('Date: ', '')
+            #url = raw_links[raw_link_index].get_attribute("href")
+            #case_meta = {#'Case name': case_name, #Bijective function between case name and number
+                #'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA portal': url}
+            #case_list.append(case_meta)
+            #urls.append(url)
+    #except Exception as e:
+        #print('Search terms returned no results.')
+        #print(e)
 
     return {'case_sum': len(case_list), 'case_list': case_list, 'urls': urls}
 
@@ -1701,6 +1688,9 @@ if preview_button:
         #quit()
 
     else:
+        
+        search_results = {'case_sum': 0}
+        
         search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
                     ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
                     product_line_input = df_master.loc[0, 'Product line'], 
