@@ -1336,7 +1336,7 @@ def afca_search(keywordsearch_input = '',
 
         date_from.send_keys(date_from_input)
 
-    if ((date_to_input != None) and (len(date_from_input) > 4):
+    if ((date_to_input != None) and (len(date_from_input) > 4)):
 
         date_to.send_keys(date_to_input)
 
