@@ -1238,7 +1238,7 @@ def afca_search(keywordsearch_input = '',
                 product_name_input = '', 
                 issue_type_input = '', 
                 issue_input = '', 
-                date_from_input = '', 
+                date_from_input = '01/01/1800', 
                 date_to_input = today):
 
     #Open browser
@@ -1332,11 +1332,11 @@ def afca_search(keywordsearch_input = '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
-    if ((date_from_input != None) and (date_from_input != '')):
+    if ((date_from_input != None) and (len(date_from_input) > 4)):
 
         date_from.send_keys(date_from_input)
 
-    if ((date_to_input != None) and (date_to_input != '')):
+    if ((date_to_input != None) and (len(date_from_input) > 4):
 
         date_to.send_keys(date_to_input)
 
