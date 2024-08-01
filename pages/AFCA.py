@@ -226,23 +226,19 @@ def create_df():
         print('Issue not entered.')
         
     #dates
-
-    if date_from_entry != 'None':
             
-        try:
-            new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
-    
-        except:
-            print('Date from not entered.')
+    try:
+        new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
 
-    if date_to_entry != 'None':
-    
-        try:
-    
-            new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
-            
-        except:
-            print('Date to not entered.')
+    except:
+        print('Date from not entered.')
+
+    try:
+
+        new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
+        
+    except:
+        print('Date to not entered.')
 
     #GPT choice and entry
     try:
@@ -1332,10 +1328,10 @@ def afca_search(keywordsearch_input = '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
-    if ((date_from_input != None) and (len(date_from_input) > 4)):
+    if date_from_input != '01/01/1900':
         date_from.send_keys(date_from_input)
 
-    if ((date_to_input != None) and (len(date_to_input) > 4)):
+    if date_to_input != today:
         date_to.send_keys(date_to_input)
 
     #Get search results
