@@ -180,7 +180,7 @@ def create_df():
             'Product name': '', 
             'Issue type': '', 
             'Issue': '', 
-            'Date from': '',
+            'Date from': '01/01/1800',
             'Date to': today,
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
