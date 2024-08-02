@@ -17,12 +17,11 @@ PyYAML
 pydeck
 pytesseract==0.3.10
 pyxlsb==1.0.10
-selenium==4.23.0
+selenium#==4.23.0
 st-gsheets-connection==0.0.4
 streamlit==1.36.0
 streamlit-ext==0.1.10
 #streamlit-gsheets
 textract==1.6.5
 tiktoken==0.7.0
-webdriver-manager==4.0.1
-#undetected-chromedriver
+webdriver-manager#==4.0.1
