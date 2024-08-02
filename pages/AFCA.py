@@ -1227,20 +1227,21 @@ today = datetime.now().strftime("%d/%m/%Y")
 # %%
 #Define search boxes
 
-def afca_search(keywordsearch_input = '', 
-                ffsearch_input = '', 
-                product_line_input = '', 
-                product_category_input = '', 
-                product_name_input = '', 
-                issue_type_input = '', 
-                issue_input = '', 
-                date_from_input = '01/01/1900', 
-                date_to_input = today):
+def afca_search(keywordsearch_input, #= '', 
+                ffsearch_input, #= '', 
+                product_line_input, #= '', 
+                product_category_input, #= '', 
+                product_name_input, #= '', 
+                issue_type_input, #= '', 
+                issue_input, #= '', 
+                date_from_input, #= '01/01/1900', 
+                date_to_input #= today
+                ):
 
     #Open browser
     browser.get('https://my.afca.org.au/searchpublisheddecisions/')
-    #browser.delete_all_cookies()
-    #browser.refresh()
+    browser.delete_all_cookies()
+    browser.refresh()
 
     #Obtaina and input elements
     
@@ -1333,7 +1334,7 @@ def afca_search(keywordsearch_input = '',
 
     if date_to_input != today:
         date_to.send_keys(date_to_input)
-
+    
     #Get search results
     submit_button.click()
 
