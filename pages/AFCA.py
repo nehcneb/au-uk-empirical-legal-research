@@ -1659,9 +1659,9 @@ issue_type_entry = st.selectbox(label = 'Issue type', options = list(issue_type_
 
 issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = None)
         
-date_from_entry = st.date_input('Date from', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+date_from_entry = st.date_input('Date from (may not work)', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
 
-date_to_entry = st.date_input('Date to', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+date_to_entry = st.date_input('Date to (may not work)', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
  
 st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
 """)
