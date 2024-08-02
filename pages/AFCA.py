@@ -1342,8 +1342,10 @@ def afca_search(keywordsearch_input, #= '',
 
     urls = [] #For actual scraping
 
+    raw_cases = [] #Placeholder
+
     try:
-        raw_cases= Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='kb_record panel panel-default container']")))
+        raw_cases = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='kb_record panel panel-default container']")))
             
         for raw_case in raw_cases:
             case_name = raw_case.text.split('\n')[0]
