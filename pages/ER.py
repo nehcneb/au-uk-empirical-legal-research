@@ -917,7 +917,9 @@ if st.session_state.page_from != "pages/ER.py": #Need to add in order to avoid G
 """)
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
-    
+
+    reset_button = st.button(label='RESET', type = 'primary')
+
     st.subheader("Your search terms")
     
     st.markdown("""For search tips, please visit [CommonLII](http://www.commonlii.org/form/search1.html?mask=uk/cases/EngR). This section mimics their search function.
@@ -1031,9 +1033,11 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         st.switch_page("Home.py")
 
     # %%
-    #if reset_button:
-        #clear_cache_except_validation_df_master()
-        #st.rerun()
+    if reset_button:
+        st.session_state.pop('df_master')
+
+        #clear_cache()
+        st.rerun()
 
     # %%
     if next_button:

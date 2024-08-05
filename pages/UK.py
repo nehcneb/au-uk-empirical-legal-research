@@ -725,6 +725,8 @@ if st.session_state.page_from != "pages/UK.py": #Need to add in order to avoid G
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
     
+    reset_button = st.button(label='RESET', type = 'primary')
+
     st.subheader("Courts and tribunals to cover")
     
     default_on = st.checkbox('Prefill the Supreme Court, the Privy Council, the Court of Appeal, the High Court of England & Wales')
@@ -875,9 +877,11 @@ Case name and medium neutral citation are always included with your results.
         st.switch_page("Home.py")
 
     # %%
-    #if reset_button:
-        #clear_cache_except_validation_df_master()
-        #st.rerun()
+    if reset_button:
+        st.session_state.pop('df_master')
+
+        #clear_cache()
+        st.rerun()
 
     # %%
     if next_button:

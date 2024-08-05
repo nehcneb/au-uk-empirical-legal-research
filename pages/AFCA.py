@@ -171,7 +171,7 @@ def afca_create_df():
             'Product name': '', 
             'Issue type': '', 
             'Issue': '', 
-            'Date from': '01/01/1900',
+            'Date from': '01/01/2000',
             'Date to': today,
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
@@ -1222,7 +1222,7 @@ def afca_search(keywordsearch_input, #= '',
                 product_name_input, #= '', 
                 issue_type_input, #= '', 
                 issue_input, #= '', 
-                date_from_input, #= '01/01/1900', 
+                date_from_input, #= '01/01/2000', 
                 date_to_input #= today
                 ):
 
@@ -1317,7 +1317,7 @@ def afca_search(keywordsearch_input, #= '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
-    if date_from_input != '01/01/1900':
+    if date_from_input != '01/01/2000':
         date_from.send_keys(date_from_input)
 
     if date_to_input != today:
@@ -1670,7 +1670,9 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
 """)
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
-    
+
+    reset_button = st.button(label='RESET', type = 'primary')
+
     st.subheader("Your search terms")
     
     st.markdown("""For search tips, please visit [the afca Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
@@ -1690,9 +1692,9 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     
     issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
             
-    date_from_entry = st.date_input('Date from (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", min_value = date(2000, 1, 1), max_value = datetime.now())
+    date_from_entry = st.date_input('Date from (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY")
     
-    date_to_entry = st.date_input('Date to (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", min_value = date(2000, 1, 1), max_value = datetime.now())
+    date_to_entry = st.date_input('Date to (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY")
      
     st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
 """)
@@ -1838,9 +1840,11 @@ Case name and hyperlinks to the afca portal are always included with your result
         st.switch_page("Home.py")
 
     # %%
-    #if reset_button:
-        #clear_cache_except_validation_df_master()
-        #st.rerun()
+    if reset_button:
+        st.session_state.pop('df_master')
+
+        #clear_cache()
+        st.rerun()
 
     # %%
     if next_button:

@@ -799,6 +799,8 @@ if st.session_state.page_from != "pages/NSW.py": #Need to add in order to avoid 
     
     st.caption("During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
     
+    reset_button = st.button(label='RESET', type = 'primary')
+
     st.subheader("Courts and tribunals to cover")
     
     default_on_courts = st.checkbox(label = 'Prefill the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court', value = st.session_state.dafault_courts_status)
@@ -974,9 +976,11 @@ Case name and medium neutral citation are always included with your results.
         st.switch_page("Home.py")
 
     # %%
-    #if reset_button:
+    if reset_button:
+        st.session_state.pop('df_master')
+
         #clear_cache()
-        #st.rerun()
+        st.rerun()
 
     # %%
     if next_button:
