@@ -78,7 +78,11 @@ def source_index(source):
 
 
 # %% editable=true slideshow={"slide_type": ""}
-#Initialize source and understanding
+#Initialize
+
+if 'page_from' not in st.session_state:
+    
+    st.session_state['page_from'] = 'Home.py'
 
 if 'source' not in st.session_state:
     st.session_state['source'] = None
@@ -144,14 +148,14 @@ if source_entry:
     
     browser_entry = st.checkbox('Yes, I understand.', value = st.session_state['i_understand'])
 
-next_button = st.button('Next')
+home_next_button = st.button('Next')
 
 
 # %% [markdown]
 # # Buttons
 
 # %% editable=true slideshow={"slide_type": ""}
-if next_button:
+if home_next_button:
 
     if source_entry == None:
 
@@ -162,6 +166,18 @@ if next_button:
 
     else:
 
+        #Clear df_master if one has been generated from another page
+
+        if 'page_from' in st.session_state:
+            
+            if 'df_master' in st.session_state:
+
+                source_index = sources_list.index(source_entry)
+
+                if source_pages[source_index] != st.session_state.page_from:
+
+                    st.session_state.pop('df_master')
+        
         st.session_state.source = source_entry
 
         st.session_state.i_understand = browser_entry

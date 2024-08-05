@@ -39,12 +39,12 @@ import PyPDF2
 import io
 from io import BytesIO
 
-
 #Streamlit
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
+from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
 import openai
@@ -58,9 +58,9 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, au_date, list_value_check
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound
+from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -71,17 +71,8 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
-
 # %% [markdown]
-# # AFCA search engine
+# # afca search engine
 
 # %%
 #Scrape javascript
@@ -129,7 +120,7 @@ from common_functions import link
 
 # %%
 #function to create dataframe
-def create_df():
+def afca_create_df():
 
     #submission time
     timestamp = datetime.now()
@@ -267,7 +258,7 @@ def create_df():
     return df_master_new
 
 
-# %% [markdown] jp-MarkdownHeadingCollapsed=true
+# %% [markdown]
 # ### Definitions of menu items
 
 # %%
@@ -576,7 +567,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
 
 issue_type_options = {'Accessibility': {'value': '3a35d144-0116-ee11-9cbe-000d3a6a9642'},
  'Advice': {'value': '80e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'AFCA Engagement': {'value': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
+ 'afca Engagement': {'value': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Authorisation/Instructions': {'value': '84e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Charges': {'value': 'a379125d-afc1-ed11-83fe-000d3a6ad49b'},
  'Charges, Fees, Interest or Premiums': {'value': '86e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -644,7 +635,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': '96e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Accuracy of RHI reporting': {'value': '39f81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '96e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'AFCA approach to terms of settlement/settlement requiring investigation': {'value': '63f71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'afca approach to terms of settlement/settlement requiring investigation': {'value': '63f71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Age discrimination': {'value': '8539554a-0216-ee11-9cbe-000d3a6a9642',
   'data-parent': '3a35d144-0116-ee11-9cbe-000d3a6a9642'},
@@ -718,11 +709,11 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': '94e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Commercial credit reporting': {'value': '5933d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'},
- 'Compliance with AFCA Engagement Charter': {'value': '67f71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Compliance with afca Engagement Charter': {'value': '67f71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'Compliance with AFCA preliminary assessment/recommendation': {'value': '69f71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Compliance with afca preliminary assessment/recommendation': {'value': '69f71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'Compliance with AFCA timeframes': {'value': '6bf71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Compliance with afca timeframes': {'value': '6bf71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Compliance with APPs': {'value': '3bf81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '96e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -760,7 +751,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': '8ee98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Contract/policy delivery': {'value': 'eff71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '8ee98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'Co-operating with AFCA': {'value': '6df71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Co-operating with afca': {'value': '6df71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'CR Code Complaints Management': {'value': '0ff81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '92e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -860,7 +851,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': '84e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Failure to follow instructions/agreement': {'value': 'eb32d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'a8e3b749-afc1-ed11-83fe-000d3a6ad49b'},
- 'Failure to give effect to AFCA determination': {'value': '6ff71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Failure to give effect to afca determination': {'value': '6ff71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Failure to prioritise clients interests': {'value': '3733d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'b3b1f969-afc1-ed11-83fe-000d3a6ad49b'},
@@ -1092,7 +1083,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': 'e72a054b-0116-ee11-9cbe-000d3a6a9642'},
  'Privacy/confidentiality breach 1': {'value': '43f81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '96e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'Providing information to AFCA': {'value': '73f71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Providing information to afca': {'value': '73f71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Quantum of loss': {'value': 'adf71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '88e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -1126,7 +1117,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'},
  'Retaining information/data': {'value': '49f81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '98e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'RG 271 Part A- AFCA Membership': {'value': '11f81b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'RG 271 Part A- afca Membership': {'value': '11f81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '92e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'RG 271 Part B- Complaint and complaint definition': {'value': '13f81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '92e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -1217,12 +1208,9 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
  'Unregulated contract financial difficulty': {'value': '0df81b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '90e98e3d-3d0f-ee11-8f6e-002248927eb4'}}
 
+
 # %% [markdown]
 # ### Obtain search results
-
-# %%
-today = datetime.now().strftime("%d/%m/%Y")
-
 
 # %%
 #Define search boxes
@@ -1358,7 +1346,7 @@ def afca_search(keywordsearch_input, #= '',
             url = 'https://my.afca.org.au' + soup_case.find_all('a', href=True)[0]['href']
             
             case_meta = {#'Case name': case_name, #Bijective function between case name and number
-                'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA portal': url}
+                'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to afca portal': url}
             case_list.append(case_meta)
             urls.append(url)
                     
@@ -1382,7 +1370,7 @@ def afca_search(keywordsearch_input, #= '',
             #date = raw_case.text.split('\n')[3].replace('Date: ', '')
             #url = raw_links[raw_link_index].get_attribute("href")
             #case_meta = {#'Case name': case_name, #Bijective function between case name and number
-                #'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA portal': url}
+                #'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to afca portal': url}
             #case_list.append(case_meta)
             #urls.append(url)
     #except Exception as e:
@@ -1394,13 +1382,13 @@ def afca_search(keywordsearch_input, #= '',
 
 
 # %%
-def meta_judgment_dict(judgment_url):
+def afca_meta_judgment_dict(judgment_url):
 
     headers = {'User-Agent': 'whatever'}
     page = requests.get(judgment_url, headers=headers)
     soup = BeautifulSoup(page.content, "lxml")
     
-    judgment_dict = {'Case name': '', 'Hyperlink to AFCA portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
+    judgment_dict = {'Case name': '', 'Hyperlink to afca portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
 
     #Attach 
 
@@ -1416,8 +1404,17 @@ def meta_judgment_dict(judgment_url):
     judgment_dict['judgment'] = judgment_text  
 
     try:
-        case_number = judgment_text.split('Case number\n')[1].split('\n')[0]
+        if 'Case number\n' in judgment_text:
+            case_number = judgment_text.split('Case number\n')[1].split('\n')[0]
+        elif 'Case numbers\n' in judgment_text:
+            case_number = judgment_text.split('Case numbers\n')[1].split('\n')[0]
+        elif 'Determination For Case ' in case_name:
+            case_number = case_name.split('Determination For Case ')[1]
+        else:
+            case_number = ''
+            
         judgment_dict['Case number'] = case_number
+        
     except:
         print('Case number not found.')
 
@@ -1435,7 +1432,7 @@ def meta_judgment_dict(judgment_url):
 
 
 # %%
-meta_labels_droppable = ["Case number", "Financial firm", 'Date']
+afca_meta_labels_droppable = ["Case number", "Financial firm", 'Date']
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -1476,7 +1473,8 @@ if 'judgments_counter_bound' not in st.session_state:
 # %%
 #Obtain parameters
 
-def run(df_master):
+def afca_run(df_master):
+    
     df_master = df_master.fillna('')
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -1510,7 +1508,7 @@ def run(df_master):
     for link in search_results['urls']:
         if counter < judgments_counter_bound:
 
-            judgment_dict = meta_judgment_dict(link)
+            judgment_dict = afca_meta_judgment_dict(link)
     
             judgments_file.append(judgment_dict)
 
@@ -1560,7 +1558,7 @@ def run(df_master):
     #Drop metadata if not wanted
 
     if int(df_master.loc[0, 'Metadata inclusion']) == 0:
-        for meta_label in meta_labels_droppable:
+        for meta_label in afca_meta_labels_droppable:
             try:
                 df_updated.pop(meta_label)
             except:
@@ -1597,7 +1595,31 @@ if 'need_resetting' not in st.session_state:
 
 if 'df_master' not in st.session_state:
 
+    #Generally applicable
     st.session_state['df_master'] = pd.DataFrame([])
+    st.session_state['df_master'].loc[0, 'Your name'] = ''
+    st.session_state['df_master'].loc[0, 'Your email address'] = ''
+    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
+    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
+    st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    st.session_state['df_master'].loc[0, 'Use own account'] = False
+    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+
+    #Jurisdiction specific
+    st.session_state.df_master.loc[0, 'Search for published decisions'] = None 
+    st.session_state.df_master.loc[0, 'Search for a financial firm'] = None 
+    st.session_state.df_master.loc[0, 'Product line'] = None 
+    st.session_state.df_master.loc[0, 'Product category'] = None 
+    st.session_state.df_master.loc[0, 'Product name'] = None 
+    st.session_state.df_master.loc[0, 'Issue type'] = None 
+    st.session_state.df_master.loc[0, 'Issue'] = None 
+    st.session_state.df_master.loc[0, 'Date from'] = None 
+    st.session_state.df_master.loc[0, 'Date to'] = None
+
+    #Generally applicable
+    st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
 
 if 'df_individual_output' not in st.session_state:
 
@@ -1625,536 +1647,216 @@ try:
 except:
     st.session_state['email_entry'] = ''
 
+# %%
+#If landing page is not home
+if 'page_from' not in st.session_state:
+    st.session_state['page_from'] = 'Home.py'
+
 # %% [markdown]
 # ## Form before AI
 
 # %%
-#Create form
+if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid GPT page from showing form of previous page
 
-return_button = st.button('RETURN to first page')
-
-st.header(f"You have selected to study :blue[decisions of the Australian Financial Complaints Authority].")
-
-#    st.header("Judgment Search Criteria")
-
-st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
-""")
-
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
-
-st.subheader("Your search terms")
-
-st.markdown("""For search tips, please visit [the AFCA Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
-""")
-
-keywordsearch_entry = st.text_input('Search for published decisions')
-
-ffsearch_entry = st.text_input('Search for a financial firm')
-
-product_line_entry = st.selectbox(label = 'Product line', options = list(product_line_options.keys()), index = None)
-
-product_category_entry = st.selectbox(label = 'Product category', options = list(product_category_options.keys()), index = None)
-
-product_name_entry = st.selectbox(label = 'Product name', options = list(product_name_options.keys()), index = None)
-
-issue_type_entry = st.selectbox(label = 'Issue type', options = list(issue_type_options.keys()), index = None)
-
-issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = None)
-        
-date_from_entry = st.date_input('Date from (may not work)', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
-
-date_to_entry = st.date_input('Date to (may not work)', value = None, format="DD/MM/YYYY", min_value = date(1800, 1, 1))
- 
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-""")
-#You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-
-preview_button = st.button('PREVIEW')
-
-
-# %%
-if preview_button:
-
-    df_master = create_df()
-
-    afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+    #Create form
     
-    if afca_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
-        #quit()
-
-    else:
-                
-        search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
-                    ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
-                    product_line_input = df_master.loc[0, 'Product line'], 
-                    product_category_input = df_master.loc[0, 'Product category'], 
-                    product_name_input = df_master.loc[0, 'Product name'], 
-                    issue_type_input = df_master.loc[0, 'Issue type'], 
-                    issue_input = df_master.loc[0, 'Issue'], 
-                    date_from_input = df_master.loc[0, 'Date from'], 
-                    date_to_input = df_master.loc[0, 'Date to'])
+    return_button = st.button('RETURN to first page')
     
-        if search_results['case_sum'] > 0:
-
-            df_preview = pd.DataFrame(search_results['case_list'])
+    st.header(f"You have selected to study :blue[decisions of the Australian Financial Complaints Authority].")
+    
+    #    st.header("Judgment Search Criteria")
+    
+    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+""")
+    
+    st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+    
+    st.subheader("Your search terms")
+    
+    st.markdown("""For search tips, please visit [the afca Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
+""")
+    
+    keywordsearch_entry = st.text_input(label = 'Search for published decisions', value = st.session_state.df_master.loc[0, 'Search for published decisions'])
+    
+    ffsearch_entry = st.text_input(label = 'Search for a financial firm', value = st.session_state.df_master.loc[0, 'Search for a financial firm'])
+    
+    product_line_entry = st.selectbox(label = 'Product line', options = list(product_line_options.keys()), index = list_value_check(list(product_line_options.keys()), st.session_state.df_master.loc[0, 'Product line']))
+    
+    product_category_entry = st.selectbox(label = 'Product category', options = list(product_category_options.keys()), index = list_value_check(list(product_category_options.keys()), st.session_state.df_master.loc[0, 'Product category']))
+    
+    product_name_entry = st.selectbox(label = 'Product name', options = list(product_name_options.keys()), index = list_value_check(list(product_name_options.keys()), st.session_state.df_master.loc[0, 'Product name']))
+    
+    issue_type_entry = st.selectbox(label = 'Issue type', options = list(issue_type_options.keys()), index = list_value_check(list(issue_type_options.keys()), st.session_state.df_master.loc[0, 'Issue type']))
+    
+    issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
             
-            link_heading_config = {} 
-      
-            link_heading_config['Hyperlink to AFCA portal'] = st.column_config.LinkColumn(display_text = 'Click')
+    date_from_entry = st.date_input('Date from (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", min_value = date(2000, 1, 1), max_value = datetime.now())
     
-            st.success(f'Your search terms returned {search_results["case_sum"]} results. Please see below for the top {min(search_results["case_sum"], 10)} results.')
-                        
-            st.dataframe(df_preview.head(10),  column_config=link_heading_config)
+    date_to_entry = st.date_input('Date to (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", min_value = date(2000, 1, 1), max_value = datetime.now())
+     
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
+""")
+    #You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+    
+    preview_button = st.button(label = 'PREVIEW', type = 'primary')
+
+
+    # %%
+    if preview_button:
+    
+        df_master = afca_create_df()
+    
+        afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+        
+        if afca_search_terms.replace('None', '') == "":
+    
+            st.warning('You must enter some search terms.')
+            #quit()
     
         else:
-            st.warning('Your search terms returned 0 results. Please change your search terms and try again.')
-
-
-# %%
-st.subheader("Judgment metadata collection")
-
-st.markdown("""Would you like to obtain judgment metadata? Such data include the case number, the financial firm involved, and the decision date. 
-
-Case name and hyperlinks to the AFCA portal are always included with your results.
-""")
-
-meta_data_entry = st.checkbox('Include metadata', value = False)
-
-# %% [markdown]
-# ## Form for AI and account
-
-# %%
-st.header("Use GPT as your research assistant")
-
-#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
-
-st.markdown("**:green[Would you like GPT to answer questions about the judgments returned by your search terms?]**")
-
-st.markdown("""Please consider trying this program without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
-""")
-
-gpt_activation_entry = st.checkbox('Use GPT', value = False)
-
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per judgment. The [exact cost](https://openai.com/pricing) for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced. You will be given ex-post cost estimates.")
-
-st.subheader("Enter your questions for each judgment")
-
-st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** judgment based only on information from **that** judgment. """)
-
-st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
-
-if st.toggle('See the instruction given to GPT'):
-    st.write(f"{intro_for_GPT[0]['content']}")
-
-if st.toggle('Tips for using GPT'):
-    tips()
-
-gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
-
-#Disable toggles while prompt is not entered or the same as the last processed prompt
-if gpt_activation_entry:
-    
-    if gpt_questions_entry:
-        st.session_state['disable_input'] = False
-        
-    else:
-        st.session_state['disable_input'] = True
-else:
-    st.session_state['disable_input'] = False
-    
-st.caption(f"By default, answers to your questions will be generated by model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each judgment.")
-
-if own_account_allowed() > 0:
-    
-    st.subheader(':orange[Enhance program capabilities]')
-    
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of judgments to process? You can do so with your own GPT account.
-    """)
-    
-    own_account_entry = st.toggle('Use my own GPT account',  disabled = st.session_state.disable_input)
-    
-    if own_account_entry:
-    
-        st.session_state["own_account"] = True
-    
-        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
-    """)
-            
-        name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
-    
-        email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
-        
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
-        
-        valdity_check = st.button('VALIDATE your API key')
-    
-        if valdity_check:
-            
-            api_key_valid = is_api_key_valid(gpt_api_key_entry)
                     
-            if api_key_valid == False:
-                st.session_state['gpt_api_key_validity'] = False
-                st.error('Your API key is not valid.')
+            search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
+                        ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
+                        product_line_input = df_master.loc[0, 'Product line'], 
+                        product_category_input = df_master.loc[0, 'Product category'], 
+                        product_name_input = df_master.loc[0, 'Product name'], 
+                        issue_type_input = df_master.loc[0, 'Issue type'], 
+                        issue_input = df_master.loc[0, 'Issue'], 
+                        date_from_input = df_master.loc[0, 'Date from'], 
+                        date_to_input = df_master.loc[0, 'Date to'])
+        
+            if search_results['case_sum'] > 0:
+    
+                df_preview = pd.DataFrame(search_results['case_list'])
                 
+                link_heading_config = {} 
+          
+                link_heading_config['Hyperlink to afca portal'] = st.column_config.LinkColumn(display_text = 'Click')
+        
+                st.success(f'Your search terms returned {search_results["case_sum"]} result(s). Please see below for the top {min(search_results["case_sum"], 10)} result(s).')
+                            
+                st.dataframe(df_preview.head(10),  column_config=link_heading_config)
+        
             else:
-                st.session_state['gpt_api_key_validity'] = True
-                st.success('Your API key is valid.')
+                st.warning('Your search terms returned 0 results. Please change your search terms and try again.')
+
+    # %%
+    st.subheader("Judgment metadata collection")
     
-        st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
-        
-        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
-        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
-        
-        if gpt_enhancement_entry == True:
-        
-            st.session_state.gpt_model = "gpt-4o"
-            st.session_state.gpt_enhancement_entry = True
-
-        else:
-            
-            #st.session_state.gpt_model = "gpt-4o-mini"
-            st.session_state.gpt_model = 'gpt-4o-mini'
-            st.session_state.gpt_enhancement_entry = False
-        
-        st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
-        
-        #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
-
-        #st.session_state.judgments_counter_bound = judgments_counter_bound_entry
-
-        judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_judgment_counter_bound))
-
-        if judgments_counter_bound_entry:
-            wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
-            try:
-                st.session_state.judgments_counter_bound = int(judgments_counter_bound_entry)
-            except:
-                st.warning(wrong_number_warning)
-                st.session_state.judgments_counter_bound = default_judgment_counter_bound
-
-            if ((st.session_state.judgments_counter_bound <= 0) or (st.session_state.judgments_counter_bound > 100)):
-                st.warning(wrong_number_warning)
-                st.session_state.judgments_counter_bound = default_judgment_counter_bound
+    st.markdown("""Would you like to obtain judgment metadata? Such data include the case number, the financial firm involved, and the decision date. 
     
-        st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
-    
-    else:
-        
-        st.session_state["own_account"] = False
-    
-        st.session_state.gpt_model = "gpt-4o-mini"
-
-        st.session_state.gpt_enhancement_entry = False
-    
-        st.session_state.judgments_counter_bound = default_judgment_counter_bound
-
-# %% [markdown]
-# ## Consent and next steps
-
-# %%
-st.header("Consent")
-
-st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
-
-consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
-
-st.markdown("""If you do not agree, then please feel free to close this form.""")
-
-st.header("Next steps")
-
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download.
-
-You can also download a record of your entries.
-
+Case name and hyperlinks to the afca portal are always included with your results.
 """)
-
-#Warning
-if st.session_state.gpt_model == 'gpt-4o-mini':
-    st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
-
-if st.session_state.gpt_model == "gpt-4o":
-    st.warning('An expensive GPT model will answer your questions. Please be cautious.')
-
-run_button = st.button('RUN the program')
-
-keep_button = st.button('DOWNLOAD your entries')
-
-reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
-
-#Display need resetting message if necessary
-if st.session_state.need_resetting == 1:
-    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output) > 0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+    
+    meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
 # %% [markdown]
-# ## Previous responses and outputs
+# ## Buttons
 
-# %%
-#Create placeholder download buttons if previous entries and results in st.session_state:
-
-if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
+    # %%
+    #Buttons
     
-    #Load previous entries and results
+    #col1, col2, col3, col4 = st.columns(4, gap = 'small')
     
-    df_master = st.session_state.df_master
-    df_individual_output = st.session_state.df_individual_output
-
-    #Buttons for downloading entries
-    st.subheader('Looking for your previous entries and results?')
-
-    st.write('Previous entries')
-
-    entries_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
-
-    csv = convert_df_to_csv(df_master)
-
-    ste.download_button(
-        label="Download your previous entries as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=entries_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    xlsx = convert_df_to_excel(df_master)
+    #with col1:
     
-    ste.download_button(label='Download your previous entries as an Excel spreadsheet (XLSX)',
-                        data=xlsx,
-                        file_name=entries_output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    json = convert_df_to_json(df_master)
+        #reset_button = st.button(label='RESET', type = 'primary')
     
-    ste.download_button(
-        label="Download your previous entries as a JSON", 
-        data = json,
-        file_name= entries_output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.write('Previous results')
-
-    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-
-    csv_output = convert_df_to_csv(df_individual_output)
+    #with col4:
+    with stylable_container(
+        "green",
+        css_styles="""
+        button {
+            background-color: #00FF00;
+            color: black;
+        }""",
+    ):
+        next_button = st.button(label='NEXT')
     
-    ste.download_button(
-        label="Download your previous results as a CSV (for use in Excel etc)", 
-        data = csv_output,
-        file_name= output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
+    keep_button = st.button('SAVE')
 
-    excel_xlsx = convert_df_to_excel(df_individual_output)
-    
-    ste.download_button(label='Download your previous results as an Excel spreadsheet (XLSX)',
-                        data=excel_xlsx,
-                        file_name= output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-    
-    json_output = convert_df_to_json(df_individual_output)
-    
-    ste.download_button(
-        label="Download your previous results as a JSON", 
-        data = json_output,
-        file_name= output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.page_link('pages/AI.py', label="ANALYSE your previous spreadsheet with an AI", icon = '🤔')
 
 # %% [markdown]
 # # Save and run
 
-# %%
-if run_button:
-
-    #Check whether search terms entered
-
-    afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+    # %%
+    if keep_button:
     
-    if afca_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
+        #Check whether search terms entered
     
-    elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
+        afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+        
+        if afca_search_terms.replace('None', '') == "":
+    
+            st.warning('You must enter some search terms.')
+                
+        else:
+                
+            df_master = afca_create_df()
 
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
-        st.session_state['need_resetting'] = 1
+            st.session_state['df_master'] = df_master
+        
+            df_master.pop("Your GPT API key")
+        
+            df_master.pop("Processed")
+        
+            responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+        
+            #Produce a file to download
+        
+            csv = convert_df_to_csv(df_master)
             
-    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-            
-        st.warning('You have not validated your API key.')
-        quit()
-
-    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
-
-        st.warning('You have not entered a valid API key.')
-        quit()  
-        
-    else:
-        
-        st.write('Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.')
-        #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-
-        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
-
-            try:
-
-                #Create spreadsheet of responses
-                df_master = create_df()
-
-                #Activate user's own key or mine
-                if st.session_state.own_account == True:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
-    
-                else:
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-                
-                openai.api_key = API_key
-
-                #Produce results
-                df_individual_output = run(df_master)
-        
-                #Keep results in session state
-                st.session_state["df_individual_output"] = df_individual_output
-        
-                st.session_state["df_master"] = df_master
-
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                
-                st.session_state["page_from"] = 'pages/AFCA.py'
-        
-                #Write results
-        
-                st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
-                
-                #Button for downloading results
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-                csv_output = convert_df_to_csv(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a CSV (for use in Excel etc)", 
-                    data = csv_output,
-                    file_name= output_name + '.csv', 
-                    mime= "text/csv", 
+            ste.download_button(
+                label="Download as a CSV (for use in Excel etc)", 
+                data = csv,
+                file_name=responses_output_name + '.csv', 
+                mime= "text/csv", 
         #            key='download-csv'
-                )
-        
-                excel_xlsx = convert_df_to_excel(df_individual_output)
-                
-                ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
-                                    data=excel_xlsx,
-                                    file_name= output_name + '.xlsx', 
-                                    mime='application/vnd.ms-excel',
-                                   )
-        
-                json_output = convert_df_to_json(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a JSON", 
-                    data = json_output,
-                    file_name= output_name + '.json', 
-                    mime= "application/json", 
-                )
-        
-                st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
-                    
-                #Keep record on Google sheet
-                #Obtain google spreadsheet       
-                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
-                #df_master["Processed"] = datetime.now()
-                #df_master.pop("Your GPT API key")
-                #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="CTH", data=df_to_update, )
+            )
+    
+            xlsx = convert_df_to_excel(df_master)
             
-            except Exception as e:
-                st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
-                st.exception(e)
-
-
-# %%
-if keep_button:
-
-    #Check whether search terms entered
-
-    afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
-    
-    if afca_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
-    
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-        
-        if 'need_resetting' not in st.session_state:
+            ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
+                                data=xlsx,
+                                file_name=responses_output_name + '.xlsx', 
+                                mime='application/vnd.ms-excel',
+                               )
             
-            st.session_state['need_resetting'] = 1
+            json = convert_df_to_json(df_master)
             
-    else:
+            ste.download_button(
+                label="Download as a JSON", 
+                data = json,
+                file_name= responses_output_name + '.json', 
+                mime= "application/json", 
+            )
+
+
+    # %%
+    if return_button:
+    
+        st.switch_page("Home.py")
+
+    # %%
+    #if reset_button:
+        #clear_cache_except_validation_df_master()
+        #st.rerun()
+
+    # %%
+    if next_button:
+    
+        afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+        
+        if afca_search_terms.replace('None', '') == "":
+    
+            st.warning('You must enter some search terms.')
+        
+        else:
+        
+            df_master = afca_create_df()
             
-        df_master = create_df()
-    
-        df_master.pop("Your GPT API key")
-    
-        df_master.pop("Processed")
-    
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
-        #Produce a file to download
-    
-        csv = convert_df_to_csv(df_master)
-        
-        ste.download_button(
-            label="Download as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=responses_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
-
-
-        xlsx = convert_df_to_excel(df_master)
-        
-        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=responses_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-        
-        json = convert_df_to_json(df_master)
-        
-        ste.download_button(
-            label="Download as a JSON", 
-            data = json,
-            file_name= responses_output_name + '.json', 
-            mime= "application/json", 
-        )
-
-
-# %%
-if return_button:
-
-    st.switch_page("Home.py")
-
-# %%
-if reset_button:
-    clear_cache_except_validation_df_master()
-    st.rerun()
-
-# %%
+            st.session_state['df_master'] = df_master
+                        
+            st.session_state["page_from"] = 'pages/AFCA.py'
+            
+            st.switch_page('pages/GPT.py')

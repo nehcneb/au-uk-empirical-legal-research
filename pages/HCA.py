@@ -48,6 +48,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
+from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
 import openai
@@ -74,20 +75,11 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
-
 # %% [markdown]
 # # High Court of Australia search engine
 
 # %%
-from common_functions import link, is_date
+from common_functions import link, is_date, list_value_check, au_date
 
 # %%
 #Collections available
@@ -97,7 +89,7 @@ hca_collections = ['Judgments 2000-present', 'Judgments 1948-1999', '1 CLR - 100
 
 # %%
 #function to create dataframe
-def create_df():
+def hca_create_df():
 
     #submission time
     timestamp = datetime.now()
@@ -354,7 +346,7 @@ def hca_search(collection = '',
 
 # %%
 #Define function turning search results url to links to judgments
-def search_results_to_judgment_links(url_search_results, judgment_counter_bound):
+def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     
     page = requests.get(url_search_results)
@@ -404,6 +396,9 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
                             counter += 1
                         else:
                             break
+                else:
+                    break
+    
 
     return links
 
@@ -411,7 +406,7 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
 
 # %%
 #Define function for judgment link containing PDF
-def pdf_judgment(url):
+def hca_pdf_judgment(url):
     pdf_url = url.replace('showCase', 'downloadPdf')
     headers = {'User-Agent': 'whatever'}
     r = requests.get(pdf_url, headers=headers)
@@ -429,13 +424,13 @@ def pdf_judgment(url):
 # %%
 #Meta labels and judgment combined
 #IN USE
-meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catchwords', 'Order']
+hca_meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catchwords', 'Order']
 
 
 # %%
 #If judgment link contains 'showCase'
 
-def meta_judgment_dict(judgment_url):
+def hca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
                 'Hyperlink to High Court Judgments Database' : '', 
@@ -555,7 +550,7 @@ def meta_judgment_dict(judgment_url):
     #Judgment text
     try:
 
-        judgment_dict['judgment'] = pdf_judgment(judgment_url)
+        judgment_dict['judgment'] = hca_pdf_judgment(judgment_url)
         
     except Exception as e:
         print(e)
@@ -569,7 +564,7 @@ def meta_judgment_dict(judgment_url):
 # %%
 #If judgment link contains 'showbyHandle'
 
-def meta_judgment_dict_alt(judgment_url):
+def hca_meta_judgment_dict_alt(judgment_url):
     
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
@@ -606,7 +601,7 @@ def meta_judgment_dict_alt(judgment_url):
     elif len(judgment_pdfs_list) > 0:
         raw_link = judgment_pdfs_list[0]['href']
         pdf_link = 'https://eresources.hcourt.gov.au' + raw_link
-        judgment_dict['judgment'] = pdf_judgment(pdf_link)
+        judgment_dict['judgment'] = hca_pdf_judgment(pdf_link)
 
     else:
         judgment_dict['judgment'] = 'Error. Judgment not available or not downloaded.'
@@ -732,7 +727,7 @@ def meta_judgment_dict_alt(judgment_url):
 # %%
 #Slow way of finding a case from mnc
 
-def mnc_to_link_browse(collection, year, num):
+def hca_mnc_to_link_browse(collection, year, num):
 
     #Default judgment without the prefix https://eresources.hcourt.gov.au
     judgment_url_raw = ''
@@ -802,7 +797,7 @@ def mnc_to_link_browse(collection, year, num):
 
 # %%
 #Function for turning citation to judgment_url
-def citation_to_link(collection, citation):
+def hca_citation_to_link(collection, citation):
 
     #Placeholder error url
     judgment_url = f'https://eresources.hcourt.gov.au/showCase/1900/HCA/1'
@@ -889,7 +884,7 @@ def citation_to_link(collection, citation):
     
             else:
                 #Try to use HCA's browse function to get link to case
-                judgment_url = mnc_to_link_browse(collection, year, num)
+                judgment_url = hca_mnc_to_link_browse(collection, year, num)
     
                 return judgment_url
     
@@ -901,7 +896,7 @@ def citation_to_link(collection, citation):
 
 # %%
 #Function for turning mnc to judgment_url
-def mnc_to_link(collection, mnc):
+def hca_mnc_to_link(collection, mnc):
 #NOT in use
     
     mnc_formatted = mnc.replace(' ', '').replace('[', '').replace(']', '')
@@ -941,7 +936,7 @@ def mnc_to_link(collection, mnc):
 
                 else:
                     
-                    judgment_url = mnc_to_link_browse(collection, year, num)
+                    judgment_url = hca_mnc_to_link_browse(collection, year, num)
 
                     return judgment_url
 
@@ -957,7 +952,7 @@ def mnc_to_link(collection, mnc):
 # %%
 #Functions for minimum and maximum year
 
-def min_max_year(collection):
+def hca_min_max_year(collection):
 #NOT IN USE
     
     if collection == 'Judgments 2000-present':
@@ -980,7 +975,9 @@ def min_max_year(collection):
 
     return {'min_year': min_year, 'max_year': max_year}
 
-def year_check(year_entry):
+def hca_year_check(year_entry):
+#NOT IN USE
+
 
     #Default validity
     validity = False
@@ -996,14 +993,14 @@ def year_check(year_entry):
         
     return validity
 
-def min_year_validity(collection, min_year_entry):
+def hca_min_year_validity(collection, min_year_entry):
     #NOT IN USE
 
-    if year_check(min_year_entry) == False:
+    if hca_year_check(min_year_entry) == False:
         
         return False
     
-    elif int(min_year_entry) <= min_max_year(collection)['min_year']:
+    elif int(min_year_entry) <= hca_min_max_year(collection)['min_year']:
         
         return False
         
@@ -1011,14 +1008,14 @@ def min_year_validity(collection, min_year_entry):
         
         return True
 
-def max_year_validity(collection, max_year_entry):
+def hca_max_year_validity(collection, max_year_entry):
     #NOT IN USE
 
-    if year_check(max_year_entry) == False:
+    if hca_year_check(max_year_entry) == False:
         
         return False
     
-    elif int(max_year_entry) >= min_max_year(collection)['max_year']:
+    elif int(max_year_entry) >= hca_min_max_year(collection)['max_year']:
         
         return False
         
@@ -1031,7 +1028,7 @@ def max_year_validity(collection, max_year_entry):
 #Load hca_data
 
 @st.cache_data
-def load_data(url):
+def hca_load_data(url):
     df = pd.read_csv(url)
     return df
 
@@ -1041,13 +1038,13 @@ hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-
 
 #hca_df = pd.read_csv(StringIO(response.text))
 
-hca_df = load_data(hca_data_url)
+hca_df = hca_load_data(hca_data_url)
 
 
 # %%
 #Function to excluding unwanted jugdments
 
-def judgment_to_exclude(case_info = {},
+def hca_judgment_to_exclude(case_info = {},
                         collection = '', 
                         own_parties_include = '', 
                         own_parties_exclude = '', 
@@ -1183,7 +1180,7 @@ def judgment_to_exclude(case_info = {},
 # %%
 #Function to get judgment links with filters
 
-def search_results_to_judgment_links_filtered_df(url_search_results, 
+def hca_search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgment_counter_bound,
                                       collection, 
                                     #hca_df, 
@@ -1257,7 +1254,7 @@ def search_results_to_judgment_links_filtered_df(url_search_results,
             
             for case_info in case_infos:
                 if counter <= judgment_counter_bound:
-                    if judgment_to_exclude(case_info, 
+                    if hca_judgment_to_exclude(case_info, 
                             collection, 
                             own_parties_include, 
                             own_parties_exclude, 
@@ -1325,7 +1322,7 @@ if 'judgments_counter_bound' not in st.session_state:
 # %%
 #Obtain parameters
 
-def run(df_master):
+def hca_run(df_master):
     df_master = df_master.fillna('')
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -1346,10 +1343,10 @@ def run(df_master):
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Use the following if don't want to filter results
-    #judgments_links = search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    #judgments_links = hca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
     
     #Use the following if want to filter results. Will be slow.
-    judgments_links = search_results_to_judgment_links_filtered_df(url_search_results, 
+    judgments_links = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgments_counter_bound,
                                     #hca_df, 
                                     df_master.loc[0, 'Collection'], 
@@ -1366,11 +1363,11 @@ def run(df_master):
 
         if 'showbyHandle' in link:
             
-            judgment_dict = meta_judgment_dict_alt(link)
+            judgment_dict = hca_meta_judgment_dict_alt(link)
 
         else: #If 'showCase' in link:
 
-            judgment_dict = meta_judgment_dict(link)
+            judgment_dict = hca_meta_judgment_dict(link)
     
         judgments_file.append(judgment_dict)
         
@@ -1379,12 +1376,12 @@ def run(df_master):
     #Add judgment if mnc entered
 
     if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
-        #direct_link = mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
-        direct_link = citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
 
         if len(direct_link) > 0:
             
-            judgment_dict_direct = meta_judgment_dict(direct_link)
+            judgment_dict_direct = hca_meta_judgment_dict(direct_link)
             
             judgments_file.append(judgment_dict_direct)
         
@@ -1424,7 +1421,7 @@ def run(df_master):
     #Drop metadata if not wanted
 
     if int(df_master.loc[0, 'Metadata inclusion']) == 0:
-        for meta_label in meta_labels_droppable:
+        for meta_label in hca_meta_labels_droppable:
             try:
                 df_updated.pop(meta_label)
             except:
@@ -1436,7 +1433,7 @@ def run(df_master):
 # %%
 #Function to get link to search results and number of results
 
-def search_url(df_master):
+def hca_search_url(df_master):
     df_master = df_master.fillna('')
     
     #Combining catchwords into new column
@@ -1453,8 +1450,8 @@ def search_url(df_master):
     #If mnc entered
 
     if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
-        #direct_link = mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
-        direct_link = citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
 
         if len(direct_link) > 0:
             
@@ -1495,7 +1492,34 @@ if 'need_resetting' not in st.session_state:
 
 if 'df_master' not in st.session_state:
 
+    #Generally applicable
     st.session_state['df_master'] = pd.DataFrame([])
+    st.session_state['df_master'].loc[0, 'Your name'] = ''
+    st.session_state['df_master'].loc[0, 'Your email address'] = ''
+    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
+    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
+    st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    st.session_state['df_master'].loc[0, 'Use own account'] = False
+    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+
+    #Jurisdiction specific
+    st.session_state.df_master.loc[0, 'Collection'] = 'Judgments 2000-present' 
+    st.session_state.df_master.loc[0, 'Quick search'] = None
+    st.session_state.df_master.loc[0, 'Full text search'] = None 
+    st.session_state.df_master.loc[0, 'Search for medium neutral citation'] = None 
+    st.session_state.df_master.loc[0, 'Parties include'] = None 
+    st.session_state.df_master.loc[0, 'Parties do not include'] = None 
+    st.session_state.df_master.loc[0, 'Decision date is before'] = None 
+    st.session_state.df_master.loc[0, 'Decision date is after'] = None 
+    #st.session_state.df_master.loc[0, 'Case numbers include'] = None 
+    #st.session_state.df_master.loc[0, 'Case numbers do not include'] = None 
+    st.session_state.df_master.loc[0, 'Judges include'] = None 
+    st.session_state.df_master.loc[0, 'Judges do not include']  = None
+
+    #Generally applicable
+    st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
 
 if 'df_individual_output' not in st.session_state:
 
@@ -1525,9 +1549,9 @@ except:
 
 # %%
 #Number of search results to display
-if 'number_of_results' not in st.session_state:
+#if 'number_of_results' not in st.session_state:
 
-    st.session_state['number_of_results'] = '0'
+    #st.session_state['number_of_results'] = '0'
 
 
 # %%
@@ -1535,625 +1559,307 @@ if 'number_of_results' not in st.session_state:
 #if 'filtering_message' not in st.session_state:
     #st.session_state['filtering_message'] = False
 
+# %%
+#If landing page is not home
+if 'page_from' not in st.session_state:
+    st.session_state['page_from'] = 'Home.py'
+
 # %% [markdown]
 # ## Form before AI
 
 # %%
-#Create form
+if st.session_state.page_from != "pages/HCA.py": #Need to add in order to avoid GPT page from showing form of previous page
 
-return_button = st.button('RETURN to first page')
-
-st.header(f"You have selected to study :blue[judgments of the High Court of Australia].")
-
-#    st.header("Judgment Search Criteria")
-
-st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    #Create form
+    
+    return_button = st.button('RETURN to first page')
+    
+    st.header(f"You have selected to study :blue[judgments of the High Court of Australia].")
+    
+    #    st.header("Judgment Search Criteria")
+    
+    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
 """)
-
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
-
-st.subheader("Jugdments to cover")
-
-collection_entry = st.selectbox(label = 'Select or type in the collection of judgments to cover', options = hca_collections)
-
-st.subheader("Your search terms")
-
-st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section largely mimics their judgments search function except the filter function.
+    
+    st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+    
+    st.subheader("Jugdments to cover")
+    
+    collection_entry = st.selectbox(label = 'Select or type in the collection of judgments to cover', options = hca_collections, index = list_value_check(hca_collections, st.session_state.df_master.loc[0, 'Collection']))
+    
+    st.subheader("Your search terms")
+    
+    st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section largely mimics their judgments search function except the filter function.
 """)
-
-quick_search_entry = st.text_input('Quick search (search party names and catchwords)')
-
-citation_entry = st.text_input('Search for medium neutral citation (eg [2014] HCA 1)')
-st.caption('CLR or other citations may work only up to 2014.')
-
-#if citation_entry:
-    #if 'hca' not in citation_entry.lower():
-        
-        #st.error('Sorry, this pilot program only searches for medium neutral citation (eg [2014] HCA 1).')
-
-if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
-
-    full_text_entry = st.text_input('Full text search')
-
-else:
-    full_text_entry = ''
-
-st.markdown("""You can preview the judgments returned by your search terms on the High Court Judgments Database after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
-
-preview_button = st.button('PREVIEW on the High Court Judgments Database (in a pop-up window)')
-
-#if st.session_state.number_of_results != '0':
-
-    #hca_results_num_button = st.button('DISPLAY the number of results')
     
-    #if hca_results_num_button:
-
-results_num_button = st.button(label = 'SHOW the number of judgments found')
-
-if results_num_button:
-
-    if len(st.session_state.df_master) > 0:
-
-        if int(st.session_state.number_of_results) == 0:
-
-            st.error(f'There are {st.session_state.number_of_results} results. Please change your search terms.')
-
-        elif int(st.session_state.number_of_results) == 1:
+    quick_search_entry = st.text_input(label = 'Quick search (search party names and catchwords)', value = st.session_state.df_master.loc[0, 'Quick search'])
     
-            st.success(f'There is {st.session_state.number_of_results} result.')
+    citation_entry = st.text_input(label = 'Search for medium neutral citation (eg [2014] HCA 1)', value = st.session_state.df_master.loc[0, 'Search for medium neutral citation'])
+    st.caption('CLR or other citations may work only up to 2014.')
     
-        else:
-        
-            st.success(f'There are {st.session_state.number_of_results} results.')
-
-    else:
-
-        st.warning('Please enter some search terms and press the PREVIEW button first.')
-        
-    #hca_results_num()
-
-#The following filters are not based on HCA's filter at https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=
-
-filter_toggle = st.toggle("Filter your search results")
-
-if filter_toggle:
-
-    #st.subheader("Filter your search results")
-    
-    st.warning("Filtering your search results may *significantly* prolong the program processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
-    
-    own_parties_include_entry = st.text_input('Parties include (separate parties by comma or semi-colon)')
-    st.caption('If entered, then this program will only process cases that include at least one of the parties entered.')
-    
-    own_parties_exclude_entry = st.text_input('Parties do not include (separate parties by comma or semi-colon)')
-    st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
-    
-    after_date_entry = st.date_input('Decision date is after', value = None, format="DD/MM/YYYY")
-    
-    before_date_entry = st.date_input('Decision date is before', value = None, format="DD/MM/YYYY")
-
-    #own_min_year_entry = st.text_input('After this year')
-    
-    #if own_min_year_entry:
-
-        #own_min_year_validity = year_check(own_min_year_entry)
-    
-        #if not own_min_year_validity:
-                
-            #st.error('You have not entered a year.')
-        
-    #own_max_year_entry = st.text_input('Before this year')
-    
-    #if own_max_year_entry:
-
-        #own_max_year_validity = year_check(own_max_year_entry)
-
-        #if not own_max_year_validity:
-    
-            #st.error('You have not entered a year.')
-
-    #if ((own_parties_include_entry) or (own_parties_exclude_entry) or (bool(after_date_entry) == True) or (bool(before_date_entry) == True)):
-        
-        #st.session_state['filtering_message'] = True
-        
-    #else:
-        #st.session_state['filtering_message'] = False
-
+    #if citation_entry:
+        #if 'hca' not in citation_entry.lower():
+            
+            #st.error('Sorry, this pilot program only searches for medium neutral citation (eg [2014] HCA 1).')
     
     if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
     
-        #own_case_numbers_include_entry = st.text_input('Case numbers include (separate case numbers by comma or semi-colon)') 
-        #st.caption('If entered, then this program will only process cases with at least one of the case numbers entered.')
+        full_text_entry = st.text_input(label = 'Full text search', value = st.session_state.df_master.loc[0, 'Full text search'])
     
-        #own_case_numbers_exclude_entry = st.text_input('Case numbers do not include (separate case numbers by comma or semi-colon)') 
-        #st.caption('If entered, then this program will only process cases without any of the case numbers entered.')
+    else:
+        full_text_entry = ''
     
-        own_judges_include_entry = st.text_input('Judges include (separate judges by comma or semi-colon)')
-        st.caption('If entered, then this program will only process cases heared by at least one of the judges entered.')
+    st.markdown("""You can preview the judgments returned by your search terms on the High Court Judgments Database after you have entered some search terms.
+    
+You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+""")
+    
+    preview_button = st.button(label = 'PREVIEW on the High Court Judgments Database (in a pop-up window)', type = 'primary')
+    
+    #if st.session_state.number_of_results != '0':
+    
+        #hca_results_num_button = st.button('DISPLAY the number of results')
         
-        own_judges_exclude_entry = st.text_input('Judges do not include (separate judges by comma or semi-colon)')
-        st.caption('If entered, then this program will only process cases not heared by any of the judges entered.')
+        #if hca_results_num_button:
+    
+    results_num_button = st.button(label = 'SHOW the number of judgments found', disabled = ('number_of_results' not in st.session_state), help = 'Press PREVIEW first.')
+    
+    if results_num_button:
+    
+        if len(st.session_state.df_master) > 0:
+    
+            if int(st.session_state.number_of_results) == 0:
+    
+                st.error(f'There are {st.session_state.number_of_results} results. Please change your search terms.')
+    
+            elif int(st.session_state.number_of_results) == 1:
         
-        #if ((own_judges_include_entry) or (own_judges_exclude_entry)):
+                st.success(f'There is {st.session_state.number_of_results} result.')
+        
+            else:
+            
+                st.success(f'There are {st.session_state.number_of_results} results.')
+    
+        else:
+    
+            st.warning('Please enter some search terms and press the PREVIEW button first.')
+            
+        #hca_results_num()
+    
+    #The following filters are not based on HCA's filter at https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=
+    
+    filter_toggle = st.toggle("Filter your search results")
+    
+    if filter_toggle:
+    
+        #st.subheader("Filter your search results")
+        
+        st.warning("Filtering your search results may *significantly* prolong the program processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
+        
+        own_parties_include_entry = st.text_input(label = 'Parties include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties include'])
+        st.caption('If entered, then this program will only process cases that include at least one of the parties entered.')
+        
+        own_parties_exclude_entry = st.text_input(label = 'Parties do not include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties do not include'])
+        st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
+        
+        after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+        
+        before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+    
+        #own_min_year_entry = st.text_input('After this year')
+        
+        #if own_min_year_entry:
+    
+            #own_hca_min_year_validity = hca_year_check(own_min_year_entry)
+        
+            #if not own_hca_min_year_validity:
+                    
+                #st.error('You have not entered a year.')
+            
+        #own_max_year_entry = st.text_input('Before this year')
+        
+        #if own_max_year_entry:
+    
+            #own_hca_max_year_validity = hca_year_check(own_max_year_entry)
+    
+            #if not own_hca_max_year_validity:
+        
+                #st.error('You have not entered a year.')
+    
+        #if ((own_parties_include_entry) or (own_parties_exclude_entry) or (bool(after_date_entry) == True) or (bool(before_date_entry) == True)):
+            
             #st.session_state['filtering_message'] = True
-
+            
         #else:
             #st.session_state['filtering_message'] = False
     
-    else:
-        #own_case_numbers_include_entry = ''
-        #own_case_numbers_exclude_entry = ''
-        own_judges_include_entry = ''
-        own_judges_exclude_entry = ''
-
-#if st.session_state.filtering_message == True:
+        
+        if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
+        
+            #own_case_numbers_include_entry = st.text_input(label = 'Case numbers include (separate case numbers by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Case numbers include']) 
+            #st.caption('If entered, then this program will only process cases with at least one of the case numbers entered.')
+        
+            #own_case_numbers_exclude_entry = st.text_input(label = 'Case numbers do not include (separate case numbers by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Case numbers do not include']) 
+            #st.caption('If entered, then this program will only process cases without any of the case numbers entered.')
+        
+            own_judges_include_entry = st.text_input(label = 'Judges include (separate judges by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Judges include'])
+            st.caption('If entered, then this program will only process cases heared by at least one of the judges entered.')
+            
+            own_judges_exclude_entry = st.text_input(label = 'Judges do not include (separate judges by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Judges do not include'])
+            st.caption('If entered, then this program will only process cases not heared by any of the judges entered.')
+            
+            #if ((own_judges_include_entry) or (own_judges_exclude_entry)):
+                #st.session_state['filtering_message'] = True
     
-    #st.warning("Filtering your search results may significantly prolong the program processing time.")
+            #else:
+                #st.session_state['filtering_message'] = False
+        
+        else:
+            #own_case_numbers_include_entry = ''
+            #own_case_numbers_exclude_entry = ''
+            own_judges_include_entry = ''
+            own_judges_exclude_entry = ''
     
-st.subheader("Judgment metadata collection")
-
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
-
+    #if st.session_state.filtering_message == True:
+        
+        #st.warning("Filtering your search results may significantly prolong the program processing time.")
+        
+    st.subheader("Judgment metadata collection")
+    
+    st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+    
 Case name and medium neutral citation are always included with your results.
 """)
-
-meta_data_entry = st.checkbox('Include metadata', value = False)
+    
+    meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
 
 # %% [markdown]
-# ## Form for AI and account
+# ## Buttons
 
-# %%
-st.header("Use GPT as your research assistant")
-
-#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
-
-st.markdown("**:green[Would you like GPT to answer questions about the judgments returned by your search terms?]**")
-
-st.markdown("""Please consider trying this program without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
-""")
-
-gpt_activation_entry = st.checkbox('Use GPT', value = False)
-
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per judgment. The [exact cost](https://openai.com/pricing) for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced. You will be given ex-post cost estimates.")
-
-st.subheader("Enter your questions for each judgment")
-
-st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** judgment based only on information from **that** judgment. """)
-
-st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
-
-if st.toggle('See the instruction given to GPT'):
-    st.write(f"{intro_for_GPT[0]['content']}")
-
-if st.toggle('Tips for using GPT'):
-    tips()
-
-gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
-
-#Disable toggles while prompt is not entered or the same as the last processed prompt
-if gpt_activation_entry:
+    # %%
+    #Buttons
     
-    if gpt_questions_entry:
-        st.session_state['disable_input'] = False
-        
-    else:
-        st.session_state['disable_input'] = True
-else:
-    st.session_state['disable_input'] = False
+    #col1, col2, col3, col4 = st.columns(4, gap = 'small')
     
-st.caption(f"By default, answers to your questions will be generated by model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each judgment.")
-
-if own_account_allowed() > 0:
+    #with col1:
     
-    st.subheader(':orange[Enhance program capabilities]')
+        #reset_button = st.button(label='RESET', type = 'primary')
     
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of judgments to process? You can do so with your own GPT account.
-    """)
+    #with col4:
+    with stylable_container(
+        "green",
+        css_styles="""
+        button {
+            background-color: #00FF00;
+            color: black;
+        }""",
+    ):
+        next_button = st.button(label='NEXT')
     
-    own_account_entry = st.toggle('Use my own GPT account',  disabled = st.session_state.disable_input)
-    
-    if own_account_entry:
-    
-        st.session_state["own_account"] = True
-    
-        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
-    """)
-            
-        name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
-    
-        email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
-        
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
-        
-        valdity_check = st.button('VALIDATE your API key')
-    
-        if valdity_check:
-            
-            api_key_valid = is_api_key_valid(gpt_api_key_entry)
-                    
-            if api_key_valid == False:
-                st.session_state['gpt_api_key_validity'] = False
-                st.error('Your API key is not valid.')
-                
-            else:
-                st.session_state['gpt_api_key_validity'] = True
-                st.success('Your API key is valid.')
-    
-        st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
-        
-        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
-        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
-        
-        if gpt_enhancement_entry == True:
-        
-            st.session_state.gpt_model = "gpt-4o"
-            st.session_state.gpt_enhancement_entry = True
+    keep_button = st.button('SAVE')
 
-        else:
-            
-            st.session_state.gpt_model = "gpt-4o-mini"
-            st.session_state.gpt_enhancement_entry = False
-        
-        st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
-        
-        #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
-
-        #st.session_state.judgments_counter_bound = judgments_counter_bound_entry
-
-        judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_judgment_counter_bound))
-
-        if judgments_counter_bound_entry:
-            wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
-            try:
-                st.session_state.judgments_counter_bound = int(judgments_counter_bound_entry)
-            except:
-                st.warning(wrong_number_warning)
-                st.session_state.judgments_counter_bound = default_judgment_counter_bound
-
-            if ((st.session_state.judgments_counter_bound <= 0) or (st.session_state.judgments_counter_bound > 100)):
-                st.warning(wrong_number_warning)
-                st.session_state.judgments_counter_bound = default_judgment_counter_bound
-    
-        st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
-    
-    else:
-        
-        st.session_state["own_account"] = False
-    
-        st.session_state.gpt_model = "gpt-4o-mini"
-
-        st.session_state.gpt_enhancement_entry = False
-    
-        st.session_state.judgments_counter_bound = default_judgment_counter_bound
-
-# %% [markdown]
-# ## Consent and next steps
-
-# %%
-st.header("Consent")
-
-st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
-
-consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
-
-st.markdown("""If you do not agree, then please feel free to close this form.""")
-
-st.header("Next steps")
-
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download.
-
-You can also download a record of your entries.
-
-""")
-
-#Warning
-if st.session_state.gpt_model == 'gpt-4o-mini':
-    st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
-
-if st.session_state.gpt_model == "gpt-4o":
-    st.warning('An expensive GPT model will answer your questions. Please be cautious.')
-
-run_button = st.button('RUN the program')
-
-keep_button = st.button('DOWNLOAD your entries')
-
-reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
-
-#Display need resetting message if necessary
-if st.session_state.need_resetting == 1:
-    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output) > 0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
-# %% [markdown]
-# ## Previous responses and outputs
-
-# %%
-#Create placeholder download buttons if previous entries and results in st.session_state:
-
-if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-    
-    #Load previous entries and results
-    
-    df_master = st.session_state.df_master
-    df_individual_output = st.session_state.df_individual_output
-
-    #Buttons for downloading entries
-    st.subheader('Looking for your previous entries and results?')
-
-    st.write('Previous entries')
-
-    entries_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
-
-    csv = convert_df_to_csv(df_master)
-
-    ste.download_button(
-        label="Download your previous entries as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=entries_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    xlsx = convert_df_to_excel(df_master)
-    
-    ste.download_button(label='Download your previous entries as an Excel spreadsheet (XLSX)',
-                        data=xlsx,
-                        file_name=entries_output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    json = convert_df_to_json(df_master)
-    
-    ste.download_button(
-        label="Download your previous entries as a JSON", 
-        data = json,
-        file_name= entries_output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.write('Previous results')
-
-    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-
-    csv_output = convert_df_to_csv(df_individual_output)
-    
-    ste.download_button(
-        label="Download your previous results as a CSV (for use in Excel etc)", 
-        data = csv_output,
-        file_name= output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    excel_xlsx = convert_df_to_excel(df_individual_output)
-    
-    ste.download_button(label='Download your previous results as an Excel spreadsheet (XLSX)',
-                        data=excel_xlsx,
-                        file_name= output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-    
-    json_output = convert_df_to_json(df_individual_output)
-    
-    ste.download_button(
-        label="Download your previous results as a JSON", 
-        data = json_output,
-        file_name= output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.page_link('pages/AI.py', label="ANALYSE your previous spreadsheet with an AI", icon = '🤔')
 
 # %% [markdown]
 # # Save and run
 
-# %%
-if preview_button:
-
-    df_master = create_df()
-
-    st.session_state['df_master'] = df_master
-
-    judgments_url_num = search_url(df_master)
+    # %%
+    if preview_button:
     
-    judgments_url = judgments_url_num['url']
-
-    judgments_num = judgments_url_num['results_num']
-
-    st.session_state['number_of_results'] = judgments_num
-
-    open_page(judgments_url)
+        df_master = hca_create_df()
     
-    #st.rerun
-
-# %%
-if run_button:
-
-    #Check whether search terms entered
-
-    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
+        st.session_state['df_master'] = df_master
     
-    if all_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
+        judgments_url_num = hca_search_url(df_master)
+        
+        judgments_url = judgments_url_num['url']
     
-    elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
+        judgments_num = judgments_url_num['results_num']
+    
+        st.session_state['number_of_results'] = judgments_num
+    
+        open_page(judgments_url)
+        
+        #st.rerun
 
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+    # %%
+    if keep_button:
+    
+        #Check whether search terms entered
+    
+        all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
+        
+        if all_search_terms.replace('None', '') == "":
+    
+            st.warning('You must enter some search terms.')
+                
+        else:
+                
+            df_master = hca_create_df()
 
-        st.session_state['need_resetting'] = 1
+            st.session_state['df_master'] = df_master
+
+            df_master.pop("Your GPT API key")
+        
+            df_master.pop("Processed")
+        
+            responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+        
+            #Produce a file to download
+        
+            csv = convert_df_to_csv(df_master)
             
-    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-            
-        st.warning('You have not validated your API key.')
-        quit()
-
-    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
-
-        st.warning('You have not entered a valid API key.')
-        quit()  
-        
-    else:
-        
-        st.write('Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.')
-        #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-
-        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
-
-            try:
-
-                #Create spreadsheet of responses
-                df_master = create_df()
-
-                #Activate user's own key or mine
-                if st.session_state.own_account == True:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
-    
-                else:
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-                
-                openai.api_key = API_key
-
-                #Produce results
-                df_individual_output = run(df_master)
-        
-                #Keep results in session state
-                st.session_state["df_individual_output"] = df_individual_output
-        
-                st.session_state["df_master"] = df_master
-
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                
-                st.session_state["page_from"] = 'pages/HCA.py'
-        
-                #Write results
-        
-                st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
-                
-                #Button for downloading results
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-                csv_output = convert_df_to_csv(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a CSV (for use in Excel etc)", 
-                    data = csv_output,
-                    file_name= output_name + '.csv', 
-                    mime= "text/csv", 
+            ste.download_button(
+                label="Download as a CSV (for use in Excel etc)", 
+                data = csv,
+                file_name=responses_output_name + '.csv', 
+                mime= "text/csv", 
         #            key='download-csv'
-                )
-        
-                excel_xlsx = convert_df_to_excel(df_individual_output)
-                
-                ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
-                                    data=excel_xlsx,
-                                    file_name= output_name + '.xlsx', 
-                                    mime='application/vnd.ms-excel',
-                                   )
-        
-                json_output = convert_df_to_json(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a JSON", 
-                    data = json_output,
-                    file_name= output_name + '.json', 
-                    mime= "application/json", 
-                )
-        
-                st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
-                    
-                #Keep record on Google sheet
-                #Obtain google spreadsheet       
-                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
-                #df_master["Processed"] = datetime.now()
-                #df_master.pop("Your GPT API key")
-                #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="CTH", data=df_to_update, )
+            )
+    
+    
+            xlsx = convert_df_to_excel(df_master)
             
-            except Exception as e:
-                st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
-                st.exception(e)
-
-
-# %%
-if keep_button:
-
-    #Check whether search terms entered
-
-    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
-    
-    if all_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
-    
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-        
-        if 'need_resetting' not in st.session_state:
+            ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
+                                data=xlsx,
+                                file_name=responses_output_name + '.xlsx', 
+                                mime='application/vnd.ms-excel',
+                               )
             
-            st.session_state['need_resetting'] = 1
+            json = convert_df_to_json(df_master)
             
-    else:
+            ste.download_button(
+                label="Download as a JSON", 
+                data = json,
+                file_name= responses_output_name + '.json', 
+                mime= "application/json", 
+            )
+
+
+    # %%
+    if return_button:
+    
+        st.switch_page("Home.py")
+
+    # %%
+    #if reset_button:
+        #clear_cache_except_validation_df_master()
+        #st.rerun()
+
+    # %%
+    if next_button:
+        all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry)
             
-        df_master = create_df()
+        if all_search_terms.replace('None', '') == "":
     
-        df_master.pop("Your GPT API key")
-    
-        df_master.pop("Processed")
-    
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
-        #Produce a file to download
-    
-        csv = convert_df_to_csv(df_master)
+            st.warning('You must enter some search terms.')
+
+        else:
         
-        ste.download_button(
-            label="Download as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=responses_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
-
-
-        xlsx = convert_df_to_excel(df_master)
-        
-        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=responses_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-        
-        json = convert_df_to_json(df_master)
-        
-        ste.download_button(
-            label="Download as a JSON", 
-            data = json,
-            file_name= responses_output_name + '.json', 
-            mime= "application/json", 
-        )
-
-
-# %%
-if return_button:
-
-    st.switch_page("Home.py")
-
-# %%
-if reset_button:
-    clear_cache_except_validation_df_master()
-    st.rerun()
-
-# %%
+            df_master = hca_create_df()
+            
+            st.session_state['df_master'] = df_master
+            
+            st.session_state["page_from"] = 'pages/HCA.py'
+            
+            st.switch_page('pages/GPT.py')

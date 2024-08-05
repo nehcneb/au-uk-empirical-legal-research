@@ -56,6 +56,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
+from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
 import openai
@@ -96,15 +97,6 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
-
 # %% [markdown]
 # # AI model and context
 
@@ -115,7 +107,7 @@ st.set_page_config(
 #Import functions
 from gpt_functions import is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
 #Import variables
-from gpt_functions import question_characters_bound
+from gpt_functions import question_characters_bound, default_judgment_counter_bound
 
 
 # %%
@@ -379,13 +371,12 @@ def pandasai_ask():
 
         if agent.last_error is not None:
             st.error(response)
-            #Keep record of response, cost and tokens
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'error': response}})
 
         else:
             st.write(response)
-            #Keep record of response, cost and tokens
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
+            
+        #Keep record of response, cost and tokens
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
 
         #Display caption if response is a dataframe
         if isinstance(response, pd.DataFrame):
@@ -532,7 +523,7 @@ def pandasai_analyse_df_produced():
     st.session_state.df_produced = st.session_state.response
     st.session_state.df_uploaded_key += 1
     #st.session_state.df_uploaded = pd.DataFrame([])
-    #st.session_state.df_individual_output = pd.DataFrame([])
+    #st.session_state.df_individual = pd.DataFrame([])
     st.session_state.response = {}
     #st.session_state["analyse_df_produced"] = False
     st.rerun()       
@@ -545,7 +536,7 @@ def pandasai_merge_df_produced():
     st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
     st.session_state.df_uploaded_key += 1
     #st.session_state.df_uploaded = pd.DataFrame([])
-    #st.session_state.df_individual_output = pd.DataFrame([])
+    #st.session_state.df_individual = pd.DataFrame([])
     st.session_state.response = []
     #st.session_state["merge_df_produced"] = False
     st.rerun()
@@ -690,7 +681,7 @@ def langchain_analyse_df_produced():
     st.session_state.df_produced = pd.DataFrame(data = st.session_state.response_json["dataframe"])
     st.session_state.df_uploaded_key += 1
     #st.session_state.df_uploaded = pd.DataFrame([])
-    #st.session_state.df_individual_output = pd.DataFrame([])
+    #st.session_state.df_individual = pd.DataFrame([])
     st.session_state.response_json["dataframe"] = pd.DataFrame([])
     st.rerun()
 
@@ -702,7 +693,7 @@ def langchain_merge_df_produced():
     st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
     st.session_state.df_uploaded_key += 1
     #st.session_state.df_uploaded = pd.DataFrame([])
-    #st.session_state.df_individual_output = pd.DataFrame([])
+    #st.session_state.df_individual = pd.DataFrame([])
     st.session_state.response_json["dataframe"] = pd.DataFrame([])
     st.rerun()
 
@@ -915,17 +906,23 @@ def clear_most_cache():
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-#Initalize page_from:
-if 'page_from' not in st.session_state:
-    st.session_state['page_from'] = 'Home.py'
-
 if 'df_master' not in st.session_state:
 
+    #Generally applicable
     st.session_state['df_master'] = pd.DataFrame([])
+    st.session_state['df_master'].loc[0, 'Your name'] = ''
+    st.session_state['df_master'].loc[0, 'Your email address'] = ''
+    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = False
+    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
+    st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    st.session_state['df_master'].loc[0, 'Use own account'] = False
+    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
-if 'df_individual_output' not in st.session_state:
+if 'df_individual' not in st.session_state:
 
-    st.session_state['df_individual_output'] = pd.DataFrame([])
+    st.session_state['df_individual'] = pd.DataFrame([])
 
 #Initalize df_uploaded:
 if 'df_uploaded' not in st.session_state:
@@ -1071,16 +1068,20 @@ spreadsheet_success = 'Your spreadsheet has been imported. Please scroll down.'
 
 # %%
 if st.button('RETURN to previous page'):
+    
+    if st.session_state.page_from == 'Home.py':
+        st.switch_page('Home.py')
+        
+    else:
+        st.switch_page('pages/GPT.py')
 
-    st.switch_page(st.session_state.page_from)
-
-st.header("You have chosen to :blue[analyse your spreadsheet].")
+st.header("You have chosen to :blue[analyse a spreadsheet].")
 
 st.caption(f'[PandasAI](https://github.com/Sinaptik-AI/pandas-ai) provides the framework for analysing your spreadsheet with AI.')
 
 #Open spreadsheet and personal details
 
-if len(st.session_state.df_individual_output) > 0:
+if len(st.session_state.df_individual) > 0:
     
     if len(st.session_state.df_produced) == 0:
 
@@ -1090,7 +1091,7 @@ if len(st.session_state.df_individual_output) > 0:
 
         st.warning(extra_spreadsheet_warning)
         
-else: #if len(st.session_state.df_individual_output) == 0:
+else: #if len(st.session_state.df_individual) == 0:
 
     st.markdown("""**:green[Please upload a spreadsheet.]** Supported formats: CSV, XLSX, JSON.""")
     
@@ -1201,19 +1202,19 @@ if own_account_allowed() > 0:
             else:
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = st.session_state.gpt_api_key_entry
             
-            valdity_check = st.button('VALIDATE your API key')
+            #valdity_check = st.button('VALIDATE your API key')
         
-            if valdity_check:
+            #if valdity_check:
                 
-                api_key_valid = is_api_key_valid(gpt_api_key_entry)
+                #api_key_valid = is_api_key_valid(gpt_api_key_entry)
                         
-                if api_key_valid == False:
-                    st.session_state['gpt_api_key_validity'] = False
-                    st.error('Your API key is not valid.')
+                #if api_key_valid == False:
+                    #st.session_state['gpt_api_key_validity'] = False
+                    #st.error('Your API key is not valid.')
                     
-                else:
-                    st.session_state['gpt_api_key_validity'] = True
-                    st.success('Your API key is valid.')
+                #else:
+                    #st.session_state['gpt_api_key_validity'] = True
+                    #st.success('Your API key is valid.')
         
             st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
             
@@ -1285,9 +1286,9 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 if len(st.session_state.df_produced) > 0:
     st.session_state.df_to_analyse = st.session_state.df_produced
     
-elif len(st.session_state.df_individual_output) > 0:
+elif len(st.session_state.df_individual) > 0:
     
-    st.session_state.df_to_analyse = st.session_state.df_individual_output
+    st.session_state.df_to_analyse = st.session_state.df_individual
 
 else: #len(st.session_state.df_uploaded) > 0:
     
@@ -1452,7 +1453,7 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
     
     st.session_state.df_uploaded_key += 1
     
-    for df_key in {'df_produced', 'df_individual_output', 'df_uploaded'}:
+    for df_key in {'df_produced', 'df_individual', 'df_uploaded'}:
         
         if isinstance(st.session_state[df_key], pd.DataFrame):
 
@@ -1589,10 +1590,18 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 #col1a, col2a, col3a, col4a = st.columns(4, gap = 'small')
 
 #with col1a:
-ask_button = st.button("ASK", disabled = st.session_state.disable_input)
+with stylable_container(
+    "green",
+    css_styles="""
+    button {
+        background-color: #00FF00;
+        color: black;
+    }""",
+):
+    ask_button = st.button("ASK", disabled = st.session_state.disable_input, help = 'You may have to press :red[RESET] before asking GPT again.')
 
 #with col2a:
-reset_button = st.button('RESET to get fresh responses', type = 'primary')#, help = f"Get fresh responses from {st.session_state.ai_choice}")
+reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.session_state.response)) == 0))#, help = f"Get fresh responses from {st.session_state.ai_choice}")
 
 
 # %%
@@ -1620,15 +1629,19 @@ if ask_button:
         quit()
         
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
+                
+        if is_api_key_valid(gpt_api_key_entry) == False:
             
-        st.warning('You have not validated your API key.')
-        quit()
+            st.session_state['gpt_api_key_validity'] = False
+            
+            st.error('Your API key is not valid.')
 
-    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
-
-        st.warning('You have not entered a valid API key.')
-        quit()
-
+            quit()
+            
+        else:
+            
+            st.session_state['gpt_api_key_validity'] = True
+    
     elif st.session_state.instruction_left == 0:
         no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
         st.error(no_more_instructions)
@@ -1735,6 +1748,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
         #if clarification_questions_toggle:
         
             with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+                
                 prompt = st.session_state.prompt
     
                 #if len(prompt) > 0:
@@ -1772,15 +1786,12 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
             
                     #Acivate if want to display tokens and costs only if own account active
                     #if st.session_state['own_account'] == True:
-                        
-                    clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
-                    st.write(clarifying_questions_cost_tokens)
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
-    
+                            
                     add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
             
                     if add_q_a_button:
                         for question_index in range(0, len(st.session_state.clarifying_answers)):
+                            
                             st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
                             
                         intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
@@ -1809,9 +1820,17 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
                         
                         #Change clarifying questions and answers status
                         st.session_state['q_and_a_provided'] = True
+
+                        #Change disable input status
+                        st.session_state['disable_input'] = False
         
                         st.rerun()
-                        
+            
+            clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
+            
+            st.write(clarifying_questions_cost_tokens)
+
+            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
 
 
 # %%
@@ -1888,10 +1907,7 @@ if len(str(st.session_state.response)) > 0:
             
             df_history = pd.DataFrame(st.session_state.messages)
         
-            if len(st.session_state.df_master)>0:
-                history_output_name = st.session_state.df_master.loc[0, 'Your name'] + '_' + str(today_in_nums) + '_chat_history'
-            else:
-                history_output_name = str(today_in_nums) + '_chat_history'
+            history_output_name = str(today_in_nums) + '_chat_history'
             
             csv = convert_df_to_csv(df_history)
         

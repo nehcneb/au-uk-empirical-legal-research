@@ -75,6 +75,7 @@ def date_parser(string):
 # %%
 #today
 today_in_nums = str(datetime.now())[0:10]
+today = datetime.now().strftime("%d/%m/%Y")
 
 # %%
 # Generate placeholder list of errors
@@ -185,12 +186,24 @@ def open_page(url):
 
 
 # %%
+def clear_cache():
+    
+    keys = list(st.session_state.keys())
+    
+    for key in keys:
+        st.session_state.pop(key)
+
+
+
+# %%
 def clear_cache_except_validation_df_master():
     keys = list(st.session_state.keys())
-    if 'gpt_api_key_validity' in keys:
-        keys.remove('gpt_api_key_validity')
     if 'df_master' in keys:
         keys.remove('df_master')
+    if 'page_from' in keys:
+        keys.remove('page_from')
+    if 'jurisdiction_page' in keys:
+        keys.remove('jurisdiction_page')
     for key in keys:
         st.session_state.pop(key)
 
@@ -218,4 +231,45 @@ def tips():
 - :orange[Maybe re-run the same questions and manually check for inconsistency.]
 """)
 
-    st.caption('Click [here](https://platform.openai.com/docs/guides/prompt-engineering) for more tips.')
+    st.write('Click [here](https://platform.openai.com/docs/guides/prompt-engineering) for more tips.')
+
+
+# %%
+def list_value_check(some_list, some_value):
+    try:
+        index = some_list.index(some_value)
+        return index
+    except:
+        return None
+
+
+# %%
+def list_range_check(some_list, some_string):
+    selected_list = []
+    try:
+        raw_list = some_string.split(',')
+
+        for item in raw_list:
+
+            while item[0] == ' ':
+                item = item[1:]
+            
+            if item in some_list:
+                selected_list.append(item)
+
+    except:
+        print(f'List {str(some_list)} does not contain {some_string}')
+ 
+    return selected_list
+
+
+
+# %%
+def au_date(x):
+    try:
+        return parser.parse(x, dayfirst=True)
+    except:
+        return None
+
+
+# %%

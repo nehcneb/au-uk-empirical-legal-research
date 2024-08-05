@@ -40,12 +40,13 @@ import PyPDF2
 import io
 from io import BytesIO
 
-
 #Streamlit
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
+from streamlit_extras.stylable_container import stylable_container
+
 
 #OpenAI
 import openai
@@ -59,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check
 #Import variables
 from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound
 
@@ -71,15 +72,6 @@ else:
 print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
-
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
 
 # %% [markdown]
 # # Canada search engine
@@ -121,11 +113,10 @@ from common_functions import link
 
 # %%
 #function to create dataframe
-def create_df():
+def ca_create_df():
 
     #submission time
     timestamp = datetime.now()
-
 
     #Personal info entries
 
@@ -178,8 +169,11 @@ def create_df():
     phrase = phrase_entry
 
     #Court/tribunal types
-
-    court_tribunal_type = court_tribunal_type_entry
+    if court_tribunal_type_entry == None:
+        
+        court_tribunal_type = 'All courts and tribunals'
+    else:
+        court_tribunal_type = court_tribunal_type_entry
     
     #dates
     
@@ -230,7 +224,10 @@ def create_df():
         pass
     
     #GPT choice and entry
-    gpt_activation_status = gpt_activation_entry
+    try:
+        gpt_activation_status = gpt_activation_entry
+    except:
+        gpt_activation_status = False
     
     gpt_questions = ''
     
@@ -249,7 +246,7 @@ def create_df():
            'Your name': name, 
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
-            'Jurisdictions': jurisdiction, 
+            'Jurisdiction': jurisdiction, 
            'Courts': court, 
            'Case name, citation or docket': case_name_mnc, 
             'Document text': phrase,
@@ -292,7 +289,6 @@ all_ca_jurisdictions = {'All': '',
                     'Northwest Territories': 'nt', 
                     'Nunavut': 'nu'}
 
-all_ca_jurisdictions_list = list(all_ca_jurisdictions.keys())
 
 
 # %%
@@ -761,7 +757,7 @@ all_ca_jurisdiction_court_pairs = {'All': {'All': 'All'},
 
 
 # %%
-court_tribunal_types = {'All courts and tribunals': '', 
+ca_court_tribunal_types = {'All courts and tribunals': '', 
 'All courts': 'courts', 
 'Appeal courts': 'appellate-courts', 
 'All tribunals': 'tribunals', 
@@ -773,7 +769,7 @@ court_tribunal_types = {'All courts and tribunals': '',
 }
 
 # %%
-all_subjects = ['Access to information and privacy', 'Administrative remedies', 'Appeal', 'Arbitration', 'Bankruptcy and insolvency', 'Business', 'Child custody and access', 'Child protection', 'Citizenship and immigration', 'Commerce and industry', 'Constitution', 'Contracts', 'Creditors and debtors', 'Criminal or statutory infractions', 'Damages', 'Defences', 'Environment', 'Evidence', 'Family', 'Guardianship', 'Health and safety', 'Indigenous peoples', 'Insurance', 'Intellectual property', 'International', 'Interpretation', 'Judicial review', 'Labour and employment', 'Motor vehicles', 'Municipalities', 'Negligence', 'Practice and procedure', 'Professions and occupations', 'Property and trusts', 'Public administration', 'Residential tenancies', 'Rights and freedoms', 'Search and seizure', 'Sentencing', 'Support and maintenance', 'Taxation', 'Torts', 'Wills and estates', 'Young offenders']
+all_subjects = ['Access to information and privacy', 'Administrative remedies', 'Appeal', 'Arbitration', 'Bankruptcy and insolvency', 'Business', 'Child custody and access', 'Child protection', 'Citizenship and immigration', 'Commerce and industry', 'Constitution', 'Contracts', 'Creditors and debtors', 'Criminal or statutory infractions', 'Damages', 'Defences', 'Environment', 'Evidence', 'Family', 'Guardianship', 'Health and safety', 'Indigenous peoples', 'Insurance', 'Intellectual property', 'International', 'Interpretation', 'Judicial review', 'Labour and employment', 'Motor vehicles', 'Municipalities', 'Negligence', 'Practice and procedure', 'Professions and occupations', 'Property and trusts', 'Public administration', 'Residential tenancies', 'Rights and freedoms', 'Search and seizure', 'Sentencing', 'Support and maintenance', 'Taxation', 'Torts', 'Wills and estates', 'Young offenders', '']
 
 
 # %%
@@ -800,6 +796,7 @@ def ca_search(jurisdiction  =  'All',
     if jurisdiction != 'All':
 
         base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[jurisdiction]}')
+        
     else:
         base_url = base_url.replace('&jId=jurisdiction_param,unspecified', '').replace('jurisdiction_param/', '')
 
@@ -833,8 +830,8 @@ def ca_search(jurisdiction  =  'All',
 
     #Add court or tribunal type
 
-    if court_tribunal_types[court_tribunal_type] != '':
-        base_url = base_url.replace('type_param', court_tribunal_types[court_tribunal_type])
+    if ca_court_tribunal_types[court_tribunal_type] != None:
+        base_url = base_url.replace('type_param', ca_court_tribunal_types[court_tribunal_type])
 
     else:
         base_url = base_url.replace('&ccType=type_param', '')
@@ -896,7 +893,7 @@ def ca_search(jurisdiction  =  'All',
 
 
 # %%
-def search_results_to_judgment_links(url_search_results, judgment_counter_bound):
+def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Start counter
     
     counter = 1
@@ -959,25 +956,17 @@ def search_results_to_judgment_links(url_search_results, judgment_counter_bound)
 
     return case_links
 
-
 # %%
-meta_labels = ['lbh-document-url', 'lbh-title', "lbh-citation", "lbh-decision-date", "lbh-collection", "lbh-jurisdiction", "lbh-keywords", "lbh-subjects"]
-meta_names = ['Hyperlink to CanLII', 'Case name', "Medium neutral citation", "Decision date", "Collection", "Jurisdiction", "Keywords", "Subjects"]
-
-
-# %%
-meta_labels_droppable = ["Decision date", "Collection", "Jurisdiction", "Keywords", "Subjects", 'Court', 'File number', 'Other citations', 'Most recent unfavourable mention']
+#meta_labels = ['lbh-document-url', 'lbh-title', "lbh-citation", "lbh-decision-date", "lbh-collection", "lbh-jurisdiction", "lbh-keywords", "lbh-subjects"]
+#meta_names = ['Hyperlink to CanLII', 'Case name', "Medium neutral citation", "Decision date", "Collection", "Jurisdiction", "Keywords", "Subjects"]
 
 
 # %%
-#meta_dict = {}
+ca_meta_labels_droppable = ["Decision date", "Collection", "Jurisdiction", "Keywords", "Subjects", 'Court', 'File number', 'Other citations', 'Most recent unfavourable mention']
 
-#for name in meta_names:
-    #index = meta_names.index(name)
-    #meta_dict.update({name: meta_labels[index]})
 
 # %%
-meta_dict = {
+ca_meta_dict = {
  'Case name': 'lbh-title',
     'Hyperlink to CanLII': 'lbh-document-url',
  'Medium neutral citation': 'lbh-citation',
@@ -989,7 +978,7 @@ meta_dict = {
 
 
 # %%
-def meta_judgment_dict(judgment_url):
+def ca_meta_judgment_dict(judgment_url):
 
     headers = {'User-Agent': 'whatever'}
     page = requests.get(judgment_url, headers=headers)
@@ -999,9 +988,9 @@ def meta_judgment_dict(judgment_url):
     judgment_dict = {}
 
     #Attach metadata
-    for meta in meta_dict.keys():
+    for meta in ca_meta_dict.keys():
         try:
-            meta_content = soup.select(f'meta[name={meta_dict[meta]}]')[0].attrs["content"]
+            meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
         except:
             meta_content = ''
         judgment_dict.update({meta: meta_content})
@@ -1037,6 +1026,15 @@ def meta_judgment_dict(judgment_url):
     return judgment_dict
 
 
+# %%
+def ca_date(x):
+    try:
+        return parser.parse(x, yearfirst=True)
+    except:
+        return None
+
+
+
 # %% [markdown]
 # # GPT functions and parameters
 
@@ -1052,7 +1050,8 @@ print(f"Questions for GPT are capped at {question_characters_bound} characters.\
 print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
 
 # %%
-#Jurisdiction specific instruction
+#Jurisdiction specific instruction and functions
+
 system_instruction = role_content
 
 intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -1076,7 +1075,7 @@ if 'judgments_counter_bound' not in st.session_state:
 # %%
 #Obtain parameters
 
-def run(df_master):
+def ca_run(df_master):
     df_master = df_master.fillna('')
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -1089,7 +1088,7 @@ def run(df_master):
     
     #Conduct search
     
-    url_search_results = ca_search(jurisdiction  = df_master.loc[0, 'Jurisdictions'],
+    url_search_results = ca_search(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
                                    court = df_master.loc[0, 'Courts'], 
                                    phrase = df_master.loc[0, 'Document text'], 
                                    case_name_mnc= df_master.loc[0, 'Case name, citation or docket'],
@@ -1104,11 +1103,11 @@ def run(df_master):
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    judgments_links = ca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
 
     for link in judgments_links:
 
-        judgment_dict = meta_judgment_dict(link)
+        judgment_dict = ca_meta_judgment_dict(link)
 
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(10, 20))
@@ -1152,7 +1151,7 @@ def run(df_master):
     #Drop metadata if not wanted
 
     if int(df_master.loc[0, 'Metadata inclusion']) == 0:
-        for meta_label in meta_labels_droppable:
+        for meta_label in ca_meta_labels_droppable:
             try:
                 df_updated.pop(meta_label)
             except:
@@ -1162,14 +1161,14 @@ def run(df_master):
 
 
 # %%
-def search_url(df_master):
+def ca_search_url(df_master):
     df_master = df_master.fillna('')
     
     #Combining catchwords into new column
     
     #Conduct search
     
-    url = ca_search(jurisdiction  = df_master.loc[0, 'Jurisdictions'],
+    url = ca_search(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
                                    court = df_master.loc[0, 'Courts'], 
                                    phrase = df_master.loc[0, 'Document text'], 
                                    case_name_mnc= df_master.loc[0, 'Case name, citation or docket'],
@@ -1189,7 +1188,7 @@ def search_url(df_master):
 
 # %%
 #Import functions and variables
-from common_functions import open_page, clear_cache_except_validation_df_master, tips
+from common_functions import open_page, tips, clear_cache, list_value_check
 
 
 # %% [markdown]
@@ -1201,9 +1200,6 @@ from common_functions import open_page, clear_cache_except_validation_df_master,
 if 'gpt_enhancement_entry' not in st.session_state:
     st.session_state['gpt_enhancement_entry'] = False
 
-if 'gpt_api_key_validity' not in st.session_state:
-    st.session_state['gpt_api_key_validity'] = False
-
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False
 
@@ -1213,8 +1209,31 @@ if 'need_resetting' not in st.session_state:
 
 if 'df_master' not in st.session_state:
 
+    #Generally applicable
     st.session_state['df_master'] = pd.DataFrame([])
+    st.session_state['df_master'].loc[0, 'Your name'] = ''
+    st.session_state['df_master'].loc[0, 'Your email address'] = ''
+    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
+    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
+    st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    st.session_state['df_master'].loc[0, 'Use own account'] = False
+    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
+    #Jurisdiction specific
+    st.session_state['df_master'].loc[0, 'Jurisdiction'] = 'All'
+    st.session_state['df_master'].loc[0, 'Courts'] = None 
+    st.session_state['df_master'].loc[0, 'Document text'] = None 
+    st.session_state['df_master'].loc[0, 'Case name, citation or docket'] = None
+    st.session_state['df_master'].loc[0, 'Subjects'] = ''
+    st.session_state['df_master'].loc[0, 'Court or tribunal type'] = None 
+    st.session_state['df_master'].loc[0, 'Decision date is'] = None
+    st.session_state['df_master'].loc[0, 'Decision date is after'] = None
+    st.session_state['df_master'].loc[0, 'Decision date is before'] = None
+
+    st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
+    
 if 'df_individual_output' not in st.session_state:
 
     st.session_state['df_individual_output'] = pd.DataFrame([])
@@ -1256,558 +1275,238 @@ if 'year' not in st.session_state:
     st.session_state["year"] = ''
 
 
+# %%
+#If landing page is not home
+if 'page_from' not in st.session_state:
+    st.session_state['page_from'] = 'Home.py'
+
 # %% [markdown]
 # ## Form before AI
 
 # %%
-#Create form
+if st.session_state.page_from != "pages/CA.py": #Need to add in order to avoid GPT page from showing form of previous page
 
-return_button = st.button('RETURN to first page')
-
-st.header(f"You have selected to study :blue[judgments of the Canadian courts, boards and tribunals].")
-
-#    st.header("Judgment Search Criteria")
-
-st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
-""")
-
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
-
-st.subheader("Court, board or tribunal to cover")
-
-jurisdiction_entry  = st.selectbox(label = 'Select or type in the jurisdiction to cover', options = list(all_ca_jurisdictions.keys()), index = list(all_ca_jurisdictions.keys()).index('All'))
-
-st.session_state["all_jurisdiction"] = jurisdiction_entry
-
-if st.session_state.all_jurisdiction != 'All':
-
-    #st.write(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction])
+    #Create form
     
-    courts_entry = st.selectbox(label = 'Select or type in the court, board or tribunal to cover', options = list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), index = list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()).index('All'))
-
-    st.session_state["court"] = courts_entry
-
-else:
-    st.session_state["court"] = 'All'
-
-st.subheader("Your search terms")
-
-st.markdown("""For search tips, please visit [CanLII](https://www.canlii.org/en/). This section largely mimics their judgments search function except the noteup/discussion function.
-""")
-
-phrase_entry = st.text_input('Document text')
-
-case_name_mnc_entry = st.text_input("Case name, citation or docket")
-
-court_tribunal_type_entry = st.selectbox("Court or tribunal type", options = list(court_tribunal_types.keys()), index = 0)
-
-on_this_date_entry = st.date_input('Decision date is', value = None, format="YYYY-MM-DD", min_value = date(1800, 1, 1))
-
-after_date_entry = st.date_input('Decision date is after', value = None, format="YYYY-MM-DD", min_value = date(1800, 1, 1))
-
-before_date_entry = st.date_input('Decision date is before', value = None, format="YYYY-MM-DD", min_value = date(1800, 1, 1))
-
-subjects_entry = st.multiselect(label = 'Subjects', options = all_subjects)
-st.caption('If left blank, all subjects will be covered.')
-
-#Can't get Noteup/Discussion to work given dynamic
-#cited_entry = st.text_input('Noteup/Discussion: cited case names, legislation titles, citations or dockets')
-
-#Year and month are browse functions, need a separate url getter
-
-#if st.session_state.court != 'All':
-
-    #year_entry = st.text_input(label = 'Choose a year')
-
-    #link_to_canlii = f"https://www.canlii.org/en/{all_ca_jurisdictions[st.session_state.all_jurisdiction]}/{all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction][st.session_state.court]}/"
-
-    #st.caption(f'[Relatively earlier]({link_to_canlii}) judgments will not be collected.')
+    return_button = st.button('RETURN to first page')
     
-    #if year_entry:
+    st.header(f"You have selected to study :blue[judgments of the Canadian courts, boards and tribunals].")
+    
+    #    st.header("Judgment Search Criteria")
+    
+    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+""")
+    
+    st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+    
+    st.subheader("Court, board or tribunal to cover")
+    
+    jurisdiction_entry  = st.selectbox(label = 'Select or type in the jurisdiction to cover', options = list(list(all_ca_jurisdictions.keys())), index = list_value_check(list(all_ca_jurisdictions.keys()), st.session_state['df_master'].loc[0, 'Jurisdiction']))
+    
+    st.session_state["all_jurisdiction"] = jurisdiction_entry
+    
+    if st.session_state.all_jurisdiction != 'All':
         
-        #wrong_number_warning = f'You have not entered a valid year. The program will not filter any search results by year.'
+        courts_entry = st.selectbox(label = 'Select or type in the court, board or tribunal to cover', options = list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), index = list_value_check(list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), st.session_state['df_master'].loc[0, 'Courts']))
+        
+        st.session_state["court"] = courts_entry
     
-        #try:
+    else:
+        st.session_state["court"] = 'All'
     
-            #year_int = int(year_entry)
-
-            #if ((year_int >= 1800) and (year_int <= datetime.now().year)):
+    st.subheader("Your search terms")
     
-                #st.session_state["year"] = year_entry
+    st.markdown("""For search tips, please visit [CanLII](https://www.canlii.org/en/). This section largely mimics their judgments search function except the noteup/discussion function.
+    """)
+    
+    phrase_entry = st.text_input(label = 'Document text', value = st.session_state['df_master'].loc[0, 'Document text'])
+    
+    case_name_mnc_entry = st.text_input(label = "Case name, citation or docket", value = st.session_state['df_master'].loc[0, 'Case name, citation or docket'])
+    
+    court_tribunal_type_entry = st.selectbox(label = "Court or tribunal type", options = list(ca_court_tribunal_types.keys()), index = list_value_check(list(ca_court_tribunal_types.keys()), st.session_state['df_master'].loc[0, 'Court or tribunal type']))
+    
+    on_this_date_entry = st.date_input(label = 'Decision date is', value = ca_date(st.session_state['df_master'].loc[0, 'Decision date is']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now())
+    
+    after_date_entry = st.date_input(label = 'Decision date is after', value = ca_date(st.session_state['df_master'].loc[0, 'Decision date is after']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now())
+    
+    before_date_entry = st.date_input(label = 'Decision date is before', value = ca_date(st.session_state['df_master'].loc[0, 'Decision date is before']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now())
+    
+    subjects_entry = st.multiselect(label = 'Subjects', options = all_subjects, default = list_range_check(all_subjects, st.session_state['df_master'].loc[0, 'Subjects']))
+    st.caption('If left blank, all subjects will be covered.')
+    
+    #Can't get Noteup/Discussion to work given dynamic
+    #cited_entry = st.text_input('Noteup/Discussion: cited case names, legislation titles, citations or dockets')
+    
+    #Year and month are browse functions, need a separate url getter
+    
+    #if st.session_state.court != 'All':
+    
+        #year_entry = st.text_input(label = 'Choose a year')
+    
+        #link_to_canlii = f"https://www.canlii.org/en/{all_ca_jurisdictions[st.session_state.all_jurisdiction]}/{all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction][st.session_state.court]}/"
+    
+        #st.caption(f'[Relatively earlier]({link_to_canlii}) judgments will not be collected.')
+        
+        #if year_entry:
             
-            #else:
-                
-                #st.warning(wrong_number_warning)
-                
-                #st.session_state["year"] = ''
+            #wrong_number_warning = f'You have not entered a valid year. The program will not filter any search results by year.'
         
-        #except:
-            #st.warning(wrong_number_warning)
-            #st.session_state["year"] = ''
-#else:
-    #st.session_state["year"] = '' 
- 
-st.markdown("""You can preview the judgments returned by your search terms on the CanLII after you have entered some search terms.
-
+            #try:
+        
+                #year_int = int(year_entry)
+    
+                #if ((year_int >= 1800) and (year_int <= datetime.now().year)):
+        
+                    #st.session_state["year"] = year_entry
+                
+                #else:
+                    
+                    #st.warning(wrong_number_warning)
+                    
+                    #st.session_state["year"] = ''
+            
+            #except:
+                #st.warning(wrong_number_warning)
+                #st.session_state["year"] = ''
+    #else:
+        #st.session_state["year"] = '' 
+     
+    st.markdown("""You can preview the judgments returned by your search terms on the CanLII after you have entered some search terms.
+    
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
 
-preview_button = st.button('PREVIEW on the CanLII (in a popped up window)')
-
-st.subheader("Judgment metadata collection")
-
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
-
+    preview_button = st.button(label = 'PREVIEW on the CanLII (in a popped up window)', type = 'primary')
+    
+    st.subheader("Judgment metadata collection")
+    
+    st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+    
 Case name and medium neutral citation are always included with your results.
 """)
-
-meta_data_entry = st.checkbox('Include metadata', value = False)
-
+    
+    meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
 
 # %% [markdown]
-# ## Form for AI and account
+# ## Buttons
 
-# %%
-st.header("Use GPT as your research assistant")
-
-#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
-
-st.markdown("**:green[Would you like GPT to answer questions about the judgments returned by your search terms?]**")
-
-st.markdown("""Please consider trying this program without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
-""")
-
-gpt_activation_entry = st.checkbox('Use GPT', value = False)
-
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per judgment. The [exact cost](https://openai.com/pricing) for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced. You will be given ex-post cost estimates.")
-
-st.subheader("Enter your questions for each judgment")
-
-st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** judgment based only on information from **that** judgment. """)
-
-st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
-
-if st.toggle('See the instruction given to GPT'):
-    st.write(f"{intro_for_GPT[0]['content']}")
-
-if st.toggle('Tips for using GPT'):
-    tips()
-
-gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
-
-#Disable toggles while prompt is not entered or the same as the last processed prompt
-if gpt_activation_entry:
+    # %%
+    #Buttons
     
-    if gpt_questions_entry:
-        st.session_state['disable_input'] = False
-        
-    else:
-        st.session_state['disable_input'] = True
-else:
-    st.session_state['disable_input'] = False
+    #col1, col2, col3, col4 = st.columns(4, gap = 'small')
     
-st.caption(f"By default, answers to your questions will be generated by model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each judgment.")
-
-if own_account_allowed() > 0:
+    #with col1:
     
-    st.subheader(':orange[Enhance program capabilities]')
+        #reset_button = st.button(label='RESET', type = 'primary')
     
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of judgments to process? You can do so with your own GPT account.
-    """)
+    #with col4:
+    with stylable_container(
+        "green",
+        css_styles="""
+        button {
+            background-color: #00FF00;
+            color: black;
+        }""",
+    ):
+        next_button = st.button(label='NEXT')
     
-    own_account_entry = st.toggle('Use my own GPT account',  disabled = st.session_state.disable_input)
-    
-    if own_account_entry:
-    
-        st.session_state["own_account"] = True
-    
-        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
-    """)
-            
-        name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
-    
-        email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
-        
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
-        
-        valdity_check = st.button('VALIDATE your API key')
-    
-        if valdity_check:
-            
-            api_key_valid = is_api_key_valid(gpt_api_key_entry)
-                    
-            if api_key_valid == False:
-                st.session_state['gpt_api_key_validity'] = False
-                st.error('Your API key is not valid.')
-                
-            else:
-                st.session_state['gpt_api_key_validity'] = True
-                st.success('Your API key is valid.')
-    
-        st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
-        
-        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
-        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
-        
-        if gpt_enhancement_entry == True:
-        
-            st.session_state.gpt_model = "gpt-4o"
-            st.session_state.gpt_enhancement_entry = True
+    keep_button = st.button('SAVE')
 
-        else:
-            
-            #st.session_state.gpt_model = "gpt-4o-mini"
-            st.session_state.gpt_model = 'gpt-4o-mini'
-            st.session_state.gpt_enhancement_entry = False
-        
-        st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
-        
-        #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
-
-        #st.session_state.judgments_counter_bound = judgments_counter_bound_entry
-
-        judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_judgment_counter_bound))
-
-        if judgments_counter_bound_entry:
-            wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
-            try:
-                st.session_state.judgments_counter_bound = int(judgments_counter_bound_entry)
-            except:
-                st.warning(wrong_number_warning)
-                st.session_state.judgments_counter_bound = default_judgment_counter_bound
-
-            if ((st.session_state.judgments_counter_bound <= 0) or (st.session_state.judgments_counter_bound > 100)):
-                st.warning(wrong_number_warning)
-                st.session_state.judgments_counter_bound = default_judgment_counter_bound
-    
-        st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
-    
-    else:
-        
-        st.session_state["own_account"] = False
-    
-        st.session_state.gpt_model = "gpt-4o-mini"
-
-        st.session_state.gpt_enhancement_entry = False
-    
-        st.session_state.judgments_counter_bound = default_judgment_counter_bound
-
-# %% [markdown]
-# ## Consent and next steps
-
-# %%
-st.header("Consent")
-
-st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
-
-consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
-
-st.markdown("""If you do not agree, then please feel free to close this form.""")
-
-st.header("Next steps")
-
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download.
-
-You can also download a record of your entries.
-
-""")
-
-#Warning
-if st.session_state.gpt_model == 'gpt-4o-mini':
-    st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
-
-if st.session_state.gpt_model == "gpt-4o":
-    st.warning('An expensive GPT model will answer your questions. Please be cautious.')
-
-run_button = st.button('RUN the program')
-
-keep_button = st.button('DOWNLOAD your entries')
-
-reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
-
-#Display need resetting message if necessary
-if st.session_state.need_resetting == 1:
-    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output) > 0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
-# %% [markdown]
-# ## Previous responses and outputs
-
-# %%
-#Create placeholder download buttons if previous entries and results in st.session_state:
-
-if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-    
-    #Load previous entries and results
-    
-    df_master = st.session_state.df_master
-    df_individual_output = st.session_state.df_individual_output
-
-    #Buttons for downloading entries
-    st.subheader('Looking for your previous entries and results?')
-
-    st.write('Previous entries')
-
-    entries_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
-
-    csv = convert_df_to_csv(df_master)
-
-    ste.download_button(
-        label="Download your previous entries as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=entries_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    xlsx = convert_df_to_excel(df_master)
-    
-    ste.download_button(label='Download your previous entries as an Excel spreadsheet (XLSX)',
-                        data=xlsx,
-                        file_name=entries_output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    json = convert_df_to_json(df_master)
-    
-    ste.download_button(
-        label="Download your previous entries as a JSON", 
-        data = json,
-        file_name= entries_output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.write('Previous results')
-
-    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-
-    csv_output = convert_df_to_csv(df_individual_output)
-    
-    ste.download_button(
-        label="Download your previous results as a CSV (for use in Excel etc)", 
-        data = csv_output,
-        file_name= output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    excel_xlsx = convert_df_to_excel(df_individual_output)
-    
-    ste.download_button(label='Download your previous results as an Excel spreadsheet (XLSX)',
-                        data=excel_xlsx,
-                        file_name= output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-    
-    json_output = convert_df_to_json(df_individual_output)
-    
-    ste.download_button(
-        label="Download your previous results as a JSON", 
-        data = json_output,
-        file_name= output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.page_link('pages/AI.py', label="ANALYSE your previous spreadsheet with an AI", icon = '🤔')
 
 # %% [markdown]
 # # Save and run
 
-# %%
-if preview_button:
+    # %%
+    if preview_button:
+        
+        df_master = ca_create_df()
+        
+        judgments_url = ca_search_url(df_master)
+        
+        open_page(judgments_url)
+
+    # %%
+    if keep_button:
     
-    df_master = create_df()
+        #Check whether search terms entered
     
-    judgments_url = search_url(df_master)
+        ca_search_terms = str(case_name_mnc_entry)  + str(phrase_entry) + str(on_this_date_entry) + str(after_date_entry) + str(before_date_entry) + str(subjects_entry)
+        
+        if ca_search_terms.replace('None', '') == "":
     
-    open_page(judgments_url)
-
-# %%
-if run_button:
-
-    #Check whether search terms entered
-
-    ca_search_terms = str(case_name_mnc_entry)  + str(phrase_entry) + str(on_this_date_entry) + str(after_date_entry) + str(before_date_entry) + str(subjects_entry)
+            st.warning('You must enter some search terms.')
+        
+        else:
+                
+            df_master = ca_create_df()
     
-    if ca_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
-    
-    elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
-
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-
-        st.session_state['need_resetting'] = 1
+            st.session_state['df_master'] = df_master
             
-    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-            
-        st.warning('You have not validated your API key.')
-        quit()
-
-    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
-
-        st.warning('You have not entered a valid API key.')
-        quit()  
+            df_master.pop("Your GPT API key")
         
-    else:
-        
-        st.write('Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.')
-        #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-
-        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
-
-            try:
-
-                #Create spreadsheet of responses
-                df_master = create_df()
-
-                #Activate user's own key or mine
-                if st.session_state.own_account == True:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
+            df_master.pop("Processed")
     
-                else:
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-                
-                openai.api_key = API_key
-
-                #Produce results
-                df_individual_output = run(df_master)
+            st.write('**You can download a copy of your entries.**')
         
-                #Keep results in session state
-                st.session_state["df_individual_output"] = df_individual_output
+            responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
         
-                st.session_state["df_master"] = df_master
-
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                
-                st.session_state["page_from"] = 'pages/CA.py'
+            #Produce a file to download
         
-                #Write results
-        
-                st.success("Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
-                
-                #Button for downloading results
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-                csv_output = convert_df_to_csv(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a CSV (for use in Excel etc)", 
-                    data = csv_output,
-                    file_name= output_name + '.csv', 
-                    mime= "text/csv", 
+            csv = convert_df_to_csv(df_master)
+            
+            ste.download_button(
+                label="Download as a CSV (for use in Excel etc)", 
+                data = csv,
+                file_name=responses_output_name + '.csv', 
+                mime= "text/csv", 
         #            key='download-csv'
-                )
+            )
+    
+            xlsx = convert_df_to_excel(df_master)
+            
+            ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
+                                data=xlsx,
+                                file_name=responses_output_name + '.xlsx', 
+                                mime='application/vnd.ms-excel',
+                               )
+            
+            json = convert_df_to_json(df_master)
+            
+            ste.download_button(
+                label="Download as a JSON", 
+                data = json,
+                file_name= responses_output_name + '.json', 
+                mime= "application/json", 
+            )
+
+
+    # %%
+    if return_button:
         
-                excel_xlsx = convert_df_to_excel(df_individual_output)
+        st.switch_page("Home.py")
+
+    # %%
+    #if reset_button:
+        #clear_cache()
+        #st.rerun()
+
+    # %%
+    if next_button:
+    
+        ca_search_terms = str(case_name_mnc_entry)  + str(phrase_entry) + str(on_this_date_entry) + str(after_date_entry) + str(before_date_entry) + str(subjects_entry)
+        
+        if ca_search_terms.replace('None', '') == "":
+    
+            st.warning('You must enter some search terms.')
+        
+        else:
                 
-                ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
-                                    data=excel_xlsx,
-                                    file_name= output_name + '.xlsx', 
-                                    mime='application/vnd.ms-excel',
-                                   )
-        
-                json_output = convert_df_to_json(df_individual_output)
-                
-                ste.download_button(
-                    label="Download your results as a JSON", 
-                    data = json_output,
-                    file_name= output_name + '.json', 
-                    mime= "application/json", 
-                )
-        
-                st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-
-                    
-                #Keep record on Google sheet
-                #Obtain google spreadsheet       
-                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
-                #df_master["Processed"] = datetime.now()
-                #df_master.pop("Your GPT API key")
-                #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="CTH", data=df_to_update, )
+            df_master = ca_create_df()
             
-            except Exception as e:
-                st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
-                st.exception(e)
-
-
-
-# %%
-if keep_button:
-
-    #Check whether search terms entered
-
-    ca_search_terms = str(case_name_mnc_entry)  + str(phrase_entry) + str(on_this_date_entry) + str(after_date_entry) + str(before_date_entry) + str(subjects_entry)
-    
-    if ca_search_terms.replace('None', '') == "":
-
-        st.warning('You must enter some search terms.')
-    
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-        
-        if 'need_resetting' not in st.session_state:
+            st.session_state['df_master'] = df_master
             
-            st.session_state['need_resetting'] = 1
+            st.session_state["page_from"] = 'pages/CA.py'
             
-    else:
-            
-        df_master = create_df()
-    
-        df_master.pop("Your GPT API key")
-    
-        df_master.pop("Processed")
-    
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
-        #Produce a file to download
-    
-        csv = convert_df_to_csv(df_master)
-        
-        ste.download_button(
-            label="Download as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=responses_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
+            st.switch_page('pages/GPT.py')
 
-
-        xlsx = convert_df_to_excel(df_master)
-        
-        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=responses_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-        
-        json = convert_df_to_json(df_master)
-        
-        ste.download_button(
-            label="Download as a JSON", 
-            data = json,
-            file_name= responses_output_name + '.json', 
-            mime= "application/json", 
-        )
-
-
-# %%
-if return_button:
-
-    st.switch_page("Home.py")
-
-# %%
-if reset_button:
-    clear_cache_except_validation_df_master()
-    st.rerun()
-
-# %%

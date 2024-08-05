@@ -51,6 +51,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
+from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
 import openai
@@ -642,7 +643,7 @@ def run(df_master, uploaded_docs, uploaded_images):
             Files_file.append(file_triple)
             file_counter += 1
     
-    #Create and export json file with search results
+    #Create and export json file with search output
     json_individual = json.dumps(Files_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
@@ -998,7 +999,7 @@ def run_b64_own(df_master, uploaded_images):
             Files_file.append(file_triple)
             file_counter += 1
 
-    #Create and export json file with search results
+    #Create and export json file with search output
     json_individual = json.dumps(Files_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
@@ -1216,21 +1217,7 @@ if own_account_allowed() > 0:
         email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
-        
-        valdity_check = st.button('VALIDATE your API key')
-    
-        if valdity_check:
             
-            api_key_valid = is_api_key_valid(gpt_api_key_entry)
-                    
-            if api_key_valid == False:
-                st.session_state['gpt_api_key_validity'] = False
-                st.error('Your API key is not valid.')
-                
-            else:
-                st.session_state['gpt_api_key_validity'] = True
-                st.success('Your API key is valid.')
-    
         st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
@@ -1298,6 +1285,15 @@ if own_account_allowed() > 0:
 
 
 # %% [markdown]
+# ## Save entries
+
+# %%
+keep_button = st.button(label = 'DOWNLOAD entries')
+
+if keep_button:
+    st.success('Scroll down to download your entries.')
+
+# %% [markdown]
 # ## Consent and next steps
 
 # %%
@@ -1311,7 +1307,7 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 
 st.header("Next steps")
 
-st.markdown("""**:green[You can now run the Empirical Legal Research Kickstarter.]** A spreadsheet which hopefully has the data you seek will be available for download.
+st.markdown("""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek.
 
 You can also download a record of your entries.
 
@@ -1324,11 +1320,18 @@ if st.session_state.gpt_model == 'gpt-4o-mini':
 if st.session_state.gpt_model == "gpt-4o":
     st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
-run_button = st.button('RUN the program')
+with stylable_container(
+    "green",
+    css_styles="""
+    button {
+        background-color: #00FF00;
+        color: black;
+    }""",
+):
 
-keep_button = st.button('DOWNLOAD your entries')
+    run_button = st.button('PRODUCE data')
 
-reset_button = st.button(label='RESET to start afresh', type = 'primary',  help = "Press to process new search terms or questions.")
+reset_button = st.button(label='RESET', type = 'primary',  help = "Press to process new search terms or questions.")
     
 #if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
 if ((st.session_state.own_account == True) and (uploaded_images)):
@@ -1354,17 +1357,17 @@ if st.session_state.need_resetting == 1:
 # ## Previous responses and outputs
 
 # %%
-#Create placeholder download buttons if previous entries and results in st.session_state:
+#Create placeholder download buttons if previous entries and output in st.session_state:
 
 if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
     
-    #Load previous entries and results
+    #Load previous entries and output
     
     df_master = st.session_state.df_master
     df_individual_output = st.session_state.df_individual_output
 
     #Buttons for downloading entries
-    st.subheader('Looking for your previous entries and results?')
+    st.subheader('Looking for your previous entries and output?')
 
     st.write('Previous entries')
 
@@ -1397,14 +1400,14 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
         mime= "application/json", 
     )
 
-    st.write('Previous results')
+    st.write('Previous output')
 
-    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
+    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
 
     csv_output = convert_df_to_csv(df_individual_output)
     
     ste.download_button(
-        label="Download your previous results as a CSV (for use in Excel etc)", 
+        label="Download your previous output as a CSV (for use in Excel etc)", 
         data = csv_output,
         file_name= output_name + '.csv', 
         mime= "text/csv", 
@@ -1413,7 +1416,7 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
 
     excel_xlsx = convert_df_to_excel(df_individual_output)
     
-    ste.download_button(label='Download your previous results as an Excel spreadsheet (XLSX)',
+    ste.download_button(label='Download your previous output as an Excel spreadsheet (XLSX)',
                         data=excel_xlsx,
                         file_name= output_name + '.xlsx', 
                         mime='application/vnd.ms-excel',
@@ -1422,7 +1425,7 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
     json_output = convert_df_to_json(df_individual_output)
     
     ste.download_button(
-        label="Download your previous results as a JSON", 
+        label="Download your previous output as a JSON", 
         data = json_output,
         file_name= output_name + '.json', 
         mime= "application/json", 
@@ -1460,7 +1463,7 @@ if run_button:
         st.warning('You must enter some questions for GPT.')
 
     elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
+        st.warning("You must click on 'Yes, I agree.' to PRODUCE data.")
     
     elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
         st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
@@ -1468,20 +1471,22 @@ if run_button:
         st.session_state['need_resetting'] = 1
 
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
+                
+        if is_api_key_valid(gpt_api_key_entry) == False:
             
-        st.warning('You have not validated your API key.')
-        quit()
+            st.session_state['gpt_api_key_validity'] = False
+            
+            st.error('Your API key is not valid.')
 
-    elif ((st.session_state.own_account == True) and (len(gpt_api_key_entry) < 20)):
-
-        st.warning('You have not entered a valid API key.')
-        quit()  
+            quit()
+            
+        else:
+            
+            st.session_state['gpt_api_key_validity'] = True
         
     else:
 
-        st.markdown("""Your results will be available for download soon. The estimated waiting time is about 2-3 minutes per 10 files. """)
-
-        with st.spinner("Running... Please :red[don't change] your entries (yet)."):
+        with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 files.}$"):
                 
             #Create spreadsheet of responses
             df_master = create_df()
@@ -1505,7 +1510,7 @@ if run_button:
             
             df_individual_output = run(df_master, uploaded_docs, uploaded_images)
 
-            #Keep results in session state
+            #Keep output in session state
             st.session_state["df_individual_output"] = df_individual_output
     
             st.session_state["df_master"] = df_master
@@ -1515,21 +1520,21 @@ if run_button:
             
             st.session_state["page_from"] = 'pages/OWN.py'
     
-            #Write results
+            #Write output
     
-            st.success('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
+            st.success('Your output are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
     
             if df_master.loc[0, 'Language choice'] != 'English':
     
                 st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
     
-            #Button for downloading results
-            output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
+            #Button for downloading output
+            output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
     
             csv_output = convert_df_to_csv(df_individual_output)
             
             ste.download_button(
-                label="Download your results as a CSV (for use in Excel etc)", 
+                label="Download your output as a CSV (for use in Excel etc)", 
                 data = csv_output,
                 file_name= output_name + '.csv', 
                 mime= "text/csv", 
@@ -1538,7 +1543,7 @@ if run_button:
     
             excel_xlsx = convert_df_to_excel(df_individual_output)
             
-            ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
+            ste.download_button(label='Download your output as an Excel spreadsheet (XLSX)',
                                 data=excel_xlsx,
                                 file_name= output_name + '.xlsx', 
                                 mime='application/vnd.ms-excel',
@@ -1547,7 +1552,7 @@ if run_button:
             json_output = convert_df_to_json(df_individual_output)
             
             ste.download_button(
-                label="Download your results as a JSON", 
+                label="Download your output as a JSON", 
                 data = json_output,
                 file_name= output_name + '.json', 
                 mime= "application/json", 
@@ -1582,7 +1587,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             st.warning('You must enter some questions for GPT.')
     
         elif int(consent) == 0:
-            st.warning("You must click on 'Yes, I agree.' to run the program.")
+            st.warning("You must click on 'Yes, I agree.' to PRODUCE data.")
         
         elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
             st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
@@ -1590,18 +1595,23 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             st.session_state['need_resetting'] = 1
     
         elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-        
-            #if (st.session_state.gpt_api_key_validity == False):
-            
-            st.warning('You have not validated your API key. Please do so.')
-            #st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
-            quit()
-            
+                    
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                
+                st.session_state['gpt_api_key_validity'] = False
+                
+                st.error('Your API key is not valid.')
+    
+                quit()
+                
+            else:
+                
+                st.session_state['gpt_api_key_validity'] = True
+       
         else:
     
-            st.markdown("""Your results will be available for download soon. The estimated waiting time is about 1-2 minutes per image. """)
     
-            with st.spinner("Running... Please :red[don't change] your entries (yet)."):
+            with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 files.}$"):
                     
                 #Create spreadsheet of responses
                 df_master = create_df()
@@ -1628,28 +1638,28 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                 
                 df_individual_output = run_b64_own(df_master, uploaded_images)
     
-                #Keep results in session state
+                #Keep output in session state
                 st.session_state["df_individual_output"] = df_individual_output
         
                 st.session_state["df_master"] = df_master
                 
                 st.session_state["page_from"] = 'pages/OWN.py'
         
-                #Write results
+                #Write output
         
-                st.success('Your results are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
+                st.success('Your output are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
         
                 if df_master.loc[0, 'Language choice'] != 'English':
         
                     st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
         
-                #Button for downloading results
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
+                #Button for downloading output
+                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
         
                 csv_output = convert_df_to_csv(df_individual_output)
                 
                 ste.download_button(
-                    label="Download your results as a CSV (for use in Excel etc)", 
+                    label="Download your output as a CSV (for use in Excel etc)", 
                     data = csv_output,
                     file_name= output_name + '.csv', 
                     mime= "text/csv", 
@@ -1658,7 +1668,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
         
                 excel_xlsx = convert_df_to_excel(df_individual_output)
                 
-                ste.download_button(label='Download your results as an Excel spreadsheet (XLSX)',
+                ste.download_button(label='Download your output as an Excel spreadsheet (XLSX)',
                                     data=excel_xlsx,
                                     file_name= output_name + '.xlsx', 
                                     mime='application/vnd.ms-excel',
@@ -1667,7 +1677,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                 json_output = convert_df_to_json(df_individual_output)
                 
                 ste.download_button(
-                    label="Download your results as a JSON", 
+                    label="Download your output as a JSON", 
                     data = json_output,
                     file_name= output_name + '.json', 
                     mime= "application/json", 
@@ -1705,6 +1715,8 @@ if keep_button:
         st.session_state['need_resetting'] = 1
             
     else:
+
+        st.subheader('Your entries are now available for download.')
 
         df_master = create_df()
     
