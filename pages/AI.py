@@ -1198,8 +1198,15 @@ if own_account_allowed() > 0:
             gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
 
             if gpt_api_key_entry:
+                
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
+s
+                if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
+                    
+                    st.warning('This key is not valid.')
+
             else:
+                
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = st.session_state.gpt_api_key_entry
             
             #valdity_check = st.button('VALIDATE your API key')

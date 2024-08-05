@@ -625,11 +625,11 @@ if run_button:
                 st.error('Your API key is not valid.')
                 quit()
                 
-        #st.write('Your results should be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.')
+        #st.write('Your results should be available for download soon. The estimated waiting time is about 3-5 minutes per 10 judgments.')
         #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
 
         
-        with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 judgments.}$"):
+        with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 3-5 minutes per 10 judgments.}$"):
             
             try:
 
@@ -768,10 +768,10 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     st.error('Your API key is not valid.')
                     quit()
                     
-            #st.write('Your results should be available for download soon. The estimated waiting time is about 2-3 minutes per 10 judgments.')
+            #st.write('Your results should be available for download soon. The estimated waiting time is about 3-5 minutes per 10 judgments.')
             #st.write('If this program produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
                 
-            with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 judgments.}$"):
+            with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 3-5 minutes per 10 judgments.}$"):
     
                 try:
 
@@ -804,6 +804,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
             
                     #Change session states
                     st.session_state['need_resetting'] = 1
+                    
                     st.session_state["page_from"] = 'pages/GPT.py'
                     
                     #Write results

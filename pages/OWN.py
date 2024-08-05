@@ -137,6 +137,7 @@ def create_df():
     gpt_enhancement = st.session_state.gpt_enhancement_entry
 
     #GPT choice and entry
+    
     gpt_activation_status = gpt_activation_entry
         
     gpt_questions = gpt_questions_entry[0: question_characters_bound]
@@ -1085,9 +1086,9 @@ if 'df_master' not in st.session_state:
 
     st.session_state['df_master'] = pd.DataFrame([])
 
-if 'df_individual_output' not in st.session_state:
+if 'df_individual' not in st.session_state:
 
-    st.session_state['df_individual_output'] = pd.DataFrame([])
+    st.session_state['df_individual'] = pd.DataFrame([])
 
 #Disable toggles
 if 'disable_input' not in st.session_state:
@@ -1217,7 +1218,15 @@ if own_account_allowed() > 0:
         email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
+
+        if gpt_api_key_entry:
             
+            st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
+
+            if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
+                
+                st.warning('This key is not valid.')
+                
         st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
@@ -1331,7 +1340,9 @@ with stylable_container(
 
     run_button = st.button('PRODUCE data')
 
-reset_button = st.button(label='RESET', type = 'primary',  help = "Press to process new search terms or questions.")
+reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
+
+#reset_button = st.button(label='RESET', type = 'primary',  help = "Press to process new search terms or questions.")
     
 #if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
 if ((st.session_state.own_account == True) and (uploaded_images)):
@@ -1349,8 +1360,9 @@ Alternatively, you can send images directly to GPT. This alternative approach ma
 
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:
-    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output) > 0)):
-        st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
+    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual) > 0)):
+        st.warning('You must :red[REMOVE] the data previously produced before processing new search terms or questions.')
+        #st.warning('You must :red[RESET] the program before processing new search terms or questions. Please press the :red[RESET] button above.')
 
 
 # %% [markdown]
@@ -1359,12 +1371,12 @@ if st.session_state.need_resetting == 1:
 # %%
 #Create placeholder download buttons if previous entries and output in st.session_state:
 
-if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
+if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual)>0)):
     
     #Load previous entries and output
     
     df_master = st.session_state.df_master
-    df_individual_output = st.session_state.df_individual_output
+    df_individual = st.session_state.df_individual
 
     #Buttons for downloading entries
     st.subheader('Looking for your previous entries and output?')
@@ -1404,7 +1416,7 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
 
     output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
 
-    csv_output = convert_df_to_csv(df_individual_output)
+    csv_output = convert_df_to_csv(df_individual)
     
     ste.download_button(
         label="Download your previous output as a CSV (for use in Excel etc)", 
@@ -1414,7 +1426,7 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
 #            key='download-csv'
     )
 
-    excel_xlsx = convert_df_to_excel(df_individual_output)
+    excel_xlsx = convert_df_to_excel(df_individual)
     
     ste.download_button(label='Download your previous output as an Excel spreadsheet (XLSX)',
                         data=excel_xlsx,
@@ -1422,7 +1434,7 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
                         mime='application/vnd.ms-excel',
                        )
     
-    json_output = convert_df_to_json(df_individual_output)
+    json_output = convert_df_to_json(df_individual)
     
     ste.download_button(
         label="Download your previous output as a JSON", 
@@ -1465,10 +1477,8 @@ if run_button:
     elif int(consent) == 0:
         st.warning("You must click on 'Yes, I agree.' to PRODUCE data.")
     
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
-                    
-        st.session_state['need_resetting'] = 1
+    elif len(st.session_state.df_individual)>0:
+        st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
 
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
                 
@@ -1508,10 +1518,10 @@ if run_button:
 
             openai.api_key = API_key
             
-            df_individual_output = run(df_master, uploaded_docs, uploaded_images)
+            df_individual = run(df_master, uploaded_docs, uploaded_images)
 
             #Keep output in session state
-            st.session_state["df_individual_output"] = df_individual_output
+            st.session_state["df_individual"] = df_individual
     
             st.session_state["df_master"] = df_master
 
@@ -1531,7 +1541,7 @@ if run_button:
             #Button for downloading output
             output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
     
-            csv_output = convert_df_to_csv(df_individual_output)
+            csv_output = convert_df_to_csv(df_individual)
             
             ste.download_button(
                 label="Download your output as a CSV (for use in Excel etc)", 
@@ -1541,7 +1551,7 @@ if run_button:
     #            key='download-csv'
             )
     
-            excel_xlsx = convert_df_to_excel(df_individual_output)
+            excel_xlsx = convert_df_to_excel(df_individual)
             
             ste.download_button(label='Download your output as an Excel spreadsheet (XLSX)',
                                 data=excel_xlsx,
@@ -1549,7 +1559,7 @@ if run_button:
                                 mime='application/vnd.ms-excel',
                                )
             
-            json_output = convert_df_to_json(df_individual_output)
+            json_output = convert_df_to_json(df_individual)
             
             ste.download_button(
                 label="Download your output as a JSON", 
@@ -1589,10 +1599,8 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
         elif int(consent) == 0:
             st.warning("You must click on 'Yes, I agree.' to PRODUCE data.")
         
-        elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-            st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
-            
-            st.session_state['need_resetting'] = 1
+        elif len(st.session_state.df_individual)>0:
+            st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
     
         elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
                     
@@ -1636,15 +1644,19 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
     
                 openai.api_key = API_key
                 
-                df_individual_output = run_b64_own(df_master, uploaded_images)
+                df_individual = run_b64_own(df_master, uploaded_images)
     
                 #Keep output in session state
-                st.session_state["df_individual_output"] = df_individual_output
+
+                st.session_state["df_individual"] = df_individual
         
                 st.session_state["df_master"] = df_master
+
+                #Change session states
+                st.session_state['need_resetting'] = 1
                 
                 st.session_state["page_from"] = 'pages/OWN.py'
-        
+
                 #Write output
         
                 st.success('Your output are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
@@ -1656,7 +1668,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                 #Button for downloading output
                 output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
         
-                csv_output = convert_df_to_csv(df_individual_output)
+                csv_output = convert_df_to_csv(df_individual)
                 
                 ste.download_button(
                     label="Download your output as a CSV (for use in Excel etc)", 
@@ -1666,7 +1678,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
         #            key='download-csv'
                 )
         
-                excel_xlsx = convert_df_to_excel(df_individual_output)
+                excel_xlsx = convert_df_to_excel(df_individual)
                 
                 ste.download_button(label='Download your output as an Excel spreadsheet (XLSX)',
                                     data=excel_xlsx,
@@ -1674,7 +1686,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                                     mime='application/vnd.ms-excel',
                                    )
                 
-                json_output = convert_df_to_json(df_individual_output)
+                json_output = convert_df_to_json(df_individual)
                 
                 ste.download_button(
                     label="Download your output as a JSON", 
@@ -1708,18 +1720,15 @@ if keep_button:
     elif len(gpt_questions_entry) < 5:
 
         st.warning('You must enter some questions for GPT.')
-
-    elif ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual_output)>0)):
-        st.warning('You must :red[RESET] the program before processing new files or questions. Please press the :red[RESET] button above.')
-                    
-        st.session_state['need_resetting'] = 1
             
     else:
 
         st.subheader('Your entries are now available for download.')
 
         df_master = create_df()
-    
+
+        st.session_state["df_master"] = df_master
+
         df_master.pop("Your GPT API key")
     
         df_master.pop("Processed")
@@ -1763,5 +1772,10 @@ if return_button:
 
 # %%
 if reset_button:
-    clear_cache_except_validation_df_master()
+    
+    st.session_state['df_individual'] = pd.DataFrame([])
+    
+    st.session_state['need_resetting'] = 0
+
+    #clear_cache_except_validation_df_master()
     st.rerun()
