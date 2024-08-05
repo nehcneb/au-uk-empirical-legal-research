@@ -1084,8 +1084,19 @@ if 'need_resetting' not in st.session_state:
 
 if 'df_master' not in st.session_state:
 
+    #Generally applicable
     st.session_state['df_master'] = pd.DataFrame([])
-
+    st.session_state['df_master'].loc[0, 'Your name'] = ''
+    st.session_state['df_master'].loc[0, 'Your email address'] = ''
+    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
+    st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound
+    st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+    st.session_state['df_master'].loc[0, 'Language choice'] = 'English'
+    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
+    st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    st.session_state['df_master'].loc[0, 'Use own account'] = False
+    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    
 if 'df_individual' not in st.session_state:
 
     st.session_state['df_individual'] = pd.DataFrame([])

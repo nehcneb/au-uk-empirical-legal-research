@@ -1200,7 +1200,7 @@ if own_account_allowed() > 0:
             if gpt_api_key_entry:
                 
                 st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
-s
+
                 if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
                     
                     st.warning('This key is not valid.')

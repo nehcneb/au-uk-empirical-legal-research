@@ -651,65 +651,72 @@ if run_button:
                 jurisdiction_page = st.session_state.jurisdiction_page
                 
                 df_individual = gpt_run(jurisdiction_page, df_master)
-        
-                #Keep results in session state
-                st.session_state["df_individual"] = df_individual
 
-
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                st.session_state["page_from"] = 'pages/GPT.py'           
-
-                #Write results
-        
-                st.success("Your data is now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
+                if len(df_individual) == 0:
+                    st.error('Your search terms may not return any judgments. Please return to the previous page and press the PREVIEW button to double-check.')
                 
-                #Button for downloading results
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-                csv_output = convert_df_to_csv(df_individual)
-                
-                ste.download_button(
-                    label="Download your data as a CSV (for use in Excel etc)", 
-                    data = csv_output,
-                    file_name= output_name + '.csv', 
-                    mime= "text/csv", 
-        #            key='download-csv'
-                )
-        
-                excel_xlsx = convert_df_to_excel(df_individual)
-                
-                ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
-                                    data=excel_xlsx,
-                                    file_name= output_name + '.xlsx', 
-                                    mime='application/vnd.ms-excel',
-                                   )
-        
-                json_output = convert_df_to_json(df_individual)
-                
-                ste.download_button(
-                    label="Download your data as a JSON", 
-                    data = json_output,
-                    file_name= output_name + '.json', 
-                    mime= "application/json", 
-                )
-        
-                st.page_link('pages/AI.py', label="ANALYSE your data with an AI", icon = '🤔')
-
-                #Keep record on Google sheet
-                #Obtain google spreadsheet       
-                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
-                #df_master["Processed"] = datetime.now()
-                #df_master.pop("Your GPT API key")
-                #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="CTH", data=df_to_update, )
+                else:
+                    
+                    #Keep results in session state
+                    st.session_state["df_individual"] = df_individual
+    
+                    #Change session states
+                    st.session_state['need_resetting'] = 1
+                    st.session_state["page_from"] = 'pages/GPT.py'           
+    
+                    #Write results
             
+                    st.success("Your data is now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
+                    
+                    #Button for downloading results
+                    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
+            
+                    csv_output = convert_df_to_csv(df_individual)
+                    
+                    ste.download_button(
+                        label="Download your data as a CSV (for use in Excel etc)", 
+                        data = csv_output,
+                        file_name= output_name + '.csv', 
+                        mime= "text/csv", 
+            #            key='download-csv'
+                    )
+            
+                    excel_xlsx = convert_df_to_excel(df_individual)
+                    
+                    ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
+                                        data=excel_xlsx,
+                                        file_name= output_name + '.xlsx', 
+                                        mime='application/vnd.ms-excel',
+                                       )
+            
+                    json_output = convert_df_to_json(df_individual)
+                    
+                    ste.download_button(
+                        label="Download your data as a JSON", 
+                        data = json_output,
+                        file_name= output_name + '.json', 
+                        mime= "application/json", 
+                    )
+            
+                    st.page_link('pages/AI.py', label="ANALYSE your data with an AI", icon = '🤔')
+    
+                    #Keep record on Google sheet
+                    #Obtain google spreadsheet       
+                    #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+                    #df_google = conn.read()
+                    #df_google = df_google.fillna('')
+                    #df_google=df_google[df_google["Processed"]!='']
+                    #df_master["Processed"] = datetime.now()
+                    #df_master.pop("Your GPT API key")
+                    #df_to_update = pd.concat([df_google, df_master])
+                    #conn.update(worksheet="CTH", data=df_to_update, )
+                
             except Exception as e:
+                
                 st.error('Your search terms may not return any judgments. Please return to the previous page and press the PREVIEW button to double-check.')
+                
                 st.exception(e)
+                
 
 
 # %%
@@ -718,6 +725,7 @@ if return_button:
     st.session_state["page_from"] = 'pages/GPT.py'
     
     st.switch_page(st.session_state.jurisdiction_page)
+    
 
 
 # %%
@@ -798,63 +806,68 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     #Produce results
                         
                     df_individual = er_run_b64(df_master)
-    
-                    #Keep results in session state
-                    st.session_state["df_individual"] = df_individual#.astype(str)
-            
-                    #Change session states
-                    st.session_state['need_resetting'] = 1
-                    
-                    st.session_state["page_from"] = 'pages/GPT.py'
-                    
-                    #Write results
-            
-                    st.success("Your data is now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
-                    
-                    #Button for downloading results
-                    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-            
-                    csv_output = convert_df_to_csv(df_individual)
-                    
-                    ste.download_button(
-                        label="Download your data as a CSV (for use in Excel etc)", 
-                        data = csv_output,
-                        file_name= output_name + '.csv', 
-                        mime= "text/csv", 
-            #            key='download-csv'
-                    )
-            
-                    excel_xlsx = convert_df_to_excel(df_individual)
-                    
-                    ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
-                                        data=excel_xlsx,
-                                        file_name= output_name + '.xlsx', 
-                                        mime='application/vnd.ms-excel',
-                                       )
-            
-                    json_output = convert_df_to_json(df_individual)
-                    
-                    ste.download_button(
-                        label="Download your data as a JSON", 
-                        data = json_output,
-                        file_name= output_name + '.json', 
-                        mime= "application/json", 
-                    )
-            
-                    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-    
+
+                    if len(df_individual) == 0:
                         
-                    #Keep record on Google sheet
-                    #Obtain google spreadsheet       
-                    #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                    #df_google = conn.read()
-                    #df_google = df_google.fillna('')
-                    #df_google=df_google[df_google["Processed"]!='']
-                    #df_master["Processed"] = datetime.now()
-                    #df_master.pop("Your GPT API key")
-                    #df_to_update = pd.concat([df_google, df_master])
-                    #conn.update(worksheet="ER", data=df_to_update, )
-            
+                        st.error('Your search terms may not return any judgments. Please return to the previous page and press the PREVIEW button to double-check.')
+                    
+                    else:
+                        #Keep results in session state
+                        st.session_state["df_individual"] = df_individual#.astype(str)
+                
+                        #Change session states
+                        st.session_state['need_resetting'] = 1
+                        
+                        st.session_state["page_from"] = 'pages/GPT.py'
+                        
+                        #Write results
+                
+                        st.success("Your data is now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
+                        
+                        #Button for downloading results
+                        output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
+                
+                        csv_output = convert_df_to_csv(df_individual)
+                        
+                        ste.download_button(
+                            label="Download your data as a CSV (for use in Excel etc)", 
+                            data = csv_output,
+                            file_name= output_name + '.csv', 
+                            mime= "text/csv", 
+                #            key='download-csv'
+                        )
+                
+                        excel_xlsx = convert_df_to_excel(df_individual)
+                        
+                        ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
+                                            data=excel_xlsx,
+                                            file_name= output_name + '.xlsx', 
+                                            mime='application/vnd.ms-excel',
+                                           )
+                
+                        json_output = convert_df_to_json(df_individual)
+                        
+                        ste.download_button(
+                            label="Download your data as a JSON", 
+                            data = json_output,
+                            file_name= output_name + '.json', 
+                            mime= "application/json", 
+                        )
+                
+                        st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
+        
+                            
+                        #Keep record on Google sheet
+                        #Obtain google spreadsheet       
+                        #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+                        #df_google = conn.read()
+                        #df_google = df_google.fillna('')
+                        #df_google=df_google[df_google["Processed"]!='']
+                        #df_master["Processed"] = datetime.now()
+                        #df_master.pop("Your GPT API key")
+                        #df_to_update = pd.concat([df_google, df_master])
+                        #conn.update(worksheet="ER", data=df_to_update, )
+                
                 except Exception as e:
                     st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
                     st.exception(e)
