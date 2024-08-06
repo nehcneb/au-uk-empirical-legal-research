@@ -1165,8 +1165,8 @@ st.markdown("""Please enter one question **per line or per paragraph**. GPT will
 
 st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
-if st.toggle('See the instruction given to GPT'):
-    st.write(f"{intro_for_GPT[0]['content']}")
+#if st.toggle('See the instruction given to GPT'):
+    #st.write(f"{intro_for_GPT[0]['content']}")
 
 if st.toggle('Tips for using GPT'):
     tips()
@@ -1474,7 +1474,7 @@ if run_button:
         st.warning('You must enter some questions for GPT.')
 
     elif int(consent) == 0:
-        st.warning("You must tick 'Yes, I agree.'")
+        st.warning("You must tick 'Yes, I agree.' to run the program.")
     
     elif len(st.session_state.df_individual)>0:
         st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
@@ -1596,7 +1596,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             st.warning('You must enter some questions for GPT.')
     
         elif int(consent) == 0:
-            st.warning("You must tick 'Yes, I agree.'")
+            st.warning("You must tick 'Yes, I agree.' to run the program.")
         
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')

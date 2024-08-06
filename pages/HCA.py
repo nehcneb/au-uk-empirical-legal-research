@@ -1364,8 +1364,8 @@ def hca_run(df_master):
                                     df_master.loc[0, 'Collection'], 
                                     df_master.loc[0, 'Parties include'], 
                                     df_master.loc[0, 'Parties do not include'], 
-                                   df_master.loc[0, 'Decision date is before'], 
-                                    df_master.loc[0, 'Decision date is after'], 
+                                    df_master.loc[0, 'Decision date is after'],
+                                      df_master.loc[0, 'Decision date is before'], 
                                     #df_master.loc[0, 'Case numbers include'], 
                                     #df_master.loc[0, 'Case numbers do not include'], 
                                     df_master.loc[0, 'Judges include'], 
@@ -1523,8 +1523,8 @@ if 'df_master' not in st.session_state:
     st.session_state.df_master.loc[0, 'Search for medium neutral citation'] = None 
     st.session_state.df_master.loc[0, 'Parties include'] = None 
     st.session_state.df_master.loc[0, 'Parties do not include'] = None 
-    st.session_state.df_master.loc[0, 'Decision date is before'] = None 
     st.session_state.df_master.loc[0, 'Decision date is after'] = None 
+    st.session_state.df_master.loc[0, 'Decision date is before'] = None 
     #st.session_state.df_master.loc[0, 'Case numbers include'] = None 
     #st.session_state.df_master.loc[0, 'Case numbers do not include'] = None 
     st.session_state.df_master.loc[0, 'Judges include'] = None 
@@ -1658,7 +1658,7 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         own_parties_exclude_entry = st.text_input(label = 'Parties do not include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties do not include'])
         st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
         
-        after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+        after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
         
         before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
     
