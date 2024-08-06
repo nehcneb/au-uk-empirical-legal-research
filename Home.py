@@ -156,8 +156,7 @@ if source_entry:
     
     i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
-home_next_button = st.button('Next')
-
+home_next_button = st.button('NEXT')
 
 
 # %% [markdown]
