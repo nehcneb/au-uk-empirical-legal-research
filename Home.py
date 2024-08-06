@@ -152,7 +152,7 @@ if source_entry:
 
             page_from_name = sources_list[source_index(st.session_state.page_from)]
 
-            st.warning(f'Pressing NEXT will :red[erase] any earlier entries and produced data. To download such entries or data, please choose {page_from_name[0].lower()}{page_from_name[1:]} instead.')
+            st.warning(f'Pressing NEXT will :red[erase] any earlier entries and produced data. To download such entries or data, please select {page_from_name[0].lower()}{page_from_name[1:]} instead.')
     
     i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
@@ -168,7 +168,7 @@ if home_next_button:
 
     if source_entry == None:
 
-        st.write('You must choose a source of information.')
+        st.write('You must select a source of information.')
 
     elif i_unstanding_tick == False:
         st.write('You must tick "Yes, I understand."')
