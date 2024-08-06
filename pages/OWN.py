@@ -1474,7 +1474,7 @@ if run_button:
         st.warning('You must enter some questions for GPT.')
 
     elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.'")
+        st.warning("You must tick 'Yes, I agree.'")
     
     elif len(st.session_state.df_individual)>0:
         st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
@@ -1596,7 +1596,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             st.warning('You must enter some questions for GPT.')
     
         elif int(consent) == 0:
-            st.warning("You must click on 'Yes, I agree.'")
+            st.warning("You must tick 'Yes, I agree.'")
         
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')

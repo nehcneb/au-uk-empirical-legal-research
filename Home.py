@@ -68,11 +68,11 @@ source_pages = ["pages/HCA.py",
 
 
 # %%
-def source_index(source):
-    if source == None:
+def source_index(page_from):
+    if ((page_from == None) or (page_from == 'Home.py')):
         index = None
     else:
-        index = sources_list.index(source)
+        index = source_pages.index(page_from)
     return index
 
 
@@ -84,10 +84,10 @@ if 'page_from' not in st.session_state:
     
     st.session_state['page_from'] = 'Home.py'
 
-if 'source' not in st.session_state:
-    st.session_state['source'] = None
+#if 'source' not in st.session_state:
+    #st.session_state['source'] = None
 
-#if st.session_state.source:
+#if st.session_state.page_from:
     #default_source_index = sources_list.index(st.session_state['source'])
 #else:
     #default_source_index = None
@@ -135,20 +135,29 @@ st.header("Start")
 #    st.subheader("What would you like to study?")
 
 st.markdown("""What would you like to study?""")
-source_entry = st.selectbox("Please select a source of information to collect, code and analyse.", sources_list, index = source_index(st.session_state.source))
+source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = sources_list, index = source_index(st.session_state.page_from))
 #    gpt_api_key_entry = st.text_input("Your GPT API key")
 
 if source_entry:
 
-    if source_entry != st.session_state.source:
+    if sources_list.index(source_entry) != source_index(st.session_state.page_from):
 
-        st.session_state.i_understand = False
+        st.session_state['i_understand'] = False
+
+        st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated information and/or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
         
-    st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated information and/or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
+        if ((source_index(st.session_state.page_from)!= None) and ('df_master' in st.session_state)):
+
+            #page_from_index = source_pages.index(st.session_state.page_from)
+
+            page_from_name = sources_list[source_index(st.session_state.page_from)]
+
+            st.warning(f'Pressing NEXT will :red[erase] any earlier entries and produced data. To download such entries or data, please choose {page_from_name[0].lower()}{page_from_name[1:]} instead.')
     
-    browser_entry = st.checkbox('Yes, I understand.', value = st.session_state['i_understand'])
+    i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
 home_next_button = st.button('Next')
+
 
 
 # %% [markdown]
@@ -161,33 +170,28 @@ if home_next_button:
 
         st.write('You must choose a source of information.')
 
-    elif browser_entry == False:
-        st.write('You must tick "Yes, I understand." to use this program.')
+    elif i_unstanding_tick == False:
+        st.write('You must tick "Yes, I understand."')
 
     else:
 
+        source_entry_index = sources_list.index(source_entry)
+
         #Clear df_master if one has been generated from another page
-
-        if 'page_from' in st.session_state:
             
-            if 'df_master' in st.session_state:
+        if 'df_master' in st.session_state:
 
-                source_index = sources_list.index(source_entry)
+            if source_pages[source_entry_index] != st.session_state.page_from:
 
-                if source_pages[source_index] != st.session_state.page_from:
+                st.session_state.pop('df_master')
 
-                    st.session_state.pop('df_master')
-        
-        st.session_state.source = source_entry
-
-        st.session_state.i_understand = browser_entry
+        st.session_state.i_understand = i_unstanding_tick
 
         st.session_state["page_from"] = "Home.py"
 
-        page_to = source_pages[sources_list.index(st.session_state.source)]
+        page_to = source_pages[source_entry_index]
 
         st.switch_page(page_to)
-
 
 
 # %%

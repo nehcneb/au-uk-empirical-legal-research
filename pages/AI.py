@@ -1620,7 +1620,7 @@ reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.s
 if ask_button:
 
     if int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.'")
+        st.warning("You must tick 'Yes, I agree.'")
         quit()
         
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
