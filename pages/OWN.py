@@ -1105,25 +1105,6 @@ if 'df_individual' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
-# %%
-#Try to carry over previously entered personal details    
-try:
-    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
-except:
-    st.session_state['gpt_api_key_entry'] = ''
-
-try:
-    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
-except:
-    st.session_state['name_entry'] = ''
-
-try:
-    st.session_state['email_entry'] = st.session_state.df_master.loc[0, '"Your email address']
-    
-except:
-    st.session_state['email_entry'] = ''
-
-
 # %% [markdown]
 # ## Form before AI
 
@@ -1224,11 +1205,11 @@ if own_account_allowed() > 0:
         st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
     """)
             
-        name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
+        name_entry = st.text_input(label = "Your name", value = st.session_state.df_master.loc[0, 'Your name'])
     
-        email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
+        email_entry = st.text_input(label = "Your email address", value = st.session_state.df_master.loc[0, 'Your email address'])
         
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
+        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.df_master.loc[0, 'Your GPT API key'])
 
         if gpt_api_key_entry:
             
@@ -1486,7 +1467,7 @@ if run_button:
         st.warning('You must enter some questions for GPT.')
 
     elif int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to PRODUCE data.")
+        st.warning("You must click on 'Yes, I agree.'")
     
     elif len(st.session_state.df_individual)>0:
         st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
@@ -1608,7 +1589,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             st.warning('You must enter some questions for GPT.')
     
         elif int(consent) == 0:
-            st.warning("You must click on 'Yes, I agree.' to PRODUCE data.")
+            st.warning("You must click on 'Yes, I agree.'")
         
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')

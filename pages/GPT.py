@@ -91,6 +91,17 @@ from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_i
 #Import variables
 from gpt_functions import question_characters_bound, default_judgment_counter_bound, role_content #, intro_for_GPT
 
+# %%
+#For checking questions and answers
+from common_functions import check_questions_answers
+
+from gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
+
+if check_questions_answers() > 0:
+    print(f'By default, questions and answers are checked for potential privacy violation.')
+else:
+    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
+
 
 # %%
 #String to integer
@@ -294,6 +305,10 @@ gpt_questions_entry = st.text_area(label = f"You may enter at most {question_cha
 if gpt_questions_entry:
     
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
+
+if check_questions_answers() > 0:
+    
+    st.write("Please do not try to obtain personally identifiable information. Your questions and GPT's answers will be checked for potential privacy violation.")
 
 #Disable toggles while prompt is not entered or the same as the last processed prompt
 if gpt_activation_entry:
@@ -610,7 +625,7 @@ if gpt_keep_button:
 if run_button:
     
     if int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
+        st.warning("You must click on 'Yes, I agree.'")
 
     elif len(st.session_state.df_individual)>0:
         st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
@@ -727,7 +742,6 @@ if return_button:
     st.switch_page(st.session_state.jurisdiction_page)
     
 
-
 # %%
 if gpt_reset_button:
 
@@ -761,7 +775,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
     if er_run_button_b64:
         
         if int(consent) == 0:
-            st.warning("You must click on 'Yes, I agree.' to run the program.")
+            st.warning("You must click on 'Yes, I agree.'")
     
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
@@ -873,3 +887,5 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     st.exception(e)
 
 
+
+# %%

@@ -39,6 +39,7 @@ import math
 from math import ceil
 import matplotlib.pyplot as plt
 import ast
+import copy
 
 #OpenAI
 import openai
@@ -63,6 +64,9 @@ from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_ope
 #Excel
 import openpyxl
 from pyxlsb import open_workbook as open_xlsb
+
+# %%
+from common_functions import check_questions_answers
 
 # %% [markdown]
 # # gpt-3.5, 4o-mini and 4o
@@ -240,12 +244,208 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
 
 # %%
+#Check questions for potential privacy infringement
+
+questions_check_system_instruction = """
+You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
+You will be given questions to check in JSON form. Please provide labels for these questions based only on information contained in the JSON.
+Where a question seeks information about a person's birthday or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
+"""
+
+#More general below
+#questions_check_system_instruction = """
+#You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
+#You will be given questions to check in JSON form. 
+#Based only on information contained in the JSON, please check each question for whether it seeks a person's birthday, address, or other personally identifiable information. 
+#Where a question indeed seeks personally identifiable information, you label "1". 
+#Where a question does not seek personally identifiable information, you label "0". 
+#If you are not sure, label "unclear".
+#"""
+
+# %%
+#Check questions for potential privacy infringement
+
+def GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction):
+    #'question_json' variable is a json of questions to GPT
+    #'jugdment' variable is a judgment_json   
+
+    #judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
+
+    json_direction = [{"role": "user", "content": 'Label the following questions in JSON form.'}]
+
+    #Create answer format
+    
+    q_keys = [*questions_json]
+    
+    labels_json = {}
+    
+    for q_index in q_keys:
+        labels_json.update({q_index: 'Your label for the question with index ' + q_index})
+    
+    #Create questions, which include the answer format
+    
+    question_to_check = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Return labels in the following JSON form: ' + json.dumps(labels_json, default = str)}]
+    
+    #Create messages in one prompt for GPT
+    
+    intro_for_GPT = [{"role": "system", "content": questions_check_system_instruction}]
+    #messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_to_check
+    messages_for_GPT = intro_for_GPT + json_direction + question_to_check
+    
+#   return messages_for_GPT
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    try:
+        #completion = client.chat.completions.create(
+        completion = openai.chat.completions.create(
+            model = gpt_model,
+            messages = messages_for_GPT, 
+            response_format = {"type": "json_object"}, 
+            max_tokens = max_output(gpt_model, messages_for_GPT), 
+            temperature = 0.2, 
+            top_p = 0.2
+        )
+        
+#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
+        
+        #To obtain a json directly, use below
+        labels_dict = json.loads(completion.choices[0].message.content)
+        
+        #Obtain tokens
+        output_tokens = completion.usage.completion_tokens
+        
+        prompt_tokens = completion.usage.prompt_tokens
+        
+        return [labels_dict, output_tokens, prompt_tokens]
+
+    except Exception as error:
+        
+        for q_index in q_keys:
+            labels_json[q_index] = error
+        
+        return [labels_json, 0, 0]
+
+
+
+# %%
+#Function to replace unchecked questions with checked questions
+def checked_questions_json(questions_json, gpt_labels_output):
+    
+    checked_questions_json = questions_json
+
+    for q_key in gpt_labels_output[0]:
+        
+        if str(gpt_labels_output[0][q_key]) == '1':
+            
+            checked_questions_json[q_key] = 'Say "Potential privacy violation" only.'
+    
+    return checked_questions_json
+    
+
+
+# %%
+#Check questions for potential privacy infringement
+
+answers_check_system_instruction = """
+You are a compliance officer helping an academic researcher to redact personally identifiable information. 
+You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
+Where any part of the text contains a birthday or an address, you replace that part with "[redacted]". 
+You then return the remainder of the text unredacted.
+"""
+
+#If more general below
+#answers_check_system_instruction = """
+#You are a compliance officer helping an academic researcher to redact personally identifiable information. 
+#You will be given text to check in JSON form. 
+#Based only on information contained in the JSON, please check each text for whether it contains a person's birthday, address, or other personally identifiable information. 
+#Where any part of the text contains personally identifiable information, you replace that part with "[redacted]". 
+#You then return the remainder of the text unredacted.
+#"""
+
+
+# %%
+#Check answers_to_check_json for potential privacy infringement
+
+def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_instruction):
+    #'question_json' variable is a json of answers_to_check_json to GPT
+    #'jugdment' variable is a judgment_json   
+
+    #judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
+
+    json_direction = [{"role": "user", "content": 'Check the following text in JSON form.'}]
+
+    #Create answer format
+    
+    q_keys = [*answers_to_check_json]
+    
+    redacted_answers_json = {}
+    
+    for q_index in q_keys:
+        
+        redacted_answers_json.update({q_index: 'Your answer for the question with index ' + q_index})
+    
+    #Create answers_to_check_json, which include the answer format
+    
+    question_to_check = [{"role": "user", "content": json.dumps(answers_to_check_json, default = str) + ' Answer in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
+    
+    #Create messages in one prompt for GPT
+    
+    intro_for_GPT = [{"role": "system", "content": answers_check_system_instruction}]
+    #messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_to_check
+    messages_for_GPT = intro_for_GPT + json_direction + question_to_check
+    
+#   return messages_for_GPT
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    try:
+        #completion = client.chat.completions.create(
+        completion = openai.chat.completions.create(
+            model = gpt_model,
+            messages = messages_for_GPT, 
+            response_format = {"type": "json_object"}, 
+            max_tokens = max_output(gpt_model, messages_for_GPT), 
+            temperature = 0.2, 
+            top_p = 0.2
+        )
+        
+#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
+        
+        #To obtain a json directly, use below
+        answers_dict = json.loads(completion.choices[0].message.content)
+        
+        #Obtain tokens
+        output_tokens = completion.usage.completion_tokens
+        
+        prompt_tokens = completion.usage.prompt_tokens
+        
+        return [answers_dict, output_tokens, prompt_tokens]
+
+    except Exception as error:
+        
+        for q_index in q_keys:
+            redacted_answers_json[q_index] = error
+        
+        return [redacted_answers_json, 0, 0]
+
+
+
+# %%
 #For modern judgments, define system role content for GPT
-role_content_raw = "You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment or metadata, include a reference to those paragraphs, pages or sections. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write 'answer not found'. "
+role_content = "You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment or metadata, include a reference to those paragraphs, pages or sections. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write 'answer not found'. "
 
-safeguards = "Where you are asked to identify a party's date of birth, address, or other personal identification information, answer 'potential privacy violation'. " 
+#safeguards = "Where you are asked to identify a party's birthday, address, or other personally identifiable information, answer 'potential privacy violation'. " 
 
-role_content = role_content_raw + safeguards
+#role_content = role_content_raw# + safeguards
 
 #role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
@@ -307,11 +507,45 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
         
         prompt_tokens = completion.usage.prompt_tokens
         
-        return [answers_dict, output_tokens, prompt_tokens]
+        #return [answers_dict, output_tokens, prompt_tokens]
+
+        #Check answers
+
+        if check_questions_answers() > 0:
+            
+            try:
+                redacted_output = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
+        
+                redacted_answers_dict = redacted_output[0]
+        
+                redacted_answers_output_tokens = redacted_output[1]
+        
+                redacted_answers_prompt_tokens = redacted_output[2]
+        
+                return [redacted_answers_dict, output_tokens + redacted_answers_output_tokens, prompt_tokens + redacted_answers_prompt_tokens]
+
+                print('Answers checked.')
+                
+            except Exception as e:
+    
+                print('Answers check failed.')
+    
+                print(e)
+    
+                return [answers_dict, output_tokens, prompt_tokens]
+
+        else:
+
+            print('Answers not checked.')
+            
+            return [answers_dict, output_tokens, prompt_tokens]
 
     except Exception as error:
         
+        print('GPT failed to produce answers.')
+        
         for q_index in q_keys:
+            
             answers_json[q_index] = error
         
         return [answers_json, 0, 0]
@@ -340,6 +574,45 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     #openai.api_key = API_key
     
     #client = OpenAI()
+
+    #Make a copy of questions for making headings later
+    unchecked_questions_json = questions_json.copy()
+
+    #Check questions for privacy violation
+
+    if check_questions_answers() > 0:
+    
+        try:
+    
+            labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
+    
+            labels_output_tokens = labels_output[1]
+    
+            labels_prompt_tokens = labels_output[2]
+        
+            questions_json = checked_questions_json(questions_json, labels_output)
+
+            print('Questions checked.')
+    
+        except Exception as e:
+            
+            print('Questions check failed.')
+            
+            print(e)
+    
+            labels_output_tokens = 0
+            
+            labels_prompt_tokens = 0
+
+    else:
+
+        print('Questions not checked.')
+        
+        labels_output_tokens = 0
+        
+        labels_prompt_tokens = 0
+
+    #Process questions
     
     question_keys = [*questions_json]
     
@@ -417,15 +690,26 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     	#Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
 
         for question_index in question_keys:
-            question_heading = question_index + ': ' + questions_json[question_index]
+
+            #If not checking questions
+            #question_heading = question_index + ': ' + questions_json[question_index]
+
+            #If checking questions
+            question_heading = question_index + ': ' + unchecked_questions_json[question_index]
+            
             df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
             
             if 'Your answer to the question with index' in str(answers_dict[question_index]):
+                
                 df_individual.loc[judgment_index, question_heading] = 'Error for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(question_index) + ' Please try again.'
 
         #Calculate GPT costs
 
-        GPT_cost = GPT_output_list[1]*gpt_output_cost(gpt_model) + GPT_output_list[2]*gpt_input_cost(gpt_model)
+        #If no check for questions
+        #GPT_cost = GPT_output_list[1]*gpt_output_cost(gpt_model) + GPT_output_list[2]*gpt_input_cost(gpt_model)
+
+        #If check for questions
+        GPT_cost = (GPT_output_list[1] + labels_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (GPT_output_list[2] + labels_prompt_tokens/len(df_individual))*gpt_input_cost(gpt_model)
 
         #Calculate and append GPT cost to individual df
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
@@ -484,3 +768,5 @@ def calculate_image_token_cost(image, detail="auto"):
         # Invalid detail_option
         raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
 
+
+# %%

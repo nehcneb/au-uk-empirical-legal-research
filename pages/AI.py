@@ -97,6 +97,12 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
+# %%
+# Go back to home page if this page is the first page
+if 'page_from' not in st.session_state:
+    clear_cache()
+    st.switch_page("Home.py")
+
 # %% [markdown]
 # # AI model and context
 
@@ -1040,24 +1046,6 @@ if 'last_prompt' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
-# %%
-#Try to carry over previously entered personal details    
-try:
-    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
-except:
-    st.session_state['gpt_api_key_entry'] = ''
-
-try:
-    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
-except:
-    st.session_state['name_entry'] = ''
-
-try:
-    st.session_state['email_entry'] = st.session_state.df_master.loc[0, 'Your email address']
-    
-except:
-    st.session_state['email_entry'] = ''
-
 # %% [markdown]
 # ## Form before choosing AI
 
@@ -1069,11 +1057,11 @@ spreadsheet_success = 'Your spreadsheet has been imported. Please scroll down.'
 # %%
 if st.button('RETURN to previous page'):
     
-    if st.session_state.page_from == 'Home.py':
-        st.switch_page('Home.py')
+    if st.session_state.page_from != 'Home.py':
+        st.switch_page(st.session_state.page_from)
         
     else:
-        st.switch_page('pages/GPT.py')
+        st.switch_page('Home.py')
 
 st.header("You have chosen to :blue[analyse a spreadsheet].")
 
@@ -1181,21 +1169,21 @@ if own_account_allowed() > 0:
             st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
 """)
                 
-            name_entry = st.text_input(label = "Your name", value = st.session_state.name_entry)
+            name_entry = st.text_input(label = "Your name", value = st.session_state.df_master.loc[0, 'Your name'])
     
             if name_entry:
                 st.session_state.df_master.loc[0, 'Your name'] = name_entry
-            else:
-                st.session_state.df_master.loc[0, 'Your name'] = st.session_state.name_entry
+            #else:
+                #st.session_state.df_master.loc[0, 'Your name'] = st.session_state.name_entry
             
-            email_entry = st.text_input(label = "Your email address", value = st.session_state.email_entry)
+            email_entry = st.text_input(label = "Your email address", value = st.session_state.df_master.loc[0, 'Your email address'])
 
             if email_entry:
                 st.session_state.df_master.loc[0, 'Your email address'] = email_entry
-            else:
-                st.session_state.df_master.loc[0, 'Your email address'] = st.session_state.email_entry
+            #else:
+                #st.session_state.df_master.loc[0, 'Your email address'] = st.session_state.email_entry
 
-            gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.gpt_api_key_entry)
+            gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.df_master.loc[0, 'Your GPT API key'])
 
             if gpt_api_key_entry:
                 
@@ -1205,9 +1193,9 @@ if own_account_allowed() > 0:
                     
                     st.warning('This key is not valid.')
 
-            else:
+            #else:
                 
-                st.session_state.df_master.loc[0, 'Your GPT API key'] = st.session_state.gpt_api_key_entry
+                #st.session_state.df_master.loc[0, 'Your GPT API key'] = st.session_state.gpt_api_key_entry
             
             #valdity_check = st.button('VALIDATE your API key')
         
@@ -1632,7 +1620,7 @@ reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.s
 if ask_button:
 
     if int(consent) == 0:
-        st.warning("You must click on 'Yes, I agree.' to run the program.")
+        st.warning("You must click on 'Yes, I agree.'")
         quit()
         
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):

@@ -1449,6 +1449,18 @@ print(f"Questions for GPT are capped at {question_characters_bound} characters.\
 print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
 
 # %%
+#For checking questions and answers
+from common_functions import check_questions_answers
+
+from gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
+
+if check_questions_answers() > 0:
+    print(f'By default, questions and answers are checked for potential privacy violation.')
+else:
+    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
+
+
+# %%
 #Jurisdiction specific instruction
 system_instruction = role_content
 
@@ -1628,24 +1640,6 @@ if 'df_individual_output' not in st.session_state:
 #Disable toggles
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
-
-# %%
-#Try to carry over previously entered personal details    
-try:
-    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
-except:
-    st.session_state['gpt_api_key_entry'] = ''
-
-try:
-    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
-except:
-    st.session_state['name_entry'] = ''
-
-try:
-    st.session_state['email_entry'] = st.session_state.df_master.loc[0, 'Your email address']
-    
-except:
-    st.session_state['email_entry'] = ''
 
 # %%
 #If landing page is not home

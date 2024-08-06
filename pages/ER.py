@@ -318,6 +318,18 @@ print(f"Questions for GPT are capped at {question_characters_bound} characters.\
 print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
 
 # %%
+#For checking questions and answers
+from common_functions import check_questions_answers
+
+from gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
+
+if check_questions_answers() > 0:
+    print(f'By default, questions and answers are checked for potential privacy violation.')
+else:
+    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
+
+
+# %%
 #Jurisdiction specific instruction
 
 role_content_er = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". The "judgment" field of the JSON given to you sometimes contains judgments for multiple cases. If you detect multiple judgments in the "judgment" field, please provide answers only for the specific case identified in the "Case name" field of the JSON given to you.'
@@ -613,10 +625,43 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
         
         prompt_tokens = completion.usage.prompt_tokens
         
-        return [answers_dict, output_tokens, prompt_tokens]
+        #return [answers_dict, output_tokens, prompt_tokens]
+
+        #Check answers
+
+        if check_questions_answers() > 0:
+            
+            try:
+                redacted_output = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
+        
+                redacted_answers_dict = redacted_output[0]
+        
+                redacted_answers_output_tokens = redacted_output[1]
+        
+                redacted_answers_prompt_tokens = redacted_output[2]
+        
+                return [redacted_answers_dict, output_tokens + redacted_answers_output_tokens, prompt_tokens + redacted_answers_prompt_tokens]
+
+                print('Answers checked.')
+                
+            except Exception as e:
+    
+                print('Answers check failed.')
+    
+                print(e)
+    
+                return [answers_dict, output_tokens, prompt_tokens]
+
+        else:
+
+            print('Answers not checked.')
+            
+            return [answers_dict, output_tokens, prompt_tokens]
 
     except Exception as error:
         
+        print('GPT failed to produce answers.')
+
         for q_index in q_keys:
             answers_json[q_index] = error
         
@@ -645,6 +690,43 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
     #openai.api_key = API_key
     
     #client = OpenAI()
+
+    #Make a copy of questions for making headings later
+    unchecked_questions_json = questions_json.copy()
+
+    #Check questions for privacy violation
+
+    if check_questions_answers() > 0:
+    
+        try:
+    
+            labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
+    
+            labels_output_tokens = labels_output[1]
+    
+            labels_prompt_tokens = labels_output[2]
+        
+            questions_json = checked_questions_json(questions_json, labels_output)
+
+            print('Questions checked.')
+    
+        except Exception as e:
+            
+            print('Questions check failed.')
+            
+            print(e)
+    
+            labels_output_tokens = 0
+            
+            labels_prompt_tokens = 0
+
+    else:
+
+        print('Questions not checked.')
+        
+        labels_output_tokens = 0
+        
+        labels_prompt_tokens = 0
     
     question_keys = [*questions_json]
 
@@ -738,12 +820,23 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         #Create GPT question headings and append answers to individual spreadsheets
 
         for question_index in question_keys:
-            question_heading = question_index + ': ' + questions_json[question_index]
+            #If not checking questions
+            #question_heading = question_index + ': ' + questions_json[question_index]
+
+            #If checking questions
+            question_heading = question_index + ': ' + unchecked_questions_json[question_index]
+
             df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
 
         #Calculate GPT costs
 
-        GPT_cost = GPT_judgment_json[1]*gpt_output_cost(gpt_model) + GPT_judgment_json[2]*gpt_input_cost(gpt_model)
+        #Calculate GPT costs
+
+        #If check for questions
+        GPT_cost = (GPT_judgment_json[1] + labels_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (GPT_judgment_json[2] + labels_prompt_tokens/len(df_individual))*gpt_input_cost(gpt_model)
+
+        #If no check for questions
+        #GPT_cost = GPT_judgment_json[1]*gpt_output_cost(gpt_model) + GPT_judgment_json[2]*gpt_input_cost(gpt_model)
 
         #Calculate and append GPT cost to individual df
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
@@ -873,24 +966,6 @@ if 'df_individual_output' not in st.session_state:
 #Disable toggles
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
-
-# %%
-#Try to carry over previously entered personal details    
-try:
-    st.session_state['gpt_api_key_entry'] = st.session_state.df_master.loc[0, 'Your GPT API key']
-except:
-    st.session_state['gpt_api_key_entry'] = ''
-
-try:
-    st.session_state['name_entry'] = st.session_state.df_master.loc[0, 'Your name']
-except:
-    st.session_state['name_entry'] = ''
-
-try:
-    st.session_state['email_entry'] = st.session_state.df_master.loc[0, 'Your email address']
-    
-except:
-    st.session_state['email_entry'] = ''
 
 # %%
 #If landing page is not home
