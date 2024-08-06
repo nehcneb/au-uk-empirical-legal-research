@@ -82,9 +82,6 @@ print(f"Questions for GPT are capped at {question_characters_bound} characters.\
 
 #Upperbound on number of judgments to scrape
 
-#Default judgment counter bound
-
-default_judgment_counter_bound = 10
 
 
 # %%

@@ -86,7 +86,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -113,7 +113,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from gpt_functions import is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound
+from gpt_functions import question_characters_bound
 
 
 # %%

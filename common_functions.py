@@ -38,12 +38,22 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-	return 0
+    return 0
 
 
 # %%
 def check_questions_answers():
     return 1
+
+
+# %%
+#Default judgment counter bound
+
+default_judgment_counter_bound = 10
+
+# %%
+#Default page bound for OWN.py
+default_page_bound = 50
 
 
 # %%
@@ -278,3 +288,26 @@ def au_date(x):
 
 
 # %%
+#String to integer
+def str_to_int(string):
+    try:
+        if '.' in string:
+            output = int(string.split('.')[0])
+        else:
+            output = int(string)
+        return output
+    except:
+        return int(default_judgment_counter_bound)
+
+
+# %%
+#String to integer
+def str_to_int_page(string):
+    try:
+        if '.' in string:
+            output = int(string.split('.')[0])
+        else:
+            output = int(string)
+        return output
+    except:
+        return int(default_page_bound)

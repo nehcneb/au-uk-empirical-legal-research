@@ -64,7 +64,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -1288,7 +1288,7 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
 #Import functions
 from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound#, role_content#, intro_for_GPT
+from gpt_functions import question_characters_bound, role_content#, intro_for_GPT
 
 
 # %%
@@ -1309,9 +1309,9 @@ else:
 
 # %%
 #Jurisdiction specific instruction
-hca_role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections, provide the paragraph or page numbers or section names as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
+#hca_role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections, provide the paragraph or page numbers or section names as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
-system_instruction = hca_role_content
+system_instruction = role_content #hca_role_content
 
 intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
@@ -1793,7 +1793,24 @@ Case name and medium neutral citation are always included with your results.
                 
             df_master = hca_create_df()
 
-            st.session_state['df_master'] = df_master
+            #st.session_state['df_master'] = df_master
+
+            keys_to_carry_over = ['Your name', 
+            'Your email address', 
+            'Your GPT API key', 
+            'Maximum number of judgments', 
+            'Enter your questions for GPT', 
+            'Use GPT', 
+            'Use own account', 
+            'Use flagship version of GPT']
+            
+            df_master = df_master.replace({np.nan: None})
+            
+            for key in st.session_state.df_master.keys():
+                
+                if key not in keys_to_carry_over:
+                    
+                    st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
 
             df_master.pop("Your GPT API key")
         
@@ -1834,6 +1851,8 @@ Case name and medium neutral citation are always included with your results.
 
     # %%
     if return_button:
+
+        st.session_state["page_from"] = 'pages/HCA.py'
     
         st.switch_page("Home.py")
 
@@ -1856,7 +1875,24 @@ Case name and medium neutral citation are always included with your results.
         
             df_master = hca_create_df()
             
-            st.session_state['df_master'] = df_master
+            #st.session_state['df_master'] = df_master
+
+            keys_to_carry_over = ['Your name', 
+            'Your email address', 
+            'Your GPT API key', 
+            'Maximum number of judgments', 
+            'Enter your questions for GPT', 
+            'Use GPT', 
+            'Use own account', 
+            'Use flagship version of GPT']
+            
+            df_master = df_master.replace({np.nan: None})
+            
+            for key in st.session_state.df_master.keys():
+                
+                if key not in keys_to_carry_over:
+                    
+                    st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
             
             st.session_state["page_from"] = 'pages/HCA.py'
             

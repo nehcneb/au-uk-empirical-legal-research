@@ -66,9 +66,9 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -77,6 +77,25 @@ else:
 
 print(f"The pause between file scraping is {scraper_pause_mean} second.\n")
 
+
+# %%
+#Page bound
+
+default_page_bound = 100
+
+print(f"\nThe maximum number of pages per file is {default_page_bound}.")
+
+#if 'page_bound' not in st.session_state:
+    #st.session_state['page_bound'] = default_page_bound
+
+#Default file counter bound
+
+default_file_counter_bound = default_judgment_counter_bound
+
+#if 'file_counter_bound' not in st.session_state:
+    #st.session_state['file_counter_bound'] = default_file_counter_bound
+
+print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
 # %%
 #Title of webpage
@@ -127,11 +146,11 @@ def create_df():
     own_account = st.session_state.own_account
     
     #file counter bound
-    file_counter_bound = st.session_state.file_counter_bound
+    file_counter_bound = st.session_state['df_master'].loc[0, 'Maximum number of files']
 
     #Page counter bound
 
-    page_bound = st.session_state.page_bound
+    page_bound = st.session_state['df_master'].loc[0,'Maximum number of pages per file']
     
     #GPT enhancement
     gpt_enhancement = st.session_state.gpt_enhancement_entry
@@ -363,11 +382,8 @@ def image_to_text(uploaded_image, language, page_bound):
 #Import functions
 from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound
+from gpt_functions import question_characters_bound
 
-
-# %%
-default_file_counter_bound = default_judgment_counter_bound
 
 # %%
 print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
@@ -522,7 +538,7 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
         
         #Calculate and append number of tokens of file, regardless of whether given to GPT
         file_tokens = num_tokens_from_string(str(file_triple), "cl100k_base")
-        df_individual.loc[file_index, f"Length of first {st.session_state.page_bound} pages in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = file_tokens       
+        df_individual.loc[file_index, f"Length of first {st.session_state['df_master'].loc[0,'Maximum number of pages per file']} pages in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = file_tokens       
 
         #Indicate whether file truncated
         
@@ -1048,25 +1064,6 @@ from common_functions import open_page, clear_cache_except_validation_df_master,
 # ## Initialize session states
 
 # %%
-#Page bound
-
-default_page_bound = 100
-
-print(f"\nThe maximum number of pages per file is {default_page_bound}.")
-
-if 'page_bound' not in st.session_state:
-    st.session_state['page_bound'] = default_page_bound
-
-#Default file counter bound
-
-default_file_counter_bound = 10
-
-if 'file_counter_bound' not in st.session_state:
-    st.session_state['file_counter_bound'] = default_file_counter_bound
-
-print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
-
-# %%
 #Initialize default values
 
 if 'gpt_enhancement_entry' not in st.session_state:
@@ -1238,39 +1235,49 @@ if own_account_allowed() > 0:
         
         #file_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_file_counter_bound))
 
-        #st.session_state.file_counter_bound = file_counter_bound_entry
+        #st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
 
-        file_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_file_counter_bound))
+        #file_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_file_counter_bound))
+        
+        file_counter_bound_entry = st.number_input(label = 'Choose a number between 1 and 100', min_value = 1, max_value = 100, step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
 
         if file_counter_bound_entry:
-            wrong_number_files_warning = f'You have not entered a whole number between 1 and 200. The program will process up to {default_file_counter_bound} files instead.'
-            try:
-                st.session_state.file_counter_bound = int(file_counter_bound_entry)
-            except:
-                st.warning(wrong_number_files_warning)
-                st.session_state.file_counter_bound = default_file_counter_bound
+            
+            st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
+        
+        #if file_counter_bound_entry:
+            #wrong_number_files_warning = f'You have not entered a whole number between 1 and 200. The program will process up to {default_file_counter_bound} files instead.'
+            #try:
+                #st.session_state['df_master'].loc[0, 'Maximum number of files'] = int(file_counter_bound_entry)
+            #except:
+                #st.warning(wrong_number_files_warning)
+                #st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
 
-            if ((st.session_state.file_counter_bound <= 0) or (st.session_state.file_counter_bound > 200)):
-                st.warning(wrong_number_files_warning)
-                st.session_state.file_counter_bound = default_file_counter_bound
+            #if ((st.session_state['df_master'].loc[0, 'Maximum number of files'] <= 0) or (st.session_state['df_master'].loc[0, 'Maximum number of files'] > 200)):
+                #st.warning(wrong_number_files_warning)
+                #st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
     
         st.write(f'**:orange[You can increase the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
         
-        page_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_page_bound))
+        #page_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(default_page_bound))
 
-        if page_bound_entry:
-            wrong_number_page_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_page_bound} files instead.'
-            try:
-                st.session_state.page_bound = int(page_bound_entry)
-            except:
-                st.warning(wrong_number_page_warning)
-                st.session_state.page_bound = default_page_bound
+        page_bound_entry = st.number_input(label = 'Enter a number between 1 and 100', min_value = 1, max_value = 100, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
 
-            if ((st.session_state.page_bound <= 0) or (st.session_state.page_bound > 100)):
-                st.warning(wrong_number_page_warning)
-                st.session_state.page_bound = default_page_bound
+        st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = page_bound_entry
+        
+        #if page_bound_entry:
+            #wrong_number_page_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_page_bound} files instead.'
+            #try:
+                #st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = int(page_bound_entry)
+            #except:
+                #st.warning(wrong_number_page_warning)
+                #st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+
+            #if ((st.session_state['df_master'].loc[0,'Maximum number of pages per file'] <= 0) or (st.session_state['df_master'].loc[0,'Maximum number of pages per file'] > 100)):
+                #st.warning(wrong_number_page_warning)
+                #st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
     
-        st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from the first  {st.session_state.page_bound} pages of each file, for up to {st.session_state.file_counter_bound} files.*')
+        st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {int(round(tokens_cap(st.session_state.gpt_model)*3/4))} words from the first  {int(st.session_state['df_master'].loc[0,'Maximum number of pages per file'])} page(s) of each file, for up to {int(st.session_state['df_master'].loc[0, 'Maximum number of files'])} file(s).*")
     
     else:
         
@@ -1280,9 +1287,9 @@ if own_account_allowed() > 0:
 
         st.session_state.gpt_enhancement_entry = False
     
-        st.session_state.file_counter_bound = default_file_counter_bound
+        st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
 
-        st.session_state.page_bound = default_page_bound
+        st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
 
 
 # %% [markdown]
@@ -1443,15 +1450,15 @@ if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individua
 # %%
 #if test_button:
     #for uploaded_doc in uploaded_docs:
-        #output = doc_to_text(uploaded_doc, language_entry, st.session_state.page_bound)
+        #output = doc_to_text(uploaded_doc, language_entry, st.session_state['df_master'].loc[0,'Maximum number of pages per file'])
         #st.write(output)
 
 #    for uploaded_image in uploaded_images:
-#        output = image_to_text(uploaded_image, language_entry, st.session_state.page_bound)
+#        output = image_to_text(uploaded_image, language_entry, st.session_state['df_master'].loc[0,'Maximum number of pages per file'])
 #        st.write(output)
 
     #for uploaded_image in uploaded_images:
-        #output = image_to_b64_own(uploaded_image, language_entry, st.session_state.page_bound)
+        #output = image_to_b64_own(uploaded_image, language_entry, st.session_state['df_master'].loc[0,'Maximum number of pages per file'])
         #st.write(output)
 
 
@@ -1515,7 +1522,7 @@ if run_button:
             #Keep output in session state
             st.session_state["df_individual"] = df_individual
     
-            st.session_state["df_master"] = df_master
+            #st.session_state["df_master"] = df_master
 
             #Change session states
             st.session_state['need_resetting'] = 1
@@ -1760,7 +1767,10 @@ if keep_button:
 # %%
 if return_button:
 
+    st.session_state["page_from"] = 'pages/OWN.py'
+
     st.switch_page("Home.py")
+
 
 # %%
 if reset_button:

@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, au_date, list_value_check
 #Import variables
-from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound
+from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -1441,7 +1441,7 @@ afca_meta_labels_droppable = ["Case number", "Financial firm", 'Date']
 #Import functions
 from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound, role_content#, intro_for_GPT
+from gpt_functions import question_characters_bound, role_content#, intro_for_GPT
 
 
 # %%
@@ -1790,7 +1790,24 @@ Case name and hyperlinks to the afca portal are always included with your result
                 
             df_master = afca_create_df()
 
-            st.session_state['df_master'] = df_master
+            #st.session_state['df_master'] = df_master
+
+            keys_to_carry_over = ['Your name', 
+            'Your email address', 
+            'Your GPT API key', 
+            'Maximum number of judgments', 
+            'Enter your questions for GPT', 
+            'Use GPT', 
+            'Use own account', 
+            'Use flagship version of GPT']
+            
+            df_master = df_master.replace({np.nan: None})
+            
+            for key in st.session_state.df_master.keys():
+                
+                if key not in keys_to_carry_over:
+                    
+                    st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
         
             df_master.pop("Your GPT API key")
         
@@ -1830,6 +1847,8 @@ Case name and hyperlinks to the afca portal are always included with your result
 
     # %%
     if return_button:
+
+        st.session_state["page_from"] = 'pages/AFCA.py'
     
         st.switch_page("Home.py")
 
@@ -1853,7 +1872,24 @@ Case name and hyperlinks to the afca portal are always included with your result
         
             df_master = afca_create_df()
             
-            st.session_state['df_master'] = df_master
+            #st.session_state['df_master'] = df_master
+
+            keys_to_carry_over = ['Your name', 
+            'Your email address', 
+            'Your GPT API key', 
+            'Maximum number of judgments', 
+            'Enter your questions for GPT', 
+            'Use GPT', 
+            'Use own account', 
+            'Use flagship version of GPT']
+            
+            df_master = df_master.replace({np.nan: None})
+            
+            for key in st.session_state.df_master.keys():
+                
+                if key not in keys_to_carry_over:
+                    
+                    st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
                         
             st.session_state["page_from"] = 'pages/AFCA.py'
             

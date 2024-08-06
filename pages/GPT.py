@@ -59,9 +59,9 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel 
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int
 #Import variables
-from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, list_range_check, au_date
+from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -89,7 +89,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from gpt_functions import question_characters_bound, default_judgment_counter_bound, role_content #, intro_for_GPT
+from gpt_functions import question_characters_bound, role_content #, intro_for_GPT
 
 # %%
 #For checking questions and answers
@@ -101,20 +101,6 @@ if check_questions_answers() > 0:
     print(f'By default, questions and answers are checked for potential privacy violation.')
 else:
     print(f'By default, questions and answers are NOT checked for potential privacy violation.')
-
-
-# %%
-#String to integer
-def str_to_int(string):
-    try:
-        if '.' in string:
-            output = int(string.split('.')[0])
-        else:
-            output = int(string)
-        return output
-    except:
-        return int(default_judgment_counter_bound)
-
 
 # %%
 #Module, costs and upperbounds
@@ -390,7 +376,7 @@ if own_account_allowed() > 0:
         
         #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
 
-        #st.session_state.judgments_counter_bound = judgments_counter_bound_entry
+        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
 
         #judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
         judgments_counter_bound_entry = st.number_input(label = 'Choose a number between 1 and 100', min_value = 1, max_value = 100, step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
@@ -401,16 +387,16 @@ if own_account_allowed() > 0:
 
             #wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
             #try:
-                #st.session_state.judgments_counter_bound = int(judgments_counter_bound_entry)
+                #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = int(judgments_counter_bound_entry)
             #except:
                 #st.warning(wrong_number_warning)
-                #st.session_state.judgments_counter_bound = default_judgment_counter_bound
+                #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
-            #if ((st.session_state.judgments_counter_bound <= 0) or (st.session_state.judgments_counter_bound > 100)):
+            #if ((st.session_state['df_master'].loc[0, 'Maximum number of judgments'] <= 0) or (st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > 100)):
                 #st.warning(wrong_number_warning)
-                #st.session_state.judgments_counter_bound = default_judgment_counter_bound
+                #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     
-        st.write(f'*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state.judgments_counter_bound} judgments.*')
+        st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} judgment(s).*")
     
     else:
         
@@ -420,7 +406,7 @@ if own_account_allowed() > 0:
 
         st.session_state.gpt_enhancement_entry = False
     
-        st.session_state.judgments_counter_bound = default_judgment_counter_bound
+        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
 # %% [markdown]
 # ## Consent
@@ -740,7 +726,7 @@ if return_button:
     st.session_state["page_from"] = 'pages/GPT.py'
     
     st.switch_page(st.session_state.jurisdiction_page)
-    
+
 
 # %%
 if gpt_reset_button:
