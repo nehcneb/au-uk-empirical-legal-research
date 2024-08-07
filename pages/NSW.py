@@ -833,11 +833,11 @@ if st.session_state.page_from != "pages/NSW.py": #Need to add in order to avoid 
     
     st.caption("Must include square brackets eg [2022] NSWSC 922")
     
-    startDate_entry = st.date_input(label = "Decision date from (01/01/1999 the earliest)", value = au_date(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now())
+    startDate_entry = st.date_input(label = "Decision date from (01/01/1999 the earliest)", value = au_date(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     st.caption("Pre-1999 decisions are usually [not available](https://www.caselaw.nsw.gov.au/about) from NSW Caselaw and will unlikely to be collected.")
     
-    endDate_entry = st.date_input(label = "Decision date to", value = au_date(st.session_state['df_master'].loc[0, 'Decision date to']),  format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now())
+    endDate_entry = st.date_input(label = "Decision date to", value = au_date(st.session_state['df_master'].loc[0, 'Decision date to']),  format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     fileNumber_entry = st.text_input(label = "File number", value = st.session_state['df_master'].loc[0, 'File number'])
     

@@ -171,7 +171,7 @@ def afca_create_df():
             'Product name': '', 
             'Issue type': '', 
             'Issue': '', 
-            'Date from': '01/01/2000',
+            'Date from': '01/11/2018',
             'Date to': today,
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
@@ -1222,7 +1222,7 @@ def afca_search(keywordsearch_input, #= '',
                 product_name_input, #= '', 
                 issue_type_input, #= '', 
                 issue_input, #= '', 
-                date_from_input, #= '01/01/2000', 
+                date_from_input, #= '01/11/2018', 
                 date_to_input #= today
                 ):
 
@@ -1317,7 +1317,7 @@ def afca_search(keywordsearch_input, #= '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
-    if date_from_input != '01/01/2000':
+    if date_from_input != '01/11/2018':
         date_from.send_keys(date_from_input)
 
     if date_to_input != today:
@@ -1346,7 +1346,7 @@ def afca_search(keywordsearch_input, #= '',
             url = 'https://my.afca.org.au' + soup_case.find_all('a', href=True)[0]['href']
             
             case_meta = {#'Case name': case_name, #Bijective function between case name and number
-                'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to afca portal': url}
+                'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA Portal': url}
             case_list.append(case_meta)
             urls.append(url)
                     
@@ -1370,7 +1370,7 @@ def afca_search(keywordsearch_input, #= '',
             #date = raw_case.text.split('\n')[3].replace('Date: ', '')
             #url = raw_links[raw_link_index].get_attribute("href")
             #case_meta = {#'Case name': case_name, #Bijective function between case name and number
-                #'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to afca portal': url}
+                #'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA Portal': url}
             #case_list.append(case_meta)
             #urls.append(url)
     #except Exception as e:
@@ -1388,7 +1388,7 @@ def afca_meta_judgment_dict(judgment_url):
     page = requests.get(judgment_url, headers=headers)
     soup = BeautifulSoup(page.content, "lxml")
     
-    judgment_dict = {'Case name': '', 'Hyperlink to afca portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
+    judgment_dict = {'Case name': '', 'Hyperlink to AFCA Portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
 
     #Attach 
 
@@ -1669,7 +1669,7 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
 
     st.subheader("Your search terms")
     
-    st.markdown("""For search tips, please visit [the afca Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
+    st.markdown("""For search tips, please visit [the AFCA Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
 """)
     
     keywordsearch_entry = st.text_input(label = 'Search for published decisions', value = st.session_state.df_master.loc[0, 'Search for published decisions'])
@@ -1686,9 +1686,9 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     
     issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
             
-    date_from_entry = st.date_input('Date from (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY")
+    date_from_entry = st.date_input('Date from (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
-    date_to_entry = st.date_input('Date to (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY")
+    date_to_entry = st.date_input('Date to (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
      
     st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
 """)
@@ -1727,7 +1727,7 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
                 
                 link_heading_config = {} 
           
-                link_heading_config['Hyperlink to afca portal'] = st.column_config.LinkColumn(display_text = 'Click')
+                link_heading_config['Hyperlink to AFCA Portal'] = st.column_config.LinkColumn(display_text = 'Click')
         
                 st.success(f'Your search terms returned {search_results["case_sum"]} result(s). Please see below for the top {min(search_results["case_sum"], 10)} result(s).')
                             
@@ -1741,7 +1741,7 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     
     st.markdown("""Would you like to obtain judgment metadata? Such data include the case number, the financial firm involved, and the decision date. 
     
-Case name and hyperlinks to the afca portal are always included with your results.
+Case name and hyperlinks to the AFCA Portal are always included with your results.
 """)
     
     meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])

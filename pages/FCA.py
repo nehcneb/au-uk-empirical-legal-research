@@ -902,11 +902,11 @@ if st.session_state.page_from != "pages/FCA.py": #Need to add in order to avoid 
     
     proximity_entry  = st.text_input(label = 'Proximity', value = st.session_state.df_master.loc[0, 'Proximity'])
     
-    on_this_date_entry = st.date_input(label = 'On this date', value = au_date(st.session_state.df_master.loc[0, 'On this date']), format="DD/MM/YYYY")
+    on_this_date_entry = st.date_input(label = 'On this date', value = au_date(st.session_state.df_master.loc[0, 'On this date']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
-    after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now())
+    after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
-    before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before'] ), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now())
+    before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before'] ), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     st.caption('[Relatively earlier](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) judgments will not be collected.')
     

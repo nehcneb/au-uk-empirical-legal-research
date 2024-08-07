@@ -745,9 +745,9 @@ if st.session_state.page_from != "pages/UK.py": #Need to add in order to avoid G
     
     query_entry = st.text_input(label = 'Free text', value = st.session_state.df_master.loc[0, 'Free text'])
     
-    from_date_entry = st.date_input('From day', value = au_date(f"{st.session_state.df_master.loc[0, 'From day']}/{st.session_state.df_master.loc[0, 'From month']}/{st.session_state.df_master.loc[0, 'From year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now())
+    from_date_entry = st.date_input('From day', value = au_date(f"{st.session_state.df_master.loc[0, 'From day']}/{st.session_state.df_master.loc[0, 'From month']}/{st.session_state.df_master.loc[0, 'From year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
-    to_date_entry = st.date_input('To day', value = au_date(f"{st.session_state.df_master.loc[0, 'To day']}/{st.session_state.df_master.loc[0, 'To month']}/{st.session_state.df_master.loc[0, 'To year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now())
+    to_date_entry = st.date_input('To day', value = au_date(f"{st.session_state.df_master.loc[0, 'To day']}/{st.session_state.df_master.loc[0, 'To month']}/{st.session_state.df_master.loc[0, 'To year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     st.caption('[Relatively earlier](https://caselaw.nationalarchives.gov.uk/structured_search) judgments are not available.')
     

@@ -69,11 +69,13 @@ source_pages = ["pages/HCA.py",
 
 # %%
 def source_index(page_from):
-    if ((page_from == None) or (page_from == 'Home.py')):
-        index = None
-    else:
+    try:
         index = source_pages.index(page_from)
-    return index
+        return index
+        
+    except:
+        
+        return None
 
 
 
@@ -140,23 +142,29 @@ source_entry = st.selectbox(label = "Please select a source of information to co
 
 if source_entry:
 
+    st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated information and/or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
+
     if sources_list.index(source_entry) != source_index(st.session_state.page_from):
 
         st.session_state['i_understand'] = False
+    
+    i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
-        st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated information and/or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
-        
-        if ((source_index(st.session_state.page_from)!= None) and ('df_master' in st.session_state)):
+home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), help = 'To use this program, you must select a source of information and tick "[y]es, I understand[]".')
+
+if source_entry:
+
+    if sources_list.index(source_entry) != source_index(st.session_state.page_from):
+
+        if ((source_index(st.session_state.page_from) != None) and ('df_master' in st.session_state)):
+            #If page_from == CA or UK, for now, source_index(st.session_state.page_from) == None
 
             #page_from_index = source_pages.index(st.session_state.page_from)
 
             page_from_name = sources_list[source_index(st.session_state.page_from)]
 
-            st.warning(f'Pressing NEXT will :red[erase] any earlier entries and produced data. To download such entries or data, please select {page_from_name[0].lower()}{page_from_name[1:]} instead.')
-    
-    i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
+            st.warning(f'Pressing NEXT will :red[erase] any earlier entries and data produced. To download such entries or data, please select {page_from_name[0].lower()}{page_from_name[1:]} instead.')
 
-home_next_button = st.button('NEXT')
 
 
 # %% [markdown]

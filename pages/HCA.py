@@ -1658,9 +1658,9 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         own_parties_exclude_entry = st.text_input(label = 'Parties do not include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties do not include'])
         st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
         
-        after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+        after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1903, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
         
-        before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1800, 1, 1))
+        before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1903, 1, 1),  max_value = datetime.now(),help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
         #own_min_year_entry = st.text_input('After this year')
         

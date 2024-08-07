@@ -611,7 +611,7 @@ if gpt_keep_button:
 if run_button:
     
     if int(consent) == 0:
-        st.warning("You must tick 'Yes, I agree.'")
+        st.warning("You must tick '[y]es, I agree[]' to run the program.")
 
     elif len(st.session_state.df_individual)>0:
         st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
@@ -761,7 +761,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
     if er_run_button_b64:
         
         if int(consent) == 0:
-            st.warning("You must tick 'Yes, I agree.'")
+            st.warning("You must tick '[y]es, I agree[]' to run the program.")
     
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
