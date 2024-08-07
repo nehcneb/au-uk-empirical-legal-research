@@ -1593,7 +1593,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    ask_button = st.button("ASK", disabled = st.session_state.disable_input, help = 'You may have to press :red[RESET] before asking GPT again.')
+    ask_button = st.button("ASK", disabled = st.session_state.disable_input, help = 'You may need to press :red[RESET] before asking GPT.')
 
 #with col2a:
 reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.session_state.response)) == 0))#, help = f"Get fresh responses from {st.session_state.ai_choice}")
