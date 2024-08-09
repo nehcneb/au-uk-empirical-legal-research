@@ -66,7 +66,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input
 #Import variables
 from common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound
 
@@ -113,7 +113,7 @@ st.set_page_config(
 # %%
 #function to create dataframe
 #@st.cache_data
-def create_df():
+def own_create_df():
 
     #submission time
     timestamp = datetime.now()
@@ -1087,7 +1087,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Your email address'] = ''
     st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
     st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound
-    st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+    st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = default_page_bound
     st.session_state['df_master'].loc[0, 'Language choice'] = 'English'
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
     st.session_state['df_master'].loc[0, 'Use GPT'] = False
@@ -1155,8 +1155,12 @@ st.header("Use GPT as your research assistant")
 
 st.markdown("**:green[Would you like GPT to answer questions about your files?]**")
 
-gpt_activation_entry = st.checkbox('Use GPT', value = False)
+gpt_activation_entry = st.checkbox(label = 'Use GPT', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
+if gpt_activation_entry:
+    
+    st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
+    
 st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/pricing) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates.")
 
 st.subheader("Enter your questions for each file")
@@ -1171,9 +1175,14 @@ st.markdown("""GPT is instructed to avoid giving answers which cannot be obtaine
 if st.toggle('Tips for using GPT'):
     tips()
 
-gpt_questions_entry = st.text_area(f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound) 
+gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
+
+if gpt_questions_entry:
+    
+    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
 
 #Disable toggles while prompt is not entered or the same as the last processed prompt
+
 if gpt_activation_entry:
     
     if gpt_questions_entry:
@@ -1193,21 +1202,31 @@ if own_account_allowed() > 0:
     st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of files to process? You can do so with your own GPT account.
     """)
     
-    own_account_entry = st.toggle('Use my own GPT account',  disabled = st.session_state.disable_input)
+    own_account_entry = st.toggle(label = 'Use my own GPT account',  disabled = st.session_state.disable_input, value = st.session_state['df_master'].loc[0, 'Use own account'])
     
     if own_account_entry:
     
+        st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
+        
         st.session_state["own_account"] = True
     
         st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
     """)
-            
-        name_entry = st.text_input(label = "Your name", value = st.session_state.df_master.loc[0, 'Your name'])
-    
-        email_entry = st.text_input(label = "Your email address", value = st.session_state.df_master.loc[0, 'Your email address'])
         
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.df_master.loc[0, 'Your GPT API key'])
+        name_entry = st.text_input(label = "Your name", value = st.session_state['df_master'].loc[0, 'Your name'])
 
+        if name_entry:
+            
+            st.session_state['df_master'].loc[0, 'Your name'] = name_entry
+        
+        email_entry = st.text_input(label = "Your email address", value =  st.session_state['df_master'].loc[0, 'Your email address'])
+
+        if email_entry:
+            
+            st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+        
+        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
+        
         if gpt_api_key_entry:
             
             st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
@@ -1218,9 +1237,14 @@ if own_account_allowed() > 0:
                 
         st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
         
-        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
-        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
+        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         
+        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
+
+        if gpt_enhancement_entry:
+
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+
         if gpt_enhancement_entry == True:
         
             st.session_state.gpt_model = "gpt-4o"
@@ -1228,7 +1252,8 @@ if own_account_allowed() > 0:
 
         else:
             
-            st.session_state.gpt_model = "gpt-4o-mini"
+            #st.session_state.gpt_model = "gpt-4o-mini"
+            st.session_state.gpt_model = 'gpt-4o-mini'
             st.session_state.gpt_enhancement_entry = False
         
         st.write(f'**:green[You can increase the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
@@ -1263,7 +1288,9 @@ if own_account_allowed() > 0:
 
         page_bound_entry = st.number_input(label = 'Enter a number between 1 and 100', min_value = 1, max_value = 100, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
 
-        st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = page_bound_entry
+        if page_bound_entry:
+            
+            st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = page_bound_entry
         
         #if page_bound_entry:
             #wrong_number_page_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_page_bound} files instead.'
@@ -1282,6 +1309,8 @@ if own_account_allowed() > 0:
     else:
         
         st.session_state["own_account"] = False
+
+        st.session_state['df_master'].loc[0, 'Use own account'] = False
     
         st.session_state.gpt_model = "gpt-4o-mini"
 
@@ -1498,7 +1527,7 @@ if run_button:
         with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 files.}$"):
                 
             #Create spreadsheet of responses
-            df_master = create_df()
+            df_master = own_create_df()
         
             #GPT model
         
@@ -1621,7 +1650,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 files.}$"):
                     
                 #Create spreadsheet of responses
-                df_master = create_df()
+                df_master = own_create_df()
 
                 #Check for non-supported file types
 
@@ -1708,7 +1737,6 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                 #conn.update(worksheet="OWN", data=df_to_update, )
                 
 
-
 # %%
 if keep_button:
 
@@ -1724,7 +1752,7 @@ if keep_button:
 
         st.subheader('Your entries are now available for download.')
 
-        df_master = create_df()
+        df_master = own_create_df()
 
         st.session_state["df_master"] = df_master
 
@@ -1766,6 +1794,10 @@ if keep_button:
 
 # %%
 if return_button:
+
+    df_master = own_create_df()
+
+    save_input(df_master)
 
     st.session_state["page_from"] = 'pages/OWN.py'
 

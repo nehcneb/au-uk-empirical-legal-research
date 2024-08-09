@@ -61,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int
 #Import variables
-from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format
+from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, save_input
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -355,6 +355,7 @@ if own_account_allowed() > 0:
         st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
+        
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
 
         if gpt_enhancement_entry:
@@ -401,6 +402,8 @@ if own_account_allowed() > 0:
     else:
         
         st.session_state["own_account"] = False
+
+        st.session_state['df_master'].loc[0, 'Use own account'] = False
     
         st.session_state.gpt_model = "gpt-4o-mini"
 

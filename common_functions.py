@@ -24,6 +24,7 @@ from dateutil.parser import parse
 from dateutil.relativedelta import *
 from datetime import datetime, timedelta
 import pandas as pd
+import numpy as np
 
 #Excel
 from io import BytesIO
@@ -38,7 +39,7 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-    return 1
+    return 0
 
 
 # %%
@@ -314,6 +315,32 @@ def str_to_int_page(string):
 
 
 # %%
+#Save jurisdiction specific input
+def save_input(df_master):
+
+    keys_to_carry_over = ['Your name', 
+                        'Your email address', 
+                        'Your GPT API key', 
+                        'Maximum number of judgments', 
+                        'Maximum number of files',
+                        'Maximum number of pages per file',
+                        'Language choice',
+                        'Enter your questions for GPT', 
+                        'Use GPT', 
+                        'Use own account', 
+                        'Use flagship version of GPT']
+    
+    df_master = df_master.replace({np.nan: None})
+    
+    for key in st.session_state.df_master.keys():
+        
+        if key not in keys_to_carry_over:
+            
+            st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
+
+
+
+# %%
 def streamlit_cloud_date_format(date):
     local_now = datetime.now().astimezone()
     time_zone = local_now.tzname()
@@ -322,4 +349,4 @@ def streamlit_cloud_date_format(date):
     else:
         date_to_send = parser.parse(date, dayfirst=True).strftime("%m/%d/%Y")
     return date_to_send
-    
+

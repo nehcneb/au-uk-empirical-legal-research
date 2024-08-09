@@ -61,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, save_input
 #Import variables
 from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -1065,29 +1065,7 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
                                 
             df_master = er_create_df()
     
-            #st.session_state['df_master'] = df_master
-
-            keys_to_carry_over = ['Your name', 
-            'Your email address', 
-            'Your GPT API key', 
-            'Maximum number of judgments', 
-            'Enter your questions for GPT', 
-            'Use GPT', 
-            'Use own account', 
-            'Use flagship version of GPT']
-            
-            df_master = df_master.replace({np.nan: None})
-            
-            for key in st.session_state.df_master.keys():
-                
-                if key not in keys_to_carry_over:
-                    
-                    st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
-
-
-            df_master.pop("Your GPT API key")
-        
-            df_master.pop("Processed")
+            save_input(df_master)
         
             responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
         
@@ -1124,6 +1102,10 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     # %%
     if return_button:
 
+        df_master = er_create_df()
+
+        save_input(df_master)
+
         st.session_state["page_from"] = 'pages/ER.py'
     
         st.switch_page("Home.py")
@@ -1147,26 +1129,8 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         else:
         
             df_master = er_create_df()
-            
-            ##st.session_state['df_master'] = df_master
-
-            keys_to_carry_over = ['Your name', 
-            'Your email address', 
-            'Your GPT API key', 
-            'Maximum number of judgments', 
-            'Enter your questions for GPT', 
-            'Use GPT', 
-            'Use own account', 
-            'Use flagship version of GPT']
-            
-            df_master = df_master.replace({np.nan: None})
-            
-            for key in st.session_state.df_master.keys():
-                
-                if key not in keys_to_carry_over:
-                    
-                    st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
-
+    
+            save_input(df_master)
                         
             st.session_state["page_from"] = 'pages/ER.py'
             
