@@ -38,7 +38,7 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
@@ -311,3 +311,15 @@ def str_to_int_page(string):
         return output
     except:
         return int(default_page_bound)
+
+
+# %%
+def streamlit_cloud_date_format(date):
+    local_now = datetime.now().astimezone()
+    time_zone = local_now.tzname()
+    if time_zone in ['AEST', 'ACST', 'AWST', 'BST']:
+        date_to_send = parser.parse(date, dayfirst=True).strftime("%d/%m/%Y")
+    else:
+        date_to_send = parser.parse(date, dayfirst=True).strftime("%m/%d/%Y")
+    return date_to_send
+    

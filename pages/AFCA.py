@@ -58,7 +58,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, au_date, list_value_check
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, au_date, list_value_check, streamlit_cloud_date_format
 #Import variables
 from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -104,6 +104,9 @@ def get_driver():
     )
 
 browser = get_driver()
+
+#tz_params = {'timezoneId': 'Australia/Sydney'}
+#browser.execute_cdp_cmd('Emulation.setTimezoneOverride', tz_params)
 
 browser.implicitly_wait(10)
 browser.set_page_load_timeout(10)
@@ -171,8 +174,8 @@ def afca_create_df():
             'Product name': '', 
             'Issue type': '', 
             'Issue': '', 
-            'Date from': '01/11/2018',
-            'Date to': today,
+            'Date from': 'DD/MM/YYYY',
+            'Date to': 'DD/MM/YYYY',
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': '', 
@@ -1222,8 +1225,8 @@ def afca_search(keywordsearch_input, #= '',
                 product_name_input, #= '', 
                 issue_type_input, #= '', 
                 issue_input, #= '', 
-                date_from_input, #= '01/11/2018', 
-                date_to_input #= today
+                date_from_input, #= 'DD/MM/YYYY', 
+                date_to_input #= 'DD/MM/YYYY'
                 ):
 
     #Open browser
@@ -1262,14 +1265,14 @@ def afca_search(keywordsearch_input, #= '',
     #'Date from'
     #date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
     date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='date_from']")))
-
+    
     #data-date-format="DD/MM/YYYY"
     #eg date_input.send_keys("07/07/2023")
     
     #'Date to'
     #date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_to')))
     date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='date_to']")))
-
+    
     #Buttons
     submit_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'submitsearch')))
     clear_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'clearsearch')))
@@ -1317,12 +1320,20 @@ def afca_search(keywordsearch_input, #= '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
-    if date_from_input != '01/11/2018':
-        date_from.send_keys(date_from_input)
+    if date_from_input != 'DD/MM/YYYY':
+        #date_from.send_keys(date_from_input)
+        
+        date_from_converted = streamlit_cloud_date_format(date_from_input)
+                
+        date_from.send_keys(date_from_converted)
+        
+    if date_to_input != 'DD/MM/YYYY':
+        #date_to.send_keys(date_to_input)
+        
+        date_to_converted = streamlit_cloud_date_format(date_to_input)
 
-    if date_to_input != today:
-        date_to.send_keys(date_to_input)
-    
+        date_to.send_keys(date_to_converted)
+
     #Get search results
     submit_button.click()
 
@@ -1686,9 +1697,9 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     
     issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
             
-    date_from_entry = st.date_input('Date from (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    date_from_entry = st.date_input('Date from', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
-    date_to_entry = st.date_input('Date to (may not work)', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    date_to_entry = st.date_input('Date to', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
      
     st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
 """)
