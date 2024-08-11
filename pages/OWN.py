@@ -1503,9 +1503,11 @@ if run_button:
         st.warning('You must enter some questions for GPT.')
 
     elif int(consent) == 0:
+        
         st.warning("You must tick '[y]es, I agree[]' to run the program.")
     
     elif len(st.session_state.df_individual)>0:
+        
         st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
 
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):

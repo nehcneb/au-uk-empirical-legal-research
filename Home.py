@@ -111,11 +111,9 @@ st.markdown("""*The Empirical Legal Research Kickstarter* is an [open-source](ht
 
 This pilot version can automatically
 
-(1) search for and collect judgments of select Anglo-Australian courts;
+(1) search for and collect judgments of select Anglo-Australian courts; and
 
-(2) extract and code information from the judgment headnotes (ie metadata); and
-
-(3) use a generative AI as a research assistant to answer your questions about each judgment.
+(2) extract and code information or data from judgments, partially using a generative AI.
 
 This program can also process your own files or spreadsheet of data.
 """)
@@ -142,7 +140,7 @@ source_entry = st.selectbox(label = "Please select a source of information to co
 
 if source_entry:
 
-    st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated information and/or data about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
+    st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
 
     if sources_list.index(source_entry) != source_index(st.session_state.page_from):
 
