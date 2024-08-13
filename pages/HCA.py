@@ -124,8 +124,12 @@ def hca_create_df():
     judgments_counter_bound = st.session_state.judgments_counter_bound
 
     #GPT enhancement
-    gpt_enhancement = st.session_state.gpt_enhancement_entry    
-
+    try:
+        gpt_enhancement = gpt_enhancement_entry
+    except:
+        print('GPT enhancement not entered')
+        gpt_enhancement = False
+        
     #Other entries
     collection = collection_entry
     quick_search = quick_search_entry
@@ -1488,9 +1492,6 @@ from common_functions import open_page, clear_cache_except_validation_df_master,
 
 # %%
 #Initialize default values
-
-if 'gpt_enhancement_entry' not in st.session_state:
-    st.session_state['gpt_enhancement_entry'] = False
 
 if 'gpt_api_key_validity' not in st.session_state:
     st.session_state['gpt_api_key_validity'] = False

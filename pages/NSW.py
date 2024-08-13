@@ -202,7 +202,11 @@ def nsw_create_df():
     judgments_counter_bound = st.session_state.judgments_counter_bound
 
     #GPT enhancement
-    gpt_enhancement = st.session_state.gpt_enhancement_entry
+    try:
+        gpt_enhancement = gpt_enhancement_entry
+    except:
+        print('GPT enhancement not entered')
+        gpt_enhancement = False
     
     #NSW court choices
 
@@ -719,9 +723,6 @@ if 'dafault_courts_status' not in st.session_state:
 
 #if 'default_tribunals' not in st.session_state:
     #st.session_state['default_tribunals'] = []
-
-if 'gpt_enhancement_entry' not in st.session_state:
-    st.session_state['gpt_enhancement_entry'] = False
 
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False

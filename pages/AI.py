@@ -991,11 +991,6 @@ if 'own_account' not in st.session_state:
 if 'gpt_model' not in st.session_state:
     st.session_state['gpt_model'] = "gpt-4o-mini"
 
-#Initialize default gpt enhacement status
-
-if 'gpt_enhancement_entry' not in st.session_state:
-    st.session_state["gpt_enhancement_entry"] = False
-
 #Initialize responses
 
 #For pandas ai
@@ -1221,14 +1216,14 @@ if own_account_allowed() > 0:
                 pai.clear_cache()
             
                 st.session_state.gpt_model = "gpt-4o"
-                st.session_state.gpt_enhancement_entry = True
+                st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
     
             else:
                 #Reset AI first
                 pai.clear_cache()
                 
                 st.session_state.gpt_model = "gpt-4o-mini"
-                st.session_state.gpt_enhancement_entry = False
+                sst.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
             
             st.write(f'**:green[You can remove the cap on the number of instructions to process.]** The default cap is {default_instructions_bound}.')
                 
@@ -1254,7 +1249,7 @@ if own_account_allowed() > 0:
     
     else:
         st.session_state['own_account'] = False
-        st.session_state.gpt_enhancement_entry = False
+        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
 else:
     print('Users are NOT allowed to use their own accounts.')

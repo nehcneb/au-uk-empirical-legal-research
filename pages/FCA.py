@@ -116,8 +116,12 @@ def fca_create_df():
     judgments_counter_bound = st.session_state.judgments_counter_bound
 
     #GPT enhancement
-    gpt_enhancement = st.session_state.gpt_enhancement_entry
-
+    try:
+        gpt_enhancement = gpt_enhancement_entry
+    except:
+        print('GPT enhancement not entered')
+        gpt_enhancement = False
+        
     #Courts
     #courts_list = courts_entry
     #court_string = ', '.join(courts_list)
@@ -784,9 +788,6 @@ from common_functions import open_page, clear_cache_except_validation_df_master,
 
 # %%
 #Initialize default values
-
-if 'gpt_enhancement_entry' not in st.session_state:
-    st.session_state['gpt_enhancement_entry'] = False
 
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False

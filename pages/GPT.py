@@ -208,9 +208,6 @@ def gpt_run(jurisdiction_page, df_master):
 # ## Initialize session states
 
 # %%
-if 'gpt_enhancement_entry' not in st.session_state:
-    st.session_state['gpt_enhancement_entry'] = False
-
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False
 
@@ -360,18 +357,14 @@ if own_account_allowed() > 0:
 
         if gpt_enhancement_entry:
 
-            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-
-        if gpt_enhancement_entry == True:
-        
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
             st.session_state.gpt_model = "gpt-4o"
-            st.session_state.gpt_enhancement_entry = True
 
         else:
             
             #st.session_state.gpt_model = "gpt-4o-mini"
             st.session_state.gpt_model = 'gpt-4o-mini'
-            st.session_state.gpt_enhancement_entry = False
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
         st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
         
@@ -407,7 +400,7 @@ if own_account_allowed() > 0:
     
         st.session_state.gpt_model = "gpt-4o-mini"
 
-        st.session_state.gpt_enhancement_entry = False
+        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
