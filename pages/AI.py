@@ -84,7 +84,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner 
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, clear_cache
 #Import variables
 from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -1223,7 +1223,7 @@ if own_account_allowed() > 0:
                 pai.clear_cache()
                 
                 st.session_state.gpt_model = "gpt-4o-mini"
-                sst.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+                st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
             
             st.write(f'**:green[You can remove the cap on the number of instructions to process.]** The default cap is {default_instructions_bound}.')
                 
@@ -1617,21 +1617,7 @@ if ask_button:
     if int(consent) == 0:
         st.warning("You must tick '[y]es, I agree[]' to run the program.")
         quit()
-        
-    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-                
-        if is_api_key_valid(gpt_api_key_entry) == False:
-            
-            st.session_state['gpt_api_key_validity'] = False
-            
-            st.error('Your API key is not valid.')
 
-            quit()
-            
-        else:
-            
-            st.session_state['gpt_api_key_validity'] = True
-    
     elif st.session_state.instruction_left == 0:
         no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
         st.error(no_more_instructions)
@@ -1648,6 +1634,22 @@ if ask_button:
 
     else:
 
+        #Check GPT API key validity if activated
+        
+        if ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
+                    
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                
+                st.session_state['gpt_api_key_validity'] = False
+                
+                st.error('Your API key is not valid.')
+    
+                quit()
+                
+            else:
+                
+                st.session_state['gpt_api_key_validity'] = True
+    
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
         #Close clarifying questions form

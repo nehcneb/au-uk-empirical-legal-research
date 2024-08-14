@@ -185,7 +185,7 @@ def max_output(gpt_model, messages_for_GPT):
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
-    return min(4096, max_output_tokens)
+    return min(4096, abs(max_output_tokens))
     
 
 
@@ -207,6 +207,13 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 # %%
 def judgment_prompt_json(judgment_json, gpt_model):
 
+    #Remove hyperlink
+    for key in judgment_json.keys():
+        if 'hyperlink' in key.lower():
+            judgment_json[key] = ''
+            break
+    
+    #Turn judgment to string
     if isinstance(judgment_json["judgment"], list):
         judgment_to_string = '\n'.join(judgment_json["judgment"])
         
@@ -215,7 +222,8 @@ def judgment_prompt_json(judgment_json, gpt_model):
         
     else:
         judgment_to_string = str(judgment_json["judgment"])
-        
+
+    #Truncate judgment if needed
     judgment_content = f'Based on the metadata and judgment in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
 
     judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
@@ -227,8 +235,10 @@ def judgment_prompt_json(judgment_json, gpt_model):
     else:
         
         meta_data_len = judgment_content_tokens - num_tokens_from_string(judgment_to_string, "cl100k_base")
+
+        intro_len = num_tokens_from_string('Based on the metadata and judgment in the following JSON: """  """', "cl100k_base")
         
-        judgment_chars_capped = int((tokens_cap(gpt_model) - meta_data_len)*4)
+        judgment_chars_capped = int(round((tokens_cap(gpt_model) - meta_data_len - intro_len)*4))
         
         judgment_string_trimmed = judgment_to_string[ :int(judgment_chars_capped/2)] + judgment_to_string[-int(judgment_chars_capped/2): ]
 
@@ -465,7 +475,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. The paragraph or page numbers in the judgment, or sections of the metadata from which you obtained your answer. '})
+        answers_json.update({q_index: f'Your answer to the question with index {q_index}. The paragraphs, pages or sections from which you obtained your answer.'})
     
     #Create questions, which include the answer format
     
