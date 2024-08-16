@@ -153,13 +153,25 @@ def own_create_df():
     page_bound = st.session_state['df_master'].loc[0,'Maximum number of pages per file']
     
     #GPT enhancement
-    gpt_enhancement = gpt_enhancement_entry
+    try:
+        gpt_enhancement = gpt_enhancement_entry
+    except:
+        print('GPT enhancement not entered')
+        gpt_enhancement = False
 
     #GPT choice and entry
+    try:
+        gpt_activation_status = gpt_activation_entry
+    except:
+        gpt_activation_status = False
+
+    gpt_questions = ''
     
-    gpt_activation_status = gpt_activation_entry
-        
-    gpt_questions = gpt_questions_entry[0: question_characters_bound]
+    try:
+        gpt_questions = gpt_questions_entry[0: question_characters_bound]
+    
+    except:
+        print('GPT questions not entered.')
 
     #Get uploaded file names
 

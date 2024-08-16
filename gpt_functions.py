@@ -73,10 +73,8 @@ from common_functions import check_questions_answers
 
 # %%
 #Upperbound on the length of questions for GPT
-#if 'question_characters_bound' not in st.session_state:
-#    st.session_state['question_characters_bound'] = 1000
 
-question_characters_bound = 1000
+question_characters_bound = 2000
 
 print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
 
