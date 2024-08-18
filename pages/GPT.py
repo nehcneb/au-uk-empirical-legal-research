@@ -196,6 +196,13 @@ def gpt_run(jurisdiction_page, df_master):
         
         run = copy.copy(kr_run)
 
+    if jurisdiction_page == 'pages/SCTA.py':
+
+        system_instruction = role_content
+                
+        from pages.SCTA import scta_run, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
+        
+        run = copy.copy(scta_run)
     
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
 

@@ -242,8 +242,19 @@ def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
             
         else:
             break
+
+    #If no need to get rid of repetitions
+    #return case_link_pairs
     
-    return case_link_pairs
+    #Get rid of repetitions
+    case_link_pairs_no_repeats = []
+
+    for case_link_pair in case_link_pairs:
+        if  case_link_pair not in case_link_pairs_no_repeats:
+            case_link_pairs_no_repeats.append(case_link_pair)
+            
+    return case_link_pairs_no_repeats
+    
 
 
 # %%

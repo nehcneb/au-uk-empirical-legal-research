@@ -75,7 +75,7 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
-# # Kercher Reports search engine
+# # SCTA search engine
 
 # %%
 from common_functions import link
@@ -83,7 +83,7 @@ from common_functions import link
 
 # %%
 #function to create dataframe
-def kr_create_df():
+def scta_create_df():
 
     #submission time
     timestamp = datetime.now()
@@ -164,25 +164,25 @@ def kr_create_df():
 # %%
 #list of search methods
 
-kr_methods_list = ['Full text', 'Titles only', 'This Boolean query', 'Any of these words', 'All of these words']
-kr_method_types = ['auto', 'title', 'boolean', 'any', 'all']
+scta_methods_list = ['Full text', 'Titles only', 'This Boolean query', 'Any of these words', 'All of these words']
+scta_method_types = ['auto', 'title', 'boolean', 'any', 'all']
 
 
 # %%
 #Function turning search terms to search results url
 
-def kr_search(query= '', 
+def scta_search(query= '', 
               method = ''
              ):
     base_url = "https://www.austlii.edu.au/cgi-bin/sinosrch.cgi?"
 
-    method_index = kr_methods_list.index(method)
-    method_type = kr_method_types[method_index]
+    method_index = scta_methods_list.index(method)
+    method_type = scta_method_types[method_index]
 
     query_text = query
 
     params = {#'meta' : ';',
-              'mask_path' : 'au/cases/nsw/NSWSupC', 
+              'mask_path' : 'au/cases/cth/SCTA', 
               'method' : method_type,
               'query' : query_text
              }
@@ -194,7 +194,7 @@ def kr_search(query= '',
 
 # %%
 #Define function turning search results url to case_link_pairs to judgments
-def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
+def scta_search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     headers = {'User-Agent': 'whatever'}
     page = requests.get(url_search_results, headers=headers)
@@ -210,8 +210,7 @@ def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
     counter = 1
     
     for link in hrefs:
-        if ((counter <= judgment_counter_bound) and (' NSWSupC ' in str(link)) and ('LawCite' not in str(link))):
-#        if ((counter <= judgment_counter_bound) and ('AustLII' in str(link)) and ('cases/EngR' in str(link)) and ('LawCite' not in str(link))):
+        if ((counter <= judgment_counter_bound) and (' SCTA ' in str(link)) and ('LawCite' not in str(link))):
             case = link.get_text()
             link_direct = link.get('href')
             link = 'https://www.austlii.edu.au' + link_direct.split('?context')[0]
@@ -227,8 +226,7 @@ def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
             
             hrefs_next_page = soup_judgment_next_page.find_all('a', href=True)
             for extra_link in hrefs_next_page:
-                if ((counter <= judgment_counter_bound) and (' NSWSupC ' in str(extra_link)) and ('LawCite' not in str(extra_link))):
-#                if ((counter <= judgment_counter_bound) and ('AustLII' in str(extra_link)) and ('cases/EngR' in str(extra_link)) and ('LawCite' not in str(extra_link))):
+                if ((counter <= judgment_counter_bound) and (' SCTA ' in str(extra_link)) and ('LawCite' not in str(extra_link))):
                     case = extra_link.get_text()
                     extra_link_direct = extra_link.get('href')
                     extra_link = 'https://www.austlii.edu.au' + extra_link_direct.split('?context')[0]
@@ -240,10 +238,7 @@ def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
             
         else:
             break
-    
-    #If no need to get rid of repetitions
-    #return case_link_pairs
-    
+
     #Get rid of repetitions
     case_link_pairs_no_repeats = []
 
@@ -252,13 +247,12 @@ def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
             case_link_pairs_no_repeats.append(case_link_pair)
             
     return case_link_pairs_no_repeats
-    
 
 
 # %%
 #Convert case-link pairs to judgment text
 
-def kr_judgment_text(case_link_pair):
+def scta_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
     page = requests.get(url, headers=headers)
@@ -276,7 +270,7 @@ def kr_judgment_text(case_link_pair):
 # %%
 #Meta labels and judgment combined
 
-def kr_meta_judgment_dict(case_link_pair):
+def scta_meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
                      'Medium neutral citation' : '', 
@@ -289,14 +283,14 @@ def kr_meta_judgment_dict(case_link_pair):
     case_name = case_link_pair['case']
     date = case_link_pair['case'].split('(')[-1].replace(')', '')
     year = case_link_pair['case'].split('[')[1][0:4]
-    case_number_raw = case_link_pair['case'].split('NSWSupC ')[1].split(' (')[0]
+    case_number_raw = case_link_pair['case'].split('SCTA ')[1].split(' (')[0]
     
     if ";" in case_number_raw:
         case_number = case_number_raw.split(';')[0]
     else:
         case_number = case_number_raw
     
-    mnc = '[' + year +']' + ' NSWSupC ' + case_number
+    mnc = '[' + year +']' + ' SCTA ' + case_number
     nr_cite = ''
         
     try:
@@ -310,7 +304,7 @@ def kr_meta_judgment_dict(case_link_pair):
     judgment_dict['Other reports'] = nr_cite
     judgment_dict['Date'] = date
     judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
-    judgment_dict['judgment'] = kr_judgment_text(case_link_pair)
+    judgment_dict['judgment'] = scta_judgment_text(case_link_pair)
 
         
     return judgment_dict
@@ -343,9 +337,7 @@ else:
 
 # %%
 #Jurisdiction specific instruction
-#role_content_kr = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
-
-system_instruction = role_content#_kr
+system_instruction = role_content
 
 intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
@@ -365,7 +357,7 @@ if 'gpt_api_key' not in st.session_state:
 # %%
 #Obtain parameters
 
-def kr_run(df_master):
+def scta_run(df_master):
     df_master = df_master.fillna('')
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -378,17 +370,17 @@ def kr_run(df_master):
     
     #Conduct search
 
-    url_search_results = kr_search(query= df_master.loc[0, 'Enter search query'], 
+    url_search_results = scta_search(query= df_master.loc[0, 'Enter search query'], 
                                    method = df_master.loc[0, 'Find (method)']
                                   )
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = kr_search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
+    case_link_pairs = scta_search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
 
     for case_link_pair in case_link_pairs:
 
-        judgment_dict = kr_meta_judgment_dict(case_link_pair)
+        judgment_dict = scta_meta_judgment_dict(case_link_pair)
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(5, 15))
     
@@ -396,7 +388,7 @@ def kr_run(df_master):
     json_individual = json.dumps(judgments_file, indent=2)
     df_individual = pd.read_json(json_individual)
 
-    #For KR, convert date to string so as to avoid Excel producing random numbers for dates
+    #For SCTA, convert date to string so as to avoid Excel producing random numbers for dates
     df_individual['Date'] = df_individual['Date'].astype(str)
 
     #Instruct GPT
@@ -423,13 +415,13 @@ def kr_run(df_master):
 
 
 # %%
-def kr_search_url(df_master):
+def scta_search_url(df_master):
 
     df_master = df_master.fillna('')
     
     #Conduct search
     
-    url = kr_search(query= df_master.loc[0, 'Enter search query'],
+    url = scta_search(query= df_master.loc[0, 'Enter search query'],
                     method= df_master.loc[0, 'Find (method)']
                    )
     return url
@@ -497,13 +489,13 @@ if 'page_from' not in st.session_state:
 # ## Form before AI
 
 # %%
-if st.session_state.page_from != "pages/KR.py": #Need to add in order to avoid GPT page from showing form of previous page
+if st.session_state.page_from != "pages/SCTA.py": #Need to add in order to avoid GPT page from showing form of previous page
 
     #Create form
     
     return_button = st.button('RETURN to first page')
     
-    st.header(f"You have selected to study :blue[the Kercher Reports].")
+    st.header(f"You have selected to study :blue[decisions of the Superannuation Complaints Tribunal of Australia].")
     
     #    st.header("Judgment Search Criteria")
     
@@ -515,10 +507,10 @@ if st.session_state.page_from != "pages/KR.py": #Need to add in order to avoid G
 
     st.subheader("Your search terms")
     
-    st.markdown("""For search tips, please visit [AustLII](https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/). This section mimics their search function.
+    st.markdown("""For search tips, please visit [AustLII](https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/cth/SCTA/). This section mimics their search function.
 """)
     
-    method_entry = st.selectbox(label = 'Find', options = kr_methods_list, index = kr_methods_list.index(st.session_state.df_master.loc[0, 'Find (method)']))
+    method_entry = st.selectbox(label = 'Find', options = scta_methods_list, index = scta_methods_list.index(st.session_state.df_master.loc[0, 'Find (method)']))
     
     query_entry = st.text_input(label = 'Enter search query', value = st.session_state.df_master.loc[0, 'Enter search query'])
         
@@ -563,9 +555,9 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     # %%
     if preview_button:
         
-        df_master = kr_create_df()
+        df_master = scta_create_df()
     
-        judgments_url = kr_search_url(df_master)
+        judgments_url = scta_search_url(df_master)
     
         open_page(judgments_url)
 
@@ -581,7 +573,7 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     
         else:
     
-            df_master = kr_create_df()
+            df_master = scta_create_df()
 
             save_input(df_master)
             
@@ -621,11 +613,11 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     # %%
     if return_button:
         
-        df_master = kr_create_df()
+        df_master = scta_create_df()
 
         save_input(df_master)
 
-        st.session_state["page_from"] = 'pages/KR.py'
+        st.session_state["page_from"] = 'pages/SCTA.py'
     
         st.switch_page("Home.py")
 
@@ -647,10 +639,10 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         
         else:
         
-            df_master = kr_create_df()
+            df_master = scta_create_df()
 
             save_input(df_master)
                         
-            st.session_state["page_from"] = 'pages/KR.py'
+            st.session_state["page_from"] = 'pages/SCTA.py'
             
             st.switch_page('pages/GPT.py')

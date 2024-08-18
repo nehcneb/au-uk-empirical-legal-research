@@ -49,8 +49,9 @@ sources_list = ["Judgments of the High Court of Australia",
                 #"Judgments of select United Kingdom courts and tribunals", 
                 #'judgments of the Canadian courts, boards and tribunals', 
                 'Decisions of the Australian Financial Complaints Authority', 
-                "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
+                #'Decisions of the Superannuation Complaints Tribunal of Australia', 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
+                "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
                 "Your own files", 
                 "Your own spreadsheet"
                ]
@@ -61,8 +62,9 @@ source_pages = ["pages/HCA.py",
                 #"pages/UK.py", 
                 #"pages/CA.py", 
                 "pages/AFCA.py", 
-                "pages/KR.py", 
+                #"pages/SCTA.py", 
                 "pages/ER.py", 
+                "pages/KR.py", 
                 "pages/OWN.py", 
                 'pages/AI.py']
 

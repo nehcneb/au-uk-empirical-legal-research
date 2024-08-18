@@ -520,7 +520,8 @@ def afca_old_search(
     #Input for whether to 'Include decisions made under earlier Terms of Reference'
     if earlier_t_o_r_input != False:
         earlier_t_o_r.click()
-        
+        pause.seconds(np.random.randint(10, 15))
+
     #'Search for published decisions'
     #NOT in use
     #keywordsearch = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tbKeywords')))
