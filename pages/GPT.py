@@ -59,7 +59,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone
 #Import variables
 from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, save_input
 
@@ -115,8 +115,8 @@ if 'gpt_api_key' not in st.session_state:
 
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
-if 'judgments_counter_bound' not in st.session_state:
-    st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
+#if 'judgments_counter_bound' not in st.session_state:
+    #st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
 
 
 # %%
@@ -146,7 +146,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from pages.FCA import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_pdf_judgment, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        from pages.FCA import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
     
         run = copy.copy(fca_run)
 
@@ -168,9 +168,13 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/AFCA.py':
 
+        if streamlit_timezone() == True:
+
+            st.warning('One or more Chrome window may be launched. It must be kept open.')
+
         system_instruction = role_content
                 
-        from pages.AFCA import afca_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable
+        from pages.AFCA import afca_run, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_element_meta, afca_old_search, afca_meta_labels_droppable
         
         run = copy.copy(afca_run)
 
@@ -368,27 +372,11 @@ if own_account_allowed() > 0:
         
         st.write(f'**:green[You can increase the maximum number of judgments to process.]** The default maximum is {default_judgment_counter_bound}.')
         
-        #judgments_counter_bound_entry = round(st.number_input(label = 'Enter a whole number between 1 and 100', min_value=1, max_value=100, value=default_judgment_counter_bound))
-
-        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
-
-        #judgments_counter_bound_entry = st.text_input(label = 'Enter a whole number between 1 and 100', value=str(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
         judgments_counter_bound_entry = st.number_input(label = 'Choose a number between 1 and 100', min_value = 1, max_value = 100, step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
 
         if judgments_counter_bound_entry:
 
             st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
-
-            #wrong_number_warning = f'You have not entered a whole number between 1 and 100. The program will process up to {default_judgment_counter_bound} judgments instead.'
-            #try:
-                #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = int(judgments_counter_bound_entry)
-            #except:
-                #st.warning(wrong_number_warning)
-                #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-
-            #if ((st.session_state['df_master'].loc[0, 'Maximum number of judgments'] <= 0) or (st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > 100)):
-                #st.warning(wrong_number_warning)
-                #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     
         st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} judgment(s).*")
     
@@ -720,8 +708,9 @@ if run_button:
 if return_button:
     
     st.session_state["page_from"] = 'pages/GPT.py'
-    
+
     st.switch_page(st.session_state.jurisdiction_page)
+    
 
 
 # %%

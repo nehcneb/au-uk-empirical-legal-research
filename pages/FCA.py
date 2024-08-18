@@ -59,7 +59,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment
 #Import variables
 from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -111,10 +111,14 @@ def fca_create_df():
     
     #Own account status
     own_account = st.session_state.own_account
-    
-    #Judgment counter bound
-    judgments_counter_bound = st.session_state.judgments_counter_bound
 
+    #Judgment counter bound
+    try:
+        judgments_counter_bound = judgments_counter_bound_entry
+    except:
+        print('judgments_counter_bound not entered')
+        judgments_counter_bound = default_judgment_counter_bound
+        
     #GPT enhancement
     try:
         gpt_enhancement = gpt_enhancement_entry
@@ -376,22 +380,6 @@ def fca_link_to_doc(url_judgment):
 
 
 # %%
-#Define function for judgment link containing PDF
-def fca_pdf_judgment(url):
-    headers = {'User-Agent': 'whatever'}
-    r = requests.get(url, headers=headers)
-    remote_file_bytes = io.BytesIO(r.content)
-    pdfdoc_remote = PyPDF2.PdfReader(remote_file_bytes)
-    text_list = []
-
-    for page in pdfdoc_remote.pages:
-        text_list.append(page.extract_text())
-    
-    return str(text_list)
-
-
-
-# %%
 #Meta labels and judgment combined
 #IN USE
 fca_metalabels = ['MNC', 'Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to']
@@ -491,7 +479,7 @@ def fca_meta_judgment_dict(judgment_url):
 
         #Attach judgment pdf text
         try:
-            judgment_pdf_raw = fca_pdf_judgment(judgment_url)
+            judgment_pdf_raw = pdf_judgment(judgment_url)
             judgment_dict['judgment'] = judgment_pdf_raw
             
         except:
@@ -628,10 +616,6 @@ if 'gpt_model' not in st.session_state:
 if 'gpt_api_key' not in st.session_state:
 
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
-
-#Upperbound on number of judgments to scrape
-if 'judgments_counter_bound' not in st.session_state:
-    st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
 
 
 # %%

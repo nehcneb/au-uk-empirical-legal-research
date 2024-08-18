@@ -58,7 +58,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, au_date, list_value_check, streamlit_cloud_date_format, save_input
+from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input
 #Import variables
 from common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -72,7 +72,14 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
-# # afca search engine
+# # AFCA search engine
+
+# %%
+#Pre June 2024 only works if running locally at the moment
+if streamlit_timezone() == True:
+    collection_options = ['Decisions published before 14 June 2024', 'Decisions published from 14 June 2024']
+else:
+    collection_options = ['Decisions published from 14 June 2024']
 
 # %%
 #Scrape javascript
@@ -88,6 +95,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
 
+#For post June 2024
 options = Options()
 options.add_argument("--disable-gpu")
 options.add_argument("--headless")
@@ -96,30 +104,58 @@ options.add_argument('--disable-dev-shm-usage')
 
 @st.cache_resource
 def get_driver():
-    return webdriver.Chrome(
-        #service=Service(
-            #ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        #),
-        options=options,
-    )
+    return webdriver.Chrome(options=options)
 
-browser = get_driver()
+try:
+    
+    browser = get_driver()
+    
+    browser.implicitly_wait(10)
+    browser.set_page_load_timeout(10)
+    
+except Exception as e:
+    st.error('Sorry, your internet connection is not stable enough for this program. Please check or change your internet connection and try again.')
+    print(e)
+    quit()
 
-#tz_params = {'timezoneId': 'Australia/Sydney'}
-#browser.execute_cdp_cmd('Emulation.setTimezoneOverride', tz_params)
+#For pre June 2024
+#Only works if running locally at the moment
 
-browser.implicitly_wait(10)
-browser.set_page_load_timeout(10)
+if streamlit_timezone() == True:
+    
+    import undetected_chromedriver as uc
+    
+    #For headlessness, see https://github.com/ultrafunkamsterdam/undetected-chromedriver/discussions/1768
+    download_dir = os.getcwd() + '/AFCA_PDFs'
+    options_old = uc.ChromeOptions()
+    options_old.add_experimental_option('prefs', {
+    "download.default_directory": download_dir, #Change default directory for downloads
+    "download.prompt_for_download": False, #To auto download the file
+    "download.directory_upgrade": True,
+    "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
+    })
+    
+    @st.cache_resource
+    def get_driver_old():
+        
+        return uc.Chrome(options = options_old)
+    
+    try:
+        browser_old = get_driver_old()
+        
+        browser_old.implicitly_wait(60)
+        browser_old.set_page_load_timeout(60)
+        
+        browser_old.minimize_window()#set_window_position(-2000,0)
+    
+    except Exception as e:
+        st.error('Sorry, your internet connection is not stable enough for this program. Please check or change your internet connection and try again.')
+        print(e)
+        quit()
 
 # %%
 from common_functions import link
 
-
-# %% [markdown]
-# ## [NOT WORKING] Pre 14 June 2024
-
-# %% [markdown]
-# ## Post 14 June 2024
 
 # %%
 #function to create dataframe
@@ -155,8 +191,12 @@ def afca_create_df():
     own_account = st.session_state.own_account
     
     #Judgment counter bound
-    judgments_counter_bound = st.session_state.judgments_counter_bound
-
+    try:
+        judgments_counter_bound = judgments_counter_bound_entry
+    except:
+        print('judgments_counter_bound not entered')
+        judgments_counter_bound = default_judgment_counter_bound
+        
     #GPT enhancement
     try:
         gpt_enhancement = gpt_enhancement_entry
@@ -171,15 +211,32 @@ def afca_create_df():
            'Your name': '', 
            'Your email address': '', 
            'Your GPT API key': '', 
+            'Collection': '', 
+              #Post 14 June 2024 search terms 
             'Search for published decisions': '', 
-               'Search for a financial firm': '', 
-            'Product line': '', 
+            'Search for a financial firm': '', 
+           'Product line': '', 
             'Product category': '', 
             'Product name': '', 
             'Issue type': '', 
             'Issue': '', 
-            'Date from': 'DD/MM/YYYY',
-            'Date to': 'DD/MM/YYYY',
+          #Pre 14 June 2024 search terms
+            'Include decisions made under earlier Terms of Reference': False, 
+            'All these words': '', 
+           'This exact wording or phrase': '', 
+            'One or more of these words - 1': '', 
+            'One or more of these words - 2': '', 
+            'One or more of these words - 3': '', 
+            'Any of these unwanted words': '', 
+            'Case number': '', 
+            #'Days back from now': '',
+            #'Months back from now': '',
+            #'Years back from now': '',
+            #'Date of decision from': '', 
+            #'Date of decision to': '', 
+            #General
+            'Date from': '', #'DD/MM/YYYY',
+            'Date to': '', #'DD/MM/YYYY', 
             'Metadata inclusion' : False,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': '', 
@@ -187,7 +244,16 @@ def afca_create_df():
            'Use own account': False,
             'Use flagship version of GPT' : False
           }
-    
+
+    #Collection
+
+    try:
+        new_row['Collection'] = collection_entry
+
+    except:
+        print('Collection not selected.')
+        
+    #Post June 2024 input
     try:
         new_row['Search for published decisions'] = keywordsearch_entry
     except:
@@ -222,7 +288,51 @@ def afca_create_df():
         new_row['Issue'] = issue_entry
     except:
         print('Issue not entered.')
-        
+
+
+    #Pre June 2024 input
+
+    try:
+        new_row['Include decisions made under earlier Terms of Reference'] = early_t_o_r_entry
+    except:
+        new_row['Include decisions made under earlier Terms of Reference'] = False
+        print('Whether to Include decisions made under earlier Terms of Reference not entered.')
+
+    try:
+        new_row['All these words'] = all_these_words_entry
+    except:
+        print('All these words not entered.')
+
+    try:
+        new_row['This exact wording or phrase'] = this_exact_wording_phrase_entry
+    except:
+        print('This exact wording or phrase not entered.')
+
+    try:
+        new_row['Any of these unwanted words'] = any_of_these_unwanted_words_entry
+    except:
+        print('Any of these unwanted words not entered.')
+
+    try:
+        new_row['One or more of these words - 1'] = one_or_more_of_these_words_1_entry
+    except:
+        print('One or more of these words - 1 not entered.')
+
+    try:
+        new_row['One or more of these words - 2'] = one_or_more_of_these_words_2_entry
+    except:
+        print('One or more of these words - 2 not entered.')
+
+    try:
+        new_row['One or more of these words - 3'] = one_or_more_of_these_words_3_entry
+    except:
+        print('One or more of these words - 3 not entered.')
+
+    try:
+        new_row['Case number'] = case_number_entry
+    except:
+        print('Case number not entered.')
+    
     #dates
             
     try:
@@ -266,25 +376,404 @@ def afca_create_df():
 
 
 # %% [markdown]
-# ### Definitions of menu items
+# ## Pre 14 June 2024
 
 # %%
-#Example of code used to generate dropdown menu options
+def afca_old_element_meta(inner_html):
+    soup = BeautifulSoup(inner_html, "lxml")
+    
+    #Get url
+    try:
+        a_hrefs = soup.find_all('a', href=True)
+        
+        for a_ref in a_hrefs:
+            if 'CaseFiles' in a_ref['href']:
+                url = a_ref['href'].replace('..', 'https://service02.afca.org.au/')
 
-#issue_options = {}
-#pair_raw = pair_raw = {"value": "a1149d98-3fc2-ed11-b597-00224892f51a", "text": "Total & Permanent Disability"}
-#text = pair_raw['text']
-#counter = 0
-#for key in issue_options.keys():
-	#if text in key:
-		#counter += 1
-#if counter == 0:
-	#issue_options[text] = pair_raw
-	#issue_options[text].pop('text')
-#else:
-	#new_text = f"{text} {counter}"
-	#issue_options[new_text] = pair_raw
-	#issue_options[new_text].pop('text')
+    except:
+        print('url not scrapped')
+        url = ''
+
+    #Case number
+    try:
+        case_number = soup.find(class_='casenumber').text
+        while case_number[-1] == ' ':
+            case_number = case_number[:-1]
+
+    except:
+
+        case_number = ''
+
+    #Decision date and file size
+    try:
+        file_detail = soup.find(class_='fileDetails').text
+
+        decision_date = file_detail.split('File size:')[0]
+        
+        while decision_date[0] == ' ':
+            decision_date = decision_date[1:]
+            
+        while decision_date[-1] == ' ':
+            decision_date = decision_date[:-1]
+
+        file_size = file_detail.split('File size:')[1]
+        
+        while file_size[0] == ' ':
+            file_size = file_size[1:]
+            
+        while file_size[-1] == ' ':
+            file_size = file_size[:-1]
+
+    except:
+        decision_date = ''
+        file_size = ''
+
+    #Title, firm and page length
+    
+    title_raw = ''
+    firm = ''
+    page_length = ''
+
+    try:
+        abstract = soup.find(class_='abstract').text
+        abstract_list = abstract.split('\n')
+        
+        #Title    
+        for text in abstract_list:
+            
+            if 'determination' in text.lower():
+                
+                title_raw += text
+         
+                while title_raw[0] == ' ':
+                    title_raw = title_raw[ 1:]
+                    
+                break
+            
+        #Financial firm
+        
+        for text in abstract_list:
+            
+            if 'firm' in text.lower():
+                
+                firm += text.replace('Financial', '').replace('financial', '').replace('firm', '')
+         
+                while firm[0] == ' ':
+                    firm = firm[ 1:]
+                    
+                while firm[-1] == ' ':
+                    firm = firm [ :-1]
+        
+                break
+
+        #Page length
+        
+        for text in abstract_list:
+            
+            if 'page' in text.lower():
+                
+                page_length += text
+         
+                while page_length[0] == ' ':
+                    page_length = page_length[ 1:]
+                    
+                while page_length[-1] == ' ':
+                    page_length = page_length [ :-1]
+        
+                page_length = page_length[-1]
+                
+                break
+    
+    except Exception as e:
+        print(f'{case_number}: Title, firm and page length not scraped.')
+        print(e)
+        
+    title = f"{title_raw.title()}Case Number: {case_number}"
+
+    case_meta = {'Case name': title, 'Case number': case_number, 'Hyperlink to AFCA Portal': url, 'Date': decision_date, 'Finanical firm': firm, 'Page length': page_length, 'File size': file_size}
+
+    return case_meta
+
+
+# %%
+def afca_old_search(
+    earlier_t_o_r_input, 
+    all_these_words_input, 
+    this_exact_wording_or_phrase_input, 
+    one_or_more_of_these_words_1_input, 
+    one_or_more_of_these_words_2_input, 
+    one_or_more_of_these_words_3_input, 
+    any_of_these_unwanted_words_input, 
+    case_number_input, 
+    date_from_input, 
+    date_to_input, 
+    judgment_counter_bound
+):
+    #Open browser
+    browser_old.get('https://service02.afca.org.au/fossic_search/')
+    browser_old.delete_all_cookies()
+    browser_old.refresh()
+
+    # 'Include decisions made under earlier Terms of Reference'
+    earlier_t_o_r = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_chbOldTOR')))
+
+    #Input for whether to 'Include decisions made under earlier Terms of Reference'
+    if earlier_t_o_r_input != False:
+        earlier_t_o_r.click()
+        
+    #'Search for published decisions'
+    #NOT in use
+    #keywordsearch = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tbKeywords')))
+    
+    #Advanced keyword search
+    advanced_keyword_search_button = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'aAdvancedKw')))
+    advanced_keyword_search_button.click()
+    
+    #'all these words'
+    all_these_words = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAllWords')))
+    #'this exact wording or phrase'
+    this_exact_wording_or_phrase = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tExactPhrase')))
+    #'one or more of these words'
+    one_or_more_of_these_words_1 = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords1')))
+    one_or_more_of_these_words_2 = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords2')))
+    one_or_more_of_these_words_3 = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords3')))
+    #'any of these unwanted words'
+    any_of_these_unwanted_words = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tNoWords')))
+    
+    #'Case number'
+    case_number = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tCaseNumber')))
+    #NOT DOING days/weeks/month/years from now
+    #from_now_tick = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'timeBack')))
+    
+    #Date range
+    date_range_tick = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='dateRange']")))
+    date_range_tick.click()
+    
+    #date format is "dd/mm/yyyy"
+    #eg date_from.send_keys("07/07/2023")
+    date_from = browser_old.find_element(By.XPATH, "//input[@id='ctl00_body_tDate1']")
+    date_to = browser_old.find_element(By.XPATH, "//input[@id='ctl00_body_tDate2']")
+    #date format is "dd/mm/yyyy"
+    #eg date_input.send_keys("07/07/2023")
+    
+    #NOT including the following filters because they would require constant changes of session states
+    #'Product line'
+    #product_line = browser_old.find_element(By.ID, 'sProductLineName')
+    #dropdown_product_line = Select(product_line)
+    
+    #'Product category'
+    #product_category = browser_old.find_element(By.ID, 'sProductCategory')
+    #dropdown_product_category = Select(product_category)
+    
+    #'Product name'
+    #product_name = browser_old.find_element(By.ID, 'sProductName')
+    #dropdown_product_name = Select(product_name)
+    
+    #'Issue type'
+    #issue_type = browser_old.find_element(By.ID, 'sIssueType')
+    #dropdown_issue_type = Select(issue_type)
+    
+    #'Issue'
+    #issue = browser_old.find_element(By.ID, 'sIssue')
+    #dropdown_issue = Select(issue)
+    
+    #Submit and clear buttons
+    submit_button = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_bSearch')))
+    clear_button = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_bClearSearch')))
+
+    #Enter keyword and date input
+
+    if ((all_these_words_input != None) and (all_these_words_input != '')):
+        all_these_words.send_keys(all_these_words_input)
+
+    if ((this_exact_wording_or_phrase_input != None) and (this_exact_wording_or_phrase_input != '')):
+        this_exact_wording_or_phrase.send_keys(this_exact_wording_or_phrase_input)
+
+    if ((one_or_more_of_these_words_1_input != None) and (one_or_more_of_these_words_1_input != '')):
+        one_or_more_of_these_words_1.send_keys(one_or_more_of_these_words_1_input)
+
+    if ((one_or_more_of_these_words_2_input != None) and (one_or_more_of_these_words_2_input != '')):
+        one_or_more_of_these_words_2.send_keys(one_or_more_of_these_words_2_input)
+
+    if ((one_or_more_of_these_words_3_input != None) and (one_or_more_of_these_words_3_input != '')):
+        one_or_more_of_these_words_3.send_keys(one_or_more_of_these_words_3_input)
+    
+    if ((any_of_these_unwanted_words_input != None) and (any_of_these_unwanted_words_input != '')):
+        any_of_these_unwanted_words.send_keys(any_of_these_unwanted_words_input)
+
+    if ((case_number_input != None) and (case_number_input != '')):
+        case_number.send_keys(case_number_input)
+        
+    #if date_from_input != 'DD/MM/YYYY':
+    if ((date_from_input != None) and (date_from_input != '')):
+        date_from_converted = streamlit_cloud_date_format(date_from_input)
+        #date_from_converted = date_from_input
+
+        date_from.send_keys(date_from_converted)
+        
+    #if date_to_input != 'DD/MM/YYYY':
+    if ((date_to_input != None) and (date_to_input != '')):
+        date_to_converted = streamlit_cloud_date_format(date_to_input)
+        #date_to_converted = date_to_input
+        
+        date_to.send_keys(date_to_converted)
+
+    #Get search results
+    submit_button.click()
+
+    #Number of cases message
+    case_num_raw = Wait(browser_old, 30).until(EC.presence_of_element_located((By.ID, "ctl00_body_pResults")))
+    #case_sum = int(case_num_raw.text.replace('Your search found ', '').replace(' results.', '').replace(' A maximum of 500 results is returned (displayed as 10 results per page).', ''))
+    case_sum_msg = case_num_raw.text.replace(' (displayed as 10 results per page)', '')
+
+    #Case number
+
+    case_sum = 0
+    
+    for word in case_sum_msg.split(' '):
+        if word.isnumeric():
+            case_sum = int(word)
+            break
+
+    #Number of pages of search results
+
+    page_num_raw = case_sum/10
+
+    if page_num_raw % 10 == 0:
+        
+        page_num = int(page_num_raw)
+        
+    else:
+        
+        page_num = int(round(page_num_raw + 0.5))
+
+    #Get case details
+    counter = 0
+    case_list = []
+
+    if page_num > 0:
+        
+        raw_cases = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
+    
+        for raw_case in raw_cases:
+    
+            if counter < judgment_counter_bound:
+                
+                case_meta = afca_old_element_meta(raw_case.get_attribute('innerHTML'))
+        
+                case_list.append(case_meta)
+    
+                counter += 1
+
+    #Get cases from subsequent pages if there are any
+
+    if ((page_num > 1) and (counter < judgment_counter_bound)):
+
+        for page in list(range(2, page_num + 1)):
+        
+            subsequent_pages = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'javascript:__doPostBack')]")))
+
+            for subsequent_page in subsequent_pages:
+
+                #Need this because of the need to click '...' button to get to page 11, 21, and so on
+                if page % 10 != 1:
+
+                    if subsequent_page.text.isnumeric():
+                
+                        if ((int(subsequent_page.text) == page) and (counter < judgment_counter_bound)):
+        
+                            subsequent_page.click()
+                            
+                            raw_cases = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
+            
+                            for raw_case in raw_cases:
+                        
+                                if counter < judgment_counter_bound:
+                                    
+                                    case_meta = afca_old_element_meta(raw_case.get_attribute('innerHTML'))
+                            
+                                    case_list.append(case_meta)
+                        
+                                    counter += 1
+
+                            pause.seconds(np.random.randint(5, 15))
+
+                            break
+
+                else:
+                    
+                    if ((not subsequent_page.text.isnumeric()) and (counter < judgment_counter_bound)):
+
+                        subsequent_page.click()
+                        
+                        raw_cases = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
+        
+                        for raw_case in raw_cases:
+                    
+                            if counter < judgment_counter_bound:
+                                
+                                case_meta = afca_old_element_meta(raw_case.get_attribute('innerHTML'))
+                        
+                                case_list.append(case_meta)
+                    
+                                counter += 1
+                        
+                        pause.seconds(np.random.randint(5, 15))
+
+                        break
+    
+    return {'case_sum': case_sum, 'case_sum_message': case_sum_msg, 'case_list': case_list}
+        
+
+
+# %%
+#Define function for judgment link containing PDF
+
+def afca_old_pdf_judgment(case_meta):
+
+    url = case_meta['Hyperlink to AFCA Portal']
+    pdf_file = url.split('/')[-1]
+    #case_meta['Case number']
+
+    browser_old.get(url)
+    
+    pdf_path = f"{download_dir}/{pdf_file}"
+
+    #Limiting waiting time for downloading PDF to 1 min
+
+    waiting_counter = 0
+    
+    while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
+        pause.seconds(5)
+        waiting_counter += 1
+
+    try:
+        
+        pdfdoc_remote = PyPDF2.PdfReader(pdf_path)
+        
+        text_list = []
+    
+        for page in pdfdoc_remote.pages:
+            text_list.append(page.extract_text())
+
+        os.remove(pdf_path)
+    
+    except:
+        
+        text_list = ['ERROR: Failed to download judgment. Please try this case again.']
+
+    return str(text_list)
+
+
+
+# %%
+afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page length', 'File size']
+
+# %% [markdown]
+# ## Post 14 June 2024
+
+# %% [markdown]
+# ### Definitions of menu items
 
 # %%
 #'Product line'
@@ -1238,7 +1727,7 @@ def afca_search(keywordsearch_input, #= '',
     browser.delete_all_cookies()
     browser.refresh()
 
-    #Obtaina and input elements
+    #Obtain input elements
     
     #'Search for published decisions'
     keywordsearch = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'keywordsearch')))
@@ -1254,7 +1743,7 @@ def afca_search(keywordsearch_input, #= '',
     product_category = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pcsearch')))
     dropdown_product_category = Select(product_category)
 
-    #'Product cate'
+    #'Product name'
     product_name = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pnsearch')))
     dropdown_product_name = Select(product_name)
 
@@ -1282,7 +1771,7 @@ def afca_search(keywordsearch_input, #= '',
     clear_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'clearsearch')))
     
     #Enter input
-    clear_button.click()
+    #clear_button.click()
 
     if ((keywordsearch_input != None) and (keywordsearch_input != '')):
         keywordsearch.send_keys(keywordsearch_input)
@@ -1324,16 +1813,15 @@ def afca_search(keywordsearch_input, #= '',
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
                 #issue_type_value = issue_type_options[issue_type_input]["value"]
 
-    if date_from_input != 'DD/MM/YYYY':
-        #date_from.send_keys(date_from_input)
-        
+    #if date_from_input != 'DD/MM/YYYY':
+    if ((date_from_input != None) and (date_from_input != '')):
         date_from_converted = streamlit_cloud_date_format(date_from_input)
                 
         date_from.send_keys(date_from_converted)
         
-    if date_to_input != 'DD/MM/YYYY':
-        #date_to.send_keys(date_to_input)
-        
+    #if date_to_input != 'DD/MM/YYYY':
+    if ((date_to_input != None) and (date_to_input != '')):
+
         date_to_converted = streamlit_cloud_date_format(date_to_input)
 
         date_to.send_keys(date_to_converted)
@@ -1444,6 +1932,7 @@ def afca_meta_judgment_dict(judgment_url):
         print('Date not found.')
     
     return judgment_dict
+    
 
 
 # %%
@@ -1492,15 +1981,113 @@ if 'gpt_api_key' not in st.session_state:
 
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
-#Upperbound on number of judgments to scrape
-if 'judgments_counter_bound' not in st.session_state:
-    st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
 
+# %% [markdown]
+# ## Pre June 2024
 
 # %%
 #Obtain parameters
 
-def afca_run(df_master):
+def afca_old_run(df_master):
+    
+    df_master = df_master.fillna('')
+
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
+    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
+    
+    #Create judgments file
+    judgments_file = []
+    
+    #Conduct search
+    
+    search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
+                                    all_these_words_input = df_master.loc[0, 'All these words'], 
+                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
+                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
+                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
+                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
+                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
+                                    case_number_input = df_master.loc[0, 'Case number'], 
+                                    date_from_input = df_master.loc[0, 'Date from'], 
+                                    date_to_input = df_master.loc[0, 'Date to'], 
+                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                )
+
+    #for link in judgments_links:
+    for case in search_results['case_list']:
+
+            judgment_dict = case.copy()
+
+            judgment_text = afca_old_pdf_judgment(case)
+
+            judgment_dict['judgment'] = judgment_text
+
+            if 'ERROR: Failed to download judgment' in judgment_dict['judgment']:
+                judgment_dict['Case name'] = judgment_text
+
+            judgment_dict['Hyperlink to AFCA Portal'] = link(case['Hyperlink to AFCA Portal'])
+    
+            judgments_file.append(judgment_dict)
+            
+            pause.seconds(np.random.randint(5, 15))
+    
+    #Create and export json file with search results
+    json_individual = json.dumps(judgments_file, indent=2)
+
+#    df_individual = pd.DataFrame(judgments_file)
+    
+    df_individual = pd.read_json(json_individual)
+    
+    #Rename column titles
+    
+#    try:
+#        df_individual['Hyperlink (double click)'] = df_individual['Hyperlink'].apply(link)
+#        df_individual.pop('Hyperlink')
+#    except:
+#        pass
+                    
+    #Instruct GPT
+    
+    #GPT model
+
+    if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        gpt_model = "gpt-4o"
+    else:        
+        #gpt_model = "gpt-4o-mini"
+        gpt_model = "gpt-4o-mini"
+        
+    #apply GPT_individual to each respondent's judgment spreadsheet
+    
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+
+    questions_json = df_master.loc[0, 'questions_json']
+            
+    #Engage GPT
+    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+
+    df_updated.pop('judgment')
+
+    #Drop metadata if not wanted
+
+    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+        for meta_label in afca_old_meta_labels_droppable:
+            try:
+                df_updated.pop(meta_label)
+            except:
+                pass
+                
+    return df_updated
+
+
+# %% [markdown]
+# ## Post 14 June 2024
+
+# %%
+#Obtain parameters
+
+def afca_new_run(df_master):
     
     df_master = df_master.fillna('')
 
@@ -1551,14 +2138,6 @@ def afca_run(df_master):
 #    df_individual = pd.DataFrame(judgments_file)
     
     df_individual = pd.read_json(json_individual)
-    
-    #Rename column titles
-    
-#    try:
-#        df_individual['Hyperlink (double click)'] = df_individual['Hyperlink'].apply(link)
-#        df_individual.pop('Hyperlink')
-#    except:
-#        pass
                     
     #Instruct GPT
     
@@ -1567,7 +2146,6 @@ def afca_run(df_master):
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
         gpt_model = "gpt-4o"
     else:        
-        #gpt_model = "gpt-4o-mini"
         gpt_model = "gpt-4o-mini"
         
     #apply GPT_individual to each respondent's judgment spreadsheet
@@ -1581,7 +2159,6 @@ def afca_run(df_master):
 
     df_updated.pop('judgment')
 
-
     #Drop metadata if not wanted
 
     if int(df_master.loc[0, 'Metadata inclusion']) == 0:
@@ -1592,6 +2169,21 @@ def afca_run(df_master):
                 pass
                 
     return df_updated
+
+
+# %% [markdown]
+# ## Run function to use
+
+# %%
+def afca_run(df_master):
+    if df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+        df_updated = afca_old_run(df_master)
+    else:
+        df_updated = afca_new_run(df_master)
+
+    return df_updated
+    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -1632,6 +2224,13 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
     #Jurisdiction specific
+
+    st.session_state.df_master.loc[0, 'Collection'] = 'Decisions published from 14 June 2024'
+    
+    st.session_state.df_master.loc[0, 'Date from'] = None 
+    st.session_state.df_master.loc[0, 'Date to'] = None
+
+    #Post June 2024
     st.session_state.df_master.loc[0, 'Search for published decisions'] = None 
     st.session_state.df_master.loc[0, 'Search for a financial firm'] = None 
     st.session_state.df_master.loc[0, 'Product line'] = None 
@@ -1639,8 +2238,16 @@ if 'df_master' not in st.session_state:
     st.session_state.df_master.loc[0, 'Product name'] = None 
     st.session_state.df_master.loc[0, 'Issue type'] = None 
     st.session_state.df_master.loc[0, 'Issue'] = None 
-    st.session_state.df_master.loc[0, 'Date from'] = None 
-    st.session_state.df_master.loc[0, 'Date to'] = None
+
+    #Pre June 2024
+    st.session_state.df_master.loc[0, 'Include decisions made under earlier Terms of Reference'] = False
+    st.session_state.df_master.loc[0, 'All these words'] = None
+    st.session_state.df_master.loc[0, 'This exact wording or phrase'] = None
+    st.session_state.df_master.loc[0, 'One or more of these words - 1'] = None
+    st.session_state.df_master.loc[0, 'One or more of these words - 2'] = None
+    st.session_state.df_master.loc[0, 'One or more of these words - 3'] = None
+    st.session_state.df_master.loc[0, 'Any of these unwanted words'] = None
+    st.session_state.df_master.loc[0, 'Case number'] = None
 
     #Generally applicable
     st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
@@ -1677,27 +2284,62 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
+    if streamlit_timezone() == True:
+        st.warning('One or more Chrome window may have been launched. It must be kept open.')
+
     reset_button = st.button(label='RESET', type = 'primary')
 
     st.subheader("Your search terms")
+
+    collection_entry = st.selectbox(label = 'Collection of decisions to study', options = collection_options, index = collection_options.index(st.session_state.df_master.loc[0, 'Collection']))
+
+    if collection_entry:
+        
+        st.session_state.df_master.loc[0, 'Collection'] = collection_entry
+        
+    if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published from 14 June 2024':
     
-    st.markdown("""For search tips, please visit [the AFCA Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
+        st.markdown("""For search tips, please visit the [AFCA Portal](https://my.afca.org.au/searchpublisheddecisions/). This section mimics their search function.
 """)
-    
-    keywordsearch_entry = st.text_input(label = 'Search for published decisions', value = st.session_state.df_master.loc[0, 'Search for published decisions'])
-    
-    ffsearch_entry = st.text_input(label = 'Search for a financial firm', value = st.session_state.df_master.loc[0, 'Search for a financial firm'])
-    
-    product_line_entry = st.selectbox(label = 'Product line', options = list(product_line_options.keys()), index = list_value_check(list(product_line_options.keys()), st.session_state.df_master.loc[0, 'Product line']))
-    
-    product_category_entry = st.selectbox(label = 'Product category', options = list(product_category_options.keys()), index = list_value_check(list(product_category_options.keys()), st.session_state.df_master.loc[0, 'Product category']))
-    
-    product_name_entry = st.selectbox(label = 'Product name', options = list(product_name_options.keys()), index = list_value_check(list(product_name_options.keys()), st.session_state.df_master.loc[0, 'Product name']))
-    
-    issue_type_entry = st.selectbox(label = 'Issue type', options = list(issue_type_options.keys()), index = list_value_check(list(issue_type_options.keys()), st.session_state.df_master.loc[0, 'Issue type']))
-    
-    issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
-            
+        
+        keywordsearch_entry = st.text_input(label = 'Search for published decisions', value = st.session_state.df_master.loc[0, 'Search for published decisions'])
+        
+        ffsearch_entry = st.text_input(label = 'Search for a financial firm', value = st.session_state.df_master.loc[0, 'Search for a financial firm'])
+        
+        product_line_entry = st.selectbox(label = 'Product line', options = list(product_line_options.keys()), index = list_value_check(list(product_line_options.keys()), st.session_state.df_master.loc[0, 'Product line']))
+        
+        product_category_entry = st.selectbox(label = 'Product category', options = list(product_category_options.keys()), index = list_value_check(list(product_category_options.keys()), st.session_state.df_master.loc[0, 'Product category']))
+        
+        product_name_entry = st.selectbox(label = 'Product name', options = list(product_name_options.keys()), index = list_value_check(list(product_name_options.keys()), st.session_state.df_master.loc[0, 'Product name']))
+        
+        issue_type_entry = st.selectbox(label = 'Issue type', options = list(issue_type_options.keys()), index = list_value_check(list(issue_type_options.keys()), st.session_state.df_master.loc[0, 'Issue type']))
+        
+        issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
+
+    else:
+        
+        st.markdown("""For search tips, please visit [AFCA's website](https://www.afca.org.au/what-to-expect/search-published-decisions). This section largely mimics their advanced keyword search function.
+""")
+        early_t_o_r_entry = st.checkbox(label = 'Include decisions made under earlier Terms of Reference', value = st.session_state['df_master'].loc[0, 'Include decisions made under earlier Terms of Reference'])
+
+        st.write('Find decisions that have...')
+        
+        all_these_words_entry = st.text_input(label = 'all these words', value = st.session_state.df_master.loc[0, 'All these words'])
+
+        this_exact_wording_phrase_entry = st.text_input(label = 'this exact wording or phrase', value = st.session_state.df_master.loc[0, 'This exact wording or phrase'])
+        
+        one_or_more_of_these_words_1_entry = st.text_input(label = 'one or more of these words', value = st.session_state.df_master.loc[0, 'One or more of these words - 1'])
+
+        one_or_more_of_these_words_2_entry = st.text_input(label = 'Word - 2', value = st.session_state.df_master.loc[0, 'One or more of these words - 2'], label_visibility="collapsed")
+
+        one_or_more_of_these_words_3_entry = st.text_input(label = 'Word - 3', value = st.session_state.df_master.loc[0, 'One or more of these words - 3'], label_visibility="collapsed")
+        
+        any_of_these_unwanted_words_entry = st.text_input(label = "But don't show decisions that have any of these unwanted words", value = st.session_state.df_master.loc[0, 'Any of these unwanted words'])
+
+        case_number_entry = st.text_input(label = 'Case number', value = st.session_state.df_master.loc[0, 'Case number'])
+
+    #Dates are applicable to both collections
+        
     date_from_entry = st.date_input('Date from', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     date_to_entry = st.date_input('Date to', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
@@ -1709,30 +2351,53 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     preview_button = st.button(label = 'PREVIEW', type = 'primary')
 
 
+# %% [markdown]
+# ## Preview
+
     # %%
     if preview_button:
     
-        df_master = afca_create_df()
-    
-        afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+        if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+            
+            afca_search_terms = str(all_these_words_entry) + str(this_exact_wording_phrase_entry) + str(one_or_more_of_these_words_1_entry) + str(one_or_more_of_these_words_2_entry) + str(one_or_more_of_these_words_3_entry) + str(case_number_entry)
+        else:
         
+            afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+            
         if afca_search_terms.replace('None', '') == "":
     
             st.warning('You must enter some search terms.')
             #quit()
     
         else:
-                    
-            search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
-                        ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
-                        product_line_input = df_master.loc[0, 'Product line'], 
-                        product_category_input = df_master.loc[0, 'Product category'], 
-                        product_name_input = df_master.loc[0, 'Product name'], 
-                        issue_type_input = df_master.loc[0, 'Issue type'], 
-                        issue_input = df_master.loc[0, 'Issue'], 
-                        date_from_input = df_master.loc[0, 'Date from'], 
-                        date_to_input = df_master.loc[0, 'Date to'])
-        
+
+            df_master = afca_create_df()
+
+            if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+                search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
+                                                    all_these_words_input = df_master.loc[0, 'All these words'], 
+                                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
+                                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
+                                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
+                                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
+                                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
+                                                    case_number_input = df_master.loc[0, 'Case number'], 
+                                                    date_from_input = df_master.loc[0, 'Date from'], 
+                                                    date_to_input = df_master.loc[0, 'Date to'], 
+                                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                                )
+
+            else:
+                search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
+                            ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
+                            product_line_input = df_master.loc[0, 'Product line'], 
+                            product_category_input = df_master.loc[0, 'Product category'], 
+                            product_name_input = df_master.loc[0, 'Product name'], 
+                            issue_type_input = df_master.loc[0, 'Issue type'], 
+                            issue_input = df_master.loc[0, 'Issue'], 
+                            date_from_input = df_master.loc[0, 'Date from'], 
+                            date_to_input = df_master.loc[0, 'Date to'])
+            
             if search_results['case_sum'] > 0:
     
                 df_preview = pd.DataFrame(search_results['case_list'])
@@ -1741,19 +2406,20 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
           
                 link_heading_config['Hyperlink to AFCA Portal'] = st.column_config.LinkColumn(display_text = 'Click')
         
-                st.success(f'Your search terms returned {search_results["case_sum"]} result(s). Please see below for the top {min(search_results["case_sum"], 10)} result(s).')
+                st.success(f'Your search terms returned {search_results["case_sum"]} result(s). Please see below for the top {min(search_results["case_sum"], default_judgment_counter_bound)} result(s).')
                             
-                st.dataframe(df_preview.head(10),  column_config=link_heading_config)
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
         
             else:
-                st.warning('Your search terms returned 0 results. Please change your search terms and try again.')
+                st.error('Your search terms returned 0 results. Please change your search terms and try again.')
+
 
     # %%
     st.subheader("Judgment metadata collection")
     
     st.markdown("""Would you like to obtain judgment metadata? Such data include the case number, the financial firm involved, and the decision date. 
     
-Case name and hyperlinks to the AFCA Portal are always included with your results.
+Case name and hyperlinks to AFCA's website are always included with your results.
 """)
     
     meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
@@ -1792,11 +2458,17 @@ Case name and hyperlinks to the AFCA Portal are always included with your result
     
         #Check whether search terms entered
     
-        afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+        if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+            
+            afca_search_terms = str(all_these_words_entry) + str(this_exact_wording_phrase_entry) + str(one_or_more_of_these_words_1_entry) + str(one_or_more_of_these_words_2_entry) + str(one_or_more_of_these_words_3_entry) + str(case_number_entry)
+        else:
         
+            afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+            
         if afca_search_terms.replace('None', '') == "":
     
             st.warning('You must enter some search terms.')
+            #quit()
                 
         else:
                 
@@ -1849,6 +2521,7 @@ Case name and hyperlinks to the AFCA Portal are always included with your result
 
     # %%
     if reset_button:
+        
         st.session_state.pop('df_master')
 
         #clear_cache()
@@ -1857,11 +2530,17 @@ Case name and hyperlinks to the AFCA Portal are always included with your result
     # %%
     if next_button:
     
-        afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+        if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+            
+            afca_search_terms = str(all_these_words_entry) + str(this_exact_wording_phrase_entry) + str(one_or_more_of_these_words_1_entry) + str(one_or_more_of_these_words_2_entry) + str(one_or_more_of_these_words_3_entry) + str(case_number_entry)
+        else:
         
+            afca_search_terms = str(keywordsearch_entry) + str(ffsearch_entry) + str(product_line_entry) + str(product_category_entry) + str(product_name_entry) + str(issue_type_entry) + str(issue_entry) + str(date_from_entry) + str(date_to_entry)
+            
         if afca_search_terms.replace('None', '') == "":
     
             st.warning('You must enter some search terms.')
+            #quit()
         
         else:
         
@@ -1872,3 +2551,4 @@ Case name and hyperlinks to the AFCA Portal are always included with your result
             st.session_state["page_from"] = 'pages/AFCA.py'
             
             st.switch_page('pages/GPT.py')
+

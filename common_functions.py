@@ -25,6 +25,10 @@ from dateutil.relativedelta import *
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
+import requests
+import PyPDF2
+import io
+from io import BytesIO
 
 #Excel
 from io import BytesIO
@@ -36,6 +40,9 @@ from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 
+
+# %% [markdown]
+# # Scraper, GPT etc
 
 # %%
 def own_account_allowed():
@@ -85,7 +92,7 @@ def date_parser(string):
         return date
     except:
         return None
-    
+
 
 
 # %%
@@ -187,41 +194,20 @@ def link(x):
 
 
 
-# %% [markdown]
-# # Streamlit
-
 # %%
-#Function to open url
-def open_page(url):
-    open_script= """
-        <script type="text/javascript">
-            window.open('%s', '_blank').focus();
-        </script>
-    """ % (url)
-    html(open_script)
+#Define function for judgment link containing PDF
+def pdf_judgment(url):
+    headers = {'User-Agent': 'whatever'}
+    r = requests.get(url, headers=headers)
+    remote_file_bytes = io.BytesIO(r.content)
+    pdfdoc_remote = PyPDF2.PdfReader(remote_file_bytes)
+    text_list = []
 
-
-# %%
-def clear_cache():
+    for page in pdfdoc_remote.pages:
+        text_list.append(page.extract_text())
     
-    keys = list(st.session_state.keys())
-    
-    for key in keys:
-        st.session_state.pop(key)
+    return str(text_list)
 
-
-
-# %%
-def clear_cache_except_validation_df_master():
-    keys = list(st.session_state.keys())
-    if 'df_master' in keys:
-        keys.remove('df_master')
-    if 'page_from' in keys:
-        keys.remove('page_from')
-    if 'jurisdiction_page' in keys:
-        keys.remove('jurisdiction_page')
-    for key in keys:
-        st.session_state.pop(key)
 
 
 # %%
@@ -292,10 +278,7 @@ def au_date(x):
 #String to integer
 def str_to_int(string):
     try:
-        if '.' in string:
-            output = int(string.split('.')[0])
-        else:
-            output = int(string)
+        output = int(float(string))
         return output
     except:
         return int(default_judgment_counter_bound)
@@ -305,10 +288,7 @@ def str_to_int(string):
 #String to integer
 def str_to_int_page(string):
     try:
-        if '.' in string:
-            output = int(string.split('.')[0])
-        else:
-            output = int(string)
+        output = int(float(string))
         return output
     except:
         return int(default_page_bound)
@@ -340,6 +320,53 @@ def save_input(df_master):
 
 
 
+# %% [markdown]
+# # Streamlit
+
+# %%
+#Function to open url
+def open_page(url):
+    open_script= """
+        <script type="text/javascript">
+            window.open('%s', '_blank').focus();
+        </script>
+    """ % (url)
+    html(open_script)
+
+
+# %%
+def clear_cache():
+    
+    keys = list(st.session_state.keys())
+    
+    for key in keys:
+        st.session_state.pop(key)
+
+
+
+# %%
+def clear_cache_except_validation_df_master():
+    keys = list(st.session_state.keys())
+    if 'df_master' in keys:
+        keys.remove('df_master')
+    if 'page_from' in keys:
+        keys.remove('page_from')
+    if 'jurisdiction_page' in keys:
+        keys.remove('jurisdiction_page')
+    for key in keys:
+        st.session_state.pop(key)
+
+
+# %%
+def streamlit_timezone():
+    local_now = datetime.now().astimezone()
+    time_zone = local_now.tzname()
+    if time_zone in ['AEST', 'ACST', 'AWST', 'BST']:
+        return True
+    else:
+        return False
+
+
 # %%
 def streamlit_cloud_date_format(date):
     local_now = datetime.now().astimezone()
@@ -350,3 +377,5 @@ def streamlit_cloud_date_format(date):
         date_to_send = parser.parse(date, dayfirst=True).strftime("%m/%d/%Y")
     return date_to_send
 
+
+# %%

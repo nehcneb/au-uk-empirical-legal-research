@@ -121,7 +121,11 @@ def hca_create_df():
     own_account = st.session_state.own_account
     
     #Judgment counter bound
-    judgments_counter_bound = st.session_state.judgments_counter_bound
+    try:
+        judgments_counter_bound = judgments_counter_bound_entry
+    except:
+        print('judgments_counter_bound not entered')
+        judgments_counter_bound = default_judgment_counter_bound
 
     #GPT enhancement
     try:
@@ -1329,10 +1333,6 @@ if 'gpt_model' not in st.session_state:
 if 'gpt_api_key' not in st.session_state:
 
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
-
-#Upperbound on number of judgments to scrape
-if 'judgments_counter_bound' not in st.session_state:
-    st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
 
 
 # %%

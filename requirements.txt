@@ -25,4 +25,5 @@ streamlit-extras==0.4.3
 #streamlit-gsheets
 textract==1.6.5
 tiktoken==0.7.0
+undetected-chromedriver==3.5.5
 webdriver-manager==4.0.2
