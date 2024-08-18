@@ -515,7 +515,7 @@ def afca_old_search(
     browser_old.refresh()
 
     # 'Include decisions made under earlier Terms of Reference'
-    earlier_t_o_r = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_chbOldTOR')))
+    earlier_t_o_r = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_chbOldTOR')))
 
     #Input for whether to 'Include decisions made under earlier Terms of Reference'
     if earlier_t_o_r_input != False:
@@ -523,30 +523,30 @@ def afca_old_search(
         
     #'Search for published decisions'
     #NOT in use
-    #keywordsearch = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tbKeywords')))
+    #keywordsearch = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tbKeywords')))
     
     #Advanced keyword search
-    advanced_keyword_search_button = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'aAdvancedKw')))
+    advanced_keyword_search_button = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'aAdvancedKw')))
     advanced_keyword_search_button.click()
     
     #'all these words'
-    all_these_words = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAllWords')))
+    all_these_words = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAllWords')))
     #'this exact wording or phrase'
-    this_exact_wording_or_phrase = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tExactPhrase')))
+    this_exact_wording_or_phrase = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tExactPhrase')))
     #'one or more of these words'
-    one_or_more_of_these_words_1 = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords1')))
-    one_or_more_of_these_words_2 = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords2')))
-    one_or_more_of_these_words_3 = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords3')))
+    one_or_more_of_these_words_1 = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords1')))
+    one_or_more_of_these_words_2 = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords2')))
+    one_or_more_of_these_words_3 = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tAnyWords3')))
     #'any of these unwanted words'
-    any_of_these_unwanted_words = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tNoWords')))
+    any_of_these_unwanted_words = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tNoWords')))
     
     #'Case number'
-    case_number = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tCaseNumber')))
+    case_number = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_tCaseNumber')))
     #NOT DOING days/weeks/month/years from now
-    #from_now_tick = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'timeBack')))
+    #from_now_tick = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'timeBack')))
     
     #Date range
-    date_range_tick = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='dateRange']")))
+    date_range_tick = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='dateRange']")))
     date_range_tick.click()
     
     #date format is "dd/mm/yyyy"
@@ -578,8 +578,8 @@ def afca_old_search(
     #dropdown_issue = Select(issue)
     
     #Submit and clear buttons
-    submit_button = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_bSearch')))
-    clear_button = Wait(browser_old,  30).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_bClearSearch')))
+    submit_button = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_bSearch')))
+    clear_button = Wait(browser_old, 45).until(EC.visibility_of_element_located((By.ID, 'ctl00_body_bClearSearch')))
 
     #Enter keyword and date input
 
@@ -622,7 +622,7 @@ def afca_old_search(
     submit_button.click()
 
     #Number of cases message
-    case_num_raw = Wait(browser_old, 30).until(EC.presence_of_element_located((By.ID, "ctl00_body_pResults")))
+    case_num_raw = Wait(browser_old,45).until(EC.presence_of_element_located((By.ID, "ctl00_body_pResults")))
     #case_sum = int(case_num_raw.text.replace('Your search found ', '').replace(' results.', '').replace(' A maximum of 500 results is returned (displayed as 10 results per page).', ''))
     case_sum_msg = case_num_raw.text.replace(' (displayed as 10 results per page)', '')
 
@@ -653,7 +653,7 @@ def afca_old_search(
 
     if page_num > 0:
         
-        raw_cases = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
+        raw_cases = Wait(browser_old,45).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
     
         for raw_case in raw_cases:
     
@@ -671,7 +671,7 @@ def afca_old_search(
 
         for page in list(range(2, page_num + 1)):
         
-            subsequent_pages = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'javascript:__doPostBack')]")))
+            subsequent_pages = Wait(browser_old,45).until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@href, 'javascript:__doPostBack')]")))
 
             for subsequent_page in subsequent_pages:
 
@@ -684,7 +684,7 @@ def afca_old_search(
         
                             subsequent_page.click()
                             
-                            raw_cases = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
+                            raw_cases = Wait(browser_old,45).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
             
                             for raw_case in raw_cases:
                         
@@ -706,7 +706,7 @@ def afca_old_search(
 
                         subsequent_page.click()
                         
-                        raw_cases = Wait(browser_old, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
+                        raw_cases = Wait(browser_old,45).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='results']")))
         
                         for raw_case in raw_cases:
                     
@@ -1063,7 +1063,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
 
 issue_type_options = {'Accessibility': {'value': '3a35d144-0116-ee11-9cbe-000d3a6a9642'},
  'Advice': {'value': '80e98e3d-3d0f-ee11-8f6e-002248927eb4'},
- 'afca Engagement': {'value': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
+ 'AFCA Engagement': {'value': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Authorisation/Instructions': {'value': '84e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Charges': {'value': 'a379125d-afc1-ed11-83fe-000d3a6ad49b'},
  'Charges, Fees, Interest or Premiums': {'value': '86e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -1205,7 +1205,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': '94e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Commercial credit reporting': {'value': '5933d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'},
- 'Compliance with afca Engagement Charter': {'value': '67f71b3f-3f0f-ee11-8f6e-00224811ec4e',
+ 'Compliance with AFCA Engagement Charter': {'value': '67f71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
  'Compliance with afca preliminary assessment/recommendation': {'value': '69f71b3f-3f0f-ee11-8f6e-00224811ec4e',
   'data-parent': '82e98e3d-3d0f-ee11-8f6e-002248927eb4'},
@@ -2314,7 +2314,7 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
         
         issue_type_entry = st.selectbox(label = 'Issue type', options = list(issue_type_options.keys()), index = list_value_check(list(issue_type_options.keys()), st.session_state.df_master.loc[0, 'Issue type']))
         
-        issue_entry = st.selectbox(label = 'Issue type', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
+        issue_entry = st.selectbox(label = 'Issue', options = list(issue_options.keys()), index = list_value_check(list(issue_options.keys()), st.session_state.df_master.loc[0, 'Issue']))
 
     else:
         
