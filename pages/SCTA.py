@@ -495,7 +495,7 @@ if st.session_state.page_from != "pages/SCTA.py": #Need to add in order to avoid
     
     return_button = st.button('RETURN to first page')
     
-    st.header(f"You have selected to study :blue[decisions of the Superannuation Complaints Tribunal of Australia].")
+    st.header(f"You have selected to study :blue[decisions of the Superannuation Complaints Tribunal].")
     
     #    st.header("Judgment Search Criteria")
     

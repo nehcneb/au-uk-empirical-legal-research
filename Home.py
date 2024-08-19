@@ -51,7 +51,7 @@ sources_list = ["Judgments of the High Court of Australia",
                 'Decisions of the Australian Financial Complaints Authority', 
                 #'Decisions of the Superannuation Complaints Tribunal of Australia', 
                 "The English Reports (nearly all English case reports from 1220 to 1866)",
-                "The Kercher Reports (decisions of the New South Wales superior courts from 1788 to 1900)", 
+                "The Kercher Reports (judgments of the New South Wales superior courts from 1788 to 1900)", 
                 "Your own files", 
                 "Your own spreadsheet"
                ]
