@@ -126,7 +126,7 @@ if own_account_allowed() > 0:
 """)
 
 else:
-    st.markdown("""**Complete this form to kickstart your project :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
+    st.markdown("""**Use this program to kickstart your project :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
 
 #st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
