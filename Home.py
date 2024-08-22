@@ -106,8 +106,9 @@ if 'i_understand' not in st.session_state:
 # %% editable=true slideshow={"slide_type": ""}
 #Create form
 
-st.title("LawtoData")
-st.header("An Empirical Legal Research Kickstarter")
+st.title(":blue[LawtoData]")
+
+st.subheader("An Empirical Legal Research Kickstarter")
 
 st.markdown("""*LawtoData* is an open-source program designed to help kickstart empirical projects involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
 
