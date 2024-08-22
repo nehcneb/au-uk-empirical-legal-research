@@ -97,15 +97,6 @@ default_file_counter_bound = default_judgment_counter_bound
 
 print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
-
 
 # %% [markdown]
 # # Functions for Own Files
@@ -1161,8 +1152,6 @@ st.caption('During the pilot stage, the languages supported are limited. Please 
 # %%
 st.header("Use GPT as your research assistant")
 
-#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
-
 st.markdown("**:green[Would you like GPT to answer questions about your files?]**")
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT', value = st.session_state['df_master'].loc[0, 'Use GPT'])
@@ -1568,7 +1557,7 @@ if run_button:
     
             #Write output
     
-            st.success('Your output are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
+            st.success('Your output are now available for download. Thank you for using LawtoData!')
     
             if df_master.loc[0, 'Language choice'] != 'English':
     
@@ -1695,7 +1684,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
 
                 #Write output
         
-                st.success('Your output are now available for download. Thank you for using the Empirical Legal Research Kickstarter!')
+                st.success('Your output are now available for download. Thank you for using LawtoData!')
         
                 if df_master.loc[0, 'Language choice'] != 'English':
         

@@ -265,8 +265,6 @@ return_button = st.button('RETURN to the previous page')
 
 #st.header("Use GPT as your research assistant")
 
-#    st.markdown("**You have three (3) opportunities to engage with GPT through the Empirical Legal Research Kickstarter. Would you like to use one (1) of these opportunities now?**")
-
 #st.markdown("**:green[Would you like GPT to answer questions about the judgments returned by your search terms?]**")
 
 st.header(":blue[Would you GPT to answer questions about the judgments returned by your search terms?]")
@@ -658,7 +656,7 @@ if run_button:
     
                     #Write results
             
-                    st.success("Your data is now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
+                    st.success("Your data is now available for download. Thank you for using LawtoData!")
                     
                     #Button for downloading results
                     output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
@@ -814,7 +812,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                         
                         #Write results
                 
-                        st.success("Your data is now available for download. Thank you for using the Empirical Legal Research Kickstarter!")
+                        st.success("Your data is now available for download. Thank you for using LawtoData!")
                         
                         #Button for downloading results
                         output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'

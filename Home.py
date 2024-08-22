@@ -26,7 +26,7 @@ import streamlit as st
 # %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
 st.set_page_config(
-   page_title="Empirical Legal Research Kickstarter",
+   page_title="LawtoData: an Empirical Legal Research Kickstarter",
    page_icon="🧊",
    layout="centered",
    initial_sidebar_state="collapsed",
@@ -106,10 +106,10 @@ if 'i_understand' not in st.session_state:
 # %% editable=true slideshow={"slide_type": ""}
 #Create form
 
-st.title("The Empirical Legal Research Kickstarter")
-st.header("An Anglo-Australian Pilot")
+st.title("LawtoData")
+st.header("An Empirical Legal Research Kickstarter")
 
-st.markdown("""*The Empirical Legal Research Kickstarter* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research/tree/main) program designed to help kickstart empirical projects involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
+st.markdown("""*LawtoData* is an open-source program designed to help kickstart empirical projects involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
 
 This pilot version can automatically
 
