@@ -108,6 +108,7 @@ def GPT_label_dict(x_list):
 # %%
 #Check validity of API key
 
+@st.cache_data
 def is_api_key_valid(key_to_check):
     openai.api_key = key_to_check
     
@@ -270,6 +271,7 @@ Where a question seeks information about a person's birthday or address, you lab
 # %%
 #Check questions for potential privacy infringement
 
+@st.cache_data
 def GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
@@ -376,6 +378,7 @@ You then return the remainder of the text unredacted.
 # %%
 #Check answers_to_check_json for potential privacy infringement
 
+@st.cache_data
 def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_instruction):
     #'question_json' variable is a json of answers_to_check_json to GPT
     #'jugdment' variable is a judgment_json   
@@ -458,6 +461,7 @@ role_content = "You are a legal research assistant helping an academic researche
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
+@st.cache_data
 def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
@@ -564,6 +568,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
+@st.cache_data
 def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df

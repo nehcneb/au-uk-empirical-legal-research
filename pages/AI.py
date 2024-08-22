@@ -1514,7 +1514,7 @@ st.subheader(f'Enter your instructions for {st.session_state.ai_choice}')
 
 st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions. It will **only** use  the data and/or information from your spreadsheet.')
 
-prompt = st.text_area(f'You may enter at most 1000 characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=1000) 
+prompt = st.text_area(f'You may enter at most {question_characters_bound} characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=question_characters_bound) 
 
 st.session_state.prompt = prompt
 

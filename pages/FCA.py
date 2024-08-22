@@ -309,6 +309,8 @@ def fca_search(court = '',
 
 # %%
 #Define function turning search results url to links to judgments
+
+@st.cache_data
 def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     page = requests.get(url_search_results)
@@ -385,6 +387,7 @@ def fca_link_to_doc(url_judgment):
 fca_metalabels = ['MNC', 'Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to']
 fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to', 'Order']
 
+@st.cache_data
 def fca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
@@ -509,6 +512,8 @@ def fca_meta_judgment_dict(judgment_url):
 
 # %%
 #Preliminary function for changing names for any PDF judgments
+
+@st.cache_data
 def fca_pdf_name_mnc_list(url_search_results, judgment_counter_bound):
                       
     #Scrape webpage of search results
@@ -621,6 +626,7 @@ if 'gpt_api_key' not in st.session_state:
 # %%
 #Obtain parameters
 
+@st.cache_data
 def fca_run(df_master):
     df_master = df_master.fillna('')
 

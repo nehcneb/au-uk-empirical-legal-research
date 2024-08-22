@@ -354,6 +354,8 @@ def hca_search(collection = '',
 
 # %%
 #Define function turning search results url to links to judgments
+
+@st.cache_data
 def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     
@@ -414,6 +416,8 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
 
 # %%
 #Define function for judgment link containing PDF
+
+@st.cache_data
 def hca_pdf_judgment(url):
     pdf_url = url.replace('showCase', 'downloadPdf')
     headers = {'User-Agent': 'whatever'}
@@ -438,6 +442,7 @@ hca_meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catch
 # %%
 #If judgment link contains 'showCase'
 
+@st.cache_data
 def hca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
@@ -572,6 +577,7 @@ def hca_meta_judgment_dict(judgment_url):
 # %%
 #If judgment link contains 'showbyHandle'
 
+@st.cache_data
 def hca_meta_judgment_dict_alt(judgment_url):
     
     judgment_dict = {'Case name': '',
@@ -735,6 +741,7 @@ def hca_meta_judgment_dict_alt(judgment_url):
 # %%
 #Slow way of finding a case from mnc
 
+@st.cache_data
 def hca_mnc_to_link_browse(collection, year, num):
 
     #Default judgment without the prefix https://eresources.hcourt.gov.au
@@ -1035,7 +1042,7 @@ def hca_max_year_validity(collection, max_year_entry):
 # %%
 #Load hca_data
 
-@st.cache_data
+@st.cache_resource
 def hca_load_data(url):
     df = pd.read_csv(url)
     return df
@@ -1188,6 +1195,7 @@ def hca_judgment_to_exclude(case_info = {},
 # %%
 #Function to get judgment links with filters
 
+@st.cache_data
 def hca_search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgment_counter_bound,
                                       collection, 
@@ -1289,6 +1297,7 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
     return links
 
 
+
 # %% [markdown]
 # # GPT functions and parameters
 
@@ -1338,6 +1347,7 @@ if 'gpt_api_key' not in st.session_state:
 # %%
 #Obtain parameters
 
+@st.cache_data
 def hca_run(df_master):
     df_master = df_master.fillna('')
 

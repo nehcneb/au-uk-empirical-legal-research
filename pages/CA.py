@@ -782,6 +782,7 @@ all_subjects = ['Access to information and privacy', 'Administrative remedies', 
 
 # %%
 #Function turning search terms to search results url
+@st.cache_data
 def ca_search(jurisdiction  =  'All', 
               court = 'All', 
               phrase = '', 
@@ -901,6 +902,7 @@ def ca_search(jurisdiction  =  'All',
 
 
 # %%
+@st.cache_data
 def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Start counter
     
@@ -986,6 +988,7 @@ ca_meta_dict = {
 
 
 # %%
+@st.cache_data
 def ca_meta_judgment_dict(judgment_url):
 
     headers = {'User-Agent': 'whatever'}
@@ -1091,6 +1094,7 @@ if 'gpt_api_key' not in st.session_state:
 # %%
 #Obtain parameters
 
+@st.cache_data
 def ca_run(df_master):
     df_master = df_master.fillna('')
 

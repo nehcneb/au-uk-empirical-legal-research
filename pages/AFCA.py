@@ -496,6 +496,7 @@ def afca_old_element_meta(inner_html):
 
 
 # %%
+@st.cache_data
 def afca_old_search(
     earlier_t_o_r_input, 
     all_these_words_input, 
@@ -724,7 +725,7 @@ def afca_old_search(
                         break
     
     return {'case_sum': case_sum, 'case_sum_message': case_sum_msg, 'case_list': case_list}
-        
+    
 
 
 # %%
@@ -773,7 +774,7 @@ afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page
 # %% [markdown]
 # ## Post 14 June 2024
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ### Definitions of menu items
 
 # %%
@@ -1712,6 +1713,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
 # %%
 #Define search boxes
 
+@st.cache_data
 def afca_search(keywordsearch_input, #= '', 
                 ffsearch_input, #= '', 
                 product_line_input, #= '', 
@@ -1886,6 +1888,7 @@ def afca_search(keywordsearch_input, #= '',
 
 
 # %%
+@st.cache_data
 def afca_meta_judgment_dict(judgment_url):
 
     headers = {'User-Agent': 'whatever'}
@@ -1989,6 +1992,7 @@ if 'gpt_api_key' not in st.session_state:
 # %%
 #Obtain parameters
 
+@st.cache_data
 def afca_old_run(df_master):
     
     df_master = df_master.fillna('')
@@ -2088,6 +2092,7 @@ def afca_old_run(df_master):
 # %%
 #Obtain parameters
 
+@st.cache_data
 def afca_new_run(df_master):
     
     df_master = df_master.fillna('')
@@ -2176,6 +2181,7 @@ def afca_new_run(df_master):
 # ## Run function to use
 
 # %%
+@st.cache_data
 def afca_run(df_master):
     if df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
         df_updated = afca_old_run(df_master)

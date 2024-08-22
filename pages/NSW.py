@@ -370,6 +370,7 @@ def nsw_link(x):
 #Define function for short judgments, which checks if judgment is in PDF
 #returns a list of judgment type and judgment text
 
+@st.cache_data
 def nsw_short_judgment(html_link):
     page_html = requests.get(html_link)
     soup_html = BeautifulSoup(page_html.content, "lxml")
@@ -549,6 +550,7 @@ def nsw_tidying_up(df_master, df_individual):
 # %%
 #Obtain parameters
 
+@st.cache_data
 def nsw_run(df_master):
     df_master = df_master.fillna('')
     
