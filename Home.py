@@ -110,19 +110,17 @@ st.title(":blue[LawtoData]")
 
 st.subheader("An Empirical Legal Research Kickstarter")
 
-st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) program designed to help kickstart empirical projects involving judgments. It automates many costly, time-consuming and mundane tasks in empirical research.
-
-This pilot version can automatically
+st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) program designed to help kickstart empirical projects involving judgments. This pilot version can automatically
 
 (1) search for and collect judgments of select Anglo-Australian courts; and
 
-(2) extract and code information or data from judgments, partially using a generative AI.
+(2) extract and code *your* choice of data or information from judgments, partially using a generative AI.
 
 This program can also process your own files or spreadsheet of data.
 """)
 
 if own_account_allowed() > 0:
-    st.markdown("""**Complete this form to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
+    st.markdown("""**Use this program to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
 """)
 
 else:
