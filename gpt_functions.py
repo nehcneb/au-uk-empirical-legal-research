@@ -359,7 +359,7 @@ def checked_questions_json(questions_json, gpt_labels_output):
 #Check questions for potential privacy infringement
 
 answers_check_system_instruction = """
-You are a compliance officer helping an academic researcher to redact personally identifiable information. 
+You are a compliance officer helping an academic researcher to redact birthdays and addresses. 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
 Where any part of the text contains a birthday or an address, you replace that part with "[redacted]". 
 You then return the remainder of the text unredacted.
