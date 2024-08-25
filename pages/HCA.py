@@ -45,7 +45,7 @@ from io import StringIO
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -55,7 +55,7 @@ import openai
 import tiktoken
 
 #Google
-from google.oauth2 import service_account
+#from google.oauth2 import service_account
 
 #Excel
 from pyxlsb import open_workbook as open_xlsb
@@ -64,7 +64,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, save_input
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -1616,7 +1616,7 @@ if st.session_state.page_from != "pages/HCA.py": #Need to add in order to avoid 
     else:
         full_text_entry = ''
     
-    st.markdown("""You can preview the judgments returned by your search terms on the High Court Judgments Database after you have entered some search terms.
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
@@ -1871,6 +1871,14 @@ Case name and medium neutral citation are always included with your results.
 
             save_input(df_master)
             
-            st.session_state["page_from"] = 'pages/HCA.py'
-            
-            st.switch_page('pages/GPT.py')
+            #Check search results
+            judgments_url_num = hca_search_url(df_master)
+            judgments_num = judgments_url_num['results_num']
+            if int(judgments_num) == 0:
+                st.error(no_results_msg)
+
+            else:
+                
+                st.session_state["page_from"] = 'pages/HCA.py'
+                
+                st.switch_page('pages/GPT.py')

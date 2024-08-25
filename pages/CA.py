@@ -42,7 +42,7 @@ from io import BytesIO
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -915,6 +915,8 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     #browser = get_driver()
     
     browser.get(url_search_results)
+    browser.delete_all_cookies()
+    browser.refresh()
     
     elements = browser.find_elements(By.CLASS_NAME, "result ")
     
@@ -1240,7 +1242,7 @@ if 'df_master' not in st.session_state:
 
     #Jurisdiction specific
     st.session_state['df_master'].loc[0, 'Jurisdiction'] = 'All'
-    st.session_state['df_master'].loc[0, 'Courts'] = None 
+    st.session_state['df_master'].loc[0, 'Courts'] = 'All' 
     st.session_state['df_master'].loc[0, 'Document text'] = None 
     st.session_state['df_master'].loc[0, 'Case name, citation or docket'] = None
     st.session_state['df_master'].loc[0, 'Subjects'] = ''
@@ -1372,7 +1374,7 @@ if st.session_state.page_from != "pages/CA.py": #Need to add in order to avoid G
     #else:
         #st.session_state["year"] = '' 
      
-    st.markdown("""You can preview the judgments returned by your search terms on the CanLII after you have entered some search terms.
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
@@ -1510,8 +1512,21 @@ Case name and medium neutral citation are always included with your results.
             df_master = ca_create_df()
         
             save_input(df_master)
+
+            #Check search results
+            ca_url_to_check = ca_search_url(df_master)
+            browser.get(ca_url_to_check)
+            browser.delete_all_cookies()
+            browser.refresh()
+            ca_elements = browser.find_elements(By.CLASS_NAME, "result ")
+            ca_case_num = len(ca_elements)
+            if int(ca_case_num) == 0:
+                
+                st.error(no_results_msg)
             
-            st.session_state["page_from"] = 'pages/CA.py'
+            else:
             
-            st.switch_page('pages/GPT.py')
+                st.session_state["page_from"] = 'pages/CA.py'
+                
+                st.switch_page('pages/GPT.py')
 

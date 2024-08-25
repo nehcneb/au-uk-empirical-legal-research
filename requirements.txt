@@ -18,8 +18,8 @@ pydeck==0.8.1b0
 pytesseract==0.3.10
 pyxlsb==1.0.10
 selenium==4.23.1
-st-gsheets-connection==0.0.4
-streamlit==1.36.0
+#st-gsheets-connection==0.0.4
+streamlit==1.37.1
 streamlit-ext==0.1.10
 streamlit-extras==0.4.3
 #streamlit-gsheets

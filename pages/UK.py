@@ -40,7 +40,7 @@ from io import BytesIO
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -59,7 +59,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, list_range_check, au_date, save_input
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -325,10 +325,7 @@ def uk_search(query= '',
     proper_url = str(response.url).replace('%25', '%')
     
     return proper_url
-
-
-# %%
-url_search_results = 'https://caselaw.nationalarchives.gov.uk/judgments/search?per_page=50&order=relevance&query=constitution&from_day=&from_month=&from_year=&to_day=&to_month=&to_year=&court=uksc&court=ukpc&court=ewca%2Fciv&court=ewca%2Fcrim&court=ewhc%2Fadmin&court=ewhc%2Fadmlty&court=ewhc%2Fch&court=ewhc%2Fcomm&court=ewhc%2Ffam&court=ewhc%2Fipec&court=ewhc%2Fkb&court=ewhc%2Fmercantile&court=ewhc%2Fpat&court=ewhc%2Fscco&court=ewhc%2Ftcc&party=&judge='
+    
 
 
 # %%
@@ -761,7 +758,7 @@ if st.session_state.page_from != "pages/UK.py": #Need to add in order to avoid G
     
     party_entry = st.text_input(label = 'Party name', value = st.session_state.df_master.loc[0, 'Party'])
     
-    st.markdown("""You can preview the judgments returned by your search terms on The National Archives after you have entered some search terms.
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
@@ -827,7 +824,8 @@ Case name and medium neutral citation are always included with your results.
             st.warning('You must enter some search terms.')
     
         elif len(courts_entry) == 0:
-            st.write('Please select at least one court to cover.')
+            
+            st.warning('Please select at least one court to cover.')
                 
         else:
                                 
@@ -895,14 +893,24 @@ Case name and medium neutral citation are always included with your results.
             st.warning('You must enter some search terms.')
     
         elif len(courts_entry) == 0:
-            st.write('Please select at least one court to cover.')
+            
+            st.warning('Please select at least one court to cover.')
         
         else:
     
             df_master = uk_create_df()
             
             save_input(df_master)
-        
-            st.session_state["page_from"] = 'pages/UK.py'
             
-            st.switch_page('pages/GPT.py')
+            #Check search results
+            uk_url_to_check = uk_search_url(df_master)
+            uk_html = requests.get(uk_url_to_check)
+            uk_soup = BeautifulSoup(uk_html.content, "lxml")
+            if 'No matching results' in str(uk_soup):
+                st.error(no_results_msg)
+
+            else:
+            
+                st.session_state["page_from"] = 'pages/UK.py'
+                
+                st.switch_page('pages/GPT.py')

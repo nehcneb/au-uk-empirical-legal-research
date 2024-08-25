@@ -42,7 +42,7 @@ import copy
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -703,7 +703,7 @@ if run_button:
                 
             except Exception as e:
                 
-                st.error('Your search terms may not return any judgments. Please return to the previous page and press the PREVIEW button to double-check.')
+                st.error('Sorry, an error has arisen. Please press PRODUCE data again, or return to the previous page and check your search terms.')
                 
                 st.exception(e)
                 
@@ -859,9 +859,8 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                         #conn.update(worksheet="ER", data=df_to_update, )
                 
                 except Exception as e:
-                    st.error('Your search terms may not return any judgments. Please press the PREVIEW button above to double-check.')
+                    st.error('Sorry, an error has arisen. Please press PRODUCE data again, or return to the previous page and check your search terms.')
                     st.exception(e)
-
 
 
 # %%

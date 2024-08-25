@@ -42,7 +42,7 @@ from io import BytesIO
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -61,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -901,7 +901,7 @@ if st.session_state.page_from != "pages/FCA.py": #Need to add in order to avoid 
     
     st.caption('[Relatively earlier](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) judgments will not be collected.')
     
-    st.markdown("""You can preview the judgments returned by your search terms on the Federal Court Digital Law Library after you have entered some search terms.
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
@@ -1046,8 +1046,17 @@ Case name and medium neutral citation are always included with your results.
             df_master = fca_create_df()
 
             save_input(df_master)
+
+            #Check search results
+            fca_url_to_check = fca_search_url(df_master)
+            fca_html = requests.get(fca_url_to_check)
+            fca_soup = BeautifulSoup(fca_html.content, "lxml")
+            if 'Display' not in str(fca_soup):
+                st.error(no_results_msg)
+
+            else:
                         
-            st.session_state["page_from"] = 'pages/FCA.py'
-            
-            st.switch_page('pages/GPT.py')
+                st.session_state["page_from"] = 'pages/FCA.py'
+                
+                st.switch_page('pages/GPT.py')
 

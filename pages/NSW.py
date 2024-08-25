@@ -42,7 +42,7 @@ from io import BytesIO
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -65,7 +65,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -447,6 +447,7 @@ def nsw_search_url(df_master):
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
                    pause = 0
                   )
+    
     return query.url
 
 
@@ -849,7 +850,7 @@ if st.session_state.page_from != "pages/NSW.py": #Need to add in order to avoid 
     
     casesCited_entry = st.text_input(label = "Cases cited", value = st.session_state['df_master'].loc[0, 'Cases cited'] )
     
-    st.markdown("""You can preview the judgments returned by your search terms on NSW Caselaw after you have entered some search terms.
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
@@ -919,7 +920,7 @@ Case name and medium neutral citation are always included with your results.
             st.warning('You must enter some search terms.')
     
         elif (len(courts_entry) == 0) and (len(tribunals_entry) == 0):
-            st.write('Please select at least one court or tribunal to cover.')
+            st.warning('Please select at least one court or tribunal to cover.')
                 
         else:
             
@@ -986,6 +987,9 @@ Case name and medium neutral citation are always included with your results.
         if all_search_terms.replace('None', '') == "":
     
             st.warning('You must enter some search terms.')
+    
+        elif (len(courts_entry) == 0) and (len(tribunals_entry) == 0):
+            st.warning('Please select at least one court or tribunal to cover.')
         
         else:
         
@@ -993,7 +997,17 @@ Case name and medium neutral citation are always included with your results.
             
             save_input(df_master)
 
-            st.session_state["page_from"] = 'pages/NSW.py'
-            
-            st.switch_page('pages/GPT.py')
+            #Check search results
+            nsw_url_to_check = nsw_search_url(df_master)
+            nsw_html = requests.get(nsw_url_to_check)
+            nsw_soup = BeautifulSoup(nsw_html.content, "lxml")
+            if 'totalElements' not in str(nsw_soup):
+                
+                st.error(no_results_msg)
+
+            else:
+
+                st.session_state["page_from"] = 'pages/NSW.py'
+                
+                st.switch_page('pages/GPT.py')
 

@@ -43,7 +43,7 @@ from io import BytesIO
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
@@ -63,7 +63,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, save_input
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -172,7 +172,6 @@ er_method_types = ['auto', 'boolean', 'any', 'all', 'phrase', 'title']
 # %%
 #Function turning search terms to search results url
 
-@st.cache_data
 def er_search(query= '', 
               method = ''
              ):
@@ -1026,7 +1025,7 @@ if st.session_state.page_from != "pages/ER.py": #Need to add in order to avoid G
     
     query_entry = st.text_input(label = 'Enter search query', value = st.session_state.df_master.loc[0, 'Enter search query'])
         
-    st.markdown("""You can preview the judgments returned by your search terms on CommonLII after you have entered some search terms.
+    st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
@@ -1152,7 +1151,15 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
             df_master = er_create_df()
     
             save_input(df_master)
-                        
-            st.session_state["page_from"] = 'pages/ER.py'
-            
-            st.switch_page('pages/GPT.py')
+
+            #Check search results
+            er_url_to_check = er_search_url(df_master)
+            er_html = requests.get(er_url_to_check, headers={'User-Agent': 'whatever'})
+            er_soup = BeautifulSoup(er_html.content, "lxml")
+            if 'Documents found:   0' in str(er_soup):
+                st.error(no_results_msg)
+                
+            else:
+                st.session_state["page_from"] = 'pages/ER.py'
+                
+                st.switch_page('pages/GPT.py')

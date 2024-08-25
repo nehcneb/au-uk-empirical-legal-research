@@ -36,7 +36,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 #Streamlit
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 
@@ -318,6 +318,10 @@ def save_input(df_master):
             
             st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
 
+
+
+# %%
+no_results_msg = 'Your search terms returned 0 results. Please change your search terms and try again.'
 
 
 # %% [markdown]
