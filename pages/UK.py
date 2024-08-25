@@ -246,28 +246,28 @@ uk_courts_default_list = ['United Kingdom Supreme Court',
 #auxiliary lists and variables
 uk_courts ={'United Kingdom Supreme Court': 'uksc',
 'Privy Council': 'ukpc',  
-'Court of Appeal Civil Division': 'ewca%2Fciv', 
- 'Court of Appeal Criminal Division':  'ewca%2Fcrim',  
-'High Court (England & Wales) Administrative Court': 'ewhc%2Fadmin',
-'High Court (England & Wales) Admiralty Court': 'ewhc%2Fadmlty',  
-'High Court (England & Wales) Chancery Division': 'ewhc%2Fch',  
-'High Court (England & Wales) Commercial Court': 'ewhc%2Fcomm',  
-'High Court (England & Wales) Family Division': 'ewhc%2Ffam',  
-'High Court (England & Wales) Intellectual Property Enterprise Court': 'ewhc%2Fipec',  
-"High Court (England & Wales) King's/Queen's Bench Division" : 'ewhc%2Fkb',
-'High Court (England & Wales) Mercantile Court': 'ewhc%2Fmercantile',  
-'High Court (England & Wales) Patents Court': 'ewhc%2Fpat',  
-'High Court (England & Wales) Senior Courts Costs Office': 'ewhc%2Fscco',  
-'High Court (England & Wales) Technology and Construction Court': 'ewhc%2Ftcc',  
+'Court of Appeal Civil Division': 'ewca/civ', 
+ 'Court of Appeal Criminal Division':  'ewca/crim',  
+'High Court (England & Wales) Administrative Court': 'ewhc/admin',
+'High Court (England & Wales) Admiralty Court': 'ewhc/admlty',  
+'High Court (England & Wales) Chancery Division': 'ewhc/ch',  
+'High Court (England & Wales) Commercial Court': 'ewhc/comm',  
+'High Court (England & Wales) Family Division': 'ewhc/fam',  
+'High Court (England & Wales) Intellectual Property Enterprise Court': 'ewhc/ipec',  
+"High Court (England & Wales) King's/Queen's Bench Division" : 'ewhc/kb',
+'High Court (England & Wales) Mercantile Court': 'ewhc/mercantile',  
+'High Court (England & Wales) Patents Court': 'ewhc/pat',  
+'High Court (England & Wales) Senior Courts Costs Office': 'ewhc/scco',  
+'High Court (England & Wales) Technology and Construction Court': 'ewhc/tcc',  
 'Court of Protection': 'ewcop',  
 'Family Court': 'ewfc',  
 'Employment Appeal Tribunal': 'eat',  
-'Administrative Appeals Chamber': 'ukut%2Faac',  
-'Immigration and Asylum Chamber': 'ukut%2Fiac',
-'Lands Chamber': 'ukut%2Flc',  
-'Tax and Chancery Chamber': 'ukut%2Ftcc',  
-'General Regulatory Chamber': 'ukftt%2Fgrc',  
-'Tax Chamber' : 'ukftt%2Ftc'
+'Administrative Appeals Chamber': 'ukut/aac',  
+'Immigration and Asylum Chamber': 'ukut/iac',
+'Lands Chamber': 'ukut/lc',  
+'Tax and Chancery Chamber': 'ukut/tcc',  
+'General Regulatory Chamber': 'ukftt/grc',  
+'Tax Chamber' : 'ukftt/tc'
 }
 
 uk_courts_list = list(uk_courts.keys())
@@ -322,9 +322,10 @@ def uk_search(query= '',
     response = requests.get(base_url, params=params)
     response.raise_for_status()
 
-    proper_url = str(response.url).replace('%25', '%')
+    #proper_url = str(response.url).replace('%25', '%')
     
-    return proper_url
+    #return proper_url
+    return response.url
     
 
 
