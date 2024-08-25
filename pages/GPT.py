@@ -77,6 +77,15 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 from common_functions import open_page, clear_cache_except_validation_df_master, clear_cache, tips, link
 
 # %%
+#Title of webpage
+st.set_page_config(
+   page_title="LawtoData: An Empirical Legal Research Kickstarter",
+   page_icon="🧊",
+   layout="centered",
+   initial_sidebar_state="collapsed",
+)
+
+# %%
 # Go back to home page if this page is the first page
 if 'page_from' not in st.session_state:
     clear_cache()

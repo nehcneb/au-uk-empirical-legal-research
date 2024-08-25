@@ -73,6 +73,15 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
+# %%
+#Title of webpage
+st.set_page_config(
+   page_title="LawtoData: An Empirical Legal Research Kickstarter",
+   page_icon="🧊",
+   layout="centered",
+   initial_sidebar_state="collapsed",
+)
+
 # %% [markdown]
 # # SCTA search engine
 

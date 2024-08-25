@@ -97,6 +97,15 @@ default_file_counter_bound = default_judgment_counter_bound
 
 print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
+# %%
+#Title of webpage
+st.set_page_config(
+   page_title="LawtoData: An Empirical Legal Research Kickstarter",
+   page_icon="🧊",
+   layout="centered",
+   initial_sidebar_state="collapsed",
+)
+
 
 # %% [markdown]
 # # Functions for Own Files
