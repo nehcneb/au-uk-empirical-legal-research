@@ -26,7 +26,7 @@ import streamlit as st
 # %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
 st.set_page_config(
-   page_title="LawtoData: an Empirical Legal Research Kickstarter",
+   page_title="LawtoData: An Empirical Legal Research Kickstarter",
    page_icon="🧊",
    layout="centered",
    initial_sidebar_state="collapsed",
@@ -110,21 +110,21 @@ st.title(":blue[LawtoData]")
 
 st.subheader("An Empirical Legal Research Kickstarter")
 
-st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) program designed to help kickstart empirical projects involving judgments. This pilot version can automatically
+st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. This pilot version can automatically
 
 (1) search for and collect judgments of select Anglo-Australian courts; and
 
 (2) extract and code *your* choice of data or information from judgments, partially using a generative AI.
 
-This program can also process your own files or spreadsheet of data.
+This app can also process your own files or spreadsheet of data.
 """)
 
 if own_account_allowed() > 0:
-    st.markdown("""**Use this program to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
+    st.markdown("""**Use this app to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
 """)
 
 else:
-    st.markdown("""**Use this program to kickstart your project :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
+    st.markdown("""**Use this app to kickstart your project :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
 
 #st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
@@ -141,7 +141,7 @@ source_entry = st.selectbox(label = "Please select a source of information to co
 
 if source_entry:
 
-    st.warning(f"This program is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
+    st.warning(f"This app is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
 
     if sources_list.index(source_entry) != source_index(st.session_state.page_from):
 
@@ -149,7 +149,7 @@ if source_entry:
     
     i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
-home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), help = 'To use this program, you must select a source of information and tick "[y]es, I understand[]".')
+home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), help = 'To use this app, you must select a source of information and tick "[y]es, I understand[]".')
 
 if source_entry:
 

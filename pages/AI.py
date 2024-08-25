@@ -1150,7 +1150,7 @@ if own_account_allowed() > 0:
 
     if st.session_state.ai_choice != 'BambooLLM':
     
-        st.subheader(':orange[Enhance program capabilities]')
+        st.subheader(':orange[Enhance app capabilities]')
         
         st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of instructions to process? You can do so with your own GPT account.
         """)
@@ -1261,7 +1261,7 @@ else:
 # %%
 st.subheader("Consent")
 
-st.markdown("""By running this program, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
+st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
 consent =  st.checkbox('Yes, I agree.', value = False)
 
@@ -1615,7 +1615,7 @@ reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.s
 if ask_button:
 
     if int(consent) == 0:
-        st.warning("You must tick '[y]es, I agree[]' to run the program.")
+        st.warning("You must tick '[y]es, I agree[]' to use the app.")
         quit()
 
     elif st.session_state.instruction_left == 0:
