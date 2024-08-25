@@ -914,8 +914,15 @@ if st.session_state.page_from != "pages/FCA.py": #Need to add in order to avoid 
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-    
-    preview_button = st.button(label = 'PREVIEW on the Federal Court Digital Law Library (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on the Federal Court Digital Law Library (in a popped up window)')
     
     st.subheader("Judgment metadata collection")
     
@@ -1057,15 +1064,17 @@ Case name and medium neutral citation are always included with your results.
             save_input(df_master)
 
             #Check search results
-            fca_url_to_check = fca_search_url(df_master)
-            fca_html = requests.get(fca_url_to_check)
-            fca_soup = BeautifulSoup(fca_html.content, "lxml")
-            if 'Display' not in str(fca_soup):
-                st.error(no_results_msg)
-
-            else:
-                        
-                st.session_state["page_from"] = 'pages/FCA.py'
-                
-                st.switch_page('pages/GPT.py')
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+    
+                fca_url_to_check = fca_search_url(df_master)
+                fca_html = requests.get(fca_url_to_check)
+                fca_soup = BeautifulSoup(fca_html.content, "lxml")
+                if 'Display' not in str(fca_soup):
+                    st.error(no_results_msg)
+    
+                else:
+                            
+                    st.session_state["page_from"] = 'pages/FCA.py'
+                    
+                    st.switch_page('pages/GPT.py')
 

@@ -539,8 +539,15 @@ if st.session_state.page_from != "pages/KR.py": #Need to add in order to avoid G
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-    
-    preview_button = st.button(label = 'PREVIEW on AustLII (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on AustLII (in a popped up window)')
 
 
 # %% [markdown]
@@ -664,14 +671,16 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
             save_input(df_master)
 
             #Check search results
-            kr_url_to_check = kr_search_url(df_master)
-            kr_html = requests.get(kr_url_to_check, headers={'User-Agent': 'whatever'})
-            kr_soup = BeautifulSoup(kr_html.content, "lxml")
-            if '>0  documents' in str(kr_soup):
-                st.error(no_results_msg)
-            
-            else:
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+    
+                kr_url_to_check = kr_search_url(df_master)
+                kr_html = requests.get(kr_url_to_check, headers={'User-Agent': 'whatever'})
+                kr_soup = BeautifulSoup(kr_html.content, "lxml")
+                if '>0  documents' in str(kr_soup):
+                    st.error(no_results_msg)
                 
-                st.session_state["page_from"] = 'pages/KR.py'
-                
-                st.switch_page('pages/GPT.py')
+                else:
+                    
+                    st.session_state["page_from"] = 'pages/KR.py'
+                    
+                    st.switch_page('pages/GPT.py')

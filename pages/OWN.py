@@ -1530,7 +1530,7 @@ if run_button:
         
     else:
 
-        with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 files.}$"):
+        with st.spinner(r"$\textsf{\normalsize \textbf{In progress...} The estimated waiting time is 2-3 minutes per 10 files.}$"):
                 
             #Create spreadsheet of responses
             df_master = own_create_df()
@@ -1653,7 +1653,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
         else:
     
     
-            with st.spinner(r"$\textsf{\normalsize \textbf{Running...} The estimated waiting time is about 2-3 minutes per 10 files.}$"):
+            with st.spinner(r"$\textsf{\normalsize \textbf{In progress...} The estimated waiting time is 2-3 minutes per 10 files.}$"):
                     
                 #Create spreadsheet of responses
                 df_master = own_create_df()

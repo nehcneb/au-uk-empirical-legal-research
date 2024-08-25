@@ -1038,8 +1038,15 @@ if st.session_state.page_from != "pages/ER.py": #Need to add in order to avoid G
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-    
-    preview_button = st.button(label = 'PREVIEW on CommonLII (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on CommonLII (in a popped up window)')
 
 
 # %% [markdown]
@@ -1162,13 +1169,15 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
             save_input(df_master)
 
             #Check search results
-            er_url_to_check = er_search_url(df_master)
-            er_html = requests.get(er_url_to_check, headers={'User-Agent': 'whatever'})
-            er_soup = BeautifulSoup(er_html.content, "lxml")
-            if 'Documents found:   0' in str(er_soup):
-                st.error(no_results_msg)
-                
-            else:
-                st.session_state["page_from"] = 'pages/ER.py'
-                
-                st.switch_page('pages/GPT.py')
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+
+                er_url_to_check = er_search_url(df_master)
+                er_html = requests.get(er_url_to_check, headers={'User-Agent': 'whatever'})
+                er_soup = BeautifulSoup(er_html.content, "lxml")
+                if 'Documents found:   0' in str(er_soup):
+                    st.error(no_results_msg)
+                    
+                else:
+                    st.session_state["page_from"] = 'pages/ER.py'
+                    
+                    st.switch_page('pages/GPT.py')

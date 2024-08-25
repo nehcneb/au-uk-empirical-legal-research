@@ -1629,8 +1629,17 @@ if st.session_state.page_from != "pages/HCA.py": #Need to add in order to avoid 
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
+
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
     
-    preview_button = st.button(label = 'PREVIEW on the High Court Judgments Database (in a pop-up window)', type = 'primary')
+        preview_button = st.button(label = 'PREVIEW on the High Court Judgments Database (in a pop-up window)')
     
     #if st.session_state.number_of_results != '0':
     
@@ -1881,13 +1890,15 @@ Case name and medium neutral citation are always included with your results.
             save_input(df_master)
             
             #Check search results
-            judgments_url_num = hca_search_url(df_master)
-            judgments_num = judgments_url_num['results_num']
-            if int(judgments_num) == 0:
-                st.error(no_results_msg)
-
-            else:
-                
-                st.session_state["page_from"] = 'pages/HCA.py'
-                
-                st.switch_page('pages/GPT.py')
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+    
+                judgments_url_num = hca_search_url(df_master)
+                judgments_num = judgments_url_num['results_num']
+                if int(judgments_num) == 0:
+                    st.error(no_results_msg)
+    
+                else:
+                    
+                    st.session_state["page_from"] = 'pages/HCA.py'
+                    
+                    st.switch_page('pages/GPT.py')

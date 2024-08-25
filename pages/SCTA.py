@@ -530,8 +530,15 @@ if st.session_state.page_from != "pages/SCTA.py": #Need to add in order to avoid
 
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-    
-    preview_button = st.button(label = 'PREVIEW on AustLII (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on AustLII (in a popped up window)')
 
 
 # %% [markdown]
@@ -655,15 +662,17 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
             save_input(df_master)
 
             #Check search results
-            scta_url_to_check = scta_search_url(df_master)
-            scta_html = requests.get(scta_url_to_check, headers={'User-Agent': 'whatever'})
-            scta_soup = BeautifulSoup(scta_html.content, "lxml")
-            if '>0  documents' in str(scta_soup):
-                st.error(no_results_msg)
-            
-            else:
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+
+                scta_url_to_check = scta_search_url(df_master)
+                scta_html = requests.get(scta_url_to_check, headers={'User-Agent': 'whatever'})
+                scta_soup = BeautifulSoup(scta_html.content, "lxml")
+                if '>0  documents' in str(scta_soup):
+                    st.error(no_results_msg)
                 
-                st.session_state["page_from"] = 'pages/SCTA.py'
-                
-                st.switch_page('pages/GPT.py')
+                else:
+                    
+                    st.session_state["page_from"] = 'pages/SCTA.py'
+                    
+                    st.switch_page('pages/GPT.py')
 

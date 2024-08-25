@@ -772,8 +772,15 @@ if st.session_state.page_from != "pages/UK.py": #Need to add in order to avoid G
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-    
-    preview_button = st.button(label = 'PREVIEW on The National Archives (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on The National Archives (in a popped up window)')
     
     st.subheader("Judgment metadata collection")
     
@@ -913,14 +920,16 @@ Case name and medium neutral citation are always included with your results.
             save_input(df_master)
             
             #Check search results
-            uk_url_to_check = uk_search_url(df_master)
-            uk_html = requests.get(uk_url_to_check)
-            uk_soup = BeautifulSoup(uk_html.content, "lxml")
-            if 'No matching results' in str(uk_soup):
-                st.error(no_results_msg)
-
-            else:
-            
-                st.session_state["page_from"] = 'pages/UK.py'
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+    
+                uk_url_to_check = uk_search_url(df_master)
+                uk_html = requests.get(uk_url_to_check)
+                uk_soup = BeautifulSoup(uk_html.content, "lxml")
+                if 'No matching results' in str(uk_soup):
+                    st.error(no_results_msg)
+    
+                else:
                 
-                st.switch_page('pages/GPT.py')
+                    st.session_state["page_from"] = 'pages/UK.py'
+                    
+                    st.switch_page('pages/GPT.py')

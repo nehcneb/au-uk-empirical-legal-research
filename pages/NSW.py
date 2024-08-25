@@ -857,8 +857,15 @@ if st.session_state.page_from != "pages/NSW.py": #Need to add in order to avoid 
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-    
-    preview_button = st.button(label = 'PREVIEW on NSW Caselaw (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on NSW Caselaw (in a popped up window)')
     
     #    headnotes_entry = st.multiselect("Please select", headnotes_choices)
     
@@ -1001,16 +1008,18 @@ Case name and medium neutral citation are always included with your results.
             save_input(df_master)
 
             #Check search results
-            nsw_url_to_check = nsw_search_url(df_master)
-            nsw_html = requests.get(nsw_url_to_check)
-            nsw_soup = BeautifulSoup(nsw_html.content, "lxml")
-            if 'totalElements' not in str(nsw_soup):
-                
-                st.error(no_results_msg)
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
-            else:
-
-                st.session_state["page_from"] = 'pages/NSW.py'
-                
-                st.switch_page('pages/GPT.py')
+                nsw_url_to_check = nsw_search_url(df_master)
+                nsw_html = requests.get(nsw_url_to_check)
+                nsw_soup = BeautifulSoup(nsw_html.content, "lxml")
+                if 'totalElements' not in str(nsw_soup):
+                    
+                    st.error(no_results_msg)
+    
+                else:
+    
+                    st.session_state["page_from"] = 'pages/NSW.py'
+                    
+                    st.switch_page('pages/GPT.py')
 

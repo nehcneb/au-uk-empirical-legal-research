@@ -1387,8 +1387,15 @@ if st.session_state.page_from != "pages/CA.py": #Need to add in order to avoid G
     
 You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
-
-    preview_button = st.button(label = 'PREVIEW on the CanLII (in a popped up window)', type = 'primary')
+    with stylable_container(
+        "purple",
+        css_styles="""
+        button {
+            background-color: purple;
+            color: white;
+        }""",
+    ):
+        preview_button = st.button(label = 'PREVIEW on the CanLII (in a popped up window)')
     
     st.subheader("Judgment metadata collection")
     
@@ -1523,19 +1530,21 @@ Case name and medium neutral citation are always included with your results.
             save_input(df_master)
 
             #Check search results
-            ca_url_to_check = ca_search_url(df_master)
-            browser.get(ca_url_to_check)
-            browser.delete_all_cookies()
-            browser.refresh()
-            ca_elements = browser.find_elements(By.CLASS_NAME, "result ")
-            ca_case_num = len(ca_elements)
-            if int(ca_case_num) == 0:
+            with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+
+                ca_url_to_check = ca_search_url(df_master)
+                browser.get(ca_url_to_check)
+                #browser.delete_all_cookies()
+                browser.refresh()
+                ca_elements = browser.find_elements(By.CLASS_NAME, "result ")
+                ca_case_num = len(ca_elements)
+                if int(ca_case_num) == 0:
+                    
+                    st.error(no_results_msg)
                 
-                st.error(no_results_msg)
-            
-            else:
-            
-                st.session_state["page_from"] = 'pages/CA.py'
+                else:
                 
-                st.switch_page('pages/GPT.py')
+                    st.session_state["page_from"] = 'pages/CA.py'
+                    
+                    st.switch_page('pages/GPT.py')
 
