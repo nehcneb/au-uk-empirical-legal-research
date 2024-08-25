@@ -114,7 +114,7 @@ try:
     browser.set_page_load_timeout(10)
     
 except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this program. Please check or change your internet connection and try again.')
+    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
     print(e)
     quit()
 
@@ -149,7 +149,7 @@ if streamlit_timezone() == True:
         browser_old.minimize_window()#set_window_position(-2000,0)
     
     except Exception as e:
-        st.error('Sorry, your internet connection is not stable enough for this program. Please check or change your internet connection and try again.')
+        st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
         st.exception(e)
         quit()
 
@@ -774,7 +774,7 @@ afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page
 # %% [markdown]
 # ## Post 14 June 2024
 
-# %% [markdown] jp-MarkdownHeadingCollapsed=true
+# %% [markdown]
 # ### Definitions of menu items
 
 # %%
@@ -2286,7 +2286,7 @@ if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid
     
     #    st.header("Judgment Search Criteria")
     
-    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**:green[Please enter your search terms.]** This app will collect (ie scrape) the first 10 judgments returned by your search terms.
 """)
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')

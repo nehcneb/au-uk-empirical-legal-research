@@ -502,7 +502,7 @@ if st.session_state.page_from != "pages/SCTA.py": #Need to add in order to avoid
     
     #    st.header("Judgment Search Criteria")
     
-    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**:green[Please enter your search terms.]** This app will collect (ie scrape) the first 10 judgments returned by your search terms.
 """)
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
     
@@ -657,4 +657,4 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
                 st.session_state["page_from"] = 'pages/SCTA.py'
                 
                 st.switch_page('pages/GPT.py')
-                
+

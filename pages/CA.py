@@ -1295,7 +1295,7 @@ if st.session_state.page_from != "pages/CA.py": #Need to add in order to avoid G
     
     #    st.header("Judgment Search Criteria")
     
-    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**:green[Please enter your search terms.]** This app will collect (ie scrape) the first 10 judgments returned by your search terms.
 """)
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
@@ -1352,7 +1352,7 @@ if st.session_state.page_from != "pages/CA.py": #Need to add in order to avoid G
         
         #if year_entry:
             
-            #wrong_number_warning = f'You have not entered a valid year. The program will not filter any search results by year.'
+            #wrong_number_warning = f'You have not entered a valid year. The app will not filter any search results by year.'
         
             #try:
         

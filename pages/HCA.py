@@ -1583,7 +1583,7 @@ if st.session_state.page_from != "pages/HCA.py": #Need to add in order to avoid 
     
     #    st.header("Judgment Search Criteria")
     
-    st.markdown("""**:green[Please enter your search terms.]** This program will collect (ie scrape) the first 10 judgments returned by your search terms.
+    st.markdown("""**:green[Please enter your search terms.]** This app will collect (ie scrape) the first 10 judgments returned by your search terms.
 """)
     
     st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
@@ -1607,7 +1607,7 @@ if st.session_state.page_from != "pages/HCA.py": #Need to add in order to avoid 
     #if citation_entry:
         #if 'hca' not in citation_entry.lower():
             
-            #st.error('Sorry, this pilot program only searches for medium neutral citation (eg [2014] HCA 1).')
+            #st.error('Sorry, this pilot app only searches for medium neutral citation (eg [2014] HCA 1).')
     
     if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
     
@@ -1661,13 +1661,13 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     
         #st.subheader("Filter your search results")
         
-        st.warning("Filtering your search results may *significantly* prolong the program processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
+        st.warning("Filtering your search results may *significantly* prolong the processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
         
         own_parties_include_entry = st.text_input(label = 'Parties include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties include'])
-        st.caption('If entered, then this program will only process cases that include at least one of the parties entered.')
+        st.caption('If entered, then this app will only process cases that include at least one of the parties entered.')
         
         own_parties_exclude_entry = st.text_input(label = 'Parties do not include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties do not include'])
-        st.caption('If entered, then this program will only process cases that do not include any of the parties entered.')
+        st.caption('If entered, then this app will only process cases that do not include any of the parties entered.')
         
         after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1903, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
         
@@ -1704,16 +1704,16 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
         
             #own_case_numbers_include_entry = st.text_input(label = 'Case numbers include (separate case numbers by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Case numbers include']) 
-            #st.caption('If entered, then this program will only process cases with at least one of the case numbers entered.')
+            #st.caption('If entered, then this app will only process cases with at least one of the case numbers entered.')
         
             #own_case_numbers_exclude_entry = st.text_input(label = 'Case numbers do not include (separate case numbers by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Case numbers do not include']) 
-            #st.caption('If entered, then this program will only process cases without any of the case numbers entered.')
+            #st.caption('If entered, then this app will only process cases without any of the case numbers entered.')
         
             own_judges_include_entry = st.text_input(label = 'Judges include (separate judges by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Judges include'])
-            st.caption('If entered, then this program will only process cases heared by at least one of the judges entered.')
+            st.caption('If entered, then this app will only process cases heared by at least one of the judges entered.')
             
             own_judges_exclude_entry = st.text_input(label = 'Judges do not include (separate judges by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Judges do not include'])
-            st.caption('If entered, then this program will only process cases not heared by any of the judges entered.')
+            st.caption('If entered, then this app will only process cases not heared by any of the judges entered.')
             
             #if ((own_judges_include_entry) or (own_judges_exclude_entry)):
                 #st.session_state['filtering_message'] = True
@@ -1729,7 +1729,7 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
     
     #if st.session_state.filtering_message == True:
         
-        #st.warning("Filtering your search results may significantly prolong the program processing time.")
+        #st.warning("Filtering your search results may significantly prolong the processing time.")
         
     st.subheader("Judgment metadata collection")
     
