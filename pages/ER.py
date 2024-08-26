@@ -1166,8 +1166,6 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
         
             df_master = er_create_df()
     
-            save_input(df_master)
-
             #Check search results
             with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
@@ -1178,6 +1176,9 @@ You may have to unblock a popped up window, refresh this page, and re-enter your
                     st.error(no_results_msg)
                     
                 else:
+
+                    save_input(df_master)
+
                     st.session_state["page_from"] = 'pages/ER.py'
                     
                     st.switch_page('pages/GPT.py')

@@ -217,7 +217,7 @@ def own_create_df():
 
 # %%
 #File types and languages for processing
-doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", 'cs', 'xml', 'json'] #"fb2", "cbz", "svg",
+doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", 'cs', 'xml', 'html', 'json'] #"fb2", "cbz", "svg",
 image_types = ["pdf", "jpg", "jpeg", "png", "bmp", "gif", "tiff"] #, "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"]
 languages_dict = {'English': 'eng', 
                   'English, Middle (1100-1500)': 'enm', 
@@ -310,7 +310,7 @@ def doc_to_text(uploaded_doc, language, page_bound):
         
     else:
         #text formats
-        if extension in ['txt', 'cs', 'xml', 'json']:
+        if extension in ['txt', 'cs', 'xml', 'html', 'json']:
             doc = fitz.open(stream=bytes_data, filetype="txt")
 
         #Other formats
@@ -1130,7 +1130,7 @@ st.caption('During the pilot stage, the number of files and the number of words 
 
 st.subheader('Upload documents')
 
-st.markdown("""Supported document formats: **searchable PDF**, **DOCX**, **TXT**, **JSON**, CS,  EPUB, MOBI, XML, XPS.
+st.markdown("""Supported document formats: **searchable PDF**, **DOCX**, **TXT**, **JSON**, CS,  EPUB, MOBI, XML, HTML, XPS.
 """)
 
 uploaded_docs = st.file_uploader("Please choose your document(s).", type = doc_types, accept_multiple_files=True)
@@ -1141,6 +1141,7 @@ st.subheader('Upload images')
 
 st.markdown("""Supported image formats: **non-searchable PDF**, **JPG**, **JPEG**, **PNG**, BMP, GIF, TIFF.
 """)
+
 uploaded_images = st.file_uploader("Please choose your image(s).", type = image_types, accept_multiple_files=True)
 
 st.caption("By default, [Python-tesseract](https://pypi.org/project/pytesseract/) will extract text from images. This tool is based on [Google’s Tesseract-OCR Engine](https://github.com/tesseract-ocr/tesseract).")
@@ -1152,7 +1153,6 @@ st.markdown("""In what language is the text from your uploaded file(s) written?"
 language_entry = st.selectbox("Please choose a language.", languages_list, index=0)
 
 st.caption('During the pilot stage, the languages supported are limited. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to choose a language which is not available under this menu.')
-
 
 
 # %% [markdown]

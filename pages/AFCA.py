@@ -2572,9 +2572,7 @@ Case name and hyperlinks to AFCA's website are always included with your results
         else:
         
             df_master = afca_create_df()
-            
-            save_input(df_master)
-            
+                        
             #Check search results
             with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
         
@@ -2608,7 +2606,9 @@ Case name and hyperlinks to AFCA's website are always included with your results
                     st.error(no_results_msg)
     
                 else:
-                            
+
+                    save_input(df_master)
+
                     st.session_state["page_from"] = 'pages/AFCA.py'
                     
                     st.switch_page('pages/GPT.py')

@@ -1527,8 +1527,6 @@ Case name and medium neutral citation are always included with your results.
                 
             df_master = ca_create_df()
         
-            save_input(df_master)
-
             #Check search results
             with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
@@ -1543,7 +1541,9 @@ Case name and medium neutral citation are always included with your results.
                     st.error(no_results_msg)
                 
                 else:
-                
+                    
+                    save_input(df_master)
+
                     st.session_state["page_from"] = 'pages/CA.py'
                     
                     st.switch_page('pages/GPT.py')
