@@ -108,28 +108,26 @@ if 'i_understand' not in st.session_state:
 
 st.title(":blue[LawtoData]")
 
-st.subheader("An Empirical Legal Research Kickstarter")
+st.subheader("An Empirical Legal Research Pilot")
 
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments.
 
-This pilot version can *automatically*
+This pilot version can **automatically**
 
 (1) search for and collect judgments of select Anglo-Australian courts; and
 
-(2) extract and code *your* choice of data or information from judgments, partially using a generative AI.
+(2) extract and code **your** choice of data or information from judgments, partially using GPT.
 
 This app can also process your own files or spreadsheet of data.
 """)
 
 if own_account_allowed() > 0:
-    st.markdown("""**Use this app to kickstart your project :green[for free] or :orange[with your own GPT account]!** The results of the abovementioned tasks will be available for download.
+    st.markdown("""**Get started below :green[for free] or :orange[with your own GPT account]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
 
 else:
-    st.markdown("""**Use this app to kickstart your project :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
+    st.markdown("""**Get started below :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
-
-#st.caption('The Empirical Legal Research Kickstarter is the joint effort of Mike Lynch and Xinwei Luo of Sydney Informatics Hub and Ben Chen of Sydney Law School. It is partially funded by a University of Sydney Research Accelerator (SOAR) Prize awarded to Ben in 2022. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
 
 st.caption('The developer Ben Chen acknowledges and greatly appreciates the exemplary technical assistance of Mike Lynch and Xinwei Luo of the Sydney Informatics Hub, a Core Research Facility of the University of Sydney, as well as the financial support provided by a University of Sydney Research Accelerator (SOAR) Prize. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
 
