@@ -74,15 +74,6 @@ print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="LawtoData: An Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
-
 # %% [markdown]
 # # English Reports search engine
 
@@ -560,6 +551,7 @@ def er_meta_judgment_dict_b64(case_link_pair):
       #  er_judgment_text= soup.get_text(strip=True)
         
     return judgment_dict
+    
 
 
 # %%
@@ -614,7 +606,7 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the judgment.'})
+        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
     
     #Create questions, which include the answer format
     
@@ -760,8 +752,6 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         
         labels_prompt_tokens = 0
     
-    question_keys = [*questions_json]
-
     for judgment_index in df_individual.index:
         
         judgment_json = df_individual.to_dict('index')[judgment_index]
@@ -806,6 +796,9 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         
         else:
             answers_dict = {}    
+            
+            question_keys = [*questions_json]
+
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
                 answer = 'Placeholder answer for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
@@ -851,16 +844,15 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
 
         #Create GPT question headings and append answers to individual spreadsheets
 
-        for question_index in question_keys:
-            #If not checking questions
-            #question_heading = question_index + ': ' + questions_json[question_index]
+        for answer_index in answers_dict.keys():
 
-            #If checking questions
-            question_heading = question_index + ': ' + unchecked_questions_json[question_index]
-
-            df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
-
-        #Calculate GPT costs
+            #Check any question override
+            if 'Say "n/a" only' in str(answer_index):
+                answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
+            else:
+                answer_header = 'GPT question: ' + answer_index
+            
+            df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
 
         #Calculate GPT costs
 

@@ -314,8 +314,8 @@ def GPT_questions_check(questions_json, gpt_model, questions_check_system_instru
             messages = messages_for_GPT, 
             response_format = {"type": "json_object"}, 
             max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.2, 
-            top_p = 0.2
+            temperature = 0.1, 
+            #top_p = 0.1
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -349,7 +349,7 @@ def checked_questions_json(questions_json, gpt_labels_output):
         
         if str(gpt_labels_output[0][q_key]) == '1':
             
-            checked_questions_json[q_key] = 'Say "Potential privacy violation" only.'
+            checked_questions_json[q_key] = 'Say Say "n/a" only.'
     
     return checked_questions_json
     
@@ -422,8 +422,8 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
             messages = messages_for_GPT, 
             response_format = {"type": "json_object"}, 
             max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.2, 
-            top_p = 0.2
+            temperature = 0.1, 
+            #top_p = 0.1
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -477,7 +477,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: f'Your answer to the question with index {q_index}. The paragraphs, pages or sections from which you obtained your answer.'})
+        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
     
     #Create questions, which include the answer format
     
@@ -502,8 +502,8 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
             messages = messages_for_GPT, 
             response_format = {"type": "json_object"}, 
             max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.2, 
-            top_p = 0.2
+            temperature = 0.1, 
+            #top_p = 0.1
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -624,8 +624,6 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
     #Process questions
     
-    question_keys = [*questions_json]
-    
     for judgment_index in df_individual.index:
         
         judgment_json = df_individual.to_dict('index')[judgment_index]
@@ -668,7 +666,10 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()        
 
         else:
-            answers_dict = {}    
+            answers_dict = {}
+            
+            question_keys = [*questions_json]
+            
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
                 answer = 'Placeholder answer for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
@@ -697,22 +698,18 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             
             GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
-    	#Create GPT question headings, append answers to individual spreadsheets, and remove template/erroneous answers
+    	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
+        
+        for answer_index in answers_dict.keys():
 
-        for question_index in question_keys:
-
-            #If not checking questions
-            #question_heading = question_index + ': ' + questions_json[question_index]
-
-            #If checking questions
-            question_heading = question_index + ': ' + unchecked_questions_json[question_index]
+            #Check any question override
+            if 'Say "n/a" only' in str(answer_index):
+                answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
+            else:
+                answer_header = 'GPT question: ' + answer_index
             
-            df_individual.loc[judgment_index, question_heading] = answers_dict[question_index]
+            df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
             
-            if 'Your answer to the question with index' in str(answers_dict[question_index]):
-                
-                df_individual.loc[judgment_index, question_heading] = 'Error for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(question_index) + ' Please try again.'
-
         #Calculate GPT costs
 
         #If no check for questions

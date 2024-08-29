@@ -97,15 +97,6 @@ default_file_counter_bound = default_judgment_counter_bound
 
 print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
-# %%
-#Title of webpage
-st.set_page_config(
-   page_title="LawtoData: An Empirical Legal Research Kickstarter",
-   page_icon="🧊",
-   layout="centered",
-   initial_sidebar_state="collapsed",
-)
-
 
 # %% [markdown]
 # # Functions for Own Files
@@ -470,7 +461,7 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
+        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
     
     #Create questions, which include the answer format
     
@@ -498,8 +489,8 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
             messages=messages_for_GPT, 
             response_format={"type": "json_object"}, 
             max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.2, 
-            top_p = 0.2
+            temperature = 0.1, 
+            #top_p = 0.1
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -547,8 +538,6 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
     
     #client = OpenAI()
     
-    question_keys = [*questions_json]
-    
     for file_index in df_individual.index:
         
         file_triple = df_individual.to_dict('index')[file_index]
@@ -592,6 +581,9 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
         else:
             answers_dict = {}    
+            
+            question_keys = [*questions_json]
+
             for q_index in question_keys:
                 #Increases file index by 2 to ensure consistency with Excel spreadsheet
                 answer = 'Placeholder answer for ' + ' file ' + str(int(file_index) + 2) + ' ' + str(q_index)
@@ -622,9 +614,11 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
         #Create GPT question headings and append answers to individual spreadsheets
 
-        for question_index in question_keys:
-            question_heading = question_index + ': ' + questions_json[question_index]
-            df_individual.loc[file_index, question_heading] = answers_dict[question_index]
+        for answer_index in answers_dict.keys():
+
+            answer_header = 'GPT question: ' + answer_index
+            
+            df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
 
         #Calculate GPT costs
 
@@ -828,7 +822,7 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({q_index: 'Your answer to the question with index ' + q_index + '. State specific page numbers or sections of the file.'})
+        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
     
     #Create questions, which include the answer format
     
@@ -855,8 +849,8 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
             model=gpt_model,
             messages=messages_for_GPT, 
             response_format={"type": "json_object"}, 
-            temperature = 0.2, 
-            top_p = 0.2
+            temperature = 0.1, 
+            #top_p = 0.1
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
@@ -903,9 +897,7 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
     #openai.api_key = API_key
     
     #client = OpenAI()
-    
-    question_keys = [*questions_json]
-    
+        
     for file_index in df_individual.index:
         
         file_triple = df_individual.to_dict('index')[file_index]
@@ -949,6 +941,9 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
         
         else:
             answers_dict = {}    
+            
+            question_keys = [*questions_json]
+
             for q_index in question_keys:
                 #Increases file index by 2 to ensure consistency with Excel spreadsheet
                 answer = 'Placeholder answer for ' + ' file ' + str(int(file_index) + 2) + ' ' + str(q_index)
@@ -979,9 +974,11 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
 
         #Create GPT question headings and append answers to individual spreadsheets
 
-        for question_index in question_keys:
-            question_heading = question_index + ': ' + questions_json[question_index]
-            df_individual.loc[file_index, question_heading] = answers_dict[question_index]
+        for answer_index in answers_dict.keys():
+
+            answer_header = 'GPT question: ' + answer_index
+            
+            df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
 
         #Calculate GPT costs
 
