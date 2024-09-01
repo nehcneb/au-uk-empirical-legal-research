@@ -138,6 +138,7 @@ def gpt_input_cost(gpt_model):
 
     if gpt_model == "gpt-4o-mini":
         gpt_input_cost = 1/1000000*0.15
+        
     return gpt_input_cost
 
 def gpt_output_cost(gpt_model):
@@ -246,7 +247,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         judgment_content_capped = f'Based on the metadata and judgment in the following JSON:  """ {json.dumps(judgment_json, default=str)} """'
         
         return judgment_content_capped
-        
+
 
 
 # %%
