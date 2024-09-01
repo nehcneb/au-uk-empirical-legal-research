@@ -852,8 +852,14 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
             else:
                 answer_header = 'GPT question: ' + answer_index
             
-            df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
+            try:
+            
+                df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
 
+            except:
+
+                df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
+                
         #Calculate GPT costs
 
         #If check for questions

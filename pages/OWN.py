@@ -618,8 +618,14 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
             answer_header = 'GPT question: ' + answer_index
             
-            df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
+            try:
+            
+                df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
 
+            except:
+
+                df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
+                
         #Calculate GPT costs
 
         GPT_cost = GPT_file_triple[1]*gpt_output_cost(gpt_model) + GPT_file_triple[2]*gpt_input_cost(gpt_model)
@@ -978,8 +984,14 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
 
             answer_header = 'GPT question: ' + answer_index
             
-            df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
+            try:
+            
+                df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
 
+            except:
+
+                df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
+                
         #Calculate GPT costs
 
         GPT_cost = GPT_file_triple[1]*gpt_output_cost(gpt_model) + GPT_file_triple[2]*gpt_input_cost(gpt_model)
