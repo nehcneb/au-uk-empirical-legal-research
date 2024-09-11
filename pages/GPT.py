@@ -367,11 +367,10 @@ if own_account_allowed() > 0:
         if gpt_enhancement_entry:
 
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
-            st.session_state.gpt_model = "gpt-4o"
+            st.session_state.gpt_model = "gpt-4o-2024-08-06"
 
         else:
             
-            #st.session_state.gpt_model = "gpt-4o-mini"
             st.session_state.gpt_model = 'gpt-4o-mini'
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
@@ -432,7 +431,7 @@ st.markdown("""You can now press :green[PRODUCE data] to obtain a spreadsheet wh
 if st.session_state.gpt_model == 'gpt-4o-mini':
     st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
 
-if st.session_state.gpt_model == "gpt-4o":
+if st.session_state.gpt_model == "gpt-4o-2024-08-06":
     st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
 with stylable_container(

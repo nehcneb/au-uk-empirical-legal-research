@@ -7,7 +7,7 @@ numpy==1.26.4
 openai==1.37.0
 openpyxl==3.1.5
 pandas==1.5.3
-pandasai==2.2.12
+pandasai==2.2.14
 pause
 pdf2image==1.17.0
 pillow==10.4.0

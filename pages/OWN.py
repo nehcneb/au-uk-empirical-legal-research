@@ -688,7 +688,7 @@ def run(df_master, uploaded_docs, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = "gpt-4o-2024-08-06"
     else:        
         gpt_model = "gpt-4o-mini"
         
@@ -1050,7 +1050,7 @@ def run_b64_own(df_master, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = "gpt-4o-2024-08-06"
     else:        
         gpt_model = "gpt-4o-mini"
         
@@ -1260,12 +1260,11 @@ if own_account_allowed() > 0:
 
         if gpt_enhancement_entry == True:
         
-            st.session_state.gpt_model = "gpt-4o"
+            st.session_state.gpt_model = "gpt-4o-2024-08-06"
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
 
         else:
             
-            #st.session_state.gpt_model = "gpt-4o-mini"
             st.session_state.gpt_model = 'gpt-4o-mini'
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
@@ -1367,7 +1366,7 @@ You can also download a record of your entries.
 if st.session_state.gpt_model == 'gpt-4o-mini':
     st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
 
-if st.session_state.gpt_model == "gpt-4o":
+if st.session_state.gpt_model == "gpt-4o-2024-08-06":
     st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
 with stylable_container(
@@ -1385,7 +1384,6 @@ reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not b
 
 #reset_button = st.button(label='RESET', type = 'primary',  help = "Press to process new search terms or questions.")
     
-#if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
 if ((st.session_state.own_account == True) and (uploaded_images)):
 
     st.markdown("""By default, this app will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
@@ -1543,13 +1541,6 @@ if run_button:
                 
             #Create spreadsheet of responses
             df_master = own_create_df()
-        
-            #GPT model
-        
-            #if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                #gpt_model = "gpt-4o"
-            #else:        
-                #gpt_model = "gpt-4o-mini"
             
             #Activate user's own key or mine
             if st.session_state.own_account == True:
@@ -1626,7 +1617,6 @@ if run_button:
 
 
 # %%
-#if ((st.session_state.gpt_model == "gpt-4o") and (uploaded_images)):
 if ((st.session_state.own_account == True) and (uploaded_images)):
     
     if run_button_b64:

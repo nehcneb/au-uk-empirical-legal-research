@@ -179,7 +179,7 @@ def check_edu_gov(email_address):
 def mnc_cleaner(x):
     if '[' in x:
         x_clean=str(x).split("[")
-        y = '[' + x_clean[1]
+        y = '[' + x_clean[-1]
         return y
     else:
         return x

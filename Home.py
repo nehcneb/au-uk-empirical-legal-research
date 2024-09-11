@@ -110,7 +110,7 @@ st.title(":blue[LawtoData]")
 
 st.subheader("An Empirical Legal Research Kickstarter")
 
-st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments.
+st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research. 
 
 This pilot version can **automatically**
 
