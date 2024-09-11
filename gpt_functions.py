@@ -364,7 +364,7 @@ def checked_questions_json(questions_json, gpt_labels_output):
         
         if str(gpt_labels_output[0][q_key]) == '1':
             
-            checked_questions_json[q_key] = 'Say Say "n/a" only.'
+            checked_questions_json[q_key] = 'Say "n/a" only.'
     
     return checked_questions_json
     
@@ -374,10 +374,11 @@ def checked_questions_json(questions_json, gpt_labels_output):
 #Check questions for potential privacy infringement
 
 answers_check_system_instruction = """
-You are a compliance officer helping an academic researcher to redact birthdays and addresses. 
+You are a compliance officer helping an academic researcher to redact birthdays and addresses only. 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
 Where any part of the text contains a birthday or an address, you replace that part with "[redacted]". 
 You then return the remainder of the text unredacted.
+You will redact birthdays and addresses only. Do not redact anything else, such as names and dates of death.
 """
 
 #If more general below
