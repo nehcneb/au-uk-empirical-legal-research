@@ -378,7 +378,8 @@ You are a compliance officer helping an academic researcher to redact birthdays 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
 Where any part of the text contains a birthday or an address, you replace that part with "[redacted]". 
 You then return the remainder of the text unredacted.
-You will redact birthdays and addresses only. Do not redact anything else, such as names and dates of death.
+You redact birthdays and addresses only. Do not redact anything else, such as names, dates of death, age.
+For example, if the text given to you is "John Smith, born 1 January 1950, aged 58, now lives at 1 Main St Blackacre.", you return "John Smith, born [redacted], aged 58, now lives at [redacted].".
 """
 
 #If more general below
