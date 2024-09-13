@@ -208,7 +208,7 @@ if retrive_button:
     
     if len(st.session_state.df_individual) > 0:
     
-        st.session_state["page_from"] = 'BATCH.py'           
+        st.session_state["page_from"] = 'pages/BATCH.py'           
     
         #Write results
     
