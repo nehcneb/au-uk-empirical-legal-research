@@ -84,9 +84,9 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, clear_cache
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, clear_cache
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -105,9 +105,9 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 
 # %%
 #Import functions
-from gpt_functions import is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
+from functions.gpt_functions import is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string  
 #Import variables
-from gpt_functions import question_characters_bound
+from functions.gpt_functions import question_characters_bound
 
 
 # %%
@@ -299,7 +299,7 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 
 def pandasai_ask_test():
 
-    with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
 
         #Get response and keep in session state
 
@@ -345,7 +345,7 @@ def pandasai_ask_test():
 # %%
 def pandasai_ask():
     
-    with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
 
         #Proess prompt
         
@@ -616,7 +616,7 @@ def langchain_write(response_json):
 #Langchain ask function
 
 def langchain_ask():
-    with langchain_get_openai_callback() as cb, st.spinner("Running..."):
+    with langchain_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
 
         #Process prompt
 
@@ -1733,7 +1733,7 @@ if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
         if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
         #if clarification_questions_toggle:
         
-            with pandasai_get_openai_callback() as cb, st.spinner("Running..."):
+            with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
                 
                 prompt = st.session_state.prompt
     

@@ -69,7 +69,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions and variables
-from common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums
+from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums
 
 
 # %% editable=true slideshow={"slide_type": ""}

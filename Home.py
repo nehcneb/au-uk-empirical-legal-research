@@ -34,12 +34,21 @@ st.set_page_config(
 
 # %%
 #Determine whether to allow user to use own account
-from common_functions import own_account_allowed
+from functions.common_functions import own_account_allowed
 
 if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
+    print(f'By default, users are allowed to use their own account.')
 else:
-    print(f'By default, users are NOT allowed to use their own account')
+    print(f'By default, users are NOT allowed to use their own account.')
+
+# %%
+#Determine whether to allow user to use batch mode
+from functions.common_functions import batch_mode_allowed
+
+if batch_mode_allowed() > 0:
+    print(f'By default, users are allowed to use batch mode.')
+else:
+    print(f'By default, users are NOT allowed to use batch mode.')
 
 # %% editable=true slideshow={"slide_type": ""}
 #List of sources of information

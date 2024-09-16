@@ -66,9 +66,9 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input
 #Import variables
-from common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -385,9 +385,9 @@ def image_to_text(uploaded_image, language, page_bound):
 
 # %%
 #Import functions
-from gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
+from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
-from gpt_functions import question_characters_bound
+from functions.gpt_functions import question_characters_bound
 
 
 # %%
@@ -715,7 +715,7 @@ def run(df_master, uploaded_docs, uploaded_images):
 
 # %%
 #Import functions
-from gpt_functions import get_image_dims, calculate_image_token_cost
+from functions.gpt_functions import get_image_dims, calculate_image_token_cost
 
 
 # %%
@@ -1079,7 +1079,7 @@ def run_b64_own(df_master, uploaded_images):
 
 # %%
 #Import functions and variables
-from common_functions import open_page, clear_cache_except_validation_df_master, tips
+from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
 
 
 # %% [markdown]

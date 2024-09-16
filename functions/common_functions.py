@@ -46,7 +46,7 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
@@ -55,8 +55,12 @@ def check_questions_answers():
 
 
 # %%
-#Default judgment counter bound
+def batch_mode_allowed():
+    return 1
 
+
+# %%
+#Default judgment counter bound
 default_judgment_counter_bound = 10
 
 # %%
@@ -308,7 +312,11 @@ def save_input(df_master):
                         'Enter your questions for GPT', 
                         'Use GPT', 
                         'Use own account', 
-                        'Use flagship version of GPT']
+                        'Use flagship version of GPT', 
+                         'submission_time', 
+                         'status', 
+                          'jurisdiction_page'
+                         ]
     
     df_master = df_master.replace({np.nan: None})
     
@@ -381,5 +389,3 @@ def streamlit_cloud_date_format(date):
         date_to_send = parser.parse(date, dayfirst=True).strftime("%m/%d/%Y")
     return date_to_send
 
-
-# %%

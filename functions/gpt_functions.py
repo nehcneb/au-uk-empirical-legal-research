@@ -66,10 +66,13 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from common_functions import check_questions_answers
+from functions.common_functions import check_questions_answers, default_judgment_counter_bound
 
 # %% [markdown]
 # # gpt-3.5, 4o-mini and 4o
+
+# %% [markdown]
+# ## Common functions and variables
 
 # %%
 #Upperbound on the length of questions for GPT
@@ -81,7 +84,6 @@ print(f"Questions for GPT are capped at {question_characters_bound} characters.\
 #Upperbound on number of judgments to scrape
 
 
-
 # %%
 #Create function to split a string into a list by line
 def split_by_line(x):
@@ -90,6 +92,7 @@ def split_by_line(x):
         if len(i) == 0:
             y.remove(i)
     return y
+    
 
 
 # %%
@@ -474,6 +477,9 @@ role_content = "You are a legal research assistant helping an academic researche
 
 #role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
+# %% [markdown]
+# ## GPT instant response
+
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
@@ -748,9 +754,258 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     return df_individual
 
 
+# %% [markdown]
+# ## Batch mode
+
+# %%
+#If own account
+
+#Cutoff for requiring activate batch mode
+
+judgment_batch_cutoff = 50
+
+#max number of judgments under any mode
+judgment_batch_max = 250
+
+
+# %%
+#Create custom id for one judgment_json file
+
+#custom_id should be mnc plus time now
+
+def gpt_get_custom_id(judgment_json):
+    
+    #Returns time now by default
+    time_now = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
+
+    mnc = ''
+
+    if 'Medium neutral citation' in judgment_json.keys():
+        mnc = judgment_json['Medium neutral citation'].replace(' ', '_')
+    
+    elif 'mnc' in judgment_json.keys():
+
+        mnc = judgment_json['mnc'].replace(' ', '_')
+
+    else:
+        mnc = 'unknown_mnc'
+
+    case_name = ''
+
+    if 'Case name' in judgment_json.keys():
+        case_name = judgment_json['Case name'].replace(' ', '_')
+    
+    elif 'title' in judgment_json.keys():
+
+        case_name = judgment_json['title'].replace(' ', '_')
+
+    else:
+        case_name = 'unknown_case_name'
+    
+    custom_id = f"{time_now}_{case_name}_{mnc}"
+
+    return custom_id
+
+
+
+# %%
+#Define function for creating custom id and one line of jsonl file for batching
+#Returns a dictionary of custom id and one line
+
+def gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_instruction):
+    #'question_json' variable is a json of questions to GPT
+    #'jugdment' variable is a judgment_json   
+
+    judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
+
+    json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
+
+    #Create answer format
+    
+    q_keys = [*questions_json]
+    
+    answers_json = {}
+    
+    for q_index in q_keys:
+        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
+    
+    #Create questions, which include the answer format
+    
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Give responses in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    
+    #Create messages in one prompt for GPT
+    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+    messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_for_GPT
+
+    #Create one line in batch input
+    #Format for one line in batch input file is
+    #{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-3.5-turbo-0125", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
+
+    body = {"model": gpt_model, 
+            "messages": messages_for_GPT, 
+            "response_format": {"type": "json_object"}, 
+            "max_tokens": max_output(gpt_model, messages_for_GPT), 
+            "temperature": 0.1, 
+            #"top_p" = 0.1
+           }
+
+    custom_id = gpt_get_custom_id(judgment_json)
+    
+    oneline = {"custom_id": custom_id, 
+              "method": "POST", 
+              "url": "/v1/chat/completions", 
+              "body": body
+             }
+
+    return {"custom_id": custom_id, "oneline": oneline}
+
+
+
+# %%
+#Define function for creating jsonl file for batching together with df_individual with custom id inserted
+
+@st.cache_data
+def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+    # Variable questions_json refers to the json of questions
+    # Variable df_individual refers to each respondent's df
+    # Variable activation refers to status of GPT activation (real or test)
+    # The output is a new JSON for the relevant respondent with new columns re:
+        # f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
+        # 'GPT cost estimate (USD excl GST)'
+        # 'GPT time estimate (seconds)'
+        # GPT questions/answers
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+
+    #Make a copy of questions for making headings later
+    unchecked_questions_json = questions_json.copy()
+
+    #Check questions for privacy violation
+
+    if check_questions_answers() > 0:
+    
+        try:
+    
+            labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
+    
+            labels_output_tokens = labels_output[1]
+    
+            labels_prompt_tokens = labels_output[2]
+        
+            questions_json = checked_questions_json(questions_json, labels_output)
+
+            print('Questions checked.')
+    
+        except Exception as e:
+            
+            print('Questions check failed.')
+            
+            print(e)
+    
+            labels_output_tokens = 0
+            
+            labels_prompt_tokens = 0
+
+    else:
+
+        print('Questions not checked.')
+        
+        labels_output_tokens = 0
+        
+        labels_prompt_tokens = 0
+
+    #Create list for conversion to jsonl
+
+    batch_input_list = []
+    
+    #Process questions
+    
+    for judgment_index in df_individual.index:
+        
+        judgment_json = df_individual.to_dict('index')[judgment_index]
+        
+        #Calculate and append number of tokens of judgment, regardless of whether given to GPT
+        judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
+        df_individual.loc[judgment_index, f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
+
+        #Indicate whether judgment truncated
+        
+        df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = ''       
+        
+        if judgment_tokens <= tokens_cap(gpt_model):
+            
+            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'No'
+            
+        else:
+            
+            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'Yes'
+
+        #Create columns for respondent's GPT cost
+        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
+        #df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = ''
+                
+        #Calculate GPT start time
+
+        GPT_start_time = datetime.now()
+
+        #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
+
+        if int(GPT_activation) > 0:
+
+            get_id_oneline = gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_instruction)
+            
+            df_individual.loc[judgment_index, 'custom_id'] = get_id_oneline['custom_id']
+
+            batch_input_list.append(get_id_oneline['oneline'])
+
+            if 'judgment' in df_individual.columns:
+                
+                df_individual.loc[judgment_index, 'judgment'] = ''
+            
+            df_individual.loc[judgment_index, 'GPT submission time'] = str(GPT_start_time)
+
+        else:
+            
+            print(f'Case {judgment_index}: GPT not activated.')
+
+    #Convert batch_input_list to jsonl
+    #The following steps are based on
+    #https://stackoverflow.com/questions/51775175/pandas-dataframe-to-jsonl-json-lines-conversion
+    #https://github.com/openai/openai-python/tree/main#file-uploads
+        #Replace 'client.' with 'openai.'
+        #Need to convert jsonl_for_batching to bytes mode, see https://www.datacamp.com/tutorial/string-to-bytes-conversion
+
+    df_jsonl = pd.DataFrame(batch_input_list)
+
+    jsonl_for_batching = df_jsonl.to_json(orient='records', lines=True)
+    
+    batch_input_file = openai.files.create(
+        file = jsonl_for_batching.encode(encoding="utf-8"),
+        purpose="batch"
+    )
+
+    batch_input_file_id = batch_input_file.id
+    
+    batch_record = openai.batches.create(
+        input_file_id=batch_input_file_id,
+        endpoint="/v1/chat/completions",
+        completion_window="24h", 
+            #metadata={
+      #"name":
+        #"email":
+    #}
+    )
+    
+    return {'batch_record': batch_record, 'df_individual': df_individual}
+    
+
 
 # %% [markdown]
-# # Vision
+# ## Vision
 
 # %%
 #Tokens counter
@@ -800,4 +1055,140 @@ def calculate_image_token_cost(image, detail="auto"):
         raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
 
 
+# %% [markdown]
+# # Run
+
 # %%
+#Jurisdiction specific instruction and functions
+
+def gpt_run(jurisdiction_page, df_master):
+
+    if jurisdiction_page == 'pages/HCA.py':
+        
+        system_instruction = role_content
+        
+        from functions.hca_functions import hca_run, hca_collections, hca_search, hca_search_results_to_judgment_links, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df
+    
+        run = copy.copy(hca_run)
+
+    if jurisdiction_page == 'pages/NSW.py':
+        
+        system_instruction = role_content
+
+        from nswcaselaw.search import Search
+        
+        from functions.nsw_functions import nsw_run, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_prebatch, nsw_search_url
+    
+        run = copy.copy(nsw_run)
+    
+    if jurisdiction_page == 'pages/FCA.py':
+        
+        system_instruction = role_content
+        
+        from functions.fca_functions import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+    
+        run = copy.copy(fca_run)
+
+    if jurisdiction_page == 'pages/CA.py':
+        
+        system_instruction = role_content
+        
+        from functions.ca_functions import ca_run, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
+        
+        run = copy.copy(ca_run)
+
+    if jurisdiction_page == 'pages/UK.py':
+        
+        system_instruction = role_content
+        
+        from functions.uk_functions import uk_run, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
+        
+        run = copy.copy(uk_run)
+
+    if jurisdiction_page == 'pages/AFCA.py':
+
+        system_instruction = role_content
+                
+        from functions.afca_functions import afca_run, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable, streamlit_timezone
+                
+        if streamlit_timezone() == True:
+
+            st.warning('One or more Chrome window may be launched. It must be kept open.')
+
+        run = copy.copy(afca_run)
+
+    if jurisdiction_page == 'pages/ER.py':
+
+        from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+
+        #from gpt_functions import get_image_dims, calculate_image_token_cost
+
+        system_instruction = role_content_er
+
+        run = copy.copy(er_run)
+
+    if jurisdiction_page == 'pages/KR.py':
+
+        system_instruction = role_content
+                
+        from functions.kr_functions import kr_run, kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict
+        
+        run = copy.copy(kr_run)
+
+    if jurisdiction_page == 'pages/SCTA.py':
+
+        system_instruction = role_content
+                
+        from functions.scta_functions import scta_run, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
+        
+        run = copy.copy(scta_run)
+    
+    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+
+    df_individual = run(df_master)
+
+    return df_individual
+    
+
+
+# %% [markdown]
+# # Batch run
+
+# %%
+#Jurisdiction specific instruction and functions
+
+def gpt_batch_input_submit(jurisdiction_page, df_master):
+
+    if jurisdiction_page == 'pages/HCA.py':
+        
+        system_instruction = role_content
+        
+        from functions.hca_functions import hca_batch, hca_collections, hca_search, hca_search_results_to_judgment_links, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df
+    
+        batch =  copy.copy(hca_batch)
+
+    if jurisdiction_page == 'pages/NSW.py':
+        
+        system_instruction = role_content
+
+        from nswcaselaw.search import Search
+
+        from functions.nsw_functions import nsw_batch, nsw_tidying_up_prebatch, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
+    
+        batch =  copy.copy(nsw_batch)
+    
+    if jurisdiction_page == 'pages/FCA.py':
+        
+        system_instruction = role_content
+        
+        from functions.fca_functions import fca_batch, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+    
+        batch = copy.copy(fca_batch)
+
+    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+
+    batch_record_df_individual = batch(df_master)
+    
+    return batch_record_df_individual
+
+
