@@ -398,7 +398,7 @@ st.subheader("Append GPT output to judgment data")
 # %%
 if len(df_batch_id_response_list) == 0:
     
-    st.warning('No GPT output is waiting to be appended.')
+    st.warning('No GPT output needs to be appended.')
 
 
 # %%
