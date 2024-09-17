@@ -487,7 +487,7 @@ with stylable_container(
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:
     if len(st.session_state.df_individual) > 0:
-        st.warning('You must :red[REMOVE] the data previously produced before processing new search terms or questions.')
+        st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
 
 
 # %% [markdown]
@@ -641,7 +641,7 @@ if run_button:
         st.warning("You must tick '[y]es, I agree[]' to use the app.")
 
     elif len(st.session_state.df_individual)>0:
-        st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
+        st.warning('You must :red[REMOVE] the data produced before producing new data.')
 
         #st.session_state['need_resetting'] = 1
             
@@ -790,7 +790,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
             st.warning("You must tick '[y]es, I agree[]' to use the app.")
     
         elif len(st.session_state.df_individual)>0:
-            st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
+            st.warning('You must :red[REMOVE] the data produced before producing new data.')
     
             #st.session_state['need_resetting'] = 1
                 
@@ -913,7 +913,7 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
             st.warning("You must tick '[y]es, I agree[]' to use the app.")
     
         #elif len(st.session_state.df_individual)>0:
-            #st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
+            #st.warning('You must :red[REMOVE] the data produced before producing new data.')
                 
         else:
     

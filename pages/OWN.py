@@ -1400,8 +1400,8 @@ Alternatively, you can send images directly to GPT. This alternative approach ma
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:
     if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual) > 0)):
-        st.warning('You must :red[REMOVE] the data previously produced before processing new search terms or questions.')
-        #st.warning('You must :red[RESET] the app before processing new search terms or questions. Please press the :red[RESET] button above.')
+        st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
+        #st.warning('You must :red[RESET] the app before producing new data. Please press the :red[RESET] button above.')
 
 
 # %% [markdown]
@@ -1519,7 +1519,7 @@ if run_button:
     
     elif len(st.session_state.df_individual)>0:
         
-        st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
+        st.warning('You must :red[REMOVE] the data produced before producing new data.')
 
     elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
                 
@@ -1633,7 +1633,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
             st.warning("You must tick '[y]es, I agree[]' to use the app.")
         
         elif len(st.session_state.df_individual)>0:
-            st.warning('You must :red[REMOVE] the data produced before processing new search terms or questions.')
+            st.warning('You must :red[REMOVE] the data produced before producing new data.')
     
         elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
                     
