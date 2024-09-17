@@ -281,7 +281,7 @@ for gpt_batch_input in gpt_batch_input_list:
     save_counter += 1
     
     #conn_record_df_individual.create(worksheet=batch_id, data=df_individual)
-    st.success(f"{batch_id} successfully saved onto AWS. Done {save_counter}/{len(gpt_batch_input_list)}.")
+    st.success(f"{batch_id} saved onto AWS. Done {save_counter}/{len(gpt_batch_input_list)}.")
 
 
 # %%
@@ -382,7 +382,7 @@ for index in all_df_masters.index:
             #Update google sheet for record of df_masters
             #conn_record_df_master.update(worksheet="Sheet1", data=all_df_masters)
 
-            st.success(f"{batch_id}: status == {status}, successfully saved on all_df_masters.csv on AWS. Done {retrieve_counter}/{max_retrieve_counter}")
+            st.success(f"{batch_id}: status == {status}, saved on all_df_masters.csv on AWS. Done {retrieve_counter}/{max_retrieve_counter}")
 
 
 # %% [markdown]
@@ -507,7 +507,7 @@ for df_batch_response in df_batch_id_response_list:
         #Update df_individual on google sheet
         #conn_record_df_individual.update(worksheet=batch_id, data=df_individual)                
 
-    st.success(f"{batch_id} GPT output successfully appended to df_individual and saved on AWS. Done {append_counter}/{len(df_batch_id_response_list)}.")
+    st.success(f"{batch_id} GPT output appended to df_individual and saved on AWS. Done {append_counter}/{len(df_batch_id_response_list)}.")
 
 
 # %% [markdown]
@@ -751,8 +751,8 @@ for index in all_df_masters.index:
 csv_buffer = StringIO()
 all_df_masters.to_csv(csv_buffer)
 s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
-st.success(f"Successfully updated all_df_masters.csv on AWS" )
-print(f"Successfully updated all_df_masters.csv on AWS" )
+st.success(f"Updated all_df_masters.csv on AWS" )
+print(f"Updated all_df_masters.csv on AWS" )
 
 
 
