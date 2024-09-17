@@ -72,6 +72,7 @@ from pyxlsb import open_workbook as open_xlsb
 from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums
 
 
+
 # %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
 st.set_page_config(
@@ -116,10 +117,10 @@ def check_email_batch_id(df, email, batch_id):
     try:
         batch_index = df.index[df['batch_id'] == batch_id].tolist()[0]
         correct_email = df.loc[batch_index, 'Your email address']
-        if email == correct_email:
+        if email.lower() == correct_email.lower():
             value = True
     except:
-        print('Email does not match with batch_id.')
+        print(f'Email does not match with batch_id.')
 
     return value
 
