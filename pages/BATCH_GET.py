@@ -102,10 +102,10 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 
 
 # %% [markdown]
-# # Get all_df_masters and all df_individuals from aws
+# # Get all_df_masters and all df_individuals
 
 # %%
-st.subheader("Load records from AWS")
+st.subheader("Load records")
 
 # %%
 #Initiate aws s3
@@ -122,8 +122,6 @@ for obj in bucket.objects.all():
     key_body = {'key': key, 'body': body}
     aws_objects.append(key_body)
 
-
-# %%
 #Get all_df_masters
 
 for key_body in aws_objects:
@@ -132,13 +130,23 @@ for key_body in aws_objects:
         st.success(f"Succesfully loaded {key_body['key']}.")
         break
 
-# %%
 #Alternative download file example
+#NOT IN USE
 #s3 = boto3.client('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 #s3.download_file('BUCKET_NAME', 'OBJECT_NAME', 'FILE_NAME')
 #see https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-example-download-file.html
 #'OBJECT_NAME' = 'FILE_NAME'
 #eg s3.download_file('lawtodata', 'myfile.csv', 'myfile.csv')
+
+
+# %%
+#Obtain google spreadsheet for all df_masters      
+#conn_all_df_masters = st.connection("gsheets_all_df_masters", type=GSheetsConnection, ttl=0)
+#all_df_masters = conn_all_df_masters.read()
+#all_df_masters = all_df_masters.fillna('')
+#all_df_masters = all_df_masters[all_df_masters["submission_time"]!='']
+
+# %%
 
 # %%
 #Type up df_masters
@@ -150,14 +158,6 @@ for column in boolean_columns:
         all_df_masters[column] = all_df_masters[column].replace({'True': 1, 'False':0, 'TRUE': 1, 'FALSE': 0})
 
 #all_df_masters.reset_index(drop=True)
-
-# %%
-#Obtain google spreadsheet for all df_masters      
-#conn_record_df_master = st.connection("gsheets_record_df_master", type=GSheetsConnection, ttl=0)
-#all_df_masters = conn_record_df_master.read()
-#all_df_masters = all_df_masters.fillna('')
-#all_df_masters = all_df_masters[all_df_masters["submission_time"]!='']
-
 
 # %% [markdown]
 # # Submit updated all_df_masters to GPT
@@ -180,7 +180,6 @@ for index in all_df_masters.index:
 if batch_request_total == 0:
     st.warning('No requests need to be submitted.')
     
-
 
 # %%
 #Generate batch input, submit to GPT and keep record on google sheet
@@ -231,20 +230,20 @@ for index in all_df_masters.index:
 
     #Keep batching record on AWS
     #Upload all_df_masters to aws
-    csv_buffer = StringIO()
-    all_df_masters.to_csv(csv_buffer)
-    s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+    #csv_buffer = StringIO()
+    #all_df_masters.to_csv(csv_buffer)
+    #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
 
     #Keep batch record on google sheet
 
-    #conn_record_df_master.update(worksheet="Sheet1", data=all_df_masters)
+    #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
 
 
 # %% [markdown]
-# # Upload each submitted df_individual onto AWS
+# # Upload each submitted df_individual
 
 # %%
-st.subheader("Save scaped judgment data on AWS")
+st.subheader("Save scaped judgment data")
 
 # %%
 if len(gpt_batch_input_list) == 0:
@@ -254,10 +253,9 @@ if len(gpt_batch_input_list) == 0:
 
 # %%
 #Obtain google spreadsheet for all df_individuals      
-#conn_record_df_individual = st.connection("gsheets_record_df_individual", type=GSheetsConnection, ttl=0)
+#conn_all_df_individuals = st.connection("gsheets_record_all_df_individuals", type=GSheetsConnection, ttl=0)
 
 # %%
-#Keep record of df_individual on google sheets
 #Based on https://stackoverflow.com/questions/38154040/save-dataframe-to-csv-directly-to-s3-python
 
 save_counter = 0
@@ -279,16 +277,20 @@ for gpt_batch_input in gpt_batch_input_list:
     s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
 
     save_counter += 1
+
+    #Keep all_df_individuals on google sheets
+    #conn_all_df_individuals.create(worksheet=batch_id, data=df_individual)
     
-    #conn_record_df_individual.create(worksheet=batch_id, data=df_individual)
-    st.success(f"{batch_id} saved onto AWS. Done {save_counter}/{len(gpt_batch_input_list)}.")
+    st.success(f"{batch_id} saved online. Done {save_counter}/{len(gpt_batch_input_list)}.")
 
-
-# %%
 #Alternative Uploading file example
+#NOT IN USE
 #s3 = boto3.client('s3')
 #with open("FILE_NAME", "rb") as f:
     #s3.upload_fileobj(f, "BUCKET_NAME", "OBJECT_NAME")
+
+
+# %%
 
 # %% [markdown]
 # # Retrive output from GPT
@@ -372,17 +374,17 @@ for index in all_df_masters.index:
             all_df_masters.loc[index, 'Your GPT API key'] = ''
     
             #Update all_df_masters on AWS
-            csv_buffer = StringIO()
-            all_df_masters.to_csv(csv_buffer)
-            s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+            #csv_buffer = StringIO()
+            #all_df_masters.to_csv(csv_buffer)
+            #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
 
             #Update counter 
             retrieve_counter += 1
     
-            #Update google sheet for record of df_masters
-            #conn_record_df_master.update(worksheet="Sheet1", data=all_df_masters)
+            #Update google sheet for all_df_masters
+            #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
 
-            st.success(f"{batch_id}: status == {status}, saved on all_df_masters.csv on AWS. Done {retrieve_counter}/{max_retrieve_counter}")
+            st.success(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
 
 
 # %% [markdown]
@@ -427,8 +429,8 @@ for df_batch_response in df_batch_id_response_list:
             break
     
     #Get df_individual from google sheets
-    #conn_record_df_individual = st.connection("gsheets_record_df_individual", type=GSheetsConnection, ttl=0)
-    #df_individual = conn_record_df_individual.read(worksheet = batch_id)
+    #conn_all_df_individuals = st.connection("gsheets_record_all_df_individuals", type=GSheetsConnection, ttl=0)
+    #df_individual = conn_all_df_individuals.read(worksheet = batch_id)
 
     #Append gpt output to individual
     df_batch_response = df_batch_response['df_batch_response']
@@ -505,9 +507,11 @@ for df_batch_response in df_batch_id_response_list:
         s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
         
         #Update df_individual on google sheet
-        #conn_record_df_individual.update(worksheet=batch_id, data=df_individual)                
+        #conn_all_df_individuals.update(worksheet=batch_id, data=df_individual)                
 
-    st.success(f"{batch_id} GPT output appended to df_individual and saved on AWS. Done {append_counter}/{len(df_batch_id_response_list)}.")
+    append_counter += 1
+    
+    st.success(f"{batch_id} GPT output appended to df_individual and saved online. Done {append_counter}/{len(df_batch_id_response_list)}.")
 
 
 # %% [markdown]
@@ -669,23 +673,23 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
 
 # %%
 #Get a list of all files on s3
-bucket = s3_resource.Bucket('lawtodata')
+#bucket = s3_resource.Bucket('lawtodata')
 
-aws_objects = []
+#aws_objects = []
 
-for obj in bucket.objects.all():
-    key = obj.key
-    body = obj.get()['Body'].read()
-    key_body = {'key': key, 'body': body}
-    aws_objects.append(key_body)
+#for obj in bucket.objects.all():
+    #key = obj.key
+    #body = obj.get()['Body'].read()
+    #key_body = {'key': key, 'body': body}
+    #aws_objects.append(key_body)
 
 #Get all_df_masters
 
-for key_body in aws_objects:
-    if key_body['key'] == 'all_df_masters.csv':
-        all_df_masters = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-        st.success(f"Succesfully loaded {key_body['key']}.")
-        break
+#for key_body in aws_objects:
+    #if key_body['key'] == 'all_df_masters.csv':
+        #all_df_masters = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+        #st.success(f"Succesfully loaded {key_body['key']}.")
+        #break
 
 # %%
 #Get number of notification emails to send
@@ -746,19 +750,22 @@ for index in all_df_masters.index:
             
 
 
+# %% [markdown]
+# # Finish
+
+# %%
+st.subheader("Finish")
+
 # %%
 #Upload all_df_masters to aws
 csv_buffer = StringIO()
 all_df_masters.to_csv(csv_buffer)
 s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
-st.success(f"Updated all_df_masters.csv on AWS" )
-print(f"Updated all_df_masters.csv on AWS" )
-
-
-
-
-# %% [markdown]
-# # Done
 
 # %%
-st.subheader("Done")
+#Update google sheet for all_df_masters
+#conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
+
+# %%
+st.success(f"Updated all_df_masters online." )
+print(f"Updated all_df_masters online." )
