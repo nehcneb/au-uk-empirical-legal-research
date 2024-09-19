@@ -768,8 +768,8 @@ for index in all_df_masters.index:
 
             email_sent_counter += 1
             
-            st.success(f'{batch_id} for user {name} at {email} successfully emailed to {RECIPIENT}. Done {email_sent_counter}/{emails_counter_total}.')
-            print(f'{batch_id} for user {name} at {email} successfully emailed to {RECIPIENT}. Done {email_sent_counter}/{emails_counter_total}.')
+            st.success(f'{batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+            print(f'{batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
 
         except Exception as e:
             st.error(f"{batch_id} not emailed to user {name} at {email}.")

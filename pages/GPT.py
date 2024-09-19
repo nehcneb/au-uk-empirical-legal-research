@@ -373,7 +373,7 @@ if own_account_allowed() > 0:
                 
                 st.warning('This key is not valid.')
  
-        st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
+        st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 15 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         
