@@ -2,12 +2,12 @@ name: run BATCH_GET.py
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  #push:
+    #branches:
+      #- main
   #schedule:
     #- cron: '0 */6 * * *' # Run every 6 hour
-    #- cron: '0 0 * * 1' # At 00:00 on Monday
+
 #see https://jasonet.co/posts/scheduled-actions/
 
 jobs:
