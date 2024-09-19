@@ -4,3 +4,5 @@ maxUploadSize = 5
 [client]
 showSidebarNavigation = false
 
+[global]
+showWarningOnDirectExecution = false
