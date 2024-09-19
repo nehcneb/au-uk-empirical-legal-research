@@ -73,6 +73,16 @@ else:
     print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
+# %%
+#Generate current directory, just to check whether running on Github Actions or locally
+current_dir = ''
+try:
+    current_dir = os.getcwd()
+    print(current_dir)
+except Exception as e:
+    print(f"current_dir not generated.")
+    print(e)
+
 # %% [markdown]
 # # Streamlit page description and initialisation
 
@@ -108,14 +118,15 @@ st.subheader("Load records")
 #Initiate aws s3
 
 #If using Github Actions
-AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+if 'Dropbox' not in current_dir:
+    AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    
+    s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
-s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-
-#If using on streamlit
-#s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+else:#If using on streamlit
+    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 
 #Get a list of all files on s3
 bucket = s3_resource.Bucket('lawtodata')
@@ -526,15 +537,13 @@ st.subheader("Send notification emails")
 # Create a new SES resource and specify a region.
 #Based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
 
-#If using Github Actions
-AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+if 'Dropbox' not in current_dir:
+    #If using Github Actions
+    ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+else:
+    #If using on streamlit
+    ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 
-ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-
-#If using on streamlit
-#ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 
 # %%
 #Define send email function
@@ -546,19 +555,22 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     # This address must be verified with Amazon SES.
     #SENDER = "name <email>"
 
-    #If using Github Actions
-    SENDER = os.environ['EMAIL_SENDER']
-    #If using on streamlit
-    #SENDER = st.secrets["email_notifications"]["email_sender"]
+    if 'Dropbox' not in current_dir:
+        #If using Github Actions
+        SENDER = os.environ['EMAIL_SENDER']
+    else:
+        #If using on streamlit
+        SENDER = st.secrets["email_notifications"]["email_sender"]
 
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
 
-    #If using Github Actions
-    RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
-
-    #If using on streamlit
-    #RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+    if 'Dropbox' not in current_dir:
+        #If using Github Actions
+        RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
+    else:
+        #If using on streamlit
+        RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
 
     # The subject line for the email.
     SUBJECT = f"{ULTIMATE_RECIPIENT_EMAIL}"
