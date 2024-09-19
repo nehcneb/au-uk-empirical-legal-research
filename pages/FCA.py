@@ -199,7 +199,7 @@ def fca_create_df():
     gpt_questions = ''
     
     try:
-        gpt_questions = gpt_questions_entry[0: 1000]
+        gpt_questions = gpt_questions_entry[0: question_characters_bound]
     
     except:
         print('GPT questions not entered.')

@@ -46,7 +46,7 @@ import streamlit_ext as ste
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
@@ -315,7 +315,8 @@ def save_input(df_master):
                         'Use flagship version of GPT', 
                          'submission_time', 
                          'status', 
-                          'jurisdiction_page'
+                          'jurisdiction_page', 
+                          'Consent'
                          ]
     
     df_master = df_master.replace({np.nan: None})
@@ -323,8 +324,11 @@ def save_input(df_master):
     for key in st.session_state.df_master.keys():
         
         if key not in keys_to_carry_over:
-            
-            st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
+            try:            
+                st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
+            except Exception as e:
+                print(f'{key} not saved.')
+                print(e)
 
 
 

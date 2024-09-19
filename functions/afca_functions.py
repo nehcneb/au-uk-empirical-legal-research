@@ -75,13 +75,6 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # AFCA search engine
 
 # %%
-#Pre June 2024 only works if running locally at the moment
-if streamlit_timezone() == True:
-    collection_options = ['Decisions published before 14 June 2024', 'Decisions published from 14 June 2024']
-else:
-    collection_options = ['Decisions published from 14 June 2024']
-
-# %%
 #Scrape javascript
 
 from selenium import webdriver
@@ -107,11 +100,10 @@ def get_driver():
     return webdriver.Chrome(options=options)
 
 try:
-    
     browser = get_driver()
     
-    browser.implicitly_wait(10)
-    browser.set_page_load_timeout(10)
+    browser.implicitly_wait(30)
+    browser.set_page_load_timeout(30)
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -154,225 +146,14 @@ if streamlit_timezone() == True:
         quit()
 
 # %%
-from functions.common_functions import link
-
+#Pre June 2024 only works if running locally at the moment
+if streamlit_timezone() == True:
+    collection_options = ['Decisions published before 14 June 2024', 'Decisions published from 14 June 2024']
+else:
+    collection_options = ['Decisions published from 14 June 2024']
 
 # %%
-#function to create dataframe
-def afca_create_df():
-
-    #submission time
-    timestamp = datetime.now()
-
-    #Personal info entries
-
-    name = ''
-    
-    email = ''
-
-    gpt_api_key = ''
-
-    try:
-        name = name_entry
-    except:
-        print('Name not entered')
-    
-    try:
-        email = email_entry
-    except:
-        print('Email not entered')
-
-    try:
-        gpt_api_key = gpt_api_key_entry
-    except:
-        print('API key not entered')
-    
-    #Own account status
-    own_account = st.session_state.own_account
-    
-    #Judgment counter bound
-    try:
-        judgments_counter_bound = judgments_counter_bound_entry
-    except:
-        print('judgments_counter_bound not entered')
-        judgments_counter_bound = default_judgment_counter_bound
-        
-    #GPT enhancement
-    try:
-        gpt_enhancement = gpt_enhancement_entry
-    except:
-        print('GPT enhancement not entered')
-        gpt_enhancement = False
-
-    #Input
-    #Template
-    new_row = {'Processed': '',
-           'Timestamp': '',
-           'Your name': '', 
-           'Your email address': '', 
-           'Your GPT API key': '', 
-            'Collection': '', 
-              #Post 14 June 2024 search terms 
-            'Search for published decisions': '', 
-            'Search for a financial firm': '', 
-           'Product line': '', 
-            'Product category': '', 
-            'Product name': '', 
-            'Issue type': '', 
-            'Issue': '', 
-          #Pre 14 June 2024 search terms
-            'Include decisions made under earlier Terms of Reference': False, 
-            'All these words': '', 
-           'This exact wording or phrase': '', 
-            'One or more of these words - 1': '', 
-            'One or more of these words - 2': '', 
-            'One or more of these words - 3': '', 
-            'Any of these unwanted words': '', 
-            'Case number': '', 
-            #'Days back from now': '',
-            #'Months back from now': '',
-            #'Years back from now': '',
-            #'Date of decision from': '', 
-            #'Date of decision to': '', 
-            #General
-            'Date from': '', #'DD/MM/YYYY',
-            'Date to': '', #'DD/MM/YYYY', 
-            'Metadata inclusion' : False,
-           'Maximum number of judgments': judgments_counter_bound, 
-           'Enter your questions for GPT': '', 
-            'Use GPT': False,
-           'Use own account': False,
-            'Use flagship version of GPT' : False
-          }
-
-    #Collection
-
-    try:
-        new_row['Collection'] = collection_entry
-
-    except:
-        print('Collection not selected.')
-        
-    #Post June 2024 input
-    try:
-        new_row['Search for published decisions'] = keywordsearch_entry
-    except:
-        print('Search for published decisions not entered.')
-    
-    try:
-        new_row['Search for a financial firm'] = ffsearch_entry
-    except:
-        print('Search for a financial firm not entered.')
-    
-    try:
-        new_row['Product line'] = product_line_entry
-    except:
-        print('Product line not entered.')
-    
-    try:
-        new_row['Product category'] = product_category_entry
-    except:
-        print('Product category not entered.')
-    
-    try:
-        new_row['Product name'] = product_name_entry
-    except:
-        print('Product name not entered.')
-    
-    try:
-        new_row['Issue type'] = issue_type_entry
-    except:
-        print('Issue type not entered.')
-    
-    try:
-        new_row['Issue'] = issue_entry
-    except:
-        print('Issue not entered.')
-
-
-    #Pre June 2024 input
-
-    try:
-        new_row['Include decisions made under earlier Terms of Reference'] = early_t_o_r_entry
-    except:
-        new_row['Include decisions made under earlier Terms of Reference'] = False
-        print('Whether to Include decisions made under earlier Terms of Reference not entered.')
-
-    try:
-        new_row['All these words'] = all_these_words_entry
-    except:
-        print('All these words not entered.')
-
-    try:
-        new_row['This exact wording or phrase'] = this_exact_wording_phrase_entry
-    except:
-        print('This exact wording or phrase not entered.')
-
-    try:
-        new_row['Any of these unwanted words'] = any_of_these_unwanted_words_entry
-    except:
-        print('Any of these unwanted words not entered.')
-
-    try:
-        new_row['One or more of these words - 1'] = one_or_more_of_these_words_1_entry
-    except:
-        print('One or more of these words - 1 not entered.')
-
-    try:
-        new_row['One or more of these words - 2'] = one_or_more_of_these_words_2_entry
-    except:
-        print('One or more of these words - 2 not entered.')
-
-    try:
-        new_row['One or more of these words - 3'] = one_or_more_of_these_words_3_entry
-    except:
-        print('One or more of these words - 3 not entered.')
-
-    try:
-        new_row['Case number'] = case_number_entry
-    except:
-        print('Case number not entered.')
-    
-    #dates
-            
-    try:
-        new_row['Date from'] = date_from_entry.strftime("%d/%m/%Y")
-
-    except:
-        print('Date from not entered.')
-
-    try:
-
-        new_row['Date to'] = date_to_entry.strftime("%d/%m/%Y")
-        
-    except:
-        print('Date to not entered.')
-
-    #GPT choice and entry
-    try:
-        gpt_activation_status = gpt_activation_entry
-        new_row['Use GPT'] = gpt_activation_status
-    except:
-        print('GPT activation status not entered.')
-
-    try:
-        gpt_questions = gpt_questions_entry[0: 1000]
-        new_row['Enter your questions for GPT'] = gpt_questions
-    
-    except:
-        print('GPT questions not entered.')
-
-    #metadata choice
-    try:
-        meta_data_choice = meta_data_entry
-        new_row['Metadata inclusion'] = meta_data_choice
-    
-    except:
-        print('Metadata choice not entered.')
-
-    df_master_new = pd.DataFrame(new_row, index = [0])
-            
-    return df_master_new
+from functions.common_functions import link
 
 
 # %% [markdown]

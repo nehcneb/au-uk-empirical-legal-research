@@ -340,7 +340,7 @@ if own_account_allowed() > 0:
     st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or change the maximum nunber of judgments to process? You can do so with your own GPT account.
 """)
     
-    own_account_entry = st.toggle(label = 'Use my own GPT account',  disabled = st.session_state.disable_input, value = st.session_state['df_master'].loc[0, 'Use own account'])
+    own_account_entry = st.toggle(label = 'Use my own GPT account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
     
     if own_account_entry:
 
@@ -373,7 +373,7 @@ if own_account_allowed() > 0:
                 
                 st.warning('This key is not valid.')
  
-        st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
+        st.markdown("""**:green[You can use the flagship version of GPT (model gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         
@@ -424,6 +424,9 @@ st.header("Consent")
 st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to judgments. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
 consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
+
+if consent:
+    st.session_state['df_master'].loc[0, 'Consent'] = consent
 
 st.markdown("""If you do not agree, then please feel free to close this form.""")
 
@@ -641,7 +644,7 @@ if run_button:
         st.warning("You must tick '[y]es, I agree[]' to use the app.")
 
     elif len(st.session_state.df_individual)>0:
-        st.warning('You must :red[REMOVE] the data produced before producing new data.')
+        st.warning('You must :red[REMOVE] the data already produced before producing new data.')
 
         #st.session_state['need_resetting'] = 1
             
@@ -790,7 +793,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
             st.warning("You must tick '[y]es, I agree[]' to use the app.")
     
         elif len(st.session_state.df_individual)>0:
-            st.warning('You must :red[REMOVE] the data produced before producing new data.')
+            st.warning('You must :red[REMOVE] the data already produced before producing new data.')
     
             #st.session_state['need_resetting'] = 1
                 
@@ -912,8 +915,8 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
         if int(consent) == 0:
             st.warning("You must tick '[y]es, I agree[]' to use the app.")
     
-        #elif len(st.session_state.df_individual)>0:
-            #st.warning('You must :red[REMOVE] the data produced before producing new data.')
+        elif len(st.session_state.df_individual)>0:
+            st.warning('You must :red[REMOVE] the data already produced before producing new data.')
                 
         else:
     

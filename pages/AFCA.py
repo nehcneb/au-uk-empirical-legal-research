@@ -75,80 +75,10 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # AFCA search engine
 
 # %%
-from functions.afca_functions import collection_options, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable
-
-
-# %%
-#Scrape javascript
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver import ActionChains
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.ui import WebDriverWait as Wait
-from selenium.webdriver.support import expected_conditions as EC
-
-#For post June 2024
-options = Options()
-options.add_argument("--disable-gpu")
-options.add_argument("--headless")
-options.add_argument('--no-sandbox')  
-options.add_argument('--disable-dev-shm-usage')  
-
-@st.cache_resource
-def get_driver():
-    return webdriver.Chrome(options=options)
-
-try:
-    
-    browser = get_driver()
-    
-    browser.implicitly_wait(10)
-    browser.set_page_load_timeout(10)
-    
-except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    print(e)
-    quit()
-
-#For pre June 2024
-#Only works if running locally at the moment
+from functions.afca_functions import browser, collection_options, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable
 
 if streamlit_timezone() == True:
-    
-    import undetected_chromedriver as uc
-    
-    #For headlessness, see https://github.com/ultrafunkamsterdam/undetected-chromedriver/discussions/1768
-    download_dir = os.getcwd() + '/AFCA_PDFs'
-    options_old = uc.ChromeOptions()
-    options_old.add_experimental_option('prefs', {
-    "download.default_directory": download_dir, #Change default directory for downloads
-    "download.prompt_for_download": False, #To auto download the file
-    "download.directory_upgrade": True,
-    "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
-    })
-    
-    @st.cache_resource
-    def get_driver_old():
-        
-        return uc.Chrome(options = options_old)
-    
-    try:
-        browser_old = get_driver_old()
-        
-        browser_old.implicitly_wait(60)
-        browser_old.set_page_load_timeout(60)
-        
-        browser_old.minimize_window()#set_window_position(-2000,0)
-    
-    except Exception as e:
-        st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-        st.exception(e)
-        quit()
+    from functions.afca_functions import browser_old
 
 
 # %%
@@ -354,7 +284,7 @@ def afca_create_df():
         print('GPT activation status not entered.')
 
     try:
-        gpt_questions = gpt_questions_entry[0: 1000]
+        gpt_questions = gpt_questions_entry[0: question_characters_bound]
         new_row['Enter your questions for GPT'] = gpt_questions
     
     except:

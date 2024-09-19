@@ -65,7 +65,6 @@ import tiktoken
 #PandasAI
 from pandasai import SmartDataframe
 from pandasai import Agent
-#from pandasai.llm import BambooLLM
 from pandasai.llm.openai import OpenAI
 import pandasai as pai
 from pandasai.responses.streamlit_response import StreamlitResponse
@@ -127,19 +126,11 @@ if 'gpt_api_key_validity' not in st.session_state:
 #Default choice of AI
 
 default_ai = 'GPT'
-#default_ai = 'BambooLLM'
-#default_ai = 'LangChain'
 
 if 'ai_choice' not in st.session_state:
     st.session_state['ai_choice'] = default_ai
 
-ai_list_raw = ['GPT'] #, 'BambooLLM'] 
-
-#Add LangChain
-#ai_list_raw.append('LangChain')
-
-#Add BambooLLM
-#ai_list_raw.append('BambooLLM')
+ai_list_raw = ['GPT']
 
 default_ai_index = ai_list_raw.index(default_ai)
 
@@ -149,32 +140,15 @@ default_ai_index = ai_list_raw.index(default_ai)
 
 def llm_setting(ai_choice, key, gpt_model_choice):
 
-    if ai_choice == 'GPT': #llm.type == 'GPT':
-        #if gpt_model_choice == 'gpt-4o':
-            #gpt_model_choice = 'gpt-4o'
+    if ai_choice == 'GPT':
         
         llm = OpenAI(api_token=key, model = gpt_model_choice)
-
-    if ai_choice == 'BambooLLM': #llm.type == 'Bamboollm':
-
-        llm = BambooLLM(api_key = st.secrets["pandasai"]["bamboollm_api_key"])
     
-    if ai_choice == 'LangChain': #llm.type == 'Bamboollm':
+    if ai_choice == 'LangChain': 
 
         llm = ChatOpenAI(model_name = gpt_model_choice, temperature=0.2, openai_api_key=key, streaming = False)
 
     return llm
-
-def ai_model_printing(ai_choice, gpt_model_choice):
-#NOT in use
-    
-    output = ai_choice
-
-    if ai_choice == 'GPT':
-        
-        output = f'GPT model {gpt_model_choice}'
-
-    return output
 
 
 
@@ -195,7 +169,7 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
     
     llm = llm_setting(ai_choice, key, gpt_model_choice)
     
-    if ai_choice in {'GPT', 'BambooLLM'}:            
+    if ai_choice == 'GPT':            
 
         #if gpt_model_choice == 'gpt-4o-mini':
             
@@ -211,20 +185,6 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
                       memory_size = default_instructions_bound, #change to instructions_bound if want to maximize memory
                       description = pandasai_agent_description
                      )
-            #agent = SmartDataframe(st.session_state.edited_df, config={"llm": llm, "verbose": True, "response_parser": StreamlitResponse, 'enable_cache': True}, description = pandasai_agent_description)
-
-        #else: #For GPT 4, StreamlitResponse doesn't 'hold' images
-            #agent = Agent(df, 
-                          #config={"llm": llm, 
-                                  #"verbose": True, 
-                                  #"response_parser": StreamlitResponse, 
-                                  #'enable_cache': True, 
-                                  #'use_error_correction_framework': True, 
-                                  #'max_retries': 5
-                                 #}, 
-                          #memory_size = default_instructions_bound, 
-                          #description = pandasai_agent_description
-                         #)
             
     if ai_choice == 'LangChain':
 
@@ -241,7 +201,6 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
 
 # %%
 #AI model descript
-#NOT in use
 
 def ai_model_description(ai_choice):
     
@@ -251,12 +210,20 @@ def ai_model_description(ai_choice):
     
         model_description = "GPT model gpt-4o-mini is selected by default. This model can explain its reasoning."
     
-    if ai_choice == 'BambooLLM': #llm.type == 'Bamboollm':
-    
-        model_description = 'BambooLLM is selected by default. This model is developed by PandasAI with data analysis in mind (see https://docs.pandas-ai.com/en/stable/).'
-
     return model_description
 
+
+
+# %%
+def ai_model_printing(ai_choice, gpt_model_choice):
+    
+    output = ai_choice
+
+    if ai_choice == 'GPT':
+        
+        output = f'GPT model {gpt_model_choice}'
+
+    return output
 
 
 # %% [markdown]
@@ -1128,9 +1095,7 @@ if len(ai_list_raw) > 1:
     st.markdown("""
     GPT can be interactive. LangChain is more agile but can't produce charts.
 """)
-# BambooLLM is developed for data analysis (see https://docs.pandas-ai.com/en/stable/).
     
-
     if st.toggle(f'See the instruction given to {st.session_state.ai_choice}'):
         
         st.write(f"*{default_agent_description}*")
@@ -1138,115 +1103,83 @@ if len(ai_list_raw) > 1:
 else:
     st.session_state.ai_choice = 'GPT'
 
-#if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
-
 if own_account_allowed() > 0:
-
-    if st.session_state.ai_choice != 'BambooLLM':
     
-        st.subheader(':orange[Enhance app capabilities]')
+    st.subheader(':orange[Enhance app capabilities]')
+    
+    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of instructions to process? You can do so with your own GPT account.
+    """)
+    
+    own_account_entry = st.toggle(label = 'Use my own GPT account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
+    
+    if own_account_entry:
         
-        st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of instructions to process? You can do so with your own GPT account.
-        """)
-        
-        own_account_entry = st.toggle('Use my own GPT account')
-        
-        if own_account_entry:
-            
-            st.session_state['own_account'] = True
-        
-            st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
+        st.session_state['own_account'] = True
+    
+        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
 """)
+            
+        name_entry = st.text_input(label = "Your name", value = st.session_state.df_master.loc[0, 'Your name'])
+
+        if name_entry:
+            st.session_state.df_master.loc[0, 'Your name'] = name_entry
+
+        email_entry = st.text_input(label = "Your email address", value = st.session_state.df_master.loc[0, 'Your email address'])
+
+        if email_entry:
+            st.session_state.df_master.loc[0, 'Your email address'] = email_entry
+
+        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
+
+        if gpt_api_key_entry:
+            
+            st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
+
+            if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
                 
-            name_entry = st.text_input(label = "Your name", value = st.session_state.df_master.loc[0, 'Your name'])
+                st.warning('This key is not valid.')
     
-            if name_entry:
-                st.session_state.df_master.loc[0, 'Your name'] = name_entry
-            #else:
-                #st.session_state.df_master.loc[0, 'Your name'] = st.session_state.name_entry
-            
-            email_entry = st.text_input(label = "Your email address", value = st.session_state.df_master.loc[0, 'Your email address'])
+        st.markdown("""**:green[You can use the flagship version of GPT (model gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
+        
+        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
+        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
+        
+        if gpt_enhancement_entry == True:
+            #Reset AI first
+            pai.clear_cache()
+        
+            st.session_state.gpt_model = "gpt-4o"
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
 
-            if email_entry:
-                st.session_state.df_master.loc[0, 'Your email address'] = email_entry
-            #else:
-                #st.session_state.df_master.loc[0, 'Your email address'] = st.session_state.email_entry
-
-            gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state.df_master.loc[0, 'Your GPT API key'])
-
-            if gpt_api_key_entry:
-                
-                st.session_state.df_master.loc[0, 'Your GPT API key'] = gpt_api_key_entry
-
-                if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
-                    
-                    st.warning('This key is not valid.')
-
-            #else:
-                
-                #st.session_state.df_master.loc[0, 'Your GPT API key'] = st.session_state.gpt_api_key_entry
-            
-            #valdity_check = st.button('VALIDATE your API key')
-        
-            #if valdity_check:
-                
-                #api_key_valid = is_api_key_valid(gpt_api_key_entry)
-                        
-                #if api_key_valid == False:
-                    #st.session_state['gpt_api_key_validity'] = False
-                    #st.error('Your API key is not valid.')
-                    
-                #else:
-                    #st.session_state['gpt_api_key_validity'] = True
-                    #st.success('Your API key is valid.')
-        
-            st.markdown("""**:green[You can use the flagship version of GPT model (gpt-4o),]** which is :red[about 30 times more expensive, per character] than the default model (gpt-4o-mini) which you can use for free.""")  
-            
-            gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
-            st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
-            
-            if gpt_enhancement_entry == True:
-                #Reset AI first
-                pai.clear_cache()
-            
-                st.session_state.gpt_model = "gpt-4o"
-                st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
-    
-            else:
-                #Reset AI first
-                pai.clear_cache()
-                
-                st.session_state.gpt_model = "gpt-4o-mini"
-                st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-            
-            st.write(f'**:green[You can remove the cap on the number of instructions to process.]** The default cap is {default_instructions_bound}.')
-                
-            drop_instructions_bound = st.button('REMOVE the cap on the number of instructions')
-        
-            if drop_instructions_bound:
-        
-                st.session_state.instructions_bound = 999
-                st.session_state.instruction_left = 999
-        
-            #st.session_state.instruction_left = st.session_state.instructions_bound
-        
         else:
-            st.session_state['own_account'] = False
-        
-            st.session_state.gpt_model = "gpt-4o-mini"
-        
-            st.session_state.instructions_bound = default_instructions_bound
-        
-            st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
+            #Reset AI first
+            pai.clear_cache()
             
-            print('User GPT API key not entered. Using own API key instead.')
+            st.session_state.gpt_model = "gpt-4o-mini"
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+        
+        st.write(f'**:green[You can remove the cap on the number of instructions to process.]** The default cap is {default_instructions_bound}.')
+            
+        drop_instructions_bound = st.button('REMOVE the cap on the number of instructions')
     
+        if drop_instructions_bound:
+    
+            st.session_state.instructions_bound = 999
+            st.session_state.instruction_left = 999
+            
     else:
         st.session_state['own_account'] = False
-        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
-else:
-    print('Users are NOT allowed to use their own accounts.')
+        st.session_state.gpt_model = "gpt-4o-mini"
+        
+        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+
+        st.session_state.instructions_bound = default_instructions_bound
+    
+        st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
+        
+        print('User GPT API key not entered. Using own API key instead.')
+
 
 
 # %% [markdown]
@@ -1258,6 +1191,9 @@ st.subheader("Consent")
 st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
 consent =  st.checkbox('Yes, I agree.', value = False)
+
+if consent:
+    st.session_state['df_master'].loc[0, 'Consent'] = consent
 
 st.markdown("""If you do not agree, then please feel free to close this form.""")
 
@@ -1295,8 +1231,8 @@ if st.session_state.ai_choice == 'GPT':
     if st.session_state.gpt_model == "gpt-4o":
         st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
     
-else: #if st.session_state.ai_choice == 'BambooLLM':
-    st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')
+#else:
+    #st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')
 
 spreadsheet_caption = 'To download, search within or maximise any spreadsheet, hover your mouse/pointer over its top right-hand corner.' # and click the appropriate button.'
 
@@ -1528,8 +1464,6 @@ st.caption("Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
     st.session_state.q_and_a_toggle = False
-    #Remove prefill after importation
-    #st.session_state['prompt_prefill'] = ''
 
 #Generate explain button
 if st.session_state.ai_choice in {'GPT', 'LangChain'}:
@@ -1539,32 +1473,11 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
     with col1:
         #Explain 
         explain_toggle = st.toggle('Explain', help = f'Get {st.session_state.ai_choice} to explain its response.', disabled = st.session_state.disable_input)
-    
-        #if explain_toggle:
-            #st.session_state.explain_status = True
-        #else:
-            #st.session_state.explain_status = False
 
     with col2:
         #Get code 
         code_toggle = st.toggle('Code', help = f'Get {st.session_state.ai_choice} to produce a code.', disabled = st.session_state.disable_input)
-    
-        #if code_toggle:
-            #st.session_state.code_status = True
-        #else:
-            #st.session_state.code_status = False
-    
-    #with col3:
-        #history_on = st.toggle(label = 'Chat history', help = 'Display all instructions and responses.')
 
-        #Clarification questions toggle
-        #if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
-            #if len(str(st.session_state.response)) > 0:
-            #clarification_questions_toggle = st.toggle(label = 'Suggestions', value = 'q_and_a_toggle', help = f'Get clarifying questions to help draft your questions or instructions.')
-        
-#else:
-    #st.session_state.explain_status = False
-    #st.session_state.code_status = False
 
 
 # %% [markdown]
@@ -1650,7 +1563,7 @@ if ask_button:
         st.session_state["q_and_a_toggle"] = False
         #clarification_questions_toggle = False
 
-        if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+        if st.session_state.ai_choice == 'GPT':
             
             pandasai_ask()
 
@@ -1671,7 +1584,7 @@ if ask_button:
 #Buttons for importing any df produced    
 
 #For Pandasai
-if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+if st.session_state.ai_choice == 'GPT':
 
     if isinstance(st.session_state.response, pd.DataFrame):
 
@@ -1726,7 +1639,7 @@ if reset_button:
 # %%
 #Clarifying questions form
 
-if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+if st.session_state.ai_choice == 'GPT':
     if ((len(str(st.session_state.response)) > 0) and 
         (st.session_state.q_and_a_provided == False)
        ):

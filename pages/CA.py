@@ -77,39 +77,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # Canada search engine
 
 # %%
-from functions.ca_functions import all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
-
-
-# %%
-#Scrape javascript
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
-from selenium.webdriver.common.by import By
-
-options = Options()
-options.add_argument("--disable-gpu")
-options.add_argument("--headless")
-options.add_argument('--no-sandbox')  
-options.add_argument('--disable-dev-shm-usage')  
-
-@st.cache_resource
-def get_driver():
-    return webdriver.Chrome(
-        #service=Service(
-            #ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        #),
-        options=options,
-    )
-
-browser = get_driver()
-
-browser.implicitly_wait(10)
-browser.set_page_load_timeout(10)
-
+from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
 
 
 # %%
@@ -245,7 +213,7 @@ def ca_create_df():
     gpt_questions = ''
     
     try:
-        gpt_questions = gpt_questions_entry[0: 1000]
+        gpt_questions = gpt_questions_entry[0: question_characters_bound]
     
     except:
         print('GPT questions not entered.')
@@ -644,12 +612,15 @@ if next_button:
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             ca_url_to_check = ca_search_url(df_master)
-            browser.get(ca_url_to_check)
+            ca_urls = ca_search_results_to_judgment_links(ca_url_to_check, default_judgment_counter_bound)
+            #browser.get(ca_url_to_check)
             #browser.delete_all_cookies()
-            browser.refresh()
-            ca_elements = browser.find_elements(By.CLASS_NAME, "result ")
-            ca_case_num = len(ca_elements)
-            if int(ca_case_num) == 0:
+            #browser.refresh()
+            #ca_elements = browser.find_elements(By.CLASS_NAME, "result ")
+            #ca_case_num = len(ca_elements)
+            
+            #if int(ca_case_num) == 0:
+            if len(ca_urls) == 0:
                 
                 st.error(no_results_msg)
             
