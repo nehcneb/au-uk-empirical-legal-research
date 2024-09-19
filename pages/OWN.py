@@ -538,6 +538,8 @@ if st.session_state.gpt_model == 'gpt-4o-mini':
 if st.session_state.gpt_model == "gpt-4o-2024-08-06":
     st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
+reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
+
 with stylable_container(
     "green",
     css_styles="""
@@ -548,10 +550,6 @@ with stylable_container(
 ):
 
     run_button = st.button('PRODUCE data')
-
-reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
-
-#reset_button = st.button(label='RESET', type = 'primary',  help = "Press to process new search terms or questions.")
     
 if ((st.session_state.own_account == True) and (uploaded_images)):
 

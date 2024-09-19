@@ -1486,6 +1486,9 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 # %%
 #col1a, col2a, col3a, col4a = st.columns(4, gap = 'small')
 
+#with col2a:
+reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.session_state.response)) == 0), help = 'You may need to press :red[RESET] before asking GPT.')
+
 #with col1a:
 with stylable_container(
     "green",
@@ -1495,10 +1498,8 @@ with stylable_container(
         color: black;
     }""",
 ):
-    ask_button = st.button("ASK", disabled = st.session_state.disable_input, help = 'You may need to press :red[RESET] before asking GPT.')
+    ask_button = st.button("ASK", disabled = st.session_state.disable_input)
 
-#with col2a:
-reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.session_state.response)) == 0))#, help = f"Get fresh responses from {st.session_state.ai_choice}")
 
 
 # %%

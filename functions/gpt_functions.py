@@ -408,14 +408,21 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
     json_direction = [{"role": "user", "content": 'Check the following text in JSON form.'}]
 
     #Create answer format
-    
-    q_keys = [*answers_to_check_json]
-    
+
+    answers_to_check_list = [answers_to_check_json]
+
     redacted_answers_json = {}
     
-    for q_index in q_keys:
+    if isinstance(answers_to_check_json, list):
+        answers_to_check_list = answers_to_check_json
+
+    for answers_to_check_json in answers_to_check_list:
         
-        redacted_answers_json.update({q_index: 'Your answer for the question with index ' + q_index})
+        q_keys = [*answers_to_check_json]
+        
+        for q_index in q_keys:
+            
+            redacted_answers_json.update({q_index: 'Your answer for the question with index ' + q_index})
     
     #Create answers_to_check_json, which include the answer format
     
@@ -722,23 +729,29 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
     	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
+
+        answers_list = [answers_dict]
+
+        if isinstance(answers_dict, list):
+            answers_list = answers_dict
         
-        for answer_index in answers_dict.keys():
-
-            #Check any question override
-            if 'Say "n/a" only' in str(answer_index):
-                answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
-            else:
-                answer_header = 'GPT question: ' + answer_index
-
-            try:
-            
-                df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
-
-            except:
-
-                df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
-
+        for answers_dict in answers_list:
+        
+            for answer_index in answers_dict.keys():
+    
+                #Check any question override
+                if 'Say "n/a" only' in str(answer_index):
+                    answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
+                else:
+                    answer_header = 'GPT question: ' + answer_index
+    
+                try:
+                
+                    df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
+    
+                except:
+    
+                    df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
             
         #Calculate GPT costs
 
