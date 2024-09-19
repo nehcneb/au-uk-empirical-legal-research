@@ -12,9 +12,6 @@
 #     name: python3
 # ---
 
-# %%
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research-unlimited/gpt_batch_retrieve.py
-
 # %% [markdown]
 # # Preliminaries
 
@@ -31,7 +28,7 @@ import numpy as np
 #from datetime import datetime
 import sys
 import pause
-#import os
+import os
 import io
 from io import BytesIO
 from io import StringIO
@@ -109,7 +106,16 @@ st.subheader("Load records")
 
 # %%
 #Initiate aws s3
-s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+
+#If using Github Actions
+AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+
+s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+#If using on streamlit
+#s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 
 #Get a list of all files on s3
 bucket = s3_resource.Bucket('lawtodata')
@@ -147,9 +153,7 @@ for key_body in aws_objects:
 #all_df_masters = all_df_masters[all_df_masters["submission_time"]!='']
 
 # %%
-
-# %%
-#Type up df_masters
+#Tidy up all_df_masters
 
 boolean_columns = ["Metadata inclusion", 'Use GPT', 'Use own account', 'Use flagship version of GPT']
 
@@ -179,10 +183,10 @@ for index in all_df_masters.index:
 
 if batch_request_total == 0:
     st.warning('No requests need to be submitted.')
-    
+
 
 # %%
-#Generate batch input, submit to GPT and keep record on google sheet
+#Generate batch input, submit to GPT and keep record online
 
 #all_df_masters = all_df_masters[all_df_masters["status"]=='to_process']
 
@@ -235,7 +239,6 @@ for index in all_df_masters.index:
     #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
 
     #Keep batch record on google sheet
-
     #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
 
 
@@ -252,10 +255,11 @@ if len(gpt_batch_input_list) == 0:
 
 
 # %%
-#Obtain google spreadsheet for all df_individuals      
+#Obtain all_df_individuals from google sheets
 #conn_all_df_individuals = st.connection("gsheets_record_all_df_individuals", type=GSheetsConnection, ttl=0)
 
 # %%
+#Obtain all_df_individuals from aws
 #Based on https://stackoverflow.com/questions/38154040/save-dataframe-to-csv-directly-to-s3-python
 
 save_counter = 0
@@ -289,8 +293,6 @@ for gpt_batch_input in gpt_batch_input_list:
 #with open("FILE_NAME", "rb") as f:
     #s3.upload_fileobj(f, "BUCKET_NAME", "OBJECT_NAME")
 
-
-# %%
 
 # %% [markdown]
 # # Retrive output from GPT
@@ -523,8 +525,16 @@ st.subheader("Send notification emails")
 # %%
 # Create a new SES resource and specify a region.
 #Based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
-ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 
+#If using Github Actions
+AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+
+ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+#If using on streamlit
+#ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
 
 # %%
 #Define send email function
@@ -535,11 +545,20 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
     #SENDER = "name <email>"
-    SENDER = st.secrets["email_notifications"]["email_sender"]
+
+    #If using Github Actions
+    SENDER = os.environ['EMAIL_SENDER']
+    #If using on streamlit
+    #SENDER = st.secrets["email_notifications"]["email_sender"]
 
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+
+    #If using Github Actions
+    RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
+
+    #If using on streamlit
+    #RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
 
     # The subject line for the email.
     SUBJECT = f"{ULTIMATE_RECIPIENT_EMAIL}"
@@ -737,8 +756,8 @@ for index in all_df_masters.index:
 
             email_sent_counter += 1
             
-            st.success(f'{batch_id} for user {name} at {email} successfully emailed to {st.secrets["email_notifications"]["email_receiver_work"]}. Done {email_sent_counter}/{emails_counter_total}.')
-            print(f'{batch_id} for user {name} at {email} successfully emailed to {st.secrets["email_notifications"]["email_receiver_work"]}. Done {email_sent_counter}/{emails_counter_total}.')
+            st.success(f'{batch_id} for user {name} at {email} successfully emailed to {RECIPIENT}. Done {email_sent_counter}/{emails_counter_total}.')
+            print(f'{batch_id} for user {name} at {email} successfully emailed to {RECIPIENT}. Done {email_sent_counter}/{emails_counter_total}.')
 
         except Exception as e:
             st.error(f"{batch_id} not emailed to user {name} at {email}.")

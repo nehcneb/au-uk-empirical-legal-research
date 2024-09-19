@@ -1,0 +1,39 @@
+name: run BATCH_GET.py
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  #schedule:
+    #- cron: '0 */6 * * *' # Run every 6 hour
+    #- cron: '0 0 * * 1' # At 00:00 on Monday
+#see https://jasonet.co/posts/scheduled-actions/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' # install the python version needed
+
+      - name: install python packages
+        run: |
+          #python -m pip install --upgrade pip'
+          python -m pip install --upgrade pip==24.0
+
+          pip install -r requirements.txt
+
+      - name: execute BATCH_GET.py
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          EMAIL_RECEIVER_WORK: ${{ secrets.EMAIL_RECEIVER_WORK }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+        run: python BATCH_GET.py
