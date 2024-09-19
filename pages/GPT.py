@@ -448,11 +448,11 @@ if gpt_keep_button:
 st.header("Next steps")
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will **immediately** process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} judgments. The estimated waiting time is 3-5 minutes per 10 judgments.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. Up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} judgments will **immediately** be processed. The estimated waiting time is 3-5 minutes per 10 judgments.
 """)
 
 if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
-    st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} judgments. This app will send your requested data to your nominated email address in **2 business days**. 
+    st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} judgments. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
 
 #Warning
