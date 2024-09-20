@@ -74,19 +74,6 @@ else:
 
 
 # %%
-#Generate current directory, just to check whether running on Github Actions or locally
-current_dir = ''
-try:
-    current_dir = os.getcwd()
-    print(current_dir)
-except Exception as e:
-    print(f"current_dir not generated.")
-    print(e)
-
-# %% [markdown]
-# # Streamlit page description and initialisation
-
-# %%
 #Title of webpage
 st.set_page_config(
    page_title="LawtoData: An Empirical Legal Research Kickstarter",
@@ -108,6 +95,42 @@ st.subheader("An Empirical Legal Research Kickstarter")
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research.""") 
 
 
+# %%
+#Generate current directory, just to check whether running on Github Actions or locally
+current_dir = ''
+try:
+    current_dir = os.getcwd()
+    print(current_dir)
+except Exception as e:
+    print(f"current_dir not generated.")
+    print(e)
+
+# %%
+#Initiate aws s3 and ses
+
+#If using Github Actions
+if 'Users/Ben' not in current_dir:
+    AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    
+    SENDER = os.environ['EMAIL_SENDER']
+    RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
+
+else:#If using on streamlit
+
+    AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
+    AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+    aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+    
+    SENDER = st.secrets["email_notifications"]["email_sender"]
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+
+s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+#ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
+
+
 # %% [markdown]
 # # Get all_df_masters and all df_individuals
 
@@ -115,19 +138,6 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 st.subheader("Load records")
 
 # %%
-#Initiate aws s3
-
-#If using Github Actions
-if 'Dropbox' not in current_dir:
-    AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
-    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-    
-    s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-
-else:#If using on streamlit
-    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-
 #Get a list of all files on s3
 bucket = s3_resource.Bucket('lawtodata')
 
@@ -158,7 +168,6 @@ all_df_masters = all_df_masters_current.copy()
 #see https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-example-download-file.html
 #'OBJECT_NAME' = 'FILE_NAME'
 #eg s3.download_file('lawtodata', 'myfile.csv', 'myfile.csv')
-
 
 # %%
 #Obtain google spreadsheet for all df_masters      
@@ -537,17 +546,6 @@ for df_batch_response in df_batch_id_response_list:
 # %%
 st.subheader("Send notification emails")
 
-# %%
-# Create a new SES resource and specify a region.
-#Based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
-
-if 'Dropbox' not in current_dir:
-    #If using Github Actions
-    ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-else:
-    #If using on streamlit
-    ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-
 
 # %%
 #Define send email function
@@ -558,23 +556,6 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
     #SENDER = "name <email>"
-
-    if 'Dropbox' not in current_dir:
-        #If using Github Actions
-        SENDER = os.environ['EMAIL_SENDER']
-    else:
-        #If using on streamlit
-        SENDER = st.secrets["email_notifications"]["email_sender"]
-
-    # Replace recipient@example.com with a "To" address. If your account 
-    # is still in the sandbox, this address must be verified.
-
-    if 'Dropbox' not in current_dir:
-        #If using Github Actions
-        RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
-    else:
-        #If using on streamlit
-        RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
 
     # The subject line for the email.
     SUBJECT = f"{ULTIMATE_RECIPIENT_EMAIL}"
@@ -705,26 +686,6 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
         st.success(f"Email sent! Message ID: {response['MessageId']}.")        
         print(f"Email sent! Message ID: {response['MessageId']}.")        
 
-
-# %%
-#Get a list of all files on s3
-#bucket = s3_resource.Bucket('lawtodata')
-
-#aws_objects = []
-
-#for obj in bucket.objects.all():
-    #key = obj.key
-    #body = obj.get()['Body'].read()
-    #key_body = {'key': key, 'body': body}
-    #aws_objects.append(key_body)
-
-#Get all_df_masters
-
-#for key_body in aws_objects:
-    #if key_body['key'] == 'all_df_masters.csv':
-        #all_df_masters = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-        #st.success(f"Succesfully loaded {key_body['key']}.")
-        #break
 
 # %%
 #Get number of notification emails to send
