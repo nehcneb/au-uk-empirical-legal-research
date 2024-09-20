@@ -6,7 +6,7 @@ on:
     #branches:
       #- main
   #schedule:
-    #- cron: '0 */6 * * *' # Run every 6 hour
+    #- cron: '32 */6 * * *' # Run every 6 hour
 
 #see https://jasonet.co/posts/scheduled-actions/
 
