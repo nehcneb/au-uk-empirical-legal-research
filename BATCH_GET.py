@@ -768,12 +768,12 @@ if all_df_masters_needs_update == True:
     all_df_masters.to_csv(csv_buffer)
     s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
 
-    st.success(f"Updated all_df_masters online." )
-    print(f"Updated all_df_masters online." )
+    st.success(f"Updated all_df_masters.csv online." )
+    print(f"Updated all_df_masters.csv online." )
 
 else:
-    st.warning(f"No need to update all_df_masters online." )
-    print(f"No need to update all_df_masters online." )
+    st.warning(f"No need to update all_df_masters.csv online." )
+    print(f"No need to update all_df_masters.csv online." )
 
 #Update google sheet for all_df_masters
 #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
