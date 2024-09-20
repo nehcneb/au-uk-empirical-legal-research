@@ -121,7 +121,7 @@ else:#If using on streamlit
 
     AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
     AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-    aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+    AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
     
     SENDER = st.secrets["email_notifications"]["email_sender"]
     RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
