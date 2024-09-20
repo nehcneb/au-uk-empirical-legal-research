@@ -399,7 +399,7 @@ if own_account_allowed() > 0:
         
             if judgments_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
         
-                st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} judgments need to be processes, this app will send your requested data to your nominated email address in **2 business days**.")
+                st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} judgments need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
 
         st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each judgment, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} judgment(s).*")
     
@@ -1001,7 +1001,7 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
                                                 ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address']
                                                )
                         
-                        st.success('Your request has been submitted. This app will send your requested data to your nominated email address in **2 business days**. Please feel free to close this app.')
+                        st.success('Your request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Please feel free to close this app.')
                     
                     except Exception as e:
                         
