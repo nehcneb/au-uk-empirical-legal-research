@@ -143,10 +143,14 @@ for obj in bucket.objects.all():
 
 for key_body in aws_objects:
     if key_body['key'] == 'all_df_masters.csv':
-        all_df_masters = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+        all_df_masters_current = pd.read_csv(BytesIO(key_body['body']), index_col=0)
         st.success(f"Succesfully loaded {key_body['key']}.")
         break
 
+#Work on new copy of all_df_masters
+
+all_df_masters = all_df_masters_current.copy()
+        
 #Alternative download file example
 #NOT IN USE
 #s3 = boto3.client('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
@@ -788,15 +792,27 @@ for index in all_df_masters.index:
 st.subheader("Finish")
 
 # %%
-#Upload all_df_masters to aws
-csv_buffer = StringIO()
-all_df_masters.to_csv(csv_buffer)
-s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+#Upload all_df_masters to aws if needed
 
-# %%
+all_df_masters_needs_update = False
+
+for index in all_df_masters.index:
+    if all_df_masters.loc[index, 'status'] != all_df_masters_current.loc[index, 'status']:
+        all_df_masters_needs_update = True
+        break
+
+if all_df_masters_needs_update == True:
+    
+    csv_buffer = StringIO()
+    all_df_masters.to_csv(csv_buffer)
+    s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+
+    st.success(f"Updated all_df_masters online." )
+    print(f"Updated all_df_masters online." )
+
+else:
+    st.warning(f"No need to update all_df_masters online." )
+    print(f"No need to update all_df_masters online." )
+
 #Update google sheet for all_df_masters
 #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
-
-# %%
-st.success(f"Updated all_df_masters online." )
-print(f"Updated all_df_masters online." )
