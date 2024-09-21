@@ -469,11 +469,11 @@ for df_batch_response in df_batch_id_response_list:
 
         #Link GPT case-specific response to row in df_individual
         
-        case_index_list = df_individual.index[df_individual['custom_id']==custom_id].tolist()
+        judgment_index_list = df_individual.index[df_individual['custom_id']==custom_id].tolist()
 
-        if len(case_index_list) > 0:
+        if len(judgment_index_list) > 0:
             
-            case_index = case_index_list[0]
+            judgment_index = judgment_index_list[0]
 
             #Get gpt specific answers
             
@@ -518,12 +518,12 @@ for df_batch_response in df_batch_id_response_list:
                 
                 #answer = answers_dict[gpt_question]
 
-                #df_individual.loc[case_index, heading] = answer
+                #df_individual.loc[judgment_index, heading] = answer
 
-            #df_individual.loc[case_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
+            #df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
 
             #Add costs column
-            df_individual.loc[case_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
+            df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
 
         	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
 
