@@ -210,47 +210,47 @@ if retrive_button:
                 print(f"Succesfully loaded {key_body['key']}.")
                 break
     
-    if len(st.session_state.df_individual) > 0:
-    
-        st.session_state["page_from"] = 'pages/BATCH.py'           
-    
-        #Write results
-    
-        st.success("Your data is now available for download. Thank you for using LawtoData!")
-    
-        batch_index = all_df_masters.index[all_df_masters['batch_id'] == batch_code_entry].tolist()[0]
+        if len(st.session_state.df_individual) > 0:
         
-        #Button for downloading results
-        output_name = str(all_df_masters.loc[batch_index, 'Your name']) + '_' + str(today_in_nums) + '_results'
-    
-        csv_output = convert_df_to_csv(df_individual)
+            st.session_state["page_from"] = 'pages/BATCH.py'           
         
-        ste.download_button(
-            label="Download your data as a CSV (for use in Excel etc)", 
-            data = csv_output,
-            file_name= output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
-    
-        excel_xlsx = convert_df_to_excel(df_individual)
+            #Write results
         
-        ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
-                            data=excel_xlsx,
-                            file_name= output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-    
-        json_output = convert_df_to_json(df_individual)
+            st.success("Your data is now available for download. Thank you for using LawtoData!")
         
-        ste.download_button(
-            label="Download your data as a JSON", 
-            data = json_output,
-            file_name= output_name + '.json', 
-            mime= "application/json", 
-        )
-    
-        st.page_link('pages/AI.py', label="ANALYSE your data with an AI", icon = '🤔')        
+            batch_index = all_df_masters.index[all_df_masters['batch_id'] == batch_code_entry].tolist()[0]
+            
+            #Button for downloading results
+            output_name = str(all_df_masters.loc[batch_index, 'Your name']) + '_' + str(today_in_nums) + '_results'
+        
+            csv_output = convert_df_to_csv(df_individual)
+            
+            ste.download_button(
+                label="Download your data as a CSV (for use in Excel etc)", 
+                data = csv_output,
+                file_name= output_name + '.csv', 
+                mime= "text/csv", 
+        #            key='download-csv'
+            )
+        
+            excel_xlsx = convert_df_to_excel(df_individual)
+            
+            ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
+                                data=excel_xlsx,
+                                file_name= output_name + '.xlsx', 
+                                mime='application/vnd.ms-excel',
+                               )
+        
+            json_output = convert_df_to_json(df_individual)
+            
+            ste.download_button(
+                label="Download your data as a JSON", 
+                data = json_output,
+                file_name= output_name + '.json', 
+                mime= "application/json", 
+            )
+        
+            st.page_link('pages/AI.py', label="ANALYSE your data with an AI", icon = '🤔')        
 
 # %%
 
