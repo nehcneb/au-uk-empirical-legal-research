@@ -199,7 +199,7 @@ if retrive_button:
     if st.session_state['match_status'] == False:
         
         st.error('Your nominated email address or access code is not correct.')
-        quit()
+        st.stop()
         
     else:
         #Get relevant df_individual
