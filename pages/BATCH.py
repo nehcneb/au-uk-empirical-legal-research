@@ -163,13 +163,13 @@ st.write('Your access code can be found in the email notifying you of the availa
 
 email_entry = st.text_input(label = 'Email address', value = st.session_state['df_master'].loc[0, 'Your email address'])
 
-#if email_entry:
-    #st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+if email_entry:
+    st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
 
 batch_code_entry = st.text_input(label = 'Access code', value = st.session_state['df_master'].loc[0, 'batch_id'])
 
-#if batch_code_entry:
-    #st.session_state['df_master'].loc[0, 'batch_id'] = batch_code_entry
+if batch_code_entry:
+    st.session_state['df_master'].loc[0, 'batch_id'] = batch_code_entry
 
 with stylable_container(
     "green",
@@ -190,10 +190,7 @@ if retrive_button:
     if not (batch_code_entry and email_entry):
         st.warning('Please enter your nominated email address and access code.')
         quit()
-    else:
-        st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
-        st.session_state['df_master'].loc[0, 'batch_id'] = batch_code_entry
-        
+    else:        
         st.session_state['match_status'] = check_email_batch_id(all_df_masters, email_entry, batch_code_entry)
 
     if st.session_state['match_status'] == False:
