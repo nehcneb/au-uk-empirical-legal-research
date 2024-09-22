@@ -26,13 +26,14 @@ from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import requests
-import PyPDF2
+import pypdf
 import io
 from io import BytesIO
 
 #Excel
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
+import xlsxwriter
 
 #Streamlit
 import streamlit as st
@@ -132,9 +133,10 @@ def convert_df_to_csv(df):
 
 def convert_df_to_excel(df):
     #Excel metadata
-    excel_author = 'The Empirical Legal Research Kickstarter'
+    excel_author = 'LawtoData: An Empirical Legal Research Kickstarter'
     excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize partially funded the development of the Empirical Legal Research Kickstarter, which generated this spreadsheet.'
     output = BytesIO()
+    #writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
     writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
     df.to_excel(writer, index=False, sheet_name='Sheet1')
     workbook = writer.book
@@ -204,7 +206,7 @@ def pdf_judgment(url):
     headers = {'User-Agent': 'whatever'}
     r = requests.get(url, headers=headers)
     remote_file_bytes = io.BytesIO(r.content)
-    pdfdoc_remote = PyPDF2.PdfReader(remote_file_bytes)
+    pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
     text_list = []
 
     for page in pdfdoc_remote.pages:

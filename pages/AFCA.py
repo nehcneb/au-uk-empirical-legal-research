@@ -35,7 +35,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
 from urllib.request import urlretrieve
 import os
-import PyPDF2
+#import pypdf
 import io
 from io import BytesIO
 

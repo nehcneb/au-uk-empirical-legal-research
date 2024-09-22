@@ -508,26 +508,26 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
         #Create GPT question headings and append answers to individual spreadsheets
 
-        answers_list = [answers_dict]
+        #answers_list = [answers_dict]
 
-        if isinstance(answers_dict, list):
+        #if isinstance(answers_dict, list):
             
-            answers_list = answers_dict
+            #answers_list = answers_dict
         
-        for answers_dict in answers_list:
+        #for answers_dict in answers_list:
     
-            for answer_index in answers_dict.keys():
-    
-                answer_header = 'GPT question: ' + answer_index
-                
-                try:
-                
-                    df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
-    
-                except:
-    
-                    df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
-                
+        for answer_index in answers_dict.keys():
+
+            answer_header = 'GPT question: ' + answer_index
+            
+            try:
+            
+                df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
+
+            except:
+
+                df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
+            
         #Calculate GPT costs
 
         GPT_cost = GPT_file_triple[1]*gpt_output_cost(gpt_model) + GPT_file_triple[2]*gpt_input_cost(gpt_model)

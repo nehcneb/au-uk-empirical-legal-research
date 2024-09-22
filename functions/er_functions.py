@@ -37,7 +37,7 @@ import httplib2
 from urllib.request import urlretrieve
 import os
 import urllib.request
-import PyPDF2
+import pypdf
 import io
 from io import BytesIO
 
@@ -186,7 +186,7 @@ def er_judgment_text(case_link_pair):
     headers = {'User-Agent': 'whatever'}
     r = requests.get(url, headers=headers)
     remote_file_bytes = io.BytesIO(r.content)
-    pdfdoc_remote = PyPDF2.PdfReader(remote_file_bytes)
+    pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
     
     text_list = []
     

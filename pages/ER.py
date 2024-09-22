@@ -37,7 +37,7 @@ import httplib2
 from urllib.request import urlretrieve
 import os
 import urllib.request
-import PyPDF2
+#import pypdf
 import io
 from io import BytesIO
 

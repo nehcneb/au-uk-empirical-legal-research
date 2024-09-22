@@ -37,7 +37,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
 from urllib.request import urlretrieve
 import os
-import PyPDF2
+import pypdf
 import io
 from io import BytesIO
 from io import StringIO
@@ -203,7 +203,7 @@ def hca_pdf_judgment(url):
     headers = {'User-Agent': 'whatever'}
     r = requests.get(pdf_url, headers=headers)
     remote_file_bytes = io.BytesIO(r.content)
-    pdfdoc_remote = PyPDF2.PdfReader(remote_file_bytes)
+    pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
     text_list = []
 
     for page in pdfdoc_remote.pages:

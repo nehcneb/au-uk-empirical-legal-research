@@ -395,8 +395,9 @@ for index in all_df_masters.index:
             
             df_batch_id_response_list.append(batch_id_response)
 
-            #Update status and remove api key on all_df_masters
+            #Update status etc and remove api key on all_df_masters
             all_df_masters.loc[index, 'status'] = status
+            all_df_masters.loc[index, 'output_file_id'] = output_file_id
             all_df_masters.loc[index, 'Your GPT API key'] = ''
     
             #Update all_df_masters on AWS
@@ -527,29 +528,29 @@ for df_batch_response in df_batch_id_response_list:
 
         	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
 
-            answers_list = [answers_dict]
+            #answers_list = [answers_dict]
     
-            if isinstance(answers_dict, list):
-                answers_list = answers_dict
+            #if isinstance(answers_dict, list):
+                #answers_list = answers_dict
             
-            for answers_dict in answers_list:
+            #for answers_dict in answers_list:
             
-                for answer_index in answers_dict.keys():
-        
-                    #Check any question override
-                    if 'Say "n/a" only' in str(answer_index):
-                        answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
-                    else:
-                        answer_header = 'GPT question: ' + answer_index
-        
-                    try:
-                    
-                        df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
-        
-                    except:
-        
-                        df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])                
-        
+            for answer_index in answers_dict.keys():
+    
+                #Check any question override
+                if 'Say "n/a" only' in str(answer_index):
+                    answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
+                else:
+                    answer_header = 'GPT question: ' + answer_index
+    
+                try:
+                
+                    df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
+    
+                except:
+    
+                    df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])                
+    
         #Remove judgment column
         
         if 'judgment' in df_individual.columns:

@@ -35,7 +35,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
 from urllib.request import urlretrieve
 import os
-import PyPDF2
+import pypdf
 import io
 from io import BytesIO
 
@@ -532,7 +532,7 @@ def afca_old_pdf_judgment(case_meta):
 
     try:
         
-        pdfdoc_remote = PyPDF2.PdfReader(pdf_path)
+        pdfdoc_remote = pypdf.PdfReader(pdf_path)
         
         text_list = []
     
