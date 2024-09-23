@@ -223,38 +223,45 @@ for index in all_df_masters.index:
     current_status = str(all_df_masters.loc[index, 'status'])
 
     if current_status == 'to_process':
+
+        try:
     
-        api_key = all_df_masters.loc[index, 'Your GPT API key']
-    
-        openai.api_key = api_key
+            api_key = all_df_masters.loc[index, 'Your GPT API key']
         
-        df_dict = all_df_masters.loc[index].to_dict()
-    
-        df_master = pd.DataFrame.from_dict([df_dict], orient='columns')
-    
-        jurisdiction_page = df_master.loc[0, 'jurisdiction_page']
-    
-        gpt_batch_input = gpt_batch_input_submit(jurisdiction_page, df_master)
-
-        gpt_batch_input_list.append(gpt_batch_input)
+            openai.api_key = api_key
+            
+            df_dict = all_df_masters.loc[index].to_dict()
         
-        #Get batch record
-        batch_record = gpt_batch_input['batch_record']
+            df_master = pd.DataFrame.from_dict([df_dict], orient='columns')
         
-        batch_dict = batch_record.to_dict()
-        batch_id = batch_dict['id']
-        input_file_id = batch_dict['input_file_id']
-        status = batch_dict['status']
+            jurisdiction_page = df_master.loc[0, 'jurisdiction_page']
+        
+            gpt_batch_input = gpt_batch_input_submit(jurisdiction_page, df_master)
+    
+            gpt_batch_input_list.append(gpt_batch_input)
+            
+            #Get batch record
+            batch_record = gpt_batch_input['batch_record']
+            
+            batch_dict = batch_record.to_dict()
+            batch_id = batch_dict['id']
+            input_file_id = batch_dict['input_file_id']
+            status = batch_dict['status']
+    
+            #Update df_masters
+            all_df_masters.loc[index, 'batch_id'] = batch_id
+            all_df_masters.loc[index, 'input_file_id'] = input_file_id
+            all_df_masters.loc[index, 'status'] = status
+    
+            #Update counter
+            batch_request_counter += 1
 
-        #Update df_masters
-        all_df_masters.loc[index, 'batch_id'] = batch_id
-        all_df_masters.loc[index, 'input_file_id'] = input_file_id
-        all_df_masters.loc[index, 'status'] = status
+            print(f'{batch_id} submitted to GPT. Done {batch_request_counter}/{batch_request_total}.')
+            st.success(f'{batch_id} submitted to GPT. Done {batch_request_counter}/{batch_request_total}.')
 
-        #Update counter
-        batch_request_counter += 1
-
-        st.success(f'{batch_id} submitted to GPT. Done {batch_request_counter}/{batch_request_total}.')
+        except Exception as e:
+            print(Exception)
+            st.error(Exception)
 
     #Keep batching record on AWS
     #Upload all_df_masters to aws
@@ -308,7 +315,8 @@ for gpt_batch_input in gpt_batch_input_list:
 
     #Keep all_df_individuals on google sheets
     #conn_all_df_individuals.create(worksheet=batch_id, data=df_individual)
-    
+
+    print(f"{batch_id} saved online. Done {save_counter}/{len(gpt_batch_input_list)}.")
     st.success(f"{batch_id} saved online. Done {save_counter}/{len(gpt_batch_input_list)}.")
 
 #Alternative Uploading file example
@@ -351,67 +359,72 @@ for index in all_df_masters.index:
     current_status = all_df_masters.loc[index, "status"]
 
     if current_status == 'validating':
-    
-        api_key = all_df_masters.loc[index, 'Your GPT API key']
-        
-        openai.api_key = api_key
-    
-        batch_id = all_df_masters.loc[index, 'batch_id']
-    
-        gpt_model = "gpt-4o-mini"
-        if all_df_masters.loc[index, 'Use flagship version of GPT'] == True:
-            gpt_model = "gpt-4o-2024-08-06"
-        else:        
-            gpt_model = "gpt-4o-mini"
-            
-        #Get batch record
-        batch_record = openai.batches.retrieve(batch_id)
-    
-        output_file_id = ''
-    
+
         try:
-    
-            output_file_id = batch_record.output_file_id
-    
-        except:
-    
-            st.warning(f"{batch_id}: output_file_id not yet available.")
-            
-        status = batch_record.status
-
-        #Print any status change
-        st.info(f"{batch_id}: status == {status}.")
-        print(f"{batch_id}: status == {status}.")
         
-        if status == 'completed':
+            api_key = all_df_masters.loc[index, 'Your GPT API key']
             
-            batch_response = openai.files.content(output_file_id)
+            openai.api_key = api_key
+        
+            batch_id = all_df_masters.loc[index, 'batch_id']
+        
+            gpt_model = "gpt-4o-mini"
+            if all_df_masters.loc[index, 'Use flagship version of GPT'] == True:
+                gpt_model = "gpt-4o-2024-08-06"
+            else:        
+                gpt_model = "gpt-4o-mini"
+                
+            #Get batch record
+            batch_record = openai.batches.retrieve(batch_id)
+        
+            output_file_id = ''
+        
+            try:
+        
+                output_file_id = batch_record.output_file_id
+        
+            except:
+        
+                st.warning(f"{batch_id}: output_file_id not yet available.")
+                
+            status = batch_record.status
     
-            df_batch_response = pd.read_json(batch_response.text, lines=True)
-    
-            batch_id_response = {'batch_id': batch_id, 'df_batch_response': df_batch_response, 'gpt_model': gpt_model}
-    
-            #Apppend gpt batch id and responses to list for adding to df_individual later
+            #Print any status change
+            st.info(f"{batch_id}: status == {status}.")
+            print(f"{batch_id}: status == {status}.")
             
-            df_batch_id_response_list.append(batch_id_response)
-
-            #Update status etc and remove api key on all_df_masters
-            all_df_masters.loc[index, 'status'] = status
-            all_df_masters.loc[index, 'output_file_id'] = output_file_id
-            all_df_masters.loc[index, 'Your GPT API key'] = ''
+            if status == 'completed':
+                
+                batch_response = openai.files.content(output_file_id)
+        
+                df_batch_response = pd.read_json(batch_response.text, lines=True)
+        
+                batch_id_response = {'batch_id': batch_id, 'df_batch_response': df_batch_response, 'gpt_model': gpt_model}
+        
+                #Apppend gpt batch id and responses to list for adding to df_individual later
+                
+                df_batch_id_response_list.append(batch_id_response)
     
-            #Update all_df_masters on AWS
-            #csv_buffer = StringIO()
-            #all_df_masters.to_csv(csv_buffer)
-            #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
-
-            #Update counter 
-            retrieve_counter += 1
+                #Update status etc and remove api key on all_df_masters
+                all_df_masters.loc[index, 'status'] = status
+                all_df_masters.loc[index, 'output_file_id'] = output_file_id
+                all_df_masters.loc[index, 'Your GPT API key'] = ''
+        
+                #Update all_df_masters on AWS
+                #csv_buffer = StringIO()
+                #all_df_masters.to_csv(csv_buffer)
+                #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
     
-            #Update google sheet for all_df_masters
-            #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
-
-            st.success(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
+                #Update counter 
+                retrieve_counter += 1
+        
+                #Update google sheet for all_df_masters
+                #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
+    
+                st.success(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
+        except Exception as e:
+            print(e)
+            st.error(e)
 
 
 # %% [markdown]
