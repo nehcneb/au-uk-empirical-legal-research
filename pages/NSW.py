@@ -351,7 +351,7 @@ if 'disable_input' not in st.session_state:
 # %%
 #If landing page is not home
 if 'page_from' not in st.session_state:
-    st.session_state['page_from'] = 'Home.py'
+    st.session_state['page_from'] = 'HOME.py'
 
 # %% [markdown]
 # ## Form before AI
@@ -550,7 +550,8 @@ if return_button:
 
     st.session_state["page_from"] = 'pages/NSW.py'
 
-    st.switch_page("Home.py")
+    st.switch_page("HOME.py")
+    
 
 # %%
 if reset_button:
