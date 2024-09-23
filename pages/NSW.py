@@ -550,7 +550,7 @@ if return_button:
 
     st.session_state["page_from"] = 'pages/NSW.py'
 
-    st.switch_page("HOME.py")
+    st.switch_page("Home.py")
     
 
 # %%

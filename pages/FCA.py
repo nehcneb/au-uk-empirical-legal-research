@@ -543,7 +543,7 @@ if return_button:
 
     st.session_state["page_from"] = 'pages/FCA.py'
     
-    st.switch_page("HOME.py")
+    st.switch_page("Home.py")
 
 
 # %%
