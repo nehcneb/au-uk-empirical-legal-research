@@ -326,7 +326,7 @@ if "judgment_counter_max" not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[your own files].")
+st.header(f"Research :blue[your own files]")
     
 st.write(f'**:green[Please upload your documents or images.]** By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
 
@@ -365,9 +365,11 @@ st.caption('During the pilot stage, the languages supported are limited. Please 
 # ## Form for AI and account
 
 # %%
-st.header("Use GPT as your research assistant")
+#st.header("Use GPT as your research assistant")
 
-st.markdown("**:green[Would you like GPT to answer questions about your files?]**")
+st.header(":blue[Would you to ask GPT questions about your files?]")
+
+#st.markdown("**:green[Would you like GPT to answer questions about your files?]**")
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 

@@ -13,7 +13,7 @@
 # ---
 
 # %% editable=true slideshow={"slide_type": ""}
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research-unlimited/Home.py
+#streamlit run Dropbox/Python/GitHub/lawtodata/Home.py
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Preliminaries
@@ -50,42 +50,36 @@ if batch_mode_allowed() > 0:
 else:
     print(f'By default, users are NOT allowed to use batch mode.')
 
-# %% editable=true slideshow={"slide_type": ""}
-#List of sources of information
-sources_list = ["Judgments of the High Court of Australia", 
-                 "Judgments of the Federal Court of Australia", 
-                "Judgments of the New South Wales courts and tribunals", 
-                #"Judgments of select United Kingdom courts and tribunals", 
-                #'judgments of the Canadian courts, boards and tribunals', 
-                'Decisions of the Australian Financial Complaints Authority', 
-                #'Decisions of the Superannuation Complaints Tribunal of Australia', 
-                "The English Reports (nearly all English case reports from 1220 to 1866)",
-                "The Kercher Reports (judgments of the New South Wales superior courts from 1788 to 1900)", 
-                "Your own files", 
-                "Your own spreadsheet"
-               ]
+# %%
+#Dict of available sources
+page_dict = {"pages/HCA.py": "Judgments of the High Court of Australia",
+            "pages/FCA.py": "Judgments of the Federal Court of Australia", 
+            "pages/NSW.py": "Judgments of the New South Wales courts and tribunals", 
+            #"pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
+            #"pages/CA.py": 'judgments of the Canadian courts, boards and tribunals', 
+            "pages/AFCA.py": 'Decisions of the Australian Financial Complaints Authority', 
+            #"pages/SCTA.py": 'Decisions of the Superannuation Complaints Tribunal of Australia', 
+            "pages/ER.py": "The English Reports (nearly all English case reports from 1220 to 1866)", 
+            "pages/KR.py": "The Kercher Reports (judgments of the New South Wales superior courts from 1788 to 1900)", 
+            "pages/OWN.py": "Your own files", 
+            'pages/AI.py': "Your own spreadsheet"
+            }
 
-source_pages = ["pages/HCA.py",
-                "pages/FCA.py", 
-                "pages/NSW.py", 
-                #"pages/UK.py", 
-                #"pages/CA.py", 
-                "pages/AFCA.py", 
-                #"pages/SCTA.py", 
-                "pages/ER.py", 
-                "pages/KR.py", 
-                "pages/OWN.py", 
-                'pages/AI.py']
+#List of pages
+page_list = [*page_dict.keys()]
+
+#List of sources
+source_list = [*page_dict.values()]
 
 
 # %%
-def source_index(page_from):
+#Return index of page if available, none otherwise
+def page_index(page_from):
     try:
-        index = source_pages.index(page_from)
+        index = page_list.index(page_from)
         return index
         
-    except:
-        
+    except: 
         return None
 
 
@@ -94,16 +88,7 @@ def source_index(page_from):
 #Initialize
 
 if 'page_from' not in st.session_state:
-    
     st.session_state['page_from'] = 'Home.py'
-
-#if 'source' not in st.session_state:
-    #st.session_state['source'] = None
-
-#if st.session_state.page_from:
-    #default_source_index = sources_list.index(st.session_state['source'])
-#else:
-    #default_source_index = None
 
 if 'i_understand' not in st.session_state:
     st.session_state['i_understand'] = False
@@ -142,17 +127,15 @@ st.caption('The developer Ben Chen acknowledges and greatly appreciates the exem
 
 st.header("Start")
 
-#    st.subheader("What would you like to study?")
+st.markdown("""What would you like to research?""")
 
-st.markdown("""What would you like to study?""")
-source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = sources_list, index = source_index(st.session_state.page_from))
-#    gpt_api_key_entry = st.text_input("Your GPT API key")
+source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = source_list, index = page_index(st.session_state.page_from))
 
 if source_entry:
 
     st.warning(f"This app is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
 
-    if sources_list.index(source_entry) != source_index(st.session_state.page_from):
+    if source_list.index(source_entry) != page_index(st.session_state.page_from):
 
         st.session_state['i_understand'] = False
     
@@ -162,14 +145,11 @@ home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry))
 
 if source_entry:
 
-    if sources_list.index(source_entry) != source_index(st.session_state.page_from):
+    if source_list.index(source_entry) != page_index(st.session_state.page_from):
 
-        if ((source_index(st.session_state.page_from) != None) and ('df_master' in st.session_state)):
-            #If page_from == CA or UK, for now, source_index(st.session_state.page_from) == None
+        if ((page_index(st.session_state.page_from) != None) and ('df_master' in st.session_state)):
 
-            #page_from_index = source_pages.index(st.session_state.page_from)
-
-            page_from_name = sources_list[source_index(st.session_state.page_from)]
+            page_from_name = source_list[page_index(st.session_state.page_from)]
 
             st.warning(f'Pressing NEXT will :red[erase] any earlier entries and data produced. To download such entries or data, please select {page_from_name[0].lower()}{page_from_name[1:]} instead.')
 
@@ -189,13 +169,12 @@ if home_next_button:
 
     else:
 
-        source_entry_index = sources_list.index(source_entry)
+        source_entry_index = source_list.index(source_entry)
 
         #Clear df_master if one has been generated from another page
-            
         if 'df_master' in st.session_state:
 
-            if source_pages[source_entry_index] != st.session_state.page_from:
+            if page_list[source_entry_index] != st.session_state.page_from:
 
                 st.session_state.pop('df_master')
 
@@ -203,9 +182,7 @@ if home_next_button:
 
         st.session_state["page_from"] = "Home.py"
 
-        page_to = source_pages[source_entry_index]
+        page_to = page_list[source_entry_index]
 
         st.switch_page(page_to)
 
-
-# %%

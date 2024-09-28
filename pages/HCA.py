@@ -312,7 +312,7 @@ def hca_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content#, intro_for_GPT
+from functions.gpt_functions import question_characters_bound, default_msg
 
 
 # %%
@@ -330,14 +330,6 @@ if check_questions_answers() > 0:
 else:
     print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
-
-# %%
-#Jurisdiction specific instruction
-#hca_role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections, provide the paragraph or page numbers or section names as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
-
-system_instruction = role_content #hca_role_content
-
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Initialize default GPT settings
@@ -440,12 +432,9 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[judgments of the High Court of Australia].")
+st.header(f"Research :blue[judgments of the High Court of Australia]")
 
-#    st.header("Judgment Search Criteria")
-
-st.markdown("""**:green[Please enter your search terms.]** This app will collect (ie scrape) the first 10 judgments returned by your search terms.
-""")
+st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 

@@ -159,7 +159,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content, judgment_batch_cutoff, judgment_batch_max
+from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max
 #, intro_for_GPT
 
 
@@ -279,9 +279,7 @@ return_button = st.button('RETURN to the previous page')
 
 #st.header("Use GPT as your research assistant")
 
-#st.markdown("**:green[Would you like GPT to answer questions about the judgments returned by your search terms?]**")
-
-st.header(":blue[Would you GPT to answer questions about the judgments returned by your search terms?]")
+st.header(":blue[Would you to ask GPT questions about the judgments returned by your search terms?]")
 
 st.markdown("""Please consider trying this app without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
 """)

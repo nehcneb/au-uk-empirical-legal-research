@@ -78,7 +78,8 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # English Reports search engine
 
 # %%
-from functions.er_functions import er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json, er_search_url
+from functions.er_functions import er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json, er_search_url
+
 
 
 # %%
@@ -173,7 +174,7 @@ def er_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound
+from functions.gpt_functions import question_characters_bound, default_msg
 
 
 # %%
@@ -190,16 +191,6 @@ if check_questions_answers() > 0:
     print(f'By default, questions and answers are checked for potential privacy violation.')
 else:
     print(f'By default, questions and answers are NOT checked for potential privacy violation.')
-
-
-# %%
-#Jurisdiction specific instruction
-
-role_content_er = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". The "judgment" field of the JSON given to you sometimes contains judgments for multiple cases. If you detect multiple judgments in the "judgment" field, please provide answers only for the specific case identified in the "Case name" field of the JSON given to you.'
-
-system_instruction = role_content_er
-
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 
 # %%
@@ -281,14 +272,9 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"You have selected to study :blue[the English Reports].")
+st.header(f"Research :blue[the English Reports]")
 
-#Search terms
-
-#    st.header("Judgment Search Criteria")
-
-st.markdown("""**:green[Please enter your search terms.]** This app will collect (ie scrape) the first 10 judgments returned by your search terms.
-""")
+st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 

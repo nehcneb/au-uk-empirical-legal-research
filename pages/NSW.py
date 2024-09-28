@@ -237,7 +237,7 @@ def nsw_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content#, intro_for_GPT
+from functions.gpt_functions import question_characters_bound, default_msg
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
@@ -258,12 +258,6 @@ if check_questions_answers() > 0:
 else:
     print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
-
-# %%
-#Jurisdiction specific instruction
-system_instruction = role_content
-
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Module, costs and upperbounds
@@ -363,11 +357,11 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header("You have selected to study :blue[judgments of the New South Wales courts and tribunals].")
+st.header("Research :blue[judgments of the New South Wales courts and tribunals]")
 
-#Search terms
+st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
 
-st.write(f'**:green[Please enter your search terms.]** This app will collect (ie scrape) the first {default_judgment_counter_bound} judgments returned by your search terms, using [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo.')
+st.write(f'To collect judgments, this app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub.')
 
 st.caption("During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
 
@@ -551,7 +545,7 @@ if return_button:
     st.session_state["page_from"] = 'pages/NSW.py'
 
     st.switch_page("Home.py")
-    
+
 
 # %%
 if reset_button:

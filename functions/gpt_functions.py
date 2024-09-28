@@ -136,12 +136,15 @@ def gpt_input_cost(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
         gpt_input_cost = 1/1000000*0.5
         
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13 #As of 20240910, points towards gpt-4o-2024-05-13
+    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         gpt_input_cost = 1/1000000*5
 
-    if gpt_model == "gpt-4o-2024-08-06":
+    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
         gpt_input_cost = 1/1000000*2.5
-    
+
+    if gpt_model == "gpt-4o":
+        gpt_input_cost = 1/1000000*2.5
+        
     if gpt_model == "gpt-4o-mini":
         gpt_input_cost = 1/1000000*0.15
         
@@ -151,10 +154,13 @@ def gpt_output_cost(gpt_model):
     if gpt_model == "gpt-3.5-turbo-0125":
         gpt_output_cost = 1/1000000*1.5
         
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13 #As of 20240910, points towards gpt-4o-2024-05-13
+    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         gpt_output_cost = 1/1000000*15
 
-    if gpt_model == "gpt-4o-2024-08-06":
+    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
+        gpt_output_cost = 1/1000000*10
+
+    if gpt_model == "gpt-4o":
         gpt_output_cost = 1/1000000*10
     
     if gpt_model == "gpt-4o-mini":
@@ -172,10 +178,14 @@ def tokens_cap(gpt_model):
         
         tokens_cap = int(16385 - 3000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13 #As of 20240910, points towards gpt-4o-2024-05-13
+    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
-    if gpt_model == "gpt-4o-2024-08-06":
+    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
+        
+        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
+
+    if gpt_model == "gpt-4o":
         
         tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
     
@@ -190,20 +200,28 @@ def max_output(gpt_model, messages_for_GPT):
         
         max_output_tokens = int(16385 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13 #As of 20240910, points towards gpt-4o-2024-05-13
+    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
-    if gpt_model == "gpt-4o-2024-08-06":
+    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
+    if gpt_model == "gpt-4o":
+        
+        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.s
+    
     if gpt_model == "gpt-4o-mini":
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
     return min(4096, abs(max_output_tokens))
     
+
+
+# %%
+default_msg = f'By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} judgments, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from each judgment.'
 
 
 # %%
@@ -478,11 +496,6 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
 #For modern judgments, define system role content for GPT
 role_content = "You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment or metadata, include a reference to those paragraphs, pages or sections. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write 'answer not found'. "
 
-#safeguards = "Where you are asked to identify a party's birthday, address, or other personally identifiable information, answer 'potential privacy violation'. " 
-
-#role_content = role_content_raw# + safeguards
-
-#role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
 # %% [markdown]
 # ## GPT instant response

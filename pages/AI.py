@@ -1019,7 +1019,7 @@ if st.button('RETURN to previous page'):
     else:
         st.switch_page('Home.py')
 
-st.header("You have chosen to :blue[analyse a spreadsheet].")
+st.header("Research :blue[your spreadsheet]")
 
 st.caption(f'[PandasAI](https://github.com/Sinaptik-AI/pandas-ai) provides the framework for analysing your spreadsheet with an AI.')
 
