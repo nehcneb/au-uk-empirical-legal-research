@@ -639,7 +639,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Dear {ULTIMATE_RECIPIENT_NAME}
     </p>
     <p>
-    Thank you for using <em>LawtoData</em>. You can now view and download your requested data. To do so, please click on the following link:
+    Thank you for using LawtoData. You can now view and download your requested data. To do so, please click on the following link:
     </p>
     <p>
     {ACCESS_LINK}
@@ -648,7 +648,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Your access code is {BATCH_CODE}
     </p>     
     <p>
-    <em>LawtoData</em> is partially funded by a University of Sydney Research Accelerator (SOAR) Prize. Please kindly acknowledge this if you use your requested data to produce any research output.
+    {funder_msg}
     </p>    
     <p>
     Please don't hesitate to reach out if I could be of assistance.
