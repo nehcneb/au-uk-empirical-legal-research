@@ -62,8 +62,8 @@ import streamlit as st
 #Import functions
 from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
+#For checking questions and answers, acknowledgment
+from functions.common_functions import check_questions_answers, funder_msg
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, GPT_answers_check
 
@@ -614,10 +614,8 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     
     f"Your access code is {BATCH_CODE}\r\n\r\n"
     
-    "Lawtodata is partially funded by a University of Sydney Research Accelerator (SOAR) Prize. Please kindly acknowledge this if you use your requested data to produce any research output. \r\n\r\n"
-    
-    #There is no need to acknowledge me. 
-    
+    f"{funder_msg} \r\n\r\n"
+        
     "Kind regards\r\n\r\n"
     
     "Ben\r\n\r\n"

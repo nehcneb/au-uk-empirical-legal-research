@@ -126,15 +126,15 @@ judgment_text_lower_bound = 5000
 # %%
 #Create function for saving responses and results
 def convert_df_to_json(df):
-    return df.to_json(orient = 'split', compression = 'infer', default_handler=str)
+    return df.to_json(orient = 'split', compression = 'infer', default_handler=str, indent=4)
 
 def convert_df_to_csv(df):
    return df.to_csv(index=False).encode('utf-8')
 
 def convert_df_to_excel(df):
     #Excel metadata
-    excel_author = 'LawtoData: An Empirical Legal Research Kickstarter'
-    excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize partially funded the development of the Empirical Legal Research Kickstarter, which generated this spreadsheet.'
+    excel_author = 'LawtoData'
+    excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA) partially funded the development of LawtoData, which generated this spreadsheet.'
     output = BytesIO()
     #writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
     writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
@@ -150,34 +150,8 @@ def convert_df_to_excel(df):
 
 
 # %%
-#Define function to determine eligibility for GPT use
-
-#Define a list of privileged email addresses with unlimited GPT uses
-
-def prior_GPT_uses(email_address, df_online):
-    privileged_emails = st.secrets["secrets"]["privileged_emails"].replace(' ', '').split(',')
-    # df_online variable should be the online df_online
-    prior_use_counter = 0
-    for i in df_online.index:
-        if ((df_online.loc[i, "Your email address"] == email_address) 
-            and (int(df_online.loc[i, "Use GPT"]) > 0) 
-            and (len(df_online.loc[i, "Processed"])>0)
-           ):
-            prior_use_counter += 1
-    if email_address in privileged_emails:
-        return 0
-    else:
-        return prior_use_counter
-
-#Define function to check whether email is educational or government
-def check_edu_gov(email_address):
-    #Return 1 if educational or government, return 0 otherwise
-    end=email_address.split('@')[1]
-    if (('.gov' in end) or ('.edu' in end) or ('.ac' in end)):
-        return 1
-    else:
-        return 0
-
+#Funder
+funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
 
 
 # %%
