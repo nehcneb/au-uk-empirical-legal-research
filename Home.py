@@ -127,7 +127,16 @@ st.caption('The developer Ben Chen acknowledges and greatly appreciates the exem
 
 st.header("Start")
 
-st.markdown("""What would you like to research?""")
+st.markdown("""You will be asked to
+
+(1) select a court, tribunal, or another source of information to research; 
+
+(2) enter search terms to identify your preferred judgments, or upload your own files; 
+
+(3) enter questions about each judgment or file for GPT to answer.
+""")
+
+st.subheader(""":green[What would you like to research?]""")
 
 source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = source_list, index = page_index(st.session_state.page_from))
 

@@ -326,7 +326,7 @@ if "judgment_counter_max" not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Research :blue[your own files]")
+st.header(f"Upload :blue[your own files]")
     
 st.write(f'**:green[Please upload your documents or images.]** By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
 

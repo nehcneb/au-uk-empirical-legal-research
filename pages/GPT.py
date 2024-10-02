@@ -281,16 +281,16 @@ return_button = st.button('RETURN to the previous page')
 
 st.header(":blue[Would you to ask GPT questions about the judgments returned by your search terms?]")
 
-st.markdown("""Please consider trying this app without asking GPT any questions first. You can, for instance, obtain the judgments satisfying your search criteria and extract the judgment metadata without using GPT.
+st.markdown("""You can use this app without asking GPT any questions. For instance, you can extract judgment metadata and get estimates of judgment length and GPT cost. 
 """)
 
-gpt_activation_entry = st.checkbox(label = 'Use GPT', value = st.session_state['df_master'].loc[0, 'Use GPT'])
+gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
 if gpt_activation_entry:
     
     st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
 
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per judgment. The [exact cost](https://openai.com/pricing) for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced. You will be given ex-post cost estimates.")
+st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per judgment. The [exact cost](https://openai.com/pricing) for answering a question about a judgment depends on the length of the question, the length of the judgment, and the length of the answer produced. You will be given cost estimates.")
 
 st.subheader("Enter your questions for each judgment")
 

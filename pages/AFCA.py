@@ -635,7 +635,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Research :blue[decisions of the Australian Financial Complaints Authority]")
+st.header(f"Search :blue[decisions of the Australian Financial Complaints Authority]")
 
 st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
 
