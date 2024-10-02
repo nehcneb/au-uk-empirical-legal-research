@@ -102,7 +102,7 @@ if 'i_understand' not in st.session_state:
 
 st.title(":blue[LawtoData]")
 
-st.subheader("An Empirical Legal Research Kickstarter")
+st.subheader("An Empirical Legal Research Automator")
 
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research. 
 
