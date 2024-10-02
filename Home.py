@@ -131,7 +131,7 @@ st.markdown("""You will be asked to
 
 (1) select a court, tribunal, or another source of information to research; 
 
-(2) enter search terms to identify your preferred judgments, or upload your own files; 
+(2) enter search terms to identify your preferred judgments, or upload your own files; and
 
 (3) enter questions about each judgment or file for GPT to answer.
 """)
