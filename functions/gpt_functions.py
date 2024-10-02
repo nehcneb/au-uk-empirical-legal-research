@@ -291,14 +291,14 @@ def judgment_prompt_json(judgment_json, gpt_model):
 questions_check_system_instruction = """
 You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
 You will be given questions to check in JSON form. Please provide labels for these questions based only on information contained in the JSON.
-Where a question seeks information about a person's birthday or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
+Where a question seeks information about a person's birth or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
 """
 
 #More general below
 #questions_check_system_instruction = """
 #You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
 #You will be given questions to check in JSON form. 
-#Based only on information contained in the JSON, please check each question for whether it seeks a person's birthday, address, or other personally identifiable information. 
+#Based only on information contained in the JSON, please check each question for whether it seeks a person's birth, address, or other personally identifiable information. 
 #Where a question indeed seeks personally identifiable information, you label "1". 
 #Where a question does not seek personally identifiable information, you label "0". 
 #If you are not sure, label "unclear".
@@ -395,22 +395,14 @@ def checked_questions_json(questions_json, gpt_labels_output):
 #Check questions for potential privacy infringement
 
 answers_check_system_instruction = """
-You are a compliance officer helping an academic researcher to redact birthdays and addresses only. 
+You are a compliance officer helping an academic researcher to redact information about birth and address only. 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
-Where any part of the text contains a birthday or an address, you replace that part with "[redacted]". 
+Where any part of the text contains information about birth or an address, you replace that part with "[redacted]". 
 You then return the remainder of the text unredacted.
-You redact birthdays and addresses only. Do not redact anything else, such as names, dates of death, age.
-For example, if the text given to you is "John Smith, born 1 January 1950, aged 58, now lives at 1 Main St Blackacre.", you return "John Smith, born [redacted], aged 58, now lives at [redacted].".
+You redact information about birth and address only. Do not redact anything else, such as names, death, age.
+For example, if the text given to you is "John Smith, born 1 January 1950, aged 58, died on 20 December 2023 at 1 Main St Blackacre.", you return "John Smith, born [redacted], aged 58, died on 20 December 2023 at [redacted].".
 """
 
-#If more general below
-#answers_check_system_instruction = """
-#You are a compliance officer helping an academic researcher to redact personally identifiable information. 
-#You will be given text to check in JSON form. 
-#Based only on information contained in the JSON, please check each text for whether it contains a person's birthday, address, or other personally identifiable information. 
-#Where any part of the text contains personally identifiable information, you replace that part with "[redacted]". 
-#You then return the remainder of the text unredacted.
-#"""
 
 
 # %%
