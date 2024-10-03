@@ -26,7 +26,7 @@ import streamlit as st
 # %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
 st.set_page_config(
-   page_title="LawtoData: An Empirical Legal Research Kickstarter",
+   page_title="LawtoData: An Empirical Legal Research Automator",
    page_icon="🧊",
    layout="centered",
    initial_sidebar_state="collapsed",
