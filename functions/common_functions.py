@@ -20,7 +20,6 @@
 import datetime
 from datetime import date
 from dateutil import parser
-from dateutil.parser import parse
 from dateutil.relativedelta import *
 from datetime import datetime, timedelta
 import pandas as pd
@@ -82,7 +81,7 @@ def is_date(string, fuzzy=False):
     :param fuzzy: bool, ignore unknown tokens in string if True
     """
     try: 
-        parse(string, fuzzy=fuzzy)
+        parser.parse(string, fuzzy=fuzzy)
         return True
 
     except ValueError:
