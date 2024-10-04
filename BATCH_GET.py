@@ -82,6 +82,7 @@ st.set_page_config(
    initial_sidebar_state="collapsed",
 )
 
+
 # %%
 #Initialise
 if 'page_from' not in st.session_state:
