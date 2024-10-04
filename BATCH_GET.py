@@ -76,7 +76,7 @@ else:
 # %%
 #Title of webpage
 st.set_page_config(
-   page_title="LawtoData: An Empirical Legal Research Kickstarter",
+   page_title="LawtoData: An Empirical Legal Research Automator",
    page_icon="🧊",
    layout="centered",
    initial_sidebar_state="collapsed",
@@ -90,7 +90,7 @@ if 'page_from' not in st.session_state:
 # %%
 st.title(":blue[LawtoData]")
 
-st.subheader("An Empirical Legal Research Kickstarter")
+st.subheader("An Empirical Legal Research Automator")
 
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research.""") 
 
@@ -628,7 +628,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
     )
 
-    #<h1>LawtoData: an Empirical Legal Research Kickstarter</h1>
+    #<h1>LawtoData: an Empirical Legal Research Automator</h1>
 
     
     # The HTML body of the email.
