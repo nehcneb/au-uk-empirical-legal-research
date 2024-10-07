@@ -291,7 +291,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
 questions_check_system_instruction = """
 You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
 You will be given questions to check in JSON form. Please provide labels for these questions based only on information contained in the JSON.
-Where a question seeks information about a person's date of birth or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
+Where a question seeks information about a person's birth or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
 For example, the question "What's the plaintiff's date of birth?" should be labelled "1".
 For example, the question "What's the defendant's address?" should be labelled "1".
 For example, the question "What's the victim's date of death?" should be labelled "0".
@@ -303,7 +303,7 @@ For example, the question "What's the defendant's age?" should be labelled "0".
 #questions_check_system_instruction = """
 #You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
 #You will be given questions to check in JSON form. 
-#Based only on information contained in the JSON, please check each question for whether it seeks a person's date of birth, address, or other personally identifiable information. 
+#Based only on information contained in the JSON, please check each question for whether it seeks a person's birth, address, or other personally identifiable information. 
 #Where a question indeed seeks personally identifiable information, you label "1". 
 #Where a question does not seek personally identifiable information, you label "0". 
 #If you are not sure, label "unclear".
@@ -400,11 +400,11 @@ def checked_questions_json(questions_json, gpt_labels_output):
 #Check questions for potential privacy infringement
 
 answers_check_system_instruction = """
-You are a compliance officer helping an academic researcher to redact information about dates of birth and addresses. 
+You are a compliance officer helping an academic researcher to redact information about birth and address. 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
-Where any part of the text identifies a date of birth or an address, you replace that part with "[redacted]". 
+Where any part of the text identifies birth or an address, you replace that part with "[redacted]". 
 You then return the remainder of the text unredacted.
-You redact dates of birth and addresses only. Do not redact anything else, such as names, date of death, age.
+You redact birth and address only. Do not redact anything else, such as names, date of death, age.
 For example, if the text given to you is "John Smith, born 1 January 1950, died on 20 December 2008 at 1 Main St Blackacre aged 58.", you return "John Smith, born [redacted], died on 20 December 2008 at [redacted] aged 58.".
 """
 
@@ -437,11 +437,12 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
         
         for q_index in q_keys:
             
-            redacted_answers_json.update({q_index: 'Your answer for the question with index ' + q_index})
-    
+            #redacted_answers_json.update({q_index: 'Your answer for the question with index ' + q_index})
+            redacted_answers_json.update({q_index: 'Your response.'})
+
     #Create answers_to_check_json, which include the answer format
     
-    question_to_check = [{"role": "user", "content": json.dumps(answers_to_check_json, default = str) + ' Answer in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
+    question_to_check = [{"role": "user", "content": json.dumps(answers_to_check_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     
@@ -517,8 +518,9 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
-    
+        #answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
+        answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+
     #Create questions, which include the answer format
     
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Give responses in the following JSON form: ' + json.dumps(answers_json, default = str)}]
@@ -850,8 +852,9 @@ def gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_ins
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
-    
+        #answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
+        answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+
     #Create questions, which include the answer format
     
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Give responses in the following JSON form: ' + json.dumps(answers_json, default = str)}]
