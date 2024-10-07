@@ -133,7 +133,7 @@ st.markdown("""You will be asked to
 
 (2) enter search terms to identify your preferred judgments, or upload your own files; and
 
-(3) enter questions about each judgment or file for GPT to answer.
+(3) enter questions about these judgments or files for GPT to answer.
 """)
 
 st.subheader(""":green[What would you like to research?]""")
