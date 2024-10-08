@@ -508,18 +508,20 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
         #Create GPT question headings and append answers to individual spreadsheets
 
-        #answers_list = [answers_dict]
+        q_counter = 1
 
-        #if isinstance(answers_dict, list):
-            
-            #answers_list = answers_dict
-        
-        #for answers_dict in answers_list:
-    
         for answer_index in answers_dict.keys():
 
-            answer_header = 'GPT question: ' + answer_index
+            answer_header = f'GPT question {q_counter}: ' + answer_index
+
+            #Check any errors
+            answer_string = str(answers_dict[answer_index]).lower()
             
+            if ((answer_string.startswith('your answer.')) or (answer_string.startswith('your response.'))):
+                
+                answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
+
+            #Append answer to spreadsheet
             try:
             
                 df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
@@ -527,6 +529,8 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
             except:
 
                 df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
+
+            q_counter += 1
             
         #Calculate GPT costs
 
@@ -730,7 +734,7 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
     answers_json = {}
     
     for q_index in q_keys:
-        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
+        answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
     
     #Create questions, which include the answer format
     
@@ -881,11 +885,20 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
             GPT_file_triple = [answers_dict, answers_tokens, input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
+        q_counter = 1
 
         for answer_index in answers_dict.keys():
 
-            answer_header = 'GPT question: ' + answer_index
+            answer_header = f'GPT question {q_counter}: ' + answer_index
+
+            #Check any errors
+            answer_string = str(answers_dict[answer_index]).lower()
             
+            if ((answer_string.startswith('your answer.')) or (answer_string.startswith('your response.'))):
+                
+                answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
+
+            #Append answer to spreadsheet
             try:
             
                 df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
@@ -893,6 +906,8 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
             except:
 
                 df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
+
+            q_counter += 1
                 
         #Calculate GPT costs
 

@@ -526,45 +526,38 @@ for df_batch_response in df_batch_id_response_list:
         
                     print(e)
 
-            #Attach GPT answers to df_individual
-            #for gpt_question in answers_dict.keys():
-
-                #heading = 'GPT question: ' + gpt_question
-                
-                #answer = answers_dict[gpt_question]
-
-                #df_individual.loc[judgment_index, heading] = answer
-
-            #df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
-
             #Add costs column
             df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
 
-        	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
-
-            #answers_list = [answers_dict]
-    
-            #if isinstance(answers_dict, list):
-                #answers_list = answers_dict
-            
-            #for answers_dict in answers_list:
+        	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers                  
+            q_counter = 1
             
             for answer_index in answers_dict.keys():
     
                 #Check any question override
                 if 'Say "n/a" only' in str(answer_index):
-                    answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
+                    answer_header = f'GPT question {q_counter}: ' + 'Not answered due to potential privacy violation'
                 else:
-                    answer_header = 'GPT question: ' + answer_index
+                    answer_header = f'GPT question {q_counter}: ' + answer_index
     
+                #Check any errors
+                answer_string = str(answers_dict[answer_index]).lower()
+                
+                if ((answer_string.startswith('your answer.')) or (answer_string.startswith('your response.'))):
+                    
+                    answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
+    
+                #Append answer to spreadsheet
                 try:
                 
                     df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
     
                 except:
     
-                    df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])                
+                    df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
     
+                q_counter += 1
+        
         #Remove judgment column
         
         if 'judgment' in df_individual.columns:

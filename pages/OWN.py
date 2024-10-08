@@ -365,13 +365,9 @@ st.caption('During the pilot stage, the languages supported are limited. Please 
 # ## Form for AI and account
 
 # %%
-#st.header("Use GPT as your research assistant")
-
 st.header(":blue[Would you to ask GPT questions about your files?]")
 
-#st.markdown("**:green[Would you like GPT to answer questions about your files?]**")
-
-gpt_activation_entry = st.checkbox(label = 'Use GPT', value = st.session_state['df_master'].loc[0, 'Use GPT'])
+gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
 if gpt_activation_entry:
     

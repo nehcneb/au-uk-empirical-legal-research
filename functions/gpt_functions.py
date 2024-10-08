@@ -748,15 +748,25 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             #answers_list = answers_dict
         
         #for answers_dict in answers_list:
+
+        q_counter = 1
         
         for answer_index in answers_dict.keys():
 
             #Check any question override
             if 'Say "n/a" only' in str(answer_index):
-                answer_header = 'GPT question: ' + 'Not answered due to potential privacy violation'
+                answer_header = f'GPT question {q_counter}: ' + 'Not answered due to potential privacy violation'
             else:
-                answer_header = 'GPT question: ' + answer_index
+                answer_header = f'GPT question {q_counter}: ' + answer_index
 
+            #Check any errors
+            answer_string = str(answers_dict[answer_index]).lower()
+            
+            if ((answer_string.startswith('your answer.')) or (answer_string.startswith('your response.'))):
+                
+                answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
+
+            #Append answer to spreadsheet
             try:
             
                 df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
@@ -764,6 +774,8 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             except:
 
                 df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
+
+            q_counter += 1
             
         #Calculate GPT costs
 
@@ -852,7 +864,6 @@ def gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_ins
     answers_json = {}
     
     for q_index in q_keys:
-        #answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
         answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
 
     #Create questions, which include the answer format
