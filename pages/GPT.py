@@ -657,7 +657,6 @@ if run_button:
         #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
         #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
 
-        
         with st.spinner(r"$\textsf{\normalsize \textbf{In progress...} The estimated waiting time is 3-5 minutes per 10 judgments.}$"):
             
             try:

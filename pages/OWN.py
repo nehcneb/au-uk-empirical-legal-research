@@ -686,21 +686,16 @@ if run_button:
         
         st.warning('You must :red[REMOVE] the data already produced before producing new data.')
 
-    elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-                
-        if is_api_key_valid(gpt_api_key_entry) == False:
-            
-            st.session_state['gpt_api_key_validity'] = False
-            
-            st.error('Your API key is not valid.')
-
-            quit()
-            
-        else:
-            
-            st.session_state['gpt_api_key_validity'] = True
-        
     else:
+
+        if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                st.error('Your API key is not valid.')
+                quit()
+                
+        #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
+        #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')     
 
         with st.spinner(r"$\textsf{\normalsize \textbf{In progress...} The estimated waiting time is 2-3 minutes per 10 files.}$"):
                 
@@ -800,21 +795,17 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data already produced before producing new data.')
     
-        elif ((st.session_state.own_account == True) and (st.session_state.gpt_api_key_validity == False)):
-                    
-            if is_api_key_valid(gpt_api_key_entry) == False:
-                
-                st.session_state['gpt_api_key_validity'] = False
-                
-                st.error('Your API key is not valid.')
-    
-                quit()
-                
-            else:
-                
-                st.session_state['gpt_api_key_validity'] = True
-       
         else:
+    
+            if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                    
+                if is_api_key_valid(gpt_api_key_entry) == False:
+                    st.error('Your API key is not valid.')
+                    quit()
+                    
+            #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
+            #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
+                    
     
             with st.spinner(r"$\textsf{\normalsize \textbf{In progress...} The estimated waiting time is 2-3 minutes per 10 files.}$"):
                     
