@@ -332,7 +332,7 @@ st.write(f'**:green[Please upload your documents or images.]** By default, this 
 
 st.write('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 
-st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more words per file.')
+st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
 
 st.subheader('Upload documents')
 
@@ -925,9 +925,9 @@ if keep_button:
 
         st.session_state["df_master"] = df_master
 
-        df_master.pop("Your GPT API key")
+        #df_master.pop("Your GPT API key")
     
-        df_master.pop("Processed")
+        #df_master.pop("Processed")
     
         responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
     
@@ -980,10 +980,23 @@ if return_button:
 
 # %%
 if reset_button:
-    
+
     st.session_state['df_individual'] = pd.DataFrame([])
     
     st.session_state['need_resetting'] = 0
 
+    #To prevent page from showing content of jurisdiction page
+    #st.session_state["page_from"] = st.session_state.jurisdiction_page
+    
+    #st.session_state['df_master'].loc[0, 'Your name'] = ''
+    #st.session_state['df_master'].loc[0, 'Your email address'] = ''
+    #st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
+    #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    #st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
+    #st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    #st.session_state['df_master'].loc[0, 'Use own account'] = False
+    #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    
     #clear_cache_except_validation_df_master()
+    
     st.rerun()

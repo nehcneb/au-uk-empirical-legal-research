@@ -291,13 +291,13 @@ print(f"The default number of files to scrape per request is capped at {default_
 # %%
 #Initialize default GPT settings
 
-if 'gpt_model' not in st.session_state:
-    st.session_state['gpt_model'] = "gpt-4o-mini"
+#if 'gpt_model' not in st.session_state:
+    #st.session_state['gpt_model'] = "gpt-4o-mini"
     
 #Initialize API key
-if 'gpt_api_key' not in st.session_state:
+#if 'gpt_api_key' not in st.session_state:
 
-    st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
+    #st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
 
 # %%

@@ -763,7 +763,7 @@ if gpt_reset_button:
     st.session_state['need_resetting'] = 0
 
     #To prevent GPT page from showing content of jurisdiction page
-    st.session_state["page_from"] = st.session_state.jurisdiction_page
+    #st.session_state["page_from"] = st.session_state.jurisdiction_page
     
     #st.session_state['df_master'].loc[0, 'Your name'] = ''
     #st.session_state['df_master'].loc[0, 'Your email address'] = ''
