@@ -1,4 +1,4 @@
-# LawtoData: an Empirical Legal Research Automator 
+# LawtoData
 
 This webpage contains the Python code for [LawtoData: an Empirical Legal Research Automator](https://lawtodata.streamlit.app).
 
