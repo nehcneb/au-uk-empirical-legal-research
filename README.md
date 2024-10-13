@@ -2,7 +2,7 @@
 
 This webpage contains the Python code for [LawtoData: an Empirical Legal Research Automator](https://lawtodata.streamlit.app).
 
-`Home.py` has the code for the home page. The codes for the individual subpages are placed in the `pages' folder. 
+`Home.py` has the code for the home page. The codes for the individual subpages are placed in the `pages` folder. 
 
 Please don't hesitate to reach out to Ben Chen at ben.chen@sydney.edu.au should you have any enquiries.
 
@@ -10,7 +10,7 @@ Please don't hesitate to reach out to Ben Chen at ben.chen@sydney.edu.au should 
 
 Copyright 2024 Ben Chen
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use these files except in compliance with the License. You may obtain a copy of the License at
 
 http://www.apache.org/licenses/LICENSE-2.0
 
