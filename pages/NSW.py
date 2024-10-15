@@ -359,7 +359,7 @@ return_button = st.button('RETURN to first page')
 
 st.header("Search :blue[judgments of the New South Wales courts and tribunals]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.write(f'To collect judgments, this app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub.')
 
@@ -417,10 +417,9 @@ legislationCited_entry = st.text_input(label = "Legislation cited", value = st.s
 
 casesCited_entry = st.text_input(label = "Cases cited", value = st.session_state['df_master'].loc[0, 'Cases cited'] )
 
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
+
 with stylable_container(
     "purple",
     css_styles="""

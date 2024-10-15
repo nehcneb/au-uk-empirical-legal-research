@@ -842,8 +842,8 @@ def hca_judgment_to_exclude(case_info = {},
                         collection = '', 
                         own_parties_include = '', 
                         own_parties_exclude = '', 
-                        before_date = '', 
                         after_date = '', 
+                        before_date = '', 
                         #own_case_numbers_include = [], 
                         #own_case_numbers_exclude = [], 
                         own_judges_include = '', 
@@ -882,19 +882,19 @@ def hca_judgment_to_exclude(case_info = {},
             
             #date_datetime = date_datetime - relativedelta(years = 100) 
 
-        if is_date(before_date, fuzzy=False):
-
-            before_date_datetime = parser.parse(before_date, dayfirst=True)
-    
-            if date_datetime > before_date_datetime:
-    
-                exclude_status = True
-
         if is_date(after_date, fuzzy=False):
 
             after_date_datetime = parser.parse(after_date,dayfirst=True)
     
             if date_datetime < after_date_datetime:
+    
+                exclude_status = True
+
+        if is_date(before_date, fuzzy=False):
+
+            before_date_datetime = parser.parse(before_date, dayfirst=True)
+    
+            if date_datetime > before_date_datetime:
     
                 exclude_status = True
 
@@ -983,8 +983,8 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
                                     own_parties_exclude, 
                                     #own_min_year, 
                                     #own_max_year, 
-                                    before_date, 
                                     after_date, 
+                                     before_date, 
                                     #own_case_numbers_include, 
                                     #own_case_numbers_exclude, 
                                     own_judges_include, 
@@ -1053,8 +1053,8 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
                             collection, 
                             own_parties_include, 
                             own_parties_exclude, 
-                            before_date, 
                             after_date, 
+                           before_date, 
                             #own_case_numbers_include = [], 
                             #own_case_numbers_exclude = [], 
                             own_judges_include, 
@@ -1247,7 +1247,7 @@ def hca_run(df_master):
 
     #Drop metadata if not wanted
 
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in hca_meta_labels_droppable:
             try:
                 df_updated.pop(meta_label)
@@ -1335,8 +1335,8 @@ def hca_batch(df_master):
 
     #Drop metadata if not wanted
 
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
-        for meta_label in fca_metalabels_droppable:
+    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
+        for meta_label in hca_metalabels_droppable:
             try:
                 df_updated.pop(meta_label)
             except Exception as e:
@@ -1356,7 +1356,9 @@ def hca_batch(df_master):
 
     #Need to convert date column to string
 
-    df_individual['Date'] = df_individual['Date'].astype(str)
+    if 'Date' in df_individual.columns:
+
+        df_individual['Date'] = df_individual['Date'].astype(str)
     
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 

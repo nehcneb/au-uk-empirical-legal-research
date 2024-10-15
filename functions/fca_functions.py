@@ -583,7 +583,7 @@ def fca_run(df_master):
 
     #Drop metadata if not wanted
 
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in fca_metalabels_droppable:
             try:
                 df_updated.pop(meta_label)
@@ -676,7 +676,7 @@ def fca_batch(df_master):
                     
     #Drop metadata if not wanted
 
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in fca_metalabels_droppable:
             try:
                 df_updated.pop(meta_label)

@@ -328,7 +328,7 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Upload :blue[your own files]")
     
-st.write(f'**:green[Please upload your documents or images.]** By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
+st.success(f'**Please upload your documents or images**. By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
 
 st.write('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 
@@ -524,9 +524,6 @@ st.markdown("""If you do not agree, then please feel free to close this form."""
 st.header("Next steps")
 
 st.markdown("""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek.
-
-You can also download a record of your entries.
-
 """)
 
 #Warning
@@ -805,8 +802,8 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                     
             #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
             #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-                    
-    
+
+            
             with st.spinner(r"$\textsf{\normalsize \textbf{In progress...} The estimated waiting time is 2-3 minutes per 10 files.}$"):
                     
                 #Create spreadsheet of responses
@@ -914,11 +911,11 @@ if keep_button:
 
         df_master = own_create_df()
 
-        st.session_state["df_master"] = df_master
+        st.session_state["df_master"] = df_master.copy(deep=True)
 
-        #df_master.pop("Your GPT API key")
+        if 'Your GPT API key' in df_master.columns:
     
-        #df_master.pop("Processed")
+            df_master.pop("Your GPT API key")
     
         responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
     

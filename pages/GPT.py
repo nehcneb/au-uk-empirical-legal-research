@@ -253,7 +253,7 @@ if 'judgment_batch_cutoff' not in st.session_state:
 #Maximum number of judgments to process under any mode
 if "judgment_counter_max" not in st.session_state:
 
-    if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
+    if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
 
         if own_account_allowed() > 0:
             st.session_state["judgment_counter_max"] = judgment_batch_max
@@ -449,7 +449,7 @@ st.header("Next steps")
 st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. Up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} judgments will **immediately** be processed. The estimated waiting time is 3-5 minutes per 10 judgments.
 """)
 
-if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
+if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} judgments. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
 
@@ -464,7 +464,7 @@ if st.session_state.gpt_model == "gpt-4o-2024-08-06":
 
 gpt_reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
-if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
+if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     with stylable_container(
         "orange",
         css_styles="""
@@ -596,11 +596,15 @@ if len(st.session_state.df_individual)>0:
 # %%
 if gpt_keep_button:
 
-    df_master = st.session_state.df_master
+    df_master = st.session_state.df_master.copy(deep=True)
 
-    #df_master.pop("Your GPT API key")
+    if 'Your GPT API key' in df_master.columns:
 
-    #df_master.pop("Processed")
+        df_master.pop("Your GPT API key")
+
+    if 'CourtListener API token' in df_master.columns:
+        
+        df_master.pop("CourtListener API token")
 
     responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
 
@@ -905,7 +909,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
 
 
 # %%
-if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
+if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     
     if batch_button:
         

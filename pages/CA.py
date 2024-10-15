@@ -374,17 +374,17 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[judgments of the Canadian courts, boards and tribunals]")
+st.header(f"Search :blue[judgments of Canadian courts, boards and tribunals]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
 reset_button = st.button(label='RESET', type = 'primary')
 
-st.subheader("Court, board or tribunal to cover")
+st.subheader("Courts, boards and tribunals to cover")
 
-jurisdiction_entry  = st.selectbox(label = 'Select or type in the jurisdiction to cover', options = list(list(all_ca_jurisdictions.keys())), index = list_value_check(list(all_ca_jurisdictions.keys()), st.session_state['df_master'].loc[0, 'Jurisdiction']))
+jurisdiction_entry  = st.selectbox(label = 'Select or type in the jurisdiction to cover', options = list(all_ca_jurisdictions.keys()), index = list_value_check(list(all_ca_jurisdictions.keys()), st.session_state['df_master'].loc[0, 'Jurisdiction']))
 
 st.session_state["all_jurisdiction"] = jurisdiction_entry
 
@@ -454,10 +454,9 @@ st.caption('If left blank, all subjects will be covered.')
 #else:
     #st.session_state["year"] = '' 
  
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
+
 with stylable_container(
     "purple",
     css_styles="""
@@ -466,7 +465,7 @@ with stylable_container(
         color: white;
     }""",
 ):
-    preview_button = st.button(label = 'PREVIEW on the CanLII (in a popped up window)')
+    preview_button = st.button(label = 'PREVIEW on CanLII (in a popped up window)')
 
 st.subheader("Judgment metadata collection")
 

@@ -83,7 +83,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, clear_cache
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, clear_cache, reverse_link
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -682,10 +682,6 @@ def link_headings_picker(df):
             link_headings.append(heading)
     return link_headings #A list of headings with hyperlinks
 
-#Reverse hyperlink display
-def reverse_link(x):
-    value = str(x).replace('=HYPERLINK("', '').replace('")', '')
-    return value
 
 def clean_link_columns(df):
         

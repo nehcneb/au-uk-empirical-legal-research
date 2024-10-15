@@ -353,7 +353,7 @@ def nsw_tidying_up(df_master, df_individual):
 
     #Drop metadata if not wanted
     
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in nsw_meta_labels_droppable:
             try:
                 df_individual.pop(meta_label)
@@ -404,7 +404,7 @@ def nsw_tidying_up_prebatch(df_master, df_individual):
 
     #Drop metadata if not wanted
     
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
+    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in nsw_meta_labels_droppable:
             try:
                 df_individual.pop(meta_label)

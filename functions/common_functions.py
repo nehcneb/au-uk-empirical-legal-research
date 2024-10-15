@@ -291,7 +291,8 @@ def save_input(df_master):
                          'submission_time', 
                          'status', 
                           'jurisdiction_page', 
-                          'Consent'
+                          'Consent',
+                          'CourtListener API token' #US specific
                          ]
     
     df_master = df_master.replace({np.nan: None})
@@ -305,6 +306,27 @@ def save_input(df_master):
                 print(f'{key} not saved.')
                 print(e)
 
+
+
+# %%
+#Function to hide own token
+
+def hide_own_token(user_token, own_token):
+    if user_token:
+        if user_token == own_token:
+            return None
+        else:
+            return user_token
+    else:
+        return None
+        
+
+
+# %%
+#Reverse hyperlink display
+def reverse_link(x):
+    value = str(x).replace('=HYPERLINK("', '').replace('")', '')
+    return value
 
 
 # %%
@@ -352,7 +374,7 @@ def clear_cache_except_validation_df_master():
 def streamlit_timezone():
     local_now = datetime.now().astimezone()
     time_zone = local_now.tzname()
-    if time_zone in ['AEST', 'ACST', 'AWST', 'BST']:
+    if time_zone in ['AEST', 'AEDT', 'ACST', 'AWST', 'BST']:
         return True
     else:
         return False

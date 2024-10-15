@@ -345,7 +345,7 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[judgments of select United Kingdom courts and tribunals]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
@@ -385,9 +385,7 @@ judge_entry = st.text_input(label = 'Judge name', value = st.session_state.df_ma
 
 party_entry = st.text_input(label = 'Party name', value = st.session_state.df_master.loc[0, 'Party'])
 
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
 with stylable_container(
     "purple",

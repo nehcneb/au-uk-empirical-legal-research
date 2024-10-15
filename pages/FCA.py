@@ -362,7 +362,7 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[judgments of the Federal Court of Australia]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
@@ -413,10 +413,9 @@ before_date_entry = st.date_input(label = 'Decision date is before', value = au_
 
 st.caption('This app will not collect catchwords or other metadata from judgments published before 1995 (given their [PDF](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) format).')
 
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
+
 with stylable_container(
     "purple",
     css_styles="""

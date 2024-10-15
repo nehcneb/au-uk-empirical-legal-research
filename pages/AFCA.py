@@ -339,212 +339,6 @@ if 'gpt_api_key' not in st.session_state:
 
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
-
-# %% [markdown]
-# ## Pre June 2024
-
-# %%
-#Obtain parameters
-
-@st.cache_data
-def afca_old_run(df_master):
-    
-    df_master = df_master.fillna('')
-
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
-    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Create judgments file
-    judgments_file = []
-    
-    #Conduct search
-    
-    search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
-                                    all_these_words_input = df_master.loc[0, 'All these words'], 
-                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
-                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
-                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
-                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
-                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
-                                    case_number_input = df_master.loc[0, 'Case number'], 
-                                    date_from_input = df_master.loc[0, 'Date from'], 
-                                    date_to_input = df_master.loc[0, 'Date to'], 
-                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-                                )
-
-    #for link in judgments_links:
-    for case in search_results['case_list']:
-
-            judgment_dict = case.copy()
-
-            judgment_text = afca_old_pdf_judgment(case)
-
-            judgment_dict['judgment'] = judgment_text
-
-            if 'ERROR: Failed to download judgment' in judgment_dict['judgment']:
-                judgment_dict['Case name'] = judgment_text
-
-            judgment_dict['Hyperlink to AFCA Portal'] = link(case['Hyperlink to AFCA Portal'])
-    
-            judgments_file.append(judgment_dict)
-            
-            pause.seconds(np.random.randint(5, 15))
-    
-    #Create and export json file with search results
-    json_individual = json.dumps(judgments_file, indent=2)
-
-#    df_individual = pd.DataFrame(judgments_file)
-    
-    df_individual = pd.read_json(json_individual)
-    
-    #Rename column titles
-    
-#    try:
-#        df_individual['Hyperlink (double click)'] = df_individual['Hyperlink'].apply(link)
-#        df_individual.pop('Hyperlink')
-#    except:
-#        pass
-                    
-    #Instruct GPT
-    
-    #GPT model
-
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o-2024-08-06"
-    else:        
-        gpt_model = "gpt-4o-mini"
-        
-    #apply GPT_individual to each respondent's judgment spreadsheet
-    
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
-
-    questions_json = df_master.loc[0, 'questions_json']
-            
-    #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
-
-    df_updated.pop('judgment')
-
-    #Drop metadata if not wanted
-
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
-        for meta_label in afca_old_meta_labels_droppable:
-            try:
-                df_updated.pop(meta_label)
-            except:
-                pass
-                
-    return df_updated
-
-
-# %% [markdown]
-# ## Post 14 June 2024
-
-# %%
-#Obtain parameters
-
-@st.cache_data
-def afca_new_run(df_master):
-    
-    df_master = df_master.fillna('')
-
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
-    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Create judgments file
-    judgments_file = []
-    
-    #Conduct search
-    
-    search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
-                ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
-                product_line_input = df_master.loc[0, 'Product line'], 
-                product_category_input = df_master.loc[0, 'Product category'], 
-                product_name_input = df_master.loc[0, 'Product name'], 
-                issue_type_input = df_master.loc[0, 'Issue type'], 
-                issue_input = df_master.loc[0, 'Issue'], 
-                date_from_input = df_master.loc[0, 'Date from'], 
-                date_to_input = df_master.loc[0, 'Date to'])
-
-    #Create list of judgment links
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #judgments_links = []
-
-    counter = 0
-
-    #for link in judgments_links:
-    for link in search_results['urls']:
-        if counter < judgments_counter_bound:
-
-            judgment_dict = afca_meta_judgment_dict(link)
-    
-            judgments_file.append(judgment_dict)
-
-            counter += 1
-            
-            pause.seconds(np.random.randint(5, 15))
-        else:
-            break
-    
-    #Create and export json file with search results
-    json_individual = json.dumps(judgments_file, indent=2)
-
-#    df_individual = pd.DataFrame(judgments_file)
-    
-    df_individual = pd.read_json(json_individual)
-                    
-    #Instruct GPT
-    
-    #GPT model
-
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o-2024-08-06"
-    else:        
-        gpt_model = "gpt-4o-mini"
-        
-    #apply GPT_individual to each respondent's judgment spreadsheet
-    
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
-
-    questions_json = df_master.loc[0, 'questions_json']
-            
-    #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
-
-    df_updated.pop('judgment')
-
-    #Drop metadata if not wanted
-
-    if int(df_master.loc[0, 'Metadata inclusion']) == 0:
-        for meta_label in afca_meta_labels_droppable:
-            try:
-                df_updated.pop(meta_label)
-            except:
-                pass
-                
-    return df_updated
-
-
-# %% [markdown]
-# ## Run function to use
-
-# %%
-@st.cache_data
-def afca_run(df_master):
-    if df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
-        df_updated = afca_old_run(df_master)
-    else:
-        df_updated = afca_new_run(df_master)
-
-    return df_updated
-    
-
-
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
@@ -631,13 +425,11 @@ if 'page_from' not in st.session_state:
 # %%
 #if st.session_state.page_from != "pages/AFCA.py": #Need to add in order to avoid GPT page from showing form of previous page
 
-#Create form
-
 return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[decisions of the Australian Financial Complaints Authority]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
@@ -703,9 +495,7 @@ date_from_entry = st.date_input('Date from', value = au_date(st.session_state.df
 
 date_to_entry = st.date_input('Date to', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
  
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-""")
-#You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms.""")
 
 with stylable_container(
     "purple",
@@ -781,6 +571,9 @@ if preview_button:
         else:
             st.error('Your search terms returned 0 results. Please change your search terms and try again.')
 
+
+# %% [markdown]
+# ## Metadata choice
 
 # %%
 st.subheader("Judgment metadata collection")

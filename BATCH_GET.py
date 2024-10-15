@@ -39,8 +39,10 @@ from io import StringIO
 #import math
 #from math import ceil
 #import matplotlib.pyplot as plt
-#import ast
+import ast
 #import copy
+import traceback
+
 
 #OpenAI
 import openai
@@ -160,8 +162,8 @@ for key_body in aws_objects:
 
 #Work on new copy of all_df_masters
 
-all_df_masters = all_df_masters_current.copy()
-        
+all_df_masters = all_df_masters_current.copy(deep = True)
+
 #Alternative download file example
 #NOT IN USE
 #s3 = boto3.client('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
@@ -261,8 +263,9 @@ for index in all_df_masters.index:
             st.success(f'{batch_id} submitted to GPT. Done {batch_request_counter}/{batch_request_total}.')
 
         except Exception as e:
-            print(Exception)
-            st.error(Exception)
+            print(traceback.format_exc())
+            print(f'{index} error: {e}')
+            st.write(f'{index} error: {e}')
 
     #Keep batching record on AWS
     #Upload all_df_masters to aws
@@ -409,8 +412,13 @@ for index in all_df_masters.index:
                 #Update status etc and remove api key on all_df_masters
                 all_df_masters.loc[index, 'status'] = status
                 all_df_masters.loc[index, 'output_file_id'] = output_file_id
-                all_df_masters.loc[index, 'Your GPT API key'] = ''
-        
+
+                if 'Your GPT API key' in all_df_masters.columns:
+                    all_df_masters.loc[index, 'Your GPT API key'] = ''
+                    
+                if 'CourtListener API token' in all_df_masters.columns:
+                    all_df_masters.loc[index, 'CourtListener API token'] = ''
+
                 #Update all_df_masters on AWS
                 #csv_buffer = StringIO()
                 #all_df_masters.to_csv(csv_buffer)
@@ -811,3 +819,5 @@ else:
 
 #Update google sheet for all_df_masters
 #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
+
+# %%

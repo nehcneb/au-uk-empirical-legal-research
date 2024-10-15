@@ -173,31 +173,6 @@ def hca_create_df():
     except:
         print('Parties to exclude not entered.')
 
-    #own_case_numbers_include = ['']
-
-    #try:
-        #own_case_numbers_include_list = own_case_numbers_include_entry.replace(';', ',').split(',')
-
-        #for case_number in own_case_numbers_include_list:
-            
-            #own_case_numbers_include.append(case_number)
-        
-    #except:
-        #print('Case numbers to include not entered.')
-
-    #own_case_numbers_exclude = ['']
-
-    #try:
-        #own_case_numbers_exclude_list = own_case_numbers_exclude_entry.replace(';', ',').split(',')
-
-        #for case_number in own_case_numbers_exclude_list:
-            
-            #own_case_numbers_exclude.append(case_number)
-        
-    #except:
-        
-        #print('Case numbers to exclude not entered.')
-        
     own_judges_include = ''
 
     try:
@@ -406,16 +381,10 @@ if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
 # %%
-#Number of search results to display
-#if 'number_of_results' not in st.session_state:
+#HCA specific session states
 
-    #st.session_state['number_of_results'] = '0'
-
-
-# %%
-#Filtering message status
-#if 'filtering_message' not in st.session_state:
-    #st.session_state['filtering_message'] = False
+if (('court_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
+    st.session_state["court_filter_status"] = False
 
 # %%
 #If landing page is not home
@@ -434,7 +403,7 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[judgments of the High Court of Australia]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
 
@@ -466,9 +435,7 @@ if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
 else:
     full_text_entry = ''
 
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
 
 with stylable_container(
@@ -514,13 +481,15 @@ if results_num_button:
 
 #The following filters are not based on HCA's filter at https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=
 
-filter_toggle = st.toggle("Filter your search results")
+st.subheader("Filter your search results")
+
+filter_toggle = st.toggle(label = "Filter/unfilter", value = st.session_state.court_filter_status)
 
 if filter_toggle:
-
-    #st.subheader("Filter your search results")
     
     st.warning("Filtering your search results may *significantly* prolong the processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
+
+    st.session_state['court_filter_status'] = True
     
     own_parties_include_entry = st.text_input(label = 'Parties include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties include'])
     st.caption('If entered, then this app will only process cases that include at least one of the parties entered.')
@@ -531,34 +500,6 @@ if filter_toggle:
     after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1903, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1903, 1, 1),  max_value = datetime.now(),help = "If you cannot change this date entry, please press :red[RESET] and try again.")
-
-    #own_min_year_entry = st.text_input('After this year')
-    
-    #if own_min_year_entry:
-
-        #own_hca_min_year_validity = hca_year_check(own_min_year_entry)
-    
-        #if not own_hca_min_year_validity:
-                
-            #st.error('You have not entered a year.')
-        
-    #own_max_year_entry = st.text_input('Before this year')
-    
-    #if own_max_year_entry:
-
-        #own_hca_max_year_validity = hca_year_check(own_max_year_entry)
-
-        #if not own_hca_max_year_validity:
-    
-            #st.error('You have not entered a year.')
-
-    #if ((own_parties_include_entry) or (own_parties_exclude_entry) or (bool(after_date_entry) == True) or (bool(before_date_entry) == True)):
-        
-        #st.session_state['filtering_message'] = True
-        
-    #else:
-        #st.session_state['filtering_message'] = False
-
     
     if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
     
@@ -580,16 +521,28 @@ if filter_toggle:
         #else:
             #st.session_state['filtering_message'] = False
     
-    else:
+    #else:
         #own_case_numbers_include_entry = ''
         #own_case_numbers_exclude_entry = ''
-        own_judges_include_entry = ''
-        own_judges_exclude_entry = ''
+        #own_judges_include_entry = ''
+        #own_judges_exclude_entry = ''
 
-#if st.session_state.filtering_message == True:
+else: #if filter_toggle == False
+
+    st.success('Your search results will not be filtered.')
     
-    #st.warning("Filtering your search results may significantly prolong the processing time.")
-    
+    st.session_state['court_filter_status'] = False
+
+    st.session_state.df_master.loc[0, 'Parties include'] = None 
+    st.session_state.df_master.loc[0, 'Parties do not include'] = None 
+    st.session_state.df_master.loc[0, 'Decision date is after'] = None 
+    st.session_state.df_master.loc[0, 'Decision date is before'] = None 
+    #st.session_state.df_master.loc[0, 'Case numbers include'] = None 
+    #st.session_state.df_master.loc[0, 'Case numbers do not include'] = None 
+    st.session_state.df_master.loc[0, 'Judges include'] = None 
+    st.session_state.df_master.loc[0, 'Judges do not include']  = None
+
+
 st.subheader("Judgment metadata collection")
 
 st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 

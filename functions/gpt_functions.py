@@ -250,7 +250,11 @@ def judgment_prompt_json(judgment_json, gpt_model):
     
     #Turn judgment to string
     if isinstance(judgment_json["judgment"], list):
-        judgment_to_string = '\n'.join(judgment_json["judgment"])
+        try:
+            judgment_to_string = '\n'.join(judgment_json["judgment"])
+
+        except:
+            judgment_to_string = str(judgment_json["judgment"])
         
     elif isinstance(judgment_json["judgment"], str):
         judgment_to_string = judgment_json["judgment"]
@@ -1126,6 +1130,15 @@ def gpt_run(jurisdiction_page, df_master):
     
         run = copy.copy(fca_run)
 
+    if jurisdiction_page == 'pages/US.py':
+        
+        system_instruction = role_content
+        
+        from functions.us_functions import us_run, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date
+    
+        run = copy.copy(us_run)
+
+    
     if jurisdiction_page == 'pages/CA.py':
         
         system_instruction = role_content
@@ -1221,6 +1234,14 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         from functions.fca_functions import fca_batch, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
     
         batch = copy.copy(fca_batch)
+
+    if jurisdiction_page == 'pages/US.py':
+        
+        system_instruction = role_content
+
+        from functions.us_functions import us_batch, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date
+            
+        batch = copy.copy(us_batch)
 
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
 

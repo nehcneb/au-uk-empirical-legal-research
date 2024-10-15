@@ -346,7 +346,7 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[decisions of the Superannuation Complaints Tribunal]")
 
-st.markdown(f"**:green[Please enter your search terms.]** {default_msg}")
+st.success(f"**Please enter your search terms.** {default_msg}")
 
 st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
 
@@ -361,10 +361,9 @@ method_entry = st.selectbox(label = 'Find', options = scta_methods_list, index =
 
 query_entry = st.text_input(label = 'Enter search query', value = st.session_state.df_master.loc[0, 'Enter search query'])
     
-st.markdown("""You can preview the judgments returned by your search terms after you have entered some search terms.
-
-You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
+st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
 """)
+
 with stylable_container(
     "purple",
     css_styles="""

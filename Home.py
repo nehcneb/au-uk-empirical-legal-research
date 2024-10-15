@@ -55,6 +55,7 @@ else:
 page_dict = {"pages/HCA.py": "Judgments of the High Court of Australia",
             "pages/FCA.py": "Judgments of the Federal Court of Australia", 
             "pages/NSW.py": "Judgments of the New South Wales courts and tribunals", 
+             "pages/US.py": "Judgments of United States courts", 
             #"pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
             #"pages/CA.py": 'judgments of the Canadian courts, boards and tribunals', 
             "pages/AFCA.py": 'Decisions of the Australian Financial Complaints Authority', 
@@ -108,7 +109,7 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 
 This pilot version can **automatically**
 
-(1) search for and collect judgments of select Anglo-Australian courts; and
+(1) search for and collect judgments of select Australian, United Kingdom and United States courts; and
 
 (2) extract and code **your** choice of data or information from judgments, partially using GPT.
 
