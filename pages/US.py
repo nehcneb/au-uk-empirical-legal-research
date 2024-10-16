@@ -486,7 +486,7 @@ if collection_entry:
 #If opinions chosen
 if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
 
-    st.write(f"For information about case coverage, please visit [CourtListener](https://free.law/2017/08/15/we-have-all-free-pacer).")
+    st.write(f"For information about case coverage, please visit [CourtListener](https://www.courtlistener.com/help/coverage/opinions/).")
 
     jurisdiction_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state.court_filter_status)
     
