@@ -1055,7 +1055,7 @@ class us_search_tool:
                 nature_of_suit=None,
                 party_name=None,
                 atty_name=None,
-                available_only=None,
+                available_only = True,
               ):
 
         self.doc_type = us_collections[doc_type]
@@ -1280,17 +1280,16 @@ class us_search_tool:
 
         try:
             page_json = json.loads(page.content.decode('utf-8')) 
-    
+            
             self.results_count = page_json["count"]
-
-            #st.write(f"self.page_json is {page_json}")
     
             results_raw = page_json['results']
 
         except Exception as e:
-            print('No results found.')
-            print(e)
-        
+            st.error('No results found.')
+            st.error(e)
+            st.error(f"self.page_json is {page_json}")
+
         result_counter = 1
 
         while result_counter <= min(self.results_count, self.judgment_counter_bound):
@@ -1383,12 +1382,15 @@ class us_search_tool:
         #opinion_json = json.loads(opinion_soup.text)
         opinion_json = json.loads(opinion_page.content.decode('utf-8'))
 
-        #Placeholder
+        #Placeholders
         opinion_json_cleaned = opinion_json.copy()
-
+        
         opinion_snippet = ''
         opinion_type = ''
         #opinion_id = ''
+        opinion_text = ''
+
+        opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
         
         if 'snippet' in opinion_json.keys():
             opinion_snippet = opinion_json['snippet']
@@ -1437,7 +1439,9 @@ class us_search_tool:
                 opinion_text = opinion_json['html_with_citations']
                 opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
 
-        opinion_json_cleaned['text'] = BeautifulSoup(opinion_json_cleaned['text'], "lxml").text
+        #opinion_json_cleaned['text'] = BeautifulSoup(opinion_json_cleaned['text'], "lxml").text
+        if len(opinion_json_cleaned['text']) == 0:
+            st.write(f'Opinion id {opinion_id}: no text scraped. Please check {opinion_url}.')
         
         return opinion_json_cleaned
 
@@ -1462,6 +1466,8 @@ class us_search_tool:
                 for opinion_raw in opinions_list:
                     opinion_json_cleaned = self.clean_opinion_json(opinion_raw, self.headers)
                     opinion_list_raw.append(opinion_json_cleaned)
+                    pause.seconds(np.random.randint(5, 10))
+
                     #self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
     
                 #Append opinion to result from combined, to leading, to concurrence, to dissent
@@ -1518,20 +1524,20 @@ class us_search_tool:
             
             for result in self.results:
     
-                #Create placeholder for 'pacer_records' (instead of 'judgment')
+                #Create placeholder for 'recap_documents' (instead of 'judgment')
                 result_index = self.results.index(result)
-                self.results_w_docs[result_index]['pacer_records'] = []
-                #doc_list_raw = []
+                #self.results_w_docs[result_index]['pacer_records'] = []
+
+                self.results_w_docs[result_index]['recap_documents'] = []
                 
                 #Get a list of docs
                 docs_list = result['recap_documents']
-    
-                #print(docs_list)
-                
+                    
                 for doc_raw in docs_list:
                     doc_json_cleaned = self.clean_doc_json(doc_raw, self.headers)
-                    #doc_list_raw.append(doc_json_cleaned)
-                    self.results_w_docs[result_index]['pacer_records'] = [doc_json_cleaned]
+                    #self.results_w_docs[result_index]['pacer_records'].append(doc_json_cleaned)
+                    self.results_w_docs[result_index]['recap_documents'].append(doc_json_cleaned)
+                    pause.seconds(np.random.randint(5, 10))
 
                 #Add useful key/values to results_w_docs, create list of dropable metadata
                 for key in result.keys():
@@ -1728,12 +1734,12 @@ def us_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    #Remove 'judgment' column if opinions sought, or 'pacer_records' column if PACER docs sought
+    #Remove 'judgment' column if opinions sought #, or 'pacer_records' column if PACER docs sought
     if 'judgment' in df_updated.columns:
         df_updated.pop('judgment')
 
-    if 'pacer_records' in df_updated.columns:
-        df_updated.pop('pacer_records')
+    #if 'pacer_records' in df_updated.columns:
+        #df_updated.pop('pacer_records')
 
     #Drop metadata if not wanted
 

@@ -248,14 +248,17 @@ def judgment_prompt_json(judgment_json, gpt_model):
             judgment_json[key] = ''
             break
 
-    #Determine whether 'judgment' or 'pacer_records' contains text
+    #Determine whether 'judgment' or 'pacer_records'/recap_documents contains text
 
     text_key = 'judgment'
     if 'judgment' in judgment_json.keys():
         text_key = 'judgment'
 
-    if 'pacer_records' in judgment_json.keys():
-        text_key = 'pacer_records'
+    #if 'pacer_records' in judgment_json.keys():
+        #text_key = 'pacer_records'
+
+    if 'recap_documents' in judgment_json.keys():
+        text_key = 'recap_documents'
 
     #st.write(f"text_key is {text_key}")
     
