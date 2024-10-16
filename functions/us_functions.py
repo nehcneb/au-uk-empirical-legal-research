@@ -1024,7 +1024,7 @@ class us_search_tool:
         self.results_w_docs = []
         #self.metadata_droppable = ['caseNameFull', 'cluster_id', 'court_citation_string', 'court_id', 'meta', 'panel_ids', 'scdb_id', 'sibling_ids', 'source', 'status', 'suitNature', 'docket_id', 'non_participating_judge_ids', 'opinions', 'lexisCite', 'posture']
         self.metadata_droppable = []
-        self.renamed_keys = ['caseName', 'citation', 'neutralCite', 'absolute_url', 'docket_absolute_url', 'court', 'dateFiled', 'dateTerminated', 'judge', 'docketNumber']
+        self.renamed_keys = ['caseName', 'citation', 'neutralCite', 'absolute_url', 'docket_absolute_url', 'court', 'dateFiled', 'dateTerminated', 'judge', 'docketNumber', 'recap_documents']
 
     def search(self, 
                doc_type = list(us_collections.keys())[0], 
@@ -1490,8 +1490,8 @@ class us_search_tool:
                     if key not in self.renamed_keys:
                         self.results_w_opinions[result_index][key] = result[key]
     
-                        if key not in self.metadata_droppable:
-                            self.metadata_droppable.append(key)
+                        #if key not in self.metadata_droppable:
+                        self.metadata_droppable.append(key)
 
     #Define function for docket link containing PDF
     @st.cache_data
@@ -1543,9 +1543,9 @@ class us_search_tool:
                 for key in result.keys():
                     if key not in self.renamed_keys:
                         self.results_w_docs[result_index][key] = result[key]
-    
-                        if key not in self.metadata_droppable:
-                            self.metadata_droppable.append(key)
+                        
+                        #if key not in self.metadata_droppable:
+                        self.metadata_droppable.append(key)
 
 
 # %%
