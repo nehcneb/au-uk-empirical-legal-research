@@ -262,45 +262,50 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
     #st.write(f"text_key is {text_key}")
     
-    #Turn judgment or pacer_records to string
-    if isinstance(judgment_json[text_key], list):
-        try:
-            judgment_to_string = '\n'.join(judgment_json[text_key])
+    #Just use original judgment_json if no long text
+    if text_key not in judgment_json.keys():
+        return judgment_json
 
-        except:
-            judgment_to_string = str(judgment_json[text_key])
-        
-    elif isinstance(judgment_json[text_key], str):
-        judgment_to_string = judgment_json[text_key]
-        
-    else:
-        judgment_to_string = str(judgment_json[text_key])
-
-    #Truncate judgment or pacer_records if needed
-    judgment_content = f'Based on the metadata and {text_key} in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
-
-    judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
+    else:        
+        #Turn judgment or pacer_records to string
+        if isinstance(judgment_json[text_key], list):
+            try:
+                judgment_to_string = '\n'.join(judgment_json[text_key])
     
-    if judgment_content_tokens <= tokens_cap(gpt_model):
+            except:
+                judgment_to_string = str(judgment_json[text_key])
+            
+        elif isinstance(judgment_json[text_key], str):
+            judgment_to_string = judgment_json[text_key]
+            
+        else:
+            judgment_to_string = str(judgment_json[text_key])
+    
+        #Truncate judgment or pacer_records if needed
+        judgment_content = f'Based on the metadata and {text_key} in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
+    
+        judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
         
-        return judgment_content
-
-    else:
-        
-        meta_data_len = judgment_content_tokens - num_tokens_from_string(judgment_to_string, "cl100k_base")
-
-        intro_len = num_tokens_from_string(f'Based on the metadata and {text_key} in the following JSON: """  """', "cl100k_base")
-        
-        judgment_chars_capped = int(round((tokens_cap(gpt_model) - meta_data_len - intro_len)*4))
-        
-        judgment_string_trimmed = judgment_to_string[ :int(judgment_chars_capped/2)] + judgment_to_string[-int(judgment_chars_capped/2): ]
-
-        judgment_json[text_key] = judgment_string_trimmed     
-        
-        judgment_content_capped = f'Based on the metadata and {text_key} in the following JSON:  """ {json.dumps(judgment_json, default=str)} """'
-        
-        return judgment_content_capped
-
+        if judgment_content_tokens <= tokens_cap(gpt_model):
+            
+            return judgment_content
+    
+        else:
+            
+            meta_data_len = judgment_content_tokens - num_tokens_from_string(judgment_to_string, "cl100k_base")
+    
+            intro_len = num_tokens_from_string(f'Based on the metadata and {text_key} in the following JSON: """  """', "cl100k_base")
+            
+            judgment_chars_capped = int(round((tokens_cap(gpt_model) - meta_data_len - intro_len)*4))
+            
+            judgment_string_trimmed = judgment_to_string[ :int(judgment_chars_capped/2)] + judgment_to_string[-int(judgment_chars_capped/2): ]
+    
+            judgment_json[text_key] = judgment_string_trimmed     
+            
+            judgment_content_capped = f'Based on the metadata and {text_key} in the following JSON:  """ {json.dumps(judgment_json, default=str)} """'
+            
+            return judgment_content_capped
+    
 
 
 # %%
