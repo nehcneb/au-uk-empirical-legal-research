@@ -86,7 +86,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 
 # %%
 us_collections = {'Judgments of Federal, State and Territory Courts': 'o',
-'Federal Court Records': 'r'
+'Federal Court records': 'r'
 }
 
 # %%
@@ -1011,21 +1011,28 @@ from functions.common_functions import link
 class us_search_tool:
 
     def __init__(self, token, judgment_counter_bound = default_judgment_counter_bound):
+
         self.token = token
         self.headers = {'Authorization': self.token,
         }
-        self.doc_type = 'o'
         self.judgment_counter_bound = judgment_counter_bound
+
+        #Essential keys to rename, then drop
+        self.renamed_keys = ['caseName', 'citation', 'absolute_url', 'docket_absolute_url', 'court', 'dateFiled', 'dateTerminated', 'judge', 'docketNumber'] #, 'neutralCite', 'recap_documents']
+
+        #Default arguments/values
+        self.doc_type = 'o'
         self.params = []
+        self.page = None
+        self.next_page = None
         self.results = []
         self.results_count = 0
         self.results_to_show = []
         self.results_w_opinions = []
         self.results_w_docs = []
-        #self.metadata_droppable = ['caseNameFull', 'cluster_id', 'court_citation_string', 'court_id', 'meta', 'panel_ids', 'scdb_id', 'sibling_ids', 'source', 'status', 'suitNature', 'docket_id', 'non_participating_judge_ids', 'opinions', 'lexisCite', 'posture']
         self.metadata_droppable = []
-        self.renamed_keys = ['caseName', 'citation', 'neutralCite', 'absolute_url', 'docket_absolute_url', 'court', 'dateFiled', 'dateTerminated', 'judge', 'docketNumber', 'recap_documents']
 
+    #Method for conducting search
     def search(self, 
                doc_type = list(us_collections.keys())[0], 
                fed_app_courts = [], 
@@ -1058,6 +1065,7 @@ class us_search_tool:
                 available_only = True,
               ):
 
+        #Determine document type sought
         self.doc_type = us_collections[doc_type]
 
         #Params for both opinions and PACER docs
@@ -1083,7 +1091,6 @@ class us_search_tool:
             params_raw.append(('docket_number', docket_number)),
         
         #Params for opinions only
-
         if self.doc_type == 'o':
 
             if isinstance(precedential_status, str):
@@ -1109,7 +1116,6 @@ class us_search_tool:
                 params_raw.append(('neutral_cite', neutral_cite))
 
             #Deal with courts
-            
             court_entries_list_raw = [fed_app_courts, fed_dist_courts, fed_hist_courts, bankr_courts, state_courts, more_courts]
         
             court_entries_list = us_court_choice_clean(court_entries_list_raw)
@@ -1168,17 +1174,14 @@ class us_search_tool:
     
             for court in more_courts:
                 if court != 'All':
-    
                     court_list.append(us_more_courts[court])
     
             #st.write(f"court_list is {court_list}")
-            
             if len(court_list) > 0:
                 court_string = ' '.join(court_list)
                 params_raw.append(('court', court_string))
 
-
-        #Params for PACER docs
+        #Params for PACER docs only
         if self.doc_type == 'r':
 
             if description:
@@ -1209,7 +1212,6 @@ class us_search_tool:
                 params_raw.append(('available_only', 'on'))
 
             #Deal with courts
-            
             court_entries_list_raw = [fed_app_courts, fed_dist_courts, bankr_courts, more_courts]
         
             court_entries_list = us_court_choice_clean_pacer(court_entries_list_raw)
@@ -1250,36 +1252,32 @@ class us_search_tool:
     
             for court in more_courts:
                 if court != 'All':
-    
                     court_list.append(us_pacer_more_courts[court])
     
             #st.write(f"court_list is {court_list}")
-            
             if len(court_list) > 0:
                 court_string = ' '.join(court_list)
                 params_raw.append(('court', court_string))
         
-        params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
-
         #Save params
+        params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
         self.params = params
 
+        #API url
         advanced_search = 'https://www.courtlistener.com/api/rest/v4/search/'
-        
-        page = requests.get(advanced_search, params=self.params, headers=self.headers)
 
         #Save page
-        self.page = page
-        
+        self.page = requests.get(advanced_search, params=self.params, headers=self.headers)
+
         #Save url to search results
-        self.results_url = page.url
+        self.results_url = self.page.url
 
         #st.write(f"self.results_url is {self.results_url}")
         
         self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
 
         try:
-            page_json = json.loads(page.content.decode('utf-8')) 
+            page_json = json.loads(self.page.content.decode('utf-8')) 
             
             self.results_count = page_json["count"]
     
@@ -1287,7 +1285,7 @@ class us_search_tool:
 
         except Exception as e:
             st.error('No results found.')
-            st.error(e)
+            #st.error(e)
             st.error(f"self.page_json is {page_json}")
 
         result_counter = 1
@@ -1312,7 +1310,7 @@ class us_search_tool:
 
                     if advanced_search in next_page_url:
                 
-                        next_page = requests.get(next_page_url, headers=self.headers)
+                        self.next_page = requests.get(next_page_url, headers=self.headers)
                         
                         next_page_json = json.loads(next_page.content.decode('utf-8'))
         
@@ -1345,9 +1343,9 @@ class us_search_tool:
             hyperlink = f"https://www.courtlistener.com{result[absolute_url_field]}"
             result_to_show.update({'Hyperlink to CourtListener': link(hyperlink)})
 
-            if 'neutralCite' in result.keys():
-                neutral_cite = result['neutralCite']
-                result_to_show.update({'Neutral citation' : neutral_cite})
+            #if 'neutralCite' in result.keys():
+                #neutral_cite = result['neutralCite']
+                #result_to_show.update({'Neutral citation' : neutral_cite})
 
             if 'court' in result.keys():
                 court =  result['court']
@@ -1445,6 +1443,7 @@ class us_search_tool:
         
         return opinion_json_cleaned
 
+    #Method for getting all opinions from all results
     def get_opinions(self):
 
         #Note if doc_type is not opinion
@@ -1485,15 +1484,13 @@ class us_search_tool:
                     else: #'concur' in opinion_json_cleaned['type']:
                         self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
     
-                #Add useful key/values to results_w_opinions, create list of dropable metadata
+                #Add case-specific metadata to results_w_opinions, create list of dropable metadata
                 for key in result.keys():
                     if key not in self.renamed_keys:
                         self.results_w_opinions[result_index][key] = result[key]
-    
-                        #if key not in self.metadata_droppable:
                         self.metadata_droppable.append(key)
 
-    #Define function for docket link containing PDF
+    #Define function for getting PDF from one link
     @st.cache_data
     def clean_doc_json(_self, recap_document, headers):
 
@@ -1514,6 +1511,7 @@ class us_search_tool:
         
         return recap_document
 
+    #Method for getting all PDF PACER docs from all results
     def get_docs(self):
 
         #Note if doc_type is not opinion
@@ -1526,26 +1524,23 @@ class us_search_tool:
     
                 #Create placeholder for 'recap_documents' (instead of 'judgment')
                 result_index = self.results.index(result)
-                #self.results_w_docs[result_index]['pacer_records'] = []
-
                 self.results_w_docs[result_index]['recap_documents'] = []
                 
                 #Get a list of docs
                 docs_list = result['recap_documents']
-                    
+
+                #Get PDF for each doc json from the list of docs, then append each json with PDF to results_w_docs
                 for doc_raw in docs_list:
                     doc_json_cleaned = self.clean_doc_json(doc_raw, self.headers)
-                    #self.results_w_docs[result_index]['pacer_records'].append(doc_json_cleaned)
                     self.results_w_docs[result_index]['recap_documents'].append(doc_json_cleaned)
                     pause.seconds(np.random.randint(5, 10))
 
-                #Add useful key/values to results_w_docs, create list of dropable metadata
+                #Add case-specific metadata key/values to results_w_docs, create list of dropable metadata
                 for key in result.keys():
                     if key not in self.renamed_keys:
                         self.results_w_docs[result_index][key] = result[key]
-                        
-                        #if key not in self.metadata_droppable:
                         self.metadata_droppable.append(key)
+                        
 
 
 # %%
@@ -1573,7 +1568,7 @@ def us_search_preview(df_master):
                 q = df_master.loc[0, 'Search'], 
                 order_by = df_master.loc[0, 'Search results order'], 
                 precedential_status = df_master.loc[0, 'Precedential status'], 
-                case_name = df_master.loc[0, 'Case Name'], 
+                case_name = df_master.loc[0, 'Case name'], 
                 judge = df_master.loc[0, 'Judge'], 
                 filed_after = df_master.loc[0, 'Filed after'], 
                 filed_before = df_master.loc[0, 'Filed before'], 
@@ -1585,8 +1580,8 @@ def us_search_preview(df_master):
                 description = df_master.loc[0, 'Document description'],
                 document_number = df_master.loc[0, 'Document number'],
                 attachment_number = df_master.loc[0, 'Attachment number'],
-                assigned_to = df_master.loc[0, 'Assigned to Judge'],
-                referred_to = df_master.loc[0, 'Referred to Judge'],
+                assigned_to = df_master.loc[0, 'Assigned to judge'],
+                referred_to = df_master.loc[0, 'Referred to judge'],
                 nature_of_suit = df_master.loc[0, 'Nature of suit'],
                 party_name = df_master.loc[0, 'Party name'],
                 atty_name = df_master.loc[0, 'Attorney name'],
@@ -1672,7 +1667,7 @@ def us_run(df_master):
                 q = df_master.loc[0, 'Search'], 
                 order_by = df_master.loc[0, 'Search results order'], 
                 precedential_status = df_master.loc[0, 'Precedential status'], 
-                case_name = df_master.loc[0, 'Case Name'], 
+                case_name = df_master.loc[0, 'Case name'], 
                 judge = df_master.loc[0, 'Judge'], 
                 filed_after = df_master.loc[0, 'Filed after'], 
                 filed_before = df_master.loc[0, 'Filed before'], 
@@ -1684,8 +1679,8 @@ def us_run(df_master):
                 description = df_master.loc[0, 'Document description'],
                 document_number = df_master.loc[0, 'Document number'],
                 attachment_number = df_master.loc[0, 'Attachment number'],
-                assigned_to = df_master.loc[0, 'Assigned to Judge'],
-                referred_to = df_master.loc[0, 'Referred to Judge'],
+                assigned_to = df_master.loc[0, 'Assigned to judge'],
+                referred_to = df_master.loc[0, 'Referred to judge'],
                 nature_of_suit = df_master.loc[0, 'Nature of suit'],
                 party_name = df_master.loc[0, 'Party name'],
                 atty_name = df_master.loc[0, 'Attorney name'],
@@ -1734,12 +1729,12 @@ def us_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    #Remove 'judgment' column if opinions sought #, or 'pacer_records' column if PACER docs sought
+    #Remove 'judgment' column if opinions sought #, or 'recap_documents' column if PACER docs sought
     if 'judgment' in df_updated.columns:
         df_updated.pop('judgment')
 
-    #if 'pacer_records' in df_updated.columns:
-        #df_updated.pop('pacer_records')
+    if 'recap_documents' in df_updated.columns:
+        df_updated.pop('recap_documents')
 
     #Drop metadata if not wanted
 
@@ -1789,7 +1784,7 @@ def us_batch(df_master):
                 q = df_master.loc[0, 'Search'], 
                 order_by = df_master.loc[0, 'Search results order'], 
                 precedential_status = df_master.loc[0, 'Precedential status'], 
-                case_name = df_master.loc[0, 'Case Name'], 
+                case_name = df_master.loc[0, 'Case name'], 
                 judge = df_master.loc[0, 'Judge'], 
                 filed_after = df_master.loc[0, 'Filed after'], 
                 filed_before = df_master.loc[0, 'Filed before'], 
@@ -1801,8 +1796,8 @@ def us_batch(df_master):
                 description = df_master.loc[0, 'Document description'],
                 document_number = df_master.loc[0, 'Document number'],
                 attachment_number = df_master.loc[0, 'Attachment number'],
-                assigned_to = df_master.loc[0, 'Assigned to Judge'],
-                referred_to = df_master.loc[0, 'Referred to Judge'],
+                assigned_to = df_master.loc[0, 'Assigned to judge'],
+                referred_to = df_master.loc[0, 'Referred to judge'],
                 nature_of_suit = df_master.loc[0, 'Nature of suit'],
                 party_name = df_master.loc[0, 'Party name'],
                 atty_name = df_master.loc[0, 'Attorney name'],

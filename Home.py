@@ -55,7 +55,7 @@ else:
 page_dict = {"pages/HCA.py": "Judgments of the High Court of Australia",
             "pages/FCA.py": "Judgments of the Federal Court of Australia", 
             "pages/NSW.py": "Judgments of the New South Wales courts and tribunals", 
-             "pages/US.py": "Judgments and records of select United States courts", 
+             "pages/US.py": "Cases of select United States courts", 
             #"pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
             #"pages/CA.py": 'judgments of the Canadian courts, boards and tribunals', 
             "pages/AFCA.py": 'Decisions of the Australian Financial Complaints Authority', 
@@ -105,13 +105,11 @@ st.title(":blue[LawtoData]")
 
 st.subheader("An Empirical Legal Research Automator")
 
-st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research. 
+st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving court cases. This pilot version can **automatically**
 
-This pilot version can **automatically**
+(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
 
-(1) search for and collect judgments of select Australian, United Kingdom and United States courts; and
-
-(2) extract and code **your** choice of data or information from judgments, partially using GPT.
+(2) extract and code **your** choice of case data or information, partially using GPT.
 
 This app can also process your own files or spreadsheet of data.
 """)
@@ -130,11 +128,11 @@ st.header("Start")
 
 st.markdown("""You will be asked to
 
-(1) select a court, tribunal, or another source of information to research; 
+(1) select courts, tribunals, or another source of information to research; 
 
-(2) enter search terms to identify your preferred judgments, or upload your own files; and
+(2) enter search terms to identify your preferred cases, or upload your own files; and
 
-(3) enter questions about these judgments or files for GPT to answer.
+(3) enter questions about these cases or files for GPT to answer.
 """)
 
 st.subheader(""":green[What would you like to research?]""")

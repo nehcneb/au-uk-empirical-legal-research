@@ -295,7 +295,7 @@ def us_create_df():
            'More Courts': more_courts, 
             'Search': q_entry, 
             'Search results order': order_by, 
-            'Case Name': case_name,
+            'Case name': case_name,
            'Docket number': docket_number,
             'Filed after': filed_after,
             'Filed before': filed_before,
@@ -308,8 +308,8 @@ def us_create_df():
                'Document description': description, 
                'Document number': document_number, 
                 'Attachment number': attachment_number, 
-               'Assigned to Judge': assigned_to, 
-               'Referred to Judge': referred_to, 
+               'Assigned to judge': assigned_to, 
+               'Referred to judge': referred_to, 
                'Nature of suit': nature_of_suit, 
                 'Party name': party_name, 
                'Attorney name': atty_name,
@@ -410,7 +410,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Search'] = None
     st.session_state['df_master'].loc[0, 'Search results order'] = list(us_order_by.keys())[0] 
     st.session_state['df_master'].loc[0, 'Precedential status'] = [list(us_precedential_status.keys())[0]]
-    st.session_state['df_master'].loc[0, 'Case Name'] = None
+    st.session_state['df_master'].loc[0, 'Case name'] = None
     st.session_state['df_master'].loc[0, 'Judge'] = None 
     st.session_state['df_master'].loc[0, 'Filed after'] = None
     st.session_state['df_master'].loc[0, 'Filed before'] = None
@@ -422,8 +422,8 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Document description'] = None 
     st.session_state['df_master'].loc[0, 'Document number'] = None
     st.session_state['df_master'].loc[0, 'Attachment number'] = None
-    st.session_state['df_master'].loc[0, 'Assigned to Judge'] = None
-    st.session_state['df_master'].loc[0, 'Referred to Judge'] = None
+    st.session_state['df_master'].loc[0, 'Assigned to judge'] = None
+    st.session_state['df_master'].loc[0, 'Referred to judge'] = None
     st.session_state['df_master'].loc[0, 'Nature of suit'] = None
     st.session_state['df_master'].loc[0, 'Party name'] = None
     st.session_state['df_master'].loc[0, 'Attorney name'] = None
@@ -462,13 +462,11 @@ if 'page_from' not in st.session_state:
 # ## Form before AI
 
 # %%
-#if st.session_state.page_from != "pages/US.py": #Need to add in order to avoid GPT page from showing form of previous page
-
 #Create form
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[judgments and records of select United States courts]")
+st.header(f"Search :blue[cases of select United States courts]")
 
 st.success(f"**Please enter your search terms.** {default_msg}")
 
@@ -476,7 +474,7 @@ st.caption('During the pilot stage, the number of judgments to scrape is capped.
 
 reset_button = st.button(label='RESET', type = 'primary')
 
-st.subheader('Collection')
+st.subheader('Case collection')
 
 collection_entry = st.selectbox(label = 'Select one to search', options = list(us_collections.keys()), index = list_value_check(list(us_collections.keys()), st.session_state.df_master.loc[0, 'Collection']))
 
@@ -540,7 +538,7 @@ if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys(
             
     else: #if jurisdiction_toggle == False
         
-        st.success('All courts will be covered.')
+        st.info('All courts will be covered.')
         
         st.session_state['court_filter_status'] = False
         st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
@@ -590,7 +588,7 @@ else: #If pacer records chosen
             
     else: #if pacer_jurisdiction_toggle == False
         
-        st.success('All courts will be covered.')
+        st.info('All courts will be covered.')
         
         st.session_state['court_filter_status'] = False
         st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
@@ -612,7 +610,7 @@ q_entry = st.text_input(label = 'Search', value = st.session_state['df_master'].
 
 order_by_entry = st.selectbox(label = "Search results order ", options = list(us_order_by.keys()), index = list(us_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
 
-case_name_entry = st.text_input(label = 'Case name', value = st.session_state['df_master'].loc[0, 'Case Name'])
+case_name_entry = st.text_input(label = 'Case name', value = st.session_state['df_master'].loc[0, 'Case name'])
 
 docket_number_entry = st.text_input(label = 'Docket number', value = st.session_state['df_master'].loc[0, 'Docket number'])
 
@@ -642,8 +640,8 @@ else: #If PACER records chosen
     description_entry = st.text_input(label = 'Document description', value = st.session_state['df_master'].loc[0, 'Document description'])
     document_number_entry = st.text_input(label = 'Document number', value = st.session_state['df_master'].loc[0, 'Document number'])
     attachment_number_entry = st.text_input(label = 'Attachment number', value = st.session_state['df_master'].loc[0, 'Attachment number'])
-    assigned_to_entry = st.text_input(label = 'Assigned to Judge', value = st.session_state['df_master'].loc[0, 'Assigned to Judge'])
-    referred_to_entry = st.text_input(label = 'Referred to Judge', value = st.session_state['df_master'].loc[0, 'Referred to Judge'])
+    assigned_to_entry = st.text_input(label = 'Assigned to judge', value = st.session_state['df_master'].loc[0, 'Assigned to judge'])
+    referred_to_entry = st.text_input(label = 'Referred to judge', value = st.session_state['df_master'].loc[0, 'Referred to judge'])
     nature_of_suit_entry = st.text_input(label = 'Nature of suit', value = st.session_state['df_master'].loc[0, 'Nature of suit'])
     party_name_entry = st.text_input(label = 'Party name', value = st.session_state['df_master'].loc[0, 'Party name'])
     atty_name_entry = st.text_input(label = 'Attorney name', value = st.session_state['df_master'].loc[0, 'Attorney name'])
@@ -660,7 +658,7 @@ if token_entry:
 
 st.write('By default, this app will process up to 500 queries per day. If that limit is exceeded, you can still use this app with your own CourtListen API token (click [here](https://www.courtlistener.com/sign-in/) to sign up for one).')
 
-st.info("""You can preview the judgments returned by your search terms.""")
+st.info("""You can preview the results returned by your search terms.""")
 
 with stylable_container(
     "purple",
@@ -681,7 +679,7 @@ if preview_button:
     
     #Check whether search terms entered
 
-    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry)
+    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry)
     
     if us_search_terms.replace('None', '') == "":
 
@@ -710,18 +708,21 @@ if preview_button:
             st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
     
         else:
-            st.error('Your search terms returned 0 results. Please change your search terms or enter a CourtListener API token, and try again.')
+            st.error(no_results_msg)
+            
+            #US-specific
+            st.error('Alternatively, please enter your own CourtListener API token and try again.')
 
 
 # %% [markdown]
 # ## Metadata choice
 
 # %%
-st.subheader("Judgment metadata collection")
+st.subheader("Case metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+st.markdown("""Would you like to obtain case metadata? Such data include the judge, the filing date and so on. 
 
-Case name and medium neutral citation are always included with your results.
+Case name and citation are always included with your results.
 """)
 
 meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
@@ -760,7 +761,7 @@ if keep_button:
 
     #Check whether search terms entered
 
-    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry)
+    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry)
     
     if us_search_terms.replace('None', '') == "":
 
@@ -830,7 +831,7 @@ if reset_button:
 # %%
 if next_button:
 
-    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry)
+    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry)
     
     if us_search_terms.replace('None', '') == "":
 
@@ -848,6 +849,9 @@ if next_button:
             if us_search_preview_dict['results_count'] == 0:
                 
                 st.error(no_results_msg)
+
+                #US-specific
+                st.error('Alternatively, please enter your own CourtListener API token and try again.')
             
             else:
                 

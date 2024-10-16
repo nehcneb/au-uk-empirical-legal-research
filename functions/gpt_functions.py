@@ -248,14 +248,12 @@ def judgment_prompt_json(judgment_json, gpt_model):
             judgment_json[key] = ''
             break
 
-    #Determine whether 'judgment' or 'pacer_records'/recap_documents contains text
+    #Determine whether 'judgment' or 'recap_documents' contains text
 
-    text_key = 'judgment'
+    text_key = ''
+    
     if 'judgment' in judgment_json.keys():
         text_key = 'judgment'
-
-    #if 'pacer_records' in judgment_json.keys():
-        #text_key = 'pacer_records'
 
     if 'recap_documents' in judgment_json.keys():
         text_key = 'recap_documents'
@@ -267,7 +265,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         return judgment_json
 
     else:        
-        #Turn judgment or pacer_records to string
+        #Turn judgment or recap_documents to string
         if isinstance(judgment_json[text_key], list):
             try:
                 judgment_to_string = '\n'.join(judgment_json[text_key])
@@ -281,7 +279,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         else:
             judgment_to_string = str(judgment_json[text_key])
     
-        #Truncate judgment or pacer_records if needed
+        #Truncate judgment or recap_documents if needed
         judgment_content = f'Based on the metadata and {text_key} in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
     
         judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
@@ -549,7 +547,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
 
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Give responses in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -740,7 +738,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
-                answer = 'Placeholder answer for ' + ' document ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
+                answer = f'Placeholder answer for {str(int(judgment_index) + 2)} {str(q_index)}'
                 answers_dict.update({q_index: answer})
             
             #Own calculation of GPT costs for Placeholder answer fors
@@ -755,7 +753,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Respond in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers in the judgment, or sections of the metadata from which you obtained your answer. ", "cl100k_base")
 
@@ -894,7 +892,7 @@ def gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_ins
 
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Give responses in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -1029,9 +1027,9 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
                 
                 df_individual.loc[judgment_index, 'judgment'] = ''
 
-            if 'pacer_records' in df_individual.columns:
+            if 'recap_documents' in df_individual.columns:
                 
-                df_individual.loc[judgment_index, 'pacer_records'] = ''
+                df_individual.loc[judgment_index, 'recap_documents'] = ''
             
             df_individual.loc[judgment_index, 'GPT submission time'] = str(GPT_start_time)
 
@@ -1164,7 +1162,6 @@ def gpt_run(jurisdiction_page, df_master):
         
         run = copy.copy(us_run)
 
-    
     if jurisdiction_page == 'pages/CA.py':
         
         system_instruction = role_content
@@ -1196,8 +1193,6 @@ def gpt_run(jurisdiction_page, df_master):
     if jurisdiction_page == 'pages/ER.py':
 
         from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
-
-        #from gpt_functions import get_image_dims, calculate_image_token_cost
 
         system_instruction = role_content_er
 
@@ -1274,5 +1269,6 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
     batch_record_df_individual = batch(df_master)
     
     return batch_record_df_individual
+    
 
 

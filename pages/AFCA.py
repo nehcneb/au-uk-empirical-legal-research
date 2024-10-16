@@ -431,16 +431,16 @@ st.header(f"Search :blue[decisions of the Australian Financial Complaints Author
 
 st.success(f"**Please enter your search terms.** {default_msg}")
 
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+st.caption('During the pilot stage, the number of cases to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases, courts, or tribunals.')
 
 if streamlit_timezone() == True:
     st.warning('One or more Chrome window may have been launched. It must be kept open.')
 
 reset_button = st.button(label='RESET', type = 'primary')
 
-st.subheader('Decisions to cover')
+st.subheader('Case collection')
 
-collection_entry = st.selectbox(label = 'Collection of decisions to study', options = collection_options, index = collection_options.index(st.session_state.df_master.loc[0, 'Collection']))
+collection_entry = st.selectbox(label = 'Select one to search', options = collection_options, index = collection_options.index(st.session_state.df_master.loc[0, 'Collection']))
 
 st.subheader("Your search terms")
 
@@ -495,7 +495,7 @@ date_from_entry = st.date_input('Date from', value = au_date(st.session_state.df
 
 date_to_entry = st.date_input('Date to', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
  
-st.info("""You can preview the judgments returned by your search terms.""")
+st.info("""You can preview the cases returned by your search terms.""")
 
 with stylable_container(
     "purple",
@@ -569,16 +569,17 @@ if preview_button:
             st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
     
         else:
-            st.error('Your search terms returned 0 results. Please change your search terms and try again.')
+            st.error(no_results_msg)
+
 
 
 # %% [markdown]
 # ## Metadata choice
 
 # %%
-st.subheader("Judgment metadata collection")
+st.subheader("Case metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the case number, the financial firm involved, and the decision date. 
+st.markdown("""Would you like to obtain case metadata? Such data include the case number, the financial firm involved, and the decision date. 
 
 Case name and hyperlinks to AFCA's website are always included with your results.
 """)
