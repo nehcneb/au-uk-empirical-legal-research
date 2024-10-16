@@ -247,23 +247,34 @@ def judgment_prompt_json(judgment_json, gpt_model):
         if 'hyperlink' in key.lower():
             judgment_json[key] = ''
             break
+
+    #Determine whether 'judgment' or 'pacer_records' contains text
+
+    text_key = 'judgment'
+    if 'judgment' in judgment_json.keys():
+        text_key = 'judgment'
+
+    if 'pacer_records' in judgment_json.keys():
+        text_key = 'pacer_records'
+
+    #st.write(f"text_key is {text_key}")
     
-    #Turn judgment to string
-    if isinstance(judgment_json["judgment"], list):
+    #Turn judgment or pacer_records to string
+    if isinstance(judgment_json[text_key], list):
         try:
-            judgment_to_string = '\n'.join(judgment_json["judgment"])
+            judgment_to_string = '\n'.join(judgment_json[text_key])
 
         except:
-            judgment_to_string = str(judgment_json["judgment"])
+            judgment_to_string = str(judgment_json[text_key])
         
-    elif isinstance(judgment_json["judgment"], str):
-        judgment_to_string = judgment_json["judgment"]
+    elif isinstance(judgment_json[text_key], str):
+        judgment_to_string = judgment_json[text_key]
         
     else:
-        judgment_to_string = str(judgment_json["judgment"])
+        judgment_to_string = str(judgment_json[text_key])
 
-    #Truncate judgment if needed
-    judgment_content = f'Based on the metadata and judgment in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
+    #Truncate judgment or pacer_records if needed
+    judgment_content = f'Based on the metadata and {text_key} in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
 
     judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
     
@@ -275,15 +286,15 @@ def judgment_prompt_json(judgment_json, gpt_model):
         
         meta_data_len = judgment_content_tokens - num_tokens_from_string(judgment_to_string, "cl100k_base")
 
-        intro_len = num_tokens_from_string('Based on the metadata and judgment in the following JSON: """  """', "cl100k_base")
+        intro_len = num_tokens_from_string(f'Based on the metadata and {text_key} in the following JSON: """  """', "cl100k_base")
         
         judgment_chars_capped = int(round((tokens_cap(gpt_model) - meta_data_len - intro_len)*4))
         
         judgment_string_trimmed = judgment_to_string[ :int(judgment_chars_capped/2)] + judgment_to_string[-int(judgment_chars_capped/2): ]
 
-        judgment_json["judgment"] = judgment_string_trimmed     
+        judgment_json[text_key] = judgment_string_trimmed     
         
-        judgment_content_capped = f'Based on the metadata and judgment in the following JSON:  """ {json.dumps(judgment_json, default=str)} """'
+        judgment_content_capped = f'Based on the metadata and {text_key} in the following JSON:  """ {json.dumps(judgment_json, default=str)} """'
         
         return judgment_content_capped
 
@@ -496,7 +507,10 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
 
 # %%
 #For modern judgments, define system role content for GPT
-role_content = "You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment or metadata, include a reference to those paragraphs, pages or sections. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write 'answer not found'. "
+role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and metadata in JSON form. 
+Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
+If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'. 
+"""
 
 
 # %% [markdown]
@@ -620,7 +634,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
     # The output is a new JSON for the relevant respondent with new columns re:
-        # f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
+        # f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
@@ -676,19 +690,19 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
-        df_individual.loc[judgment_index, f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
+        df_individual.loc[judgment_index, f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
 
         #Indicate whether judgment truncated
         
-        df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = ''       
+        df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = ''       
         
         if judgment_tokens <= tokens_cap(gpt_model):
             
-            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'No'
+            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'No'
             
         else:
             
-            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'Yes'
+            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'Yes'
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -718,7 +732,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
-                answer = 'Placeholder answer for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
+                answer = 'Placeholder answer for ' + ' document ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
                 answers_dict.update({q_index: answer})
             
             #Own calculation of GPT costs for Placeholder answer fors
@@ -911,7 +925,7 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
     # The output is a new JSON for the relevant respondent with new columns re:
-        # f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
+        # f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
@@ -971,19 +985,19 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
-        df_individual.loc[judgment_index, f"Judgment length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
+        df_individual.loc[judgment_index, f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
 
         #Indicate whether judgment truncated
         
-        df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = ''       
+        df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = ''       
         
         if judgment_tokens <= tokens_cap(gpt_model):
             
-            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'No'
+            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'No'
             
         else:
             
-            df_individual.loc[judgment_index, "Judgment truncated (if given to GPT)?"] = 'Yes'
+            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'Yes'
 
         #Create columns for respondent's GPT cost
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -1006,6 +1020,10 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
             if 'judgment' in df_individual.columns:
                 
                 df_individual.loc[judgment_index, 'judgment'] = ''
+
+            if 'pacer_records' in df_individual.columns:
+                
+                df_individual.loc[judgment_index, 'pacer_records'] = ''
             
             df_individual.loc[judgment_index, 'GPT submission time'] = str(GPT_start_time)
 
@@ -1134,8 +1152,8 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_run, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date
-    
+        from functions.us_functions import us_run, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        
         run = copy.copy(us_run)
 
     
@@ -1238,8 +1256,8 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
     if jurisdiction_page == 'pages/US.py':
         
         system_instruction = role_content
-
-        from functions.us_functions import us_batch, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date
+        
+        from functions.us_functions import us_batch, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
             
         batch = copy.copy(us_batch)
 

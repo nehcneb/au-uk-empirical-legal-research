@@ -566,11 +566,14 @@ for df_batch_response in df_batch_id_response_list:
     
                 q_counter += 1
         
-        #Remove judgment column
+        #Remove judgment and PACER records columns
         
         if 'judgment' in df_individual.columns:
             df_individual.pop('judgment')
-
+        
+        if 'pacer_records' in df_individual.columns:
+            df_individual.pop('pacer_records')
+        
         #Update df_individual on AWS
         csv_buffer = StringIO()
         df_individual.to_csv(csv_buffer)

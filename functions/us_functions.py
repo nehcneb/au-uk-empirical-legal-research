@@ -37,7 +37,7 @@ import httplib2
 import urllib
 from urllib.request import urlretrieve
 import os
-#import pypdf
+import pypdf
 import io
 from io import BytesIO
 import ast
@@ -80,6 +80,14 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 
 # %% [markdown]
 # ## Definitions
+
+# %% [markdown]
+# ### Menus and courts
+
+# %%
+us_collections = {'Judgments of Federal, State and Territory Courts': 'o',
+'Federal Court Records': 'r'
+}
 
 # %%
 us_order_by = {'Relevance': "score desc", #not working on their api
@@ -598,26 +606,235 @@ all_us_jurisdictions = {'Federal Appellate Courts': us_fed_app_courts,
                     'More Courts': us_more_courts,
                        }
 
+# %%
+us_pacer_fed_app_courts = {'All': None,
+    'First Circuit': 'ca1',
+ 'Second Circuit': 'ca2',
+ 'Third Circuit': 'ca3',
+ 'Fourth Circuit': 'ca4',
+ 'Fifth Circuit': 'ca5',
+ 'Sixth Circuit': 'ca6',
+ 'Seventh Circuit': 'ca7',
+ 'Eighth Circuit': 'ca8',
+ 'Ninth Circuit': 'ca9',
+ 'Tenth Circuit': 'ca10',
+ 'Eleventh Circuit': 'ca11',
+ 'D.C. Circuit': 'cadc',
+ 'Federal Circuit': 'cafc',
+ 'District of Columbia': 'dcd'
+}
 
 # %%
-#Court List to string
-#NOT IN USE
+us_pacer_fed_dist_courts = {'All': None,
+    'M.D. Alabama': 'almd',
+ 'N.D. Alabama': 'alnd',
+ 'S.D. Alabama': 'alsd',
+ 'D. Alaska': 'akd',
+ 'D. Arizona': 'azd',
+ 'E.D. Arkansas': 'ared',
+ 'W.D. Arkansas': 'arwd',
+ 'C.D. California': 'cacd',
+ 'E.D. California': 'caed',
+ 'N.D. California': 'cand',
+ 'S.D. California': 'casd',
+ 'D. Colorado': 'cod',
+ 'D. Connecticut': 'ctd',
+ 'D. Delaware': 'ded',
+ 'M.D. Florida': 'flmd',
+ 'N.D. Florida': 'flnd',
+ 'S.D. Florida': 'flsd',
+ 'M.D. Georgia': 'gamd',
+ 'N.D. Georgia': 'gand',
+ 'S.D. Georgia': 'gasd',
+ 'D. Hawaii': 'hid',
+ 'D. Idaho': 'idd',
+ 'C.D. Illinois': 'ilcd',
+ 'N.D. Illinois': 'ilnd',
+ 'S.D. Illinois': 'ilsd',
+ 'N.D. Indiana': 'innd',
+ 'S.D. Indiana': 'insd',
+ 'N.D. Iowa': 'iand',
+ 'S.D. Iowa': 'iasd',
+ 'D. Kansas': 'ksd',
+ 'E.D. Kentucky': 'kyed',
+ 'W.D. Kentucky': 'kywd',
+ 'E.D. Louisiana': 'laed',
+ 'M.D. Louisiana': 'lamd',
+ 'W.D. Louisiana': 'lawd',
+ 'D. Maine': 'med',
+ 'D. Maryland': 'mdd',
+ 'D. Massachusetts': 'mad',
+ 'E.D. Michigan': 'mied',
+ 'W.D. Michigan': 'miwd',
+ 'D. Minnesota': 'mnd',
+ 'N.D. Mississippi': 'msnd',
+ 'S.D. Mississippi': 'mssd',
+ 'E.D. Missouri': 'moed',
+ 'W.D. Missouri': 'mowd',
+ 'D. Montana': 'mtd',
+ 'D. Nebraska': 'ned',
+ 'D. Nevada': 'nvd',
+ 'D. New Hampshire': 'nhd',
+ 'D. New Jersey': 'njd',
+ 'D. New Mexico': 'nmd',
+ 'E.D. New York': 'nyed',
+ 'N.D. New York': 'nynd',
+ 'S.D. New York': 'nysd',
+ 'W.D. New York': 'nywd',
+ 'E.D. North Carolina': 'nced',
+ 'M.D. North Carolina': 'ncmd',
+ 'W.D. North Carolina': 'ncwd',
+ 'D. North Dakota': 'ndd',
+ 'N.D. Ohio': 'ohnd',
+ 'S.D. Ohio': 'ohsd',
+ 'E.D. Oklahoma': 'oked',
+ 'N.D. Oklahoma': 'oknd',
+ 'W.D. Oklahoma': 'okwd',
+ 'D. Oregon': 'ord',
+ 'E.D. Pennsylvania': 'paed',
+ 'M.D. Pennsylvania': 'pamd',
+ 'W.D. Pennsylvania': 'pawd',
+ 'D. Rhode Island': 'rid',
+ 'D. South Carolina': 'scd',
+ 'D. South Dakota': 'sdd',
+ 'E.D. Tennessee': 'tned',
+ 'M.D. Tennessee': 'tnmd',
+ 'W.D. Tennessee': 'tnwd',
+ 'E.D. Texas': 'txed',
+ 'N.D. Texas': 'txnd',
+ 'S.D. Texas': 'txsd',
+ 'W.D. Texas': 'txwd',
+ 'D. Utah': 'utd',
+ 'D. Vermont': 'vtd',
+ 'E.D. Virginia': 'vaed',
+ 'W.D. Virginia': 'vawd',
+ 'E.D. Washington': 'waed',
+ 'W.D. Washington': 'wawd',
+ 'N.D. West Virginia': 'wvnd',
+ 'S.D. West Virginia': 'wvsd',
+ 'E.D. Wisconsin': 'wied',
+ 'W.D. Wisconsin': 'wiwd',
+ 'D. Wyoming': 'wyd',
+ 'D. Guam': 'gud',
+ 'Northern Mariana Islands': 'nmid',
+ 'D. Puerto Rico': 'prd',
+ 'Virgin Islands': 'vid'}
 
-def us_court_choice_to_string(court_list):
+# %%
+us_pacer_bankr_courts = {'All': None,
+    'M.D. Alabama': 'almb',
+ 'N.D. Alabama': 'alnb',
+ 'S.D. Alabama': 'alsb',
+ 'D. Alaska': 'akb',
+ 'D. Arizona': 'arb',
+ 'E.D. Arkansas': 'areb',
+ 'W.D. Arkansas': 'arwb',
+ 'C.D. California': 'cacb',
+ 'E.D. California': 'caeb',
+ 'N.D. California': 'canb',
+ 'S.D. California': 'casb',
+ 'D. Colorado': 'cob',
+ 'D. Connecticut': 'ctb',
+ 'D. Delaware': 'deb',
+ 'District of Columbia': 'dcb',
+ 'M.D. Florida': 'flmb',
+ 'N.D. Florida': 'flnb',
+ 'S.D. Florida': 'flsb',
+ 'M.D. Georgia': 'gamb',
+ 'N.D. Georgia': 'ganb',
+ 'S.D. Georgia': 'gasb',
+ 'D. Hawaii': 'hib',
+ 'D. Idaho': 'idb',
+ 'C.D. Illinois': 'ilcb',
+ 'N.D. Illinois': 'ilnb',
+ 'S.D. Illinois': 'ilsb',
+ 'N.D. Indiana': 'innb',
+ 'S.D. Indiana': 'insb',
+ 'N.D. Iowa': 'ianb',
+ 'S.D. Iowa': 'iasb',
+ 'D. Kansas': 'ksb',
+ 'E.D. Kentucky': 'kyeb',
+ 'W.D. Kentucky': 'kywb',
+ 'E.D. Louisiana': 'laeb',
+ 'M.D. Louisiana': 'lamb',
+ 'W.D. Louisiana': 'lawb',
+ 'D. Maine': 'meb',
+ 'D. Maryland': 'mdb',
+ 'D. Massachusetts': 'mab',
+ 'E.D. Michigan': 'mieb',
+ 'W.D. Michigan': 'miwb',
+ 'D. Minnesota': 'mnb',
+ 'N.D. Mississippi': 'msnb',
+ 'S.D. Mississippi': 'mssb',
+ 'E.D. Missouri': 'moeb',
+ 'W.D. Missouri': 'mowb',
+ 'D. Montana': 'mtb',
+ 'D. Nebraska': 'nebraskab',
+ 'D. Nevada': 'nvb',
+ 'D. New Hampshire': 'nhb',
+ 'D. New Jersey': 'njb',
+ 'D. New Mexico': 'nmb',
+ 'E.D. New York': 'nyeb',
+ 'N.D. New York': 'nynb',
+ 'S.D. New York': 'nysb',
+ 'W.D. New York': 'nywb',
+ 'E.D. North Carolina': 'nceb',
+ 'M.D. North Carolina': 'ncmb',
+ 'W.D. North Carolina': 'ncwb',
+ 'D. North Dakota': 'ndb',
+ 'N.D. Ohio': 'ohnb',
+ 'S.D. Ohio': 'ohsb',
+ 'E.D. Oklahoma': 'okeb',
+ 'N.D. Oklahoma': 'oknb',
+ 'W.D. Oklahoma': 'okwb',
+ 'D. Oregon': 'orb',
+ 'E.D. Pennsylvania': 'paeb',
+ 'M.D. Pennsylvania': 'pamb',
+ 'W.D. Pennsylvania': 'pawb',
+ 'D. Rhode Island': 'rib',
+ 'D. South Carolina': 'scb',
+ 'D. South Dakota': 'sdb',
+ 'E.D. Tennessee': 'tneb',
+ 'M.D. Tennessee': 'tnmb',
+ 'W.D. Tennessee': 'tnwb',
+ 'E.D. Texas': 'txeb',
+ 'N.D. Texas': 'txnb',
+ 'S.D. Texas': 'txsb',
+ 'W.D. Texas': 'txwb',
+ 'D. Utah': 'utb',
+ 'D. Vermont': 'vtb',
+ 'E.D. Virginia': 'vaeb',
+ 'W.D. Virginia': 'vawb',
+ 'E.D. Washington': 'waeb',
+ 'W.D. Washington': 'wawb',
+ 'N.D. West Virginia': 'wvnb',
+ 'S.D. West Virginia': 'wvsb',
+ 'E.D. Wisconsin': 'wieb',
+ 'W.D. Wisconsin': 'wiwb',
+ 'D. Wyoming': 'wyb',
+ 'D. Guam': 'gub',
+ 'Northern Mariana Islands': 'nmib',
+ 'D. Puerto Rico': 'prb',
+ 'D. Virgin Islands': 'vib'}
 
-    #Return string if is string already
-    if isinstance(court_list, str):
-        return court_list
+# %%
+us_pacer_more_courts = {'All': None,
+'Federal Claims': 'uscfc',
+ 'Court of International Trade': 'cit',
+ 'Judicial Panel on Multidistrict Litigation': 'jpml'}
 
-    else:
-    
-        if court_list:    
-            court_string =  "; ".join(court_list)
-            return court_string
-        else:
-            return None
+# %%
+#Define format functions for jurisdiction choice, and GPT questions
+
+all_us_pacer_jurisdictions = {'Federal Appellate Courts': us_pacer_fed_app_courts, 
+                    'Federal District Courts': us_pacer_fed_dist_courts, 
+                    'Bankruptcy Courts': us_pacer_bankr_courts, 
+                    'More Courts': us_pacer_more_courts,
+                       }
 
 
+# %% [markdown]
+# ### Functions
 
 # %%
 #Court string to list
@@ -640,85 +857,6 @@ def us_court_choice_to_list(court_string):
         else:
             return []
         
-
-
-# %%
-#Fill in each court if 'All' is not chosen for all jurisdictions
-#NOT IN USE, TOO LAGGY
-
-def us_court_fill_in(fed_app_courts_list_entry, 
-                     fed_dist_courts_list_entry, 
-                     fed_hist_courts_list_entry, 
-                     bankr_courts_list_entry, 
-                     state_courts_list_entry, 
-                     more_courts_list_entry
-                    ):
-
-    court_entries_list = [fed_app_courts_list_entry, 
-                     fed_dist_courts_list_entry, 
-                     fed_hist_courts_list_entry, 
-                     bankr_courts_list_entry, 
-                     state_courts_list_entry, 
-                     more_courts_list_entry
-                 ]
-    
-    no_all_in_some_list_entry = False
-    
-    for entry_list in court_entries_list:
-
-        if ((entry_list == None) or (entry_list == [])):
-            
-            no_all_in_some_list_entry = True
-
-            break
-        
-        else:
-            
-            if 'All' not in entry_list:
-                
-                no_all_in_some_list_entry = True
-                
-                break
-    
-    #Return original court entries as a list if every court entry_list has 'All'
-    if not no_all_in_some_list_entry:
-
-        all_court_entries_list = [['All'],['All'],['All'],['All'],['All'],['All']] 
-        
-        return all_court_entries_list
-
-    else:
-
-        cleaned_court_entries_list = []
-
-        jurisdiction_index = 0
-
-        for entry_list in court_entries_list:
-
-            print(entry_list)
-
-            cleaned_list_entry_list = []
-
-            #If 'All' not chosen
-            if 'All' not in entry_list:
-
-                cleaned_list_entry_list = entry_list
-
-            #If 'All' chosen, then add every one individually
-            else:
-                            
-                jurisdiction = list(all_us_jurisdictions.keys())[jurisdiction_index]
-
-                print(jurisdiction)
-
-                cleaned_list_entry_list = list(all_us_jurisdictions[jurisdiction].keys())
-    
-            cleaned_court_entries_list.append(cleaned_list_entry_list)
-
-            jurisdiction_index += 1
-
-        return cleaned_court_entries_list
-
 
 
 # %%
@@ -788,33 +926,69 @@ def us_court_choice_clean(court_entries_list):
 
 
 # %%
-#Clean court choice
-#NOT IN USE
-def us_clean_court_choice(df_master):
+#Fill in each court if 'All' is not chosen for all jurisdictions
+def us_court_choice_clean_pacer(court_entries_list):
+
+    #Intitial status of False means (every court entry list has 'All') <=> (some court entry list does not have 'All')
+    no_all_in_some_list_entry = False
+
+    for entry_list in court_entries_list:
+
+        if ((entry_list == None) or (entry_list == [])):
+            
+            no_all_in_some_list_entry = True
+
+            break
+        
+        else:
+            
+            if 'All' not in entry_list:
+                
+                no_all_in_some_list_entry = True
+                
+                break
     
-    court_entries_list = [df_master.loc[0, 'Federal Appellate Courts'] , 
-    df_master.loc[0, 'Federal District Courts'] , 
-    df_master.loc[0, 'Federal Historical Courts'] , 
-    df_master.loc[0, 'Bankruptcy Courts'], 
-     df_master.loc[0, 'State and Territory Courts'] , 
-     df_master.loc[0, 'More Courts']
-    ]
+    #Return original court entries as a list if every court entry list has 'All'
+    if no_all_in_some_list_entry == False:
 
-    court_entries_list_cleaned = us_court_choice_clean(court_entries_list)
-    
-    df_master.loc[0, 'Federal Appellate Courts'] = court_entries_list_cleaned[0]
+        all_court_entries_list = [['All'],['All'],['All'],['All']] 
+        
+        return all_court_entries_list
 
-    df_master.loc[0, 'Federal District Courts']  = court_entries_list_cleaned[1]
+    else:
 
-    df_master.loc[0, 'Federal Historical Courts'] = court_entries_list_cleaned[2]
+        cleaned_court_entries_list = []
 
-    df_master.loc[0, 'Bankruptcy Courts'] = court_entries_list_cleaned[3]
+        jurisdiction_index = 0
 
-    df_master.loc[0, 'State and Territory Courts'] = court_entries_list_cleaned[4]
+        for entry_list in court_entries_list:
 
-    df_master.loc[0, 'More Courts'] = court_entries_list_cleaned[5]
+            #st.write(entry_list)
 
-    return df_master
+            cleaned_list_entry_list = []
+
+            #If 'All' not chosen
+            if 'All' not in entry_list:
+
+                cleaned_list_entry_list = entry_list
+
+            #If 'All' chosen, then add every court for that jurisdiction
+            else:
+                
+                jurisdiction = list(all_us_pacer_jurisdictions.keys())[jurisdiction_index]
+
+                #st.write(jurisdiction)
+
+                cleaned_list_entry_list = list(all_us_pacer_jurisdictions[jurisdiction].keys())
+
+            #st.write(cleaned_list_entry_list)
+            
+            cleaned_court_entries_list.append(cleaned_list_entry_list)
+
+            jurisdiction_index += 1
+
+        return cleaned_court_entries_list
+
 
 
 # %%
@@ -840,19 +1014,20 @@ class us_search_tool:
         self.token = token
         self.headers = {'Authorization': self.token,
         }
+        self.doc_type = 'o'
         self.judgment_counter_bound = judgment_counter_bound
         self.params = []
         self.results = []
         self.results_count = 0
         self.results_to_show = []
         self.results_w_opinions = []
+        self.results_w_docs = []
         #self.metadata_droppable = ['caseNameFull', 'cluster_id', 'court_citation_string', 'court_id', 'meta', 'panel_ids', 'scdb_id', 'sibling_ids', 'source', 'status', 'suitNature', 'docket_id', 'non_participating_judge_ids', 'opinions', 'lexisCite', 'posture']
         self.metadata_droppable = []
-        self.renamed_keys = ['caseName', 'citation', 'neutralCite', 'absolute_url', 'court', 'dateFiled', 'judge',]
+        self.renamed_keys = ['caseName', 'citation', 'neutralCite', 'absolute_url', 'docket_absolute_url', 'court', 'dateFiled', 'dateTerminated', 'judge', 'docketNumber']
 
     def search(self, 
-               doc_type = 'o', 
-              #court = [], 
+               doc_type = list(us_collections.keys())[0], 
                fed_app_courts = [], 
               fed_dist_courts = [], 
               fed_hist_courts = [], 
@@ -871,107 +1046,27 @@ class us_search_tool:
                citation = None, 
                neutral_cite = None, 
                docket_number = None, 
-               #Enable following if want to capture documents from PACER; Still working on it
-               #description=None, 
-                #document_number=None,
-                #attachment_number=None,
-                #assigned_to=None,
-                #referred_to=None,
-                #nature_of_suit=None,
-                #party_name=None,
-                #atty_name=None,
-                #available_only=None,
+               #For PACER only
+               description=None, 
+                document_number=None,
+                attachment_number=None,
+                assigned_to=None,
+                referred_to=None,
+                nature_of_suit=None,
+                party_name=None,
+                atty_name=None,
+                available_only=None,
               ):
 
+        self.doc_type = us_collections[doc_type]
+
+        #Params for both opinions and PACER docs
         params_raw = [
-            ('type', doc_type),
+            ('type', self.doc_type),
             ('q', q), 
-            ('type', doc_type),
+            ('type', self.doc_type),
             ('order_by', us_order_by[order_by])
         ]
-
-
-        if isinstance(precedential_status, str):
-            precedential_status = ast.literal_eval(precedential_status)
-        
-        for status in precedential_status:
-            status_key = us_precedential_status[status]
-            params_raw.append((status_key, 'on'))
-
-        #Deal with courts
-        
-        court_entries_list_raw = [fed_app_courts, fed_dist_courts, fed_hist_courts, bankr_courts, state_courts, more_courts]
-    
-        court_entries_list = us_court_choice_clean(court_entries_list_raw)
-        
-        fed_app_courts = court_entries_list[0]
-    
-        fed_dist_courts = court_entries_list[1]
-    
-        fed_hist_courts = court_entries_list[2]
-    
-        bankr_courts = court_entries_list[3]
-    
-        state_courts = court_entries_list[4]
-    
-        more_courts = court_entries_list[5]
-    
-        court_list = []
-        
-        if isinstance(fed_app_courts, str):
-            fed_app_courts = ast.literal_eval(fed_app_courts)
-
-        for court in fed_app_courts:
-            if court != 'All':
-                court_list.append(us_fed_app_courts[court])
-
-        if isinstance(fed_dist_courts, str):
-            fed_dist_courts = ast.literal_eval(fed_dist_courts)
-
-        for court in fed_dist_courts:
-            if court != 'All':
-                court_list.append(us_fed_dist_courts[court])
-
-        if isinstance(fed_hist_courts, str):
-            fed_hist_courts = ast.literal_eval(fed_hist_courts)
-
-        for court in fed_hist_courts:
-            if court != 'All':
-                court_list.append(us_fed_hist_courts[court])
-            
-        if isinstance(bankr_courts, str):
-            bankr_courts = ast.literal_eval(bankr_courts)
-            
-        for court in bankr_courts:
-            if court != 'All':
-                court_list.append(us_bankr_courts[court])
-
-        if isinstance(state_courts, str):
-            state_courts = ast.literal_eval(state_courts)
-
-        for court in state_courts:
-            if court != 'All':
-                court_list.append(us_state_courts[court])
-
-        if isinstance(more_courts, str):
-            more_courts = ast.literal_eval(more_courts)
-
-        for court in more_courts:
-            if court != 'All':
-
-                court_list.append(us_more_courts[court])
-
-        #st.write(f"court_list is {court_list}")
-        
-        if len(court_list) > 0:
-            court_string = ' '.join(court_list)
-            params_raw.append(('court', court_string))
-            
-        if case_name:
-            params_raw.append(('case_name', case_name))
-        
-        if judge:
-            params_raw.append(('judge', judge))
 
         if filed_after:
             if len(filed_after) > 0:
@@ -981,48 +1076,188 @@ class us_search_tool:
             if len(filed_before) > 0:
                 params_raw.append(('filed_before', filed_before))
 
-        if cited_gt:
-            params_raw.append(('cited_gt', cited_gt))
-
-        if cited_lt:
-            params_raw.append(('cited_lt', cited_lt))
-
-        if citation:
-            params_raw.append(('citation', citation))
+        if case_name:
+            params_raw.append(('case_name', case_name))
         
-        if neutral_cite:
-            params_raw.append(('neutral_cite', neutral_cite))
-
         if docket_number:
             params_raw.append(('docket_number', docket_number)),
+        
+        #Params for opinions only
 
-       #Enable following if want to capture documents from PACER; Still working on it
-        #if description:
-            #params_raw.append(('description', description)),
+        if self.doc_type == 'o':
 
-        #if document_number:
-            #params_raw.append(('document_number', document_number)),
+            if isinstance(precedential_status, str):
+                precedential_status = ast.literal_eval(precedential_status)
+            
+            for status in precedential_status:
+                status_key = us_precedential_status[status]
+                params_raw.append((status_key, 'on'))
 
-        #if attachment_number:
-            #params_raw.append(('attachment_number', attachment_number)),
+            if judge:
+                params_raw.append(('judge', judge))
+    
+            if cited_gt:
+                params_raw.append(('cited_gt', cited_gt))
+    
+            if cited_lt:
+                params_raw.append(('cited_lt', cited_lt))
+    
+            if citation:
+                params_raw.append(('citation', citation))
+            
+            if neutral_cite:
+                params_raw.append(('neutral_cite', neutral_cite))
 
-        #if assigned_to:
-            #params_raw.append(('assigned_to', assigned_to)),
+            #Deal with courts
+            
+            court_entries_list_raw = [fed_app_courts, fed_dist_courts, fed_hist_courts, bankr_courts, state_courts, more_courts]
+        
+            court_entries_list = us_court_choice_clean(court_entries_list_raw)
+            
+            fed_app_courts = court_entries_list[0]
+        
+            fed_dist_courts = court_entries_list[1]
+        
+            fed_hist_courts = court_entries_list[2]
+        
+            bankr_courts = court_entries_list[3]
+        
+            state_courts = court_entries_list[4]
+        
+            more_courts = court_entries_list[5]
+        
+            court_list = []
+            
+            if isinstance(fed_app_courts, str):
+                fed_app_courts = ast.literal_eval(fed_app_courts)
+    
+            for court in fed_app_courts:
+                if court != 'All':
+                    court_list.append(us_fed_app_courts[court])
+    
+            if isinstance(fed_dist_courts, str):
+                fed_dist_courts = ast.literal_eval(fed_dist_courts)
+    
+            for court in fed_dist_courts:
+                if court != 'All':
+                    court_list.append(us_fed_dist_courts[court])
+    
+            if isinstance(fed_hist_courts, str):
+                fed_hist_courts = ast.literal_eval(fed_hist_courts)
+    
+            for court in fed_hist_courts:
+                if court != 'All':
+                    court_list.append(us_fed_hist_courts[court])
+                
+            if isinstance(bankr_courts, str):
+                bankr_courts = ast.literal_eval(bankr_courts)
+                
+            for court in bankr_courts:
+                if court != 'All':
+                    court_list.append(us_bankr_courts[court])
+    
+            if isinstance(state_courts, str):
+                state_courts = ast.literal_eval(state_courts)
+    
+            for court in state_courts:
+                if court != 'All':
+                    court_list.append(us_state_courts[court])
+    
+            if isinstance(more_courts, str):
+                more_courts = ast.literal_eval(more_courts)
+    
+            for court in more_courts:
+                if court != 'All':
+    
+                    court_list.append(us_more_courts[court])
+    
+            #st.write(f"court_list is {court_list}")
+            
+            if len(court_list) > 0:
+                court_string = ' '.join(court_list)
+                params_raw.append(('court', court_string))
 
-        #if referred_to:
-            #params_raw.append(('referred_to', referred_to)),
 
-        #if nature_of_suit:
-            #params_raw.append(('nature_of_suit', nature_of_suit)),
+        #Params for PACER docs
+        if self.doc_type == 'r':
 
-        #if party_name:
-            #params_raw.append(('party_name', party_name)),
+            if description:
+                params_raw.append(('description', description))
+    
+            if document_number:
+                params_raw.append(('document_number', document_number))
+    
+            if attachment_number:
+                params_raw.append(('attachment_number', attachment_number))
+    
+            if assigned_to:
+                params_raw.append(('assigned_to', assigned_to))
+    
+            if referred_to:
+                params_raw.append(('referred_to', referred_to))
+    
+            if nature_of_suit:
+                params_raw.append(('nature_of_suit', nature_of_suit))
+    
+            if party_name:
+                params_raw.append(('party_name', party_name))
+    
+            if atty_name:
+                params_raw.append(('atty_name', atty_name))
+    
+            if int(float(available_only)) == 1:
+                params_raw.append(('available_only', 'on'))
 
-        #if atty_name:
-            #params_raw.append(('atty_name', atty_name)),
-
-        #if available_only:
-            #params_raw.append(('available_only', available_only)),
+            #Deal with courts
+            
+            court_entries_list_raw = [fed_app_courts, fed_dist_courts, bankr_courts, more_courts]
+        
+            court_entries_list = us_court_choice_clean_pacer(court_entries_list_raw)
+            
+            fed_app_courts = court_entries_list[0]
+        
+            fed_dist_courts = court_entries_list[1]
+                
+            bankr_courts = court_entries_list[2]
+                
+            more_courts = court_entries_list[3]
+        
+            court_list = []
+            
+            if isinstance(fed_app_courts, str):
+                fed_app_courts = ast.literal_eval(fed_app_courts)
+    
+            for court in fed_app_courts:
+                if court != 'All':
+                    court_list.append(us_pacer_fed_app_courts[court])
+    
+            if isinstance(fed_dist_courts, str):
+                fed_dist_courts = ast.literal_eval(fed_dist_courts)
+    
+            for court in fed_dist_courts:
+                if court != 'All':
+                    court_list.append(us_pacer_fed_dist_courts[court])
+                    
+            if isinstance(bankr_courts, str):
+                bankr_courts = ast.literal_eval(bankr_courts)
+                
+            for court in bankr_courts:
+                if court != 'All':
+                    court_list.append(us_pacer_bankr_courts[court])
+        
+            if isinstance(more_courts, str):
+                more_courts = ast.literal_eval(more_courts)
+    
+            for court in more_courts:
+                if court != 'All':
+    
+                    court_list.append(us_pacer_more_courts[court])
+    
+            #st.write(f"court_list is {court_list}")
+            
+            if len(court_list) > 0:
+                court_string = ' '.join(court_list)
+                params_raw.append(('court', court_string))
         
         params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
 
@@ -1042,13 +1277,6 @@ class us_search_tool:
         #st.write(f"self.results_url is {self.results_url}")
         
         self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
-
-        #Get a list of cases with judge field filled
-                
-        #soup = BeautifulSoup(page.content, 'lxml')
-
-        #Get a list of results with judge field filled
-        #results_raw = json.loads(soup.text)['results']
 
         try:
             page_json = json.loads(page.content.decode('utf-8')) 
@@ -1094,47 +1322,53 @@ class us_search_tool:
         #self.results = results
 
         #Create results for display
+        absolute_url_field = 'absolute_url'
+        
+        if self.doc_type == 'o': #Opinions
+            absolute_url_field = 'absolute_url'
 
+        if self.doc_type == 'r': #PACER docs
+            absolute_url_field = 'docket_absolute_url'
+            
         for result in self.results:
-            case_name = ''
-            citation = ''
-            neutral_cite = ''
-            hyperlink = f"https://www.courtlistener.com{result['absolute_url']}"
-            court = ''
-            filed = ''
-            docket = ''
-            judge = ''
 
+            result_to_show = {}
+
+            #Add each field if available
             if 'caseName' in result.keys():
                 case_name = result['caseName']
+                result_to_show.update({'Case name' : case_name})
                 
             if 'citation' in result.keys():
                 citation = result['citation']
-                
+                result_to_show.update({'Citation' : citation})
+
+            hyperlink = f"https://www.courtlistener.com{result[absolute_url_field]}"
+            result_to_show.update({'Hyperlink to CourtListener': link(hyperlink)})
+
             if 'neutralCite' in result.keys():
                 neutral_cite = result['neutralCite']
-            
+                result_to_show.update({'Neutral citation' : neutral_cite})
+
             if 'court' in result.keys():
                 court =  result['court']
+                result_to_show.update({'Court' : court})
 
             if 'dateFiled' in result.keys():
                 filed = result['dateFiled']
+                result_to_show.update({'Filed' : filed})
+
+            if 'dateTerminated' in result.keys():
+                dateTerminated = result['dateTerminated']
+                result_to_show.update({'Terminated' : dateTerminated})
+            
+            if 'docketNumber' in result.keys():
+                docket = result['docketNumber']
+                result_to_show.update({'Docket number' : docket})
 
             if 'judge' in result.keys():
                 judge = result['judge']
-
-            if 'docketNumber' in result.keys():
-                docket = result['docketNumber']
-                
-            result_to_show = {'Case name': case_name, 
-                              'Citation': citation, 
-                                'Neutral citation': neutral_cite, 
-                              'Hyperlink to CourtListener': link(hyperlink), 
-                                'Court': court, 
-                              'Filed': filed, 
-                              'Docket number': docket, 
-                              'Judges': judge, 
-            }
+                result_to_show.update({'Judges' : judge})
 
             self.results_to_show.append(result_to_show)
 
@@ -1208,46 +1442,104 @@ class us_search_tool:
         return opinion_json_cleaned
 
     def get_opinions(self):
-        
-        self.results_w_opinions = self.results_to_show.copy()
-        
-        for result in self.results:
 
-            #Create placeholder for 'judgment'
-            result_index = self.results.index(result)
-            self.results_w_opinions[result_index]['judgment'] = []
-            opinion_list_raw = []
+        #Note if doc_type is not opinion
+        if self.doc_type != 'o':
+            print('Not scraping opinions becase another type of documents is sought.')
+        else:
             
-            #Get a list of opinions
-            opinions_list = result['opinions']
-            for opinion_raw in opinions_list:
-                opinion_json_cleaned = self.clean_opinion_json(opinion_raw, self.headers)
-                opinion_list_raw.append(opinion_json_cleaned)
-                #self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
+            self.results_w_opinions = self.results_to_show.copy()
+            
+            for result in self.results:
+    
+                #Create placeholder for 'judgment'
+                result_index = self.results.index(result)
+                self.results_w_opinions[result_index]['judgment'] = []
+                opinion_list_raw = []
+                
+                #Get a list of opinions
+                opinions_list = result['opinions']
+                for opinion_raw in opinions_list:
+                    opinion_json_cleaned = self.clean_opinion_json(opinion_raw, self.headers)
+                    opinion_list_raw.append(opinion_json_cleaned)
+                    #self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
+    
+                #Append opinion to result from combined, to leading, to concurrence, to dissent
+                for opinion_json_cleaned in opinion_list_raw:
+                    if 'combine' in opinion_json_cleaned['type']:
+                        self.results_w_opinions[result_index]['judgment'] = [opinion_json_cleaned]
+                        break
+                        
+                    elif 'lead' in opinion_json_cleaned['type']:
+                        self.results_w_opinions[result_index]['judgment'].insert(0, opinion_json_cleaned)
+                                        
+                    elif 'dissent' in opinion_json_cleaned['type']:
+                        self.results_w_opinions[result_index]['judgment'].insert(-1, opinion_json_cleaned)
+    
+                    else: #'concur' in opinion_json_cleaned['type']:
+                        self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
+    
+                #Add useful key/values to results_w_opinions, create list of dropable metadata
+                for key in result.keys():
+                    if key not in self.renamed_keys:
+                        self.results_w_opinions[result_index][key] = result[key]
+    
+                        if key not in self.metadata_droppable:
+                            self.metadata_droppable.append(key)
 
-            #Append opinion to result from combined, to leading, to concurrence, to dissent
-            for opinion_json_cleaned in opinion_list_raw:
-                if 'combine' in opinion_json_cleaned['type']:
-                    self.results_w_opinions[result_index]['judgment'] = [opinion_json_cleaned]
-                    break
-                    
-                elif 'lead' in opinion_json_cleaned['type']:
-                    self.results_w_opinions[result_index]['judgment'].insert(0, opinion_json_cleaned)
-                                    
-                elif 'dissent' in opinion_json_cleaned['type']:
-                    self.results_w_opinions[result_index]['judgment'].insert(-1, opinion_json_cleaned)
+    #Define function for docket link containing PDF
+    @st.cache_data
+    def clean_doc_json(_self, recap_document, headers):
 
-                else: #'concur' in opinion_json_cleaned['type']:
-                    self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
+        headers.update({'User-Agent': 'whatever'})
+    
+        if ('filepath_local' in recap_document.keys()) and ('is_available' in recap_document.keys()):
+            if (('.pdf' in str(recap_document['filepath_local']).lower()) and (str(recap_document['is_available']).lower() == 'true')):
+                pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']
+                r = requests.get(pdf_url, headers=headers)
+                remote_file_bytes = io.BytesIO(r.content)
+                pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
+                text_list = []
+            
+                for page in pdfdoc_remote.pages:
+                    text_list.append(page.extract_text())
+    
+                recap_document['file_content'] = str(text_list)
+        
+        return recap_document
 
-            #Add useful key/values to results_w_opinions, create list of dropable metadata
-            for key in result.keys():
-                if key not in self.renamed_keys:
-                    self.results_w_opinions[result_index][key] = result[key]
+    def get_docs(self):
 
-                    if key not in self.metadata_droppable:
-                        self.metadata_droppable.append(key)
+        #Note if doc_type is not opinion
+        if self.doc_type != 'r':
+            print('Not scraping PACER documents because another type of documents is sought.')
+        else:
+            self.results_w_docs = self.results_to_show.copy()
+            
+            for result in self.results:
+    
+                #Create placeholder for 'pacer_records' (instead of 'judgment')
+                result_index = self.results.index(result)
+                self.results_w_docs[result_index]['pacer_records'] = []
+                #doc_list_raw = []
+                
+                #Get a list of docs
+                docs_list = result['recap_documents']
+    
+                #print(docs_list)
+                
+                for doc_raw in docs_list:
+                    doc_json_cleaned = self.clean_doc_json(doc_raw, self.headers)
+                    #doc_list_raw.append(doc_json_cleaned)
+                    self.results_w_docs[result_index]['pacer_records'] = [doc_json_cleaned]
 
+                #Add useful key/values to results_w_docs, create list of dropable metadata
+                for key in result.keys():
+                    if key not in self.renamed_keys:
+                        self.results_w_docs[result_index][key] = result[key]
+    
+                        if key not in self.metadata_droppable:
+                            self.metadata_droppable.append(key)
 
 
 # %%
@@ -1265,6 +1557,7 @@ def us_search_preview(df_master):
     #Conduct search
     
     us_search.search(
+                doc_type = df_master.loc[0, 'Collection'], 
                 fed_app_courts = df_master.loc[0, 'Federal Appellate Courts'], 
                 fed_dist_courts = df_master.loc[0, 'Federal District Courts'], 
                 fed_hist_courts = df_master.loc[0, 'Federal Historical Courts'], 
@@ -1283,14 +1576,23 @@ def us_search_preview(df_master):
                 citation = df_master.loc[0, 'Citation'], 
                 neutral_cite = df_master.loc[0, 'Neutral citation'], 
                 docket_number = df_master.loc[0, 'Docket number'],
+                description = df_master.loc[0, 'Document description'],
+                document_number = df_master.loc[0, 'Document number'],
+                attachment_number = df_master.loc[0, 'Attachment number'],
+                assigned_to = df_master.loc[0, 'Assigned to Judge'],
+                referred_to = df_master.loc[0, 'Referred to Judge'],
+                nature_of_suit = df_master.loc[0, 'Nature of suit'],
+                party_name = df_master.loc[0, 'Party name'],
+                atty_name = df_master.loc[0, 'Attorney name'],
+                available_only = df_master.loc[0, 'Only show results with PDFs'],
                 )
     
     url = us_search.results_url_to_show
     results_count = us_search.results_count
     results_to_show = us_search.results_to_show
 
-
     return {'url': url, 'results_count': results_count, 'results_to_show': us_search.results_to_show}
+
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -1302,7 +1604,6 @@ from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_va
 from functions.gpt_functions import question_characters_bound, role_content#, intro_for_GPT
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
-
 
 
 # %%
@@ -1355,6 +1656,7 @@ def us_run(df_master):
     #Conduct search
     
     us_search.search(
+                doc_type = df_master.loc[0, 'Collection'], 
                 fed_app_courts = df_master.loc[0, 'Federal Appellate Courts'], 
                 fed_dist_courts = df_master.loc[0, 'Federal District Courts'], 
                 fed_hist_courts = df_master.loc[0, 'Federal Historical Courts'], 
@@ -1373,14 +1675,34 @@ def us_run(df_master):
                 citation = df_master.loc[0, 'Citation'], 
                 neutral_cite = df_master.loc[0, 'Neutral citation'], 
                 docket_number = df_master.loc[0, 'Docket number'],
+                description = df_master.loc[0, 'Document description'],
+                document_number = df_master.loc[0, 'Document number'],
+                attachment_number = df_master.loc[0, 'Attachment number'],
+                assigned_to = df_master.loc[0, 'Assigned to Judge'],
+                referred_to = df_master.loc[0, 'Referred to Judge'],
+                nature_of_suit = df_master.loc[0, 'Nature of suit'],
+                party_name = df_master.loc[0, 'Party name'],
+                atty_name = df_master.loc[0, 'Attorney name'],
+                available_only = df_master.loc[0, 'Only show results with PDFs'],
                 )
 
-    us_search.get_opinions()
-
-    for judgment_json in us_search.results_w_opinions:
-
-        judgments_file.append(judgment_json)
+    #If seeking opinions
+    if df_master.loc[0, 'Collection'] == list(us_collections.keys())[0]:
     
+        us_search.get_opinions()
+    
+        for judgment_json in us_search.results_w_opinions:
+    
+            judgments_file.append(judgment_json)
+
+    else:  #If seeking PACER docs
+
+        us_search.get_docs()
+    
+        for judgment_json in us_search.results_w_docs:
+    
+            judgments_file.append(judgment_json)
+        
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
@@ -1406,7 +1728,12 @@ def us_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    df_updated.pop('judgment')
+    #Remove 'judgment' column if opinions sought, or 'pacer_records' column if PACER docs sought
+    if 'judgment' in df_updated.columns:
+        df_updated.pop('judgment')
+
+    if 'pacer_records' in df_updated.columns:
+        df_updated.pop('pacer_records')
 
     #Drop metadata if not wanted
 
@@ -1446,6 +1773,7 @@ def us_batch(df_master):
     #Conduct search
     
     us_search.search(
+                doc_type = df_master.loc[0, 'Collection'], 
                 fed_app_courts = df_master.loc[0, 'Federal Appellate Courts'], 
                 fed_dist_courts = df_master.loc[0, 'Federal District Courts'], 
                 fed_hist_courts = df_master.loc[0, 'Federal Historical Courts'], 
@@ -1464,13 +1792,33 @@ def us_batch(df_master):
                 citation = df_master.loc[0, 'Citation'], 
                 neutral_cite = df_master.loc[0, 'Neutral citation'], 
                 docket_number = df_master.loc[0, 'Docket number'],
+                description = df_master.loc[0, 'Document description'],
+                document_number = df_master.loc[0, 'Document number'],
+                attachment_number = df_master.loc[0, 'Attachment number'],
+                assigned_to = df_master.loc[0, 'Assigned to Judge'],
+                referred_to = df_master.loc[0, 'Referred to Judge'],
+                nature_of_suit = df_master.loc[0, 'Nature of suit'],
+                party_name = df_master.loc[0, 'Party name'],
+                atty_name = df_master.loc[0, 'Attorney name'],
+                available_only = df_master.loc[0, 'Only show results with PDFs'],
                 )
 
-    us_search.get_opinions()
+    #If seeking opinions
+    if df_master.loc[0, 'Collection'] == list(us_collections.keys())[0]:
+    
+        us_search.get_opinions()
+    
+        for judgment_json in us_search.results_w_opinions:
+    
+            judgments_file.append(judgment_json)
 
-    for judgment_json in us_search.results_w_opinions:
+    else:  #If seeking PACER docs
 
-        judgments_file.append(judgment_json)
+        us_search.get_docs()
+    
+        for judgment_json in us_search.results_w_docs:
+    
+            judgments_file.append(judgment_json)
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

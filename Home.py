@@ -55,7 +55,7 @@ else:
 page_dict = {"pages/HCA.py": "Judgments of the High Court of Australia",
             "pages/FCA.py": "Judgments of the Federal Court of Australia", 
             "pages/NSW.py": "Judgments of the New South Wales courts and tribunals", 
-             "pages/US.py": "Judgments of United States courts", 
+             "pages/US.py": "Judgments and records of select United States courts", 
             #"pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
             #"pages/CA.py": 'judgments of the Canadian courts, boards and tribunals', 
             "pages/AFCA.py": 'Decisions of the Australian Financial Complaints Authority', 
