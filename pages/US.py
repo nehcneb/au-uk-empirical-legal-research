@@ -486,6 +486,8 @@ if collection_entry:
 #If opinions chosen
 if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
 
+    st.write(f"For information about case coverage, please visit [CourtListener](https://free.law/2017/08/15/we-have-all-free-pacer).")
+
     jurisdiction_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state.court_filter_status)
     
     if jurisdiction_toggle:
@@ -493,45 +495,33 @@ if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys(
         st.warning('Please select courts to cover.')
     
         st.session_state['court_filter_status'] = True
-            
-        st.markdown("**:blue[Federal Appellate Courts]**")
-    
-        fed_app_courts_entry = st.multiselect(label = 'Select or type in Federal Appellate Courts to cover', 
+                
+        fed_app_courts_entry = st.multiselect(label = 'Federal Appellate Courts', 
                                               options = list(us_fed_app_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal Appellate Courts'])
                                              )
-            
-        st.markdown("**:blue[Federal District Courts]**")
-    
-        fed_dist_courts_entry = st.multiselect(label = 'Select or type in Federal District Courts to cover', 
+                
+        fed_dist_courts_entry = st.multiselect(label = 'Federal District Courts', 
                                               options = list(us_fed_dist_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal District Courts'])
                                              )
-            
-        st.markdown("**:blue[Federal Historical Courts]**")
-        
-        fed_hist_courts_entry = st.multiselect(label = 'Select or type in Federal Historical Courts to cover', 
+                    
+        fed_hist_courts_entry = st.multiselect(label = 'Federal Historical Courts', 
                                               options = list(us_fed_hist_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal Historical Courts'])
                                              )
-                
-        st.markdown("**:blue[Bankruptcy Courts]**")
-    
-        bankr_courts_entry = st.multiselect(label = 'Select or type in Bankruptcy Courts to cover', 
+                    
+        bankr_courts_entry = st.multiselect(label = 'Bankruptcy Courts', 
                                               options = list(us_bankr_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "Bankruptcy Courts"])
                                              )
-            
-        st.markdown("**:blue[State and Territory Courts]**")
-    
-        state_courts_entry = st.multiselect(label = 'Select or type in State and Territory Courts to cover', 
+                
+        state_courts_entry = st.multiselect(label = 'State and Territory Courts', 
                                               options = list(us_state_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "State and Territory Courts"])
                                              )
-            
-        st.markdown("**:blue[More Courts]**")
-    
-        more_courts_entry = st.multiselect(label = 'Select or type in more Courts to cover', 
+                
+        more_courts_entry = st.multiselect(label = 'More Courts', 
                                               options = list(us_more_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "More Courts"])
                                              )
@@ -549,6 +539,8 @@ if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys(
         st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
 
 else: #If pacer records chosen
+
+    st.write(f"For information about case coverage, please visit [CourtListener](https://free.law/2017/08/15/we-have-all-free-pacer).")
     
     pacer_jurisdiction_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state.court_pacer_filter_status)
     
@@ -556,32 +548,24 @@ else: #If pacer records chosen
     
         st.warning('Please select courts to cover.')
     
-        st.session_state['court_filter_status'] = True
-            
-        st.markdown("**:blue[Federal Appellate Courts]**")
-    
-        fed_app_courts_entry = st.multiselect(label = 'Select or type in Federal Appellate Courts to cover', 
+        st.session_state['court_pacer_filter_status'] = True
+                
+        fed_app_courts_entry = st.multiselect(label = 'Federal Appellate Courts', 
                                               options = list(us_pacer_fed_app_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal Appellate Courts'])
                                              )
-            
-        st.markdown("**:blue[Federal District Courts]**")
-    
-        fed_dist_courts_entry = st.multiselect(label = 'Select or type in Federal District Courts to cover', 
+                
+        fed_dist_courts_entry = st.multiselect(label = 'Federal District Courts', 
                                               options = list(us_pacer_fed_dist_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal District Courts'])
                                              )
-                    
-        st.markdown("**:blue[Bankruptcy Courts]**")
-    
-        bankr_courts_entry = st.multiselect(label = 'Select or type in Bankruptcy Courts to cover', 
+                        
+        bankr_courts_entry = st.multiselect(label = 'Bankruptcy Courts', 
                                               options = list(us_pacer_bankr_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "Bankruptcy Courts"])
                                              )
-            
-        st.markdown("**:blue[More Courts]**")
-    
-        more_courts_entry = st.multiselect(label = 'Select or type in more Courts to cover', 
+                
+        more_courts_entry = st.multiselect(label = 'More Courts', 
                                               options = list(us_pacer_more_courts.keys()), 
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "More Courts"])
                                              )
@@ -590,16 +574,11 @@ else: #If pacer records chosen
         
         st.info('All courts will be covered.')
         
-        st.session_state['court_filter_status'] = False
+        st.session_state['court_pacer_filter_status'] = False
         st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
         st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
         st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
         st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
-
-#Enable to see what courts are covered
-#for jurisdiction in all_us_jurisdictions.keys():
-
-    #st.write(f"Covered for {jurisdiction}: {st.session_state['df_master'].loc[0, jurisdiction]}")
 
 st.subheader("Your search terms")
 

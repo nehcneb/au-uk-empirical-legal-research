@@ -379,9 +379,9 @@ else:
     #st.session_state.default_courts = []
     st.session_state.default_courts = list_range_check(nsw_courts, st.session_state['df_master'].loc[0, 'Courts'])
 
-courts_entry = st.multiselect(label = 'Select or type in the courts to cover', options = nsw_courts, default = st.session_state.default_courts)
+courts_entry = st.multiselect(label = 'Courts', options = nsw_courts, default = st.session_state.default_courts)
 
-tribunals_entry = st.multiselect(label = 'Select or type in the tribunals to cover', options = nsw_tribunals, default = list_range_check(nsw_tribunals, st.session_state['df_master'].loc[0, 'Tribunals']))
+tribunals_entry = st.multiselect(label = 'Tribunals', options = nsw_tribunals, default = list_range_check(nsw_tribunals, st.session_state['df_master'].loc[0, 'Tribunals']))
 
 #st.caption(f"All courts and tribunals listed in these menus will be covered if left blank.")
 

@@ -86,7 +86,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 
 # %%
 us_collections = {'Judgments of Federal, State and Territory Courts': 'o',
-'Federal Court records': 'r'
+'Records of Federal Courts': 'r'
 }
 
 # %%
