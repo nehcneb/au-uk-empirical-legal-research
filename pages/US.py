@@ -410,7 +410,7 @@ jurisdiction_toggle = st.toggle(label = 'Select/unselect courts', value = st.ses
 
 if jurisdiction_toggle:
 
-    st.warning('Please select the courts to cover.')
+    st.warning('Please select courts to cover.')
 
     st.session_state['court_filter_status'] = True
         
