@@ -677,9 +677,14 @@ with stylable_container(
 # %%
 if preview_button:
     
-    #Check whether search terms entered
+    #If opinions chosen
+    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
 
-    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry)
+        us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(judge_entry)
+
+    else: #if pacer docs chosen
+        
+        us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(description_entry) + str(document_number_entry) + str(attachment_number_entry) + str(assigned_to_entry) + str(referred_to_entry) + str(nature_of_suit_entry) + str(party_name_entry) + str(atty_name_entry)
     
     if us_search_terms.replace('None', '') == "":
 
@@ -761,7 +766,14 @@ if keep_button:
 
     #Check whether search terms entered
 
-    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry)
+    #If opinions chosen
+    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+
+        us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(judge_entry)
+
+    else: #if pacer docs chosen
+        
+        us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(description_entry) + str(document_number_entry) + str(attachment_number_entry) + str(assigned_to_entry) + str(referred_to_entry) + str(nature_of_suit_entry) + str(party_name_entry) + str(atty_name_entry)
     
     if us_search_terms.replace('None', '') == "":
 
@@ -831,7 +843,14 @@ if reset_button:
 # %%
 if next_button:
 
-    us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry)
+    #If opinions chosen
+    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+
+        us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(judge_entry)
+
+    else: #if pacer docs chosen
+        
+        us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(description_entry) + str(document_number_entry) + str(attachment_number_entry) + str(assigned_to_entry) + str(referred_to_entry) + str(nature_of_suit_entry) + str(party_name_entry) + str(atty_name_entry)
     
     if us_search_terms.replace('None', '') == "":
 
