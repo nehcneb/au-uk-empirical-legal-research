@@ -213,7 +213,7 @@ if retrive_button:
         
             #Write results
         
-            st.success("Your data is now available for download. Thank you for using LawtoData!")
+            st.success("Your data is now available for download. Thank you for using *LawtoData*!")
         
             batch_index = all_df_masters.index[all_df_masters['batch_id'] == batch_code_entry].tolist()[0]
             

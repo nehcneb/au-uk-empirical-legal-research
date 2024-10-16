@@ -697,7 +697,7 @@ if run_button:
     
                     #Write results
             
-                    st.success("Your data is now available for download. Thank you for using LawtoData!")
+                    st.success("Your data is now available for download. Thank you for using *LawtoData*!")
                     
                     #Button for downloading results
                     output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
@@ -851,7 +851,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                         
                         #Write results
                 
-                        st.success("Your data is now available for download. Thank you for using LawtoData!")
+                        st.success("Your data is now available for download. Thank you for using *LawtoData*!")
                         
                         #Button for downloading results
                         output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
