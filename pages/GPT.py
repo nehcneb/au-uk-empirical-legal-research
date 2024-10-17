@@ -281,7 +281,7 @@ return_button = st.button('RETURN to the previous page')
 
 st.header(":blue[Would you to ask GPT questions about the cases returned by your search terms?]")
 
-st.markdown("""You can use this app without asking GPT any questions. For instance, you can extract metadata and get estimates of judgment or record length and GPT cost. 
+st.markdown("""You can use this app without asking GPT any questions. For instance, you can extract metadata and get estimates of file length and GPT cost. 
 """)
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
@@ -294,9 +294,9 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your questions for each case")
 
-st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each case** based only on information from the relevant judgment or record **itself**. """)
+st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each case** based only on information from the relevant file **itself**. """)
 
-st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant judgment or record itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
 #if st.toggle('See the instruction given to GPT'):
     #st.write(f"{intro_for_GPT[0]['content']}")
@@ -398,7 +398,7 @@ if own_account_allowed() > 0:
         
                 st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} cases need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
 
-        st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each file, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} file(s).*")
+        st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each case, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} case(s).*")
     
     else:
         
@@ -432,7 +432,7 @@ st.markdown("""If you do not agree, then please feel free to close this app. """
 # ## Save entries
 
 # %%
-gpt_keep_button = st.button(label = 'DOWNLOAD entries')
+gpt_keep_button = st.button(label = 'Download entries')
 
 if gpt_keep_button:
     st.success('Scroll down to download your entries.')
@@ -445,7 +445,7 @@ if gpt_keep_button:
 st.header("Next steps")
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. Up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases will **immediately** be processed. The estimated waiting time is 3-5 minutes per 10 cases.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will **immediately** process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is 3-5 minutes per 10 cases.
 """)
 
 if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):

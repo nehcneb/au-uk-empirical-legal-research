@@ -221,7 +221,9 @@ def max_output(gpt_model, messages_for_GPT):
 
 
 # %%
-default_msg = f'By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} judgments, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from each judgment.'
+default_msg = f'**Please enter your search terms.** By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from each case.'
+
+default_caption = f'During the pilot stage, the number of cases to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases, courts, or tribunals.'
 
 
 # %%
@@ -248,12 +250,15 @@ def judgment_prompt_json(judgment_json, gpt_model):
             judgment_json[key] = ''
             break
 
-    #Determine whether 'judgment' or 'recap_documents' contains text
+    #Determine whether 'judgment', opinions, or 'recap_documents' contains text
 
     text_key = ''
     
     if 'judgment' in judgment_json.keys():
         text_key = 'judgment'
+
+    if 'opinions' in judgment_json.keys():
+        text_key = 'opinions'
 
     if 'recap_documents' in judgment_json.keys():
         text_key = 'recap_documents'
@@ -265,7 +270,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         return judgment_json
 
     else:        
-        #Turn judgment or recap_documents to string
+        #Turn judgment, opinions or recap_documents to string
         if isinstance(judgment_json[text_key], list):
             try:
                 judgment_to_string = '\n'.join(judgment_json[text_key])
@@ -279,7 +284,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         else:
             judgment_to_string = str(judgment_json[text_key])
     
-        #Truncate judgment or recap_documents if needed
+        #Truncate judgment, opinions or recap_documents if needed
         judgment_content = f'Based on the metadata and {text_key} in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
     
         judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
@@ -1026,6 +1031,10 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
             if 'judgment' in df_individual.columns:
                 
                 df_individual.loc[judgment_index, 'judgment'] = ''
+
+            if 'opinions' in df_individual.columns:
+                
+                df_individual.loc[judgment_index, 'opinions'] = ''
 
             if 'recap_documents' in df_individual.columns:
                 

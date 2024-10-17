@@ -85,7 +85,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # ### Menus and courts
 
 # %%
-us_collections = {'Judgments of Federal, State and Territory Courts': 'o',
+us_collections = {'Opinions of Federal, State and Territory Courts': 'o',
 'Records of Federal Courts': 'r'
 }
 
@@ -832,9 +832,16 @@ all_us_pacer_jurisdictions = {'Federal Appellate Courts': us_pacer_fed_app_court
                     'More Courts': us_pacer_more_courts,
                        }
 
-
 # %% [markdown]
 # ### Functions
+
+# %%
+test = ['1', '2']
+
+for item in []:
+    if item in test:
+        print('Yes')
+
 
 # %%
 #Court string to list
@@ -1380,16 +1387,14 @@ class us_search_tool:
         #opinion_json = json.loads(opinion_soup.text)
         opinion_json = json.loads(opinion_page.content.decode('utf-8'))
 
-        #Placeholders
-        opinion_json_cleaned = opinion_json.copy()
-        
+        #Placeholders        
         opinion_snippet = ''
         opinion_type = ''
         #opinion_id = ''
         opinion_text = ''
 
         opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
-        
+
         if 'snippet' in opinion_json.keys():
             opinion_snippet = opinion_json['snippet']
 
@@ -1405,42 +1410,36 @@ class us_search_tool:
         if 'plain_text' in opinion_json.keys():
             if len(opinion_json['plain_text']) > 0:
                 opinion_text = opinion_json['plain_text']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
         
         if 'html' in opinion_json.keys():
             if len(opinion_json['html']) > 0:
                 opinion_text = opinion_json['html']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
 
         if 'html_anon_2020' in opinion_json.keys():
             if len(opinion_json['html_anon_2020']) > 0:
                 opinion_text = opinion_json['html_anon_2020']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
 
         if 'xml_harvard' in opinion_json.keys():
             if len(opinion_json['xml_harvard']) > 0:
                 opinion_text = opinion_json['xml_harvard']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
 
         if 'html_lawbox' in opinion_json.keys():
             if len(opinion_json['html_lawbox']) > 0:
                 opinion_text = opinion_json['html_lawbox']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
 
         if 'html_columbia' in opinion_json.keys():
             if len(opinion_json['html_columbia']) > 0:
                 opinion_text = opinion_json['html_columbia']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
         
         if 'html_with_citations' in opinion_json.keys():
             if len(opinion_json['html_with_citations']) > 0:
                 opinion_text = opinion_json['html_with_citations']
-                opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
 
-        #opinion_json_cleaned['text'] = BeautifulSoup(opinion_json_cleaned['text'], "lxml").text
+        opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
+        
         if len(opinion_json_cleaned['text']) == 0:
             st.write(f'Opinion id {opinion_id}: no text scraped. Please check {opinion_url}.')
-        
+
         return opinion_json_cleaned
 
     #Method for getting all opinions from all results
@@ -1455,9 +1454,9 @@ class us_search_tool:
             
             for result in self.results:
     
-                #Create placeholder for 'judgment'
+                #Create placeholder for 'opinions' instead of 'judgment'
                 result_index = self.results.index(result)
-                self.results_w_opinions[result_index]['judgment'] = []
+                self.results_w_opinions[result_index]['opinions'] = []
                 opinion_list_raw = []
                 
                 #Get a list of opinions
@@ -1467,22 +1466,22 @@ class us_search_tool:
                     opinion_list_raw.append(opinion_json_cleaned)
                     pause.seconds(np.random.randint(5, 10))
 
-                    #self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
+                    #self.results_w_opinions[result_index]['opinions'].append(opinion_json_cleaned)
     
                 #Append opinion to result from combined, to leading, to concurrence, to dissent
                 for opinion_json_cleaned in opinion_list_raw:
                     if 'combine' in opinion_json_cleaned['type']:
-                        self.results_w_opinions[result_index]['judgment'] = [opinion_json_cleaned]
+                        self.results_w_opinions[result_index]['opinions'] = [opinion_json_cleaned]
                         break
                         
                     elif 'lead' in opinion_json_cleaned['type']:
-                        self.results_w_opinions[result_index]['judgment'].insert(0, opinion_json_cleaned)
+                        self.results_w_opinions[result_index]['opinions'].insert(0, opinion_json_cleaned)
                                         
                     elif 'dissent' in opinion_json_cleaned['type']:
-                        self.results_w_opinions[result_index]['judgment'].insert(-1, opinion_json_cleaned)
+                        self.results_w_opinions[result_index]['opinions'].insert(-1, opinion_json_cleaned)
     
                     else: #'concur' in opinion_json_cleaned['type']:
-                        self.results_w_opinions[result_index]['judgment'].append(opinion_json_cleaned)
+                        self.results_w_opinions[result_index]['opinions'].append(opinion_json_cleaned)
     
                 #Add case-specific metadata to results_w_opinions, create list of dropable metadata
                 for key in result.keys():

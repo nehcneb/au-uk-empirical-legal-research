@@ -155,8 +155,12 @@ def us_create_df():
     
         more_courts = ['All']
 
-
-    if ((st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]) and (st.session_state.court_filter_status)):
+    filtered_by_court = False
+    
+    if Filtered_by_court_toggle:
+        filtered_by_court = Filtered_by_court_toggle
+    
+    if ((collection_entry ==  list(us_collections.keys())[0]) and (filtered_by_court)):
 
         fed_app_courts = fed_app_courts_entry
         
@@ -170,8 +174,7 @@ def us_create_df():
     
         more_courts = more_courts_entry
 
-
-    if ((st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[1]) and (st.session_state.court_pacer_filter_status)):
+    if ((collection_entry ==  list(us_collections.keys())[1]) and (filtered_by_court)):
         
         fed_app_courts = fed_app_courts_entry
         
@@ -234,7 +237,7 @@ def us_create_df():
     available_only= True
 
     #Opinions specific entries
-    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+    if collection_entry ==  list(us_collections.keys())[0]:
         precedential_status = precedential_status_entry    
     
         judge = judge_entry
@@ -287,6 +290,8 @@ def us_create_df():
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
                'Collection': collection, 
+           'Filtered by court': filtered_by_court, 
+          'Filtered by court': filtered_by_court, 
             'Federal Appellate Courts': fed_app_courts, 
            'Federal District Courts': fed_dist_courts, 
            'Federal Historical Courts': fed_hist_courts, 
@@ -327,6 +332,7 @@ def us_create_df():
             
     return df_master_new
 
+
 # %% [markdown]
 # # GPT functions and parameters
 
@@ -334,7 +340,7 @@ def us_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption
 
 
 # %%
@@ -401,6 +407,7 @@ if 'df_master' not in st.session_state:
 
     #Jurisdiction specific
     st.session_state['df_master'].loc[0, 'Collection'] =  list(us_collections.keys())[0]
+    st.session_state['df_master'].loc[0, 'Filtered by court'] =  False
     st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
     st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
     st.session_state['df_master'].loc[0, 'Federal Historical Courts'] = ['All']
@@ -445,12 +452,12 @@ if 'disable_input' not in st.session_state:
 #US specific session states
 
 #For opinions
-if (('court_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
-    st.session_state["court_filter_status"] = False
+#if (('court_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
+    #st.session_state["court_filter_status"] = False
 
 #For pacer records
-if (('court_pacer_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
-    st.session_state["court_pacer_filter_status"] = False
+#if (('court_pacer_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
+    #st.session_state["court_pacer_filter_status"] = False
 
 
 # %%
@@ -468,9 +475,9 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[cases of select United States courts]")
 
-st.success(f"**Please enter your search terms.** {default_msg}")
+st.success(default_msg)
 
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 
@@ -478,23 +485,28 @@ st.subheader('Case collection')
 
 collection_entry = st.selectbox(label = 'Select one to search', options = list(us_collections.keys()), index = list_value_check(list(us_collections.keys()), st.session_state.df_master.loc[0, 'Collection']))
 
-if collection_entry:
-    st.session_state['df_master'].loc[0, 'Collection'] = collection_entry
+if collection_entry != st.session_state['df_master'].loc[0, 'Collection']:
+    st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
+    st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
+    st.session_state['df_master'].loc[0, 'Federal Historical Courts'] = ['All']
+    st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
+    st.session_state['df_master'].loc[0, 'State and Territory Courts'] = ['All']
+    st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
 
 #st.subheader('Courts to cover')
 
 #If opinions chosen
-if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+if collection_entry ==  list(us_collections.keys())[0]:
 
     st.write(f"For information about case coverage, please visit [CourtListener](https://www.courtlistener.com/help/coverage/opinions/).")
 
-    jurisdiction_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state.court_filter_status)
+    Filtered_by_court_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state['df_master'].loc[0, 'Filtered by court'])
     
-    if jurisdiction_toggle:
+    if Filtered_by_court_toggle:
     
         st.warning('Please select courts to cover.')
     
-        st.session_state['court_filter_status'] = True
+        #st.session_state['court_filter_status'] = True
                 
         fed_app_courts_entry = st.multiselect(label = 'Federal Appellate Courts', 
                                               options = list(us_fed_app_courts.keys()), 
@@ -526,29 +538,29 @@ if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys(
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "More Courts"])
                                              )
             
-    else: #if jurisdiction_toggle == False
+    else: #if Filtered_by_court_toggle == False
         
         st.info('All courts will be covered.')
         
-        st.session_state['court_filter_status'] = False
-        st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
-        st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
-        st.session_state['df_master'].loc[0, 'Federal Historical Courts'] = ['All']
-        st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
-        st.session_state['df_master'].loc[0, 'State and Territory Courts'] = ['All']
-        st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
+        #st.session_state['court_filter_status'] = False
+        #st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
+        #st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
+        #st.session_state['df_master'].loc[0, 'Federal Historical Courts'] = ['All']
+        #st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
+        #st.session_state['df_master'].loc[0, 'State and Territory Courts'] = ['All']
+        #st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
 
 else: #If pacer records chosen
 
     st.write(f"For information about case coverage, please visit [CourtListener](https://free.law/2017/08/15/we-have-all-free-pacer).")
     
-    pacer_jurisdiction_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state.court_pacer_filter_status)
+    Filtered_by_court_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state['df_master'].loc[0, 'Filtered by court'])
     
-    if pacer_jurisdiction_toggle:
+    if Filtered_by_court_toggle:
     
         st.warning('Please select courts to cover.')
     
-        st.session_state['court_pacer_filter_status'] = True
+        #st.session_state['court_pacer_filter_status'] = True
                 
         fed_app_courts_entry = st.multiselect(label = 'Federal Appellate Courts', 
                                               options = list(us_pacer_fed_app_courts.keys()), 
@@ -570,15 +582,15 @@ else: #If pacer records chosen
                                               default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "More Courts"])
                                              )
             
-    else: #if pacer_jurisdiction_toggle == False
+    else: #if Filtered_by_court_toggle == False
         
         st.info('All courts will be covered.')
         
-        st.session_state['court_pacer_filter_status'] = False
-        st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
-        st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
-        st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
-        st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
+        #st.session_state['court_pacer_filter_status'] = False
+        #st.session_state['df_master'].loc[0, 'Federal Appellate Courts'] = ['All'] 
+        #st.session_state['df_master'].loc[0, 'Federal District Courts'] = ['All']
+        #st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
+        #st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
 
 st.subheader("Your search terms")
 
@@ -598,7 +610,7 @@ filed_after_entry = st.date_input(label = 'Filed after (month first)', value = u
 filed_before_entry = st.date_input(label = 'Filed before (month first)', value = us_date(st.session_state['df_master'].loc[0, 'Filed before']), format="MM/DD/YYYY", min_value = date(1658, 7, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 #If opinions chosen
-if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+if collection_entry ==  list(us_collections.keys())[0]:
 
     judge_entry = st.text_input(label = 'Judge', value = st.session_state['df_master'].loc[0, 'Judge'])
     
@@ -657,7 +669,7 @@ with stylable_container(
 if preview_button:
     
     #If opinions chosen
-    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+    if collection_entry ==  list(us_collections.keys())[0]:
 
         us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(judge_entry)
 
@@ -704,7 +716,7 @@ if preview_button:
 # %%
 st.subheader("Case metadata collection")
 
-st.markdown("""Would you like to obtain case metadata? Such data include the judge, the filing date and so on. 
+st.markdown("""Would you like to obtain case metadata? Such data include the name of the judge, the filing date and so on. 
 
 Case name and citation are always included with your results.
 """)
@@ -746,7 +758,7 @@ if keep_button:
     #Check whether search terms entered
 
     #If opinions chosen
-    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+    if collection_entry ==  list(us_collections.keys())[0]:
 
         us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(judge_entry)
 
@@ -823,7 +835,7 @@ if reset_button:
 if next_button:
 
     #If opinions chosen
-    if st.session_state.df_master.loc[0, 'Collection'] ==  list(us_collections.keys())[0]:
+    if collection_entry ==  list(us_collections.keys())[0]:
 
         us_search_terms = str(q_entry) + str(case_name_entry) + str(docket_number_entry) + str(filed_after_entry) + str(filed_before_entry) + str(judge_entry)
 

@@ -250,7 +250,7 @@ def fca_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption
 
 
 # %%
@@ -362,15 +362,15 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[judgments of the Federal Court of Australia]")
 
-st.success(f"**Please enter your search terms.** {default_msg}")
+st.success(default_msg)
 
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 
 st.subheader("Court or tribunal to cover")
 
-courts_entry = st.selectbox(label = 'Select or type in the court or tribunal to cover', options = fca_courts_list, index = fca_courts_list.index(st.session_state.df_master.loc[0, 'Courts']))
+courts_entry = st.selectbox(label = 'Select one to search', options = fca_courts_list, index = fca_courts_list.index(st.session_state.df_master.loc[0, 'Courts']))
 
 st.write('You may select the Federal Court, tribunals administered by the Court, the Supreme Court of Norfolk Island and the Industrial Relations Court of Australia.')
 

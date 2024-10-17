@@ -237,10 +237,9 @@ def nsw_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
-
 
 
 # %%
@@ -359,11 +358,11 @@ return_button = st.button('RETURN to first page')
 
 st.header("Search :blue[judgments of the New South Wales courts and tribunals]")
 
-st.success(f"**Please enter your search terms.** {default_msg}")
+st.success(default_msg)
 
-st.write(f'To collect judgments, this app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub.')
+st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to collect judgments from New South Wales.')
 
-st.caption("During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like to cover more judgments.")
+st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 

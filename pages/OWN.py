@@ -330,9 +330,9 @@ st.header(f"Upload :blue[your own files]")
     
 st.success(f'**Please upload your documents or images**. By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
 
-st.write('This app works only if the text from your file(s) is displayed horizontally and neatly.')
-
 st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
+
+st.warning('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 
 st.subheader('Upload documents')
 
@@ -377,7 +377,7 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your questions for each file")
 
-st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each** file based only on information from **that** file. """)
+st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each file** based only on information from the file **itself**. """)
 
 st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 

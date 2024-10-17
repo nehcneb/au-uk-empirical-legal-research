@@ -566,11 +566,14 @@ for df_batch_response in df_batch_id_response_list:
     
                 q_counter += 1
         
-        #Remove judgment and PACER records columns
+        #Remove judgment, opinions and PACER records columns
         
         if 'judgment' in df_individual.columns:
             df_individual.pop('judgment')
-        
+            
+        if 'opinions' in df_individual.columns:
+            df_individual.pop('opinions')
+
         if 'recap_documents' in df_individual.columns:
             df_individual.pop('recap_documents')
         

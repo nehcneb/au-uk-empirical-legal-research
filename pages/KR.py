@@ -172,7 +172,7 @@ def kr_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption
 
 
 # %%
@@ -272,9 +272,9 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[the Kercher Reports]")
 
-st.success(f"**Please enter your search terms.** {default_msg}")
+st.success(default_msg)
 
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 

@@ -229,7 +229,7 @@ def uk_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption
 
 
 # %%
@@ -345,9 +345,9 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[judgments of select United Kingdom courts and tribunals]")
 
-st.success(f"**Please enter your search terms.** {default_msg}")
+st.success(default_msg)
 
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments.')
+st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 
@@ -362,7 +362,7 @@ if default_on:
 else:
     st.session_state.default_courts = list_range_check(uk_courts, st.session_state['df_master'].loc[0, 'Courts'])
 
-courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to cover', options = uk_courts_list, default = st.session_state.default_courts)
+courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to search', options = uk_courts_list, default = st.session_state.default_courts)
     
 #st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
 

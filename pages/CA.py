@@ -258,7 +258,7 @@ def ca_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption
 
 
 # %%
@@ -376,21 +376,21 @@ return_button = st.button('RETURN to first page')
 
 st.header(f"Search :blue[judgments of Canadian courts, boards and tribunals]")
 
-st.success(f"**Please enter your search terms.** {default_msg}")
+st.success(default_msg)
 
-st.caption('During the pilot stage, the number of judgments to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more judgments, courts, or tribunals.')
+st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 
 st.subheader("Courts, boards and tribunals to cover")
 
-jurisdiction_entry  = st.selectbox(label = 'Select or type in the jurisdiction to cover', options = list(all_ca_jurisdictions.keys()), index = list_value_check(list(all_ca_jurisdictions.keys()), st.session_state['df_master'].loc[0, 'Jurisdiction']))
+jurisdiction_entry  = st.selectbox(label = 'Select one jurisdiction to search', options = list(all_ca_jurisdictions.keys()), index = list_value_check(list(all_ca_jurisdictions.keys()), st.session_state['df_master'].loc[0, 'Jurisdiction']))
 
 st.session_state["all_jurisdiction"] = jurisdiction_entry
 
 if st.session_state.all_jurisdiction != 'All':
     
-    courts_entry = st.selectbox(label = 'Select or type in the court, board or tribunal to cover', options = list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), index = list_value_check(list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), st.session_state['df_master'].loc[0, 'Courts']))
+    courts_entry = st.selectbox(label = 'Select one court, board or tribunal to search', options = list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), index = list_value_check(list(all_ca_jurisdiction_court_pairs[st.session_state.all_jurisdiction].keys()), st.session_state['df_master'].loc[0, 'Courts']))
     
     st.session_state["court"] = courts_entry
 
