@@ -688,7 +688,7 @@ def hca_citation_to_link(collection, citation):
             print("Can't get case url for citation")
             print(e)
             return ''
-
+            
 
 # %%
 #Function for turning mnc to judgment_url
@@ -1005,8 +1005,10 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
     number_of_pages = soup.find("span", id="lastItem").text
 
     #Start links list
-    links = []
-            
+    #links = []
+
+    case_infos = []
+
     for page_raw in range(0, int(number_of_pages)):
         
         if counter <= judgment_counter_bound:
@@ -1023,39 +1025,30 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
             
             raw_links = soup_page.find_all(class_='case')
 
-            case_infos = []
-
             for raw_link in raw_links:
-                index = raw_links.index(raw_link)
-                #mnc = '[' + raw_link.text.split('[')[-1]
-                case_name_mnc = split_title_mnc(raw_link.get_text().strip())
-                case_name = case_name_mnc[0]
-                mnc = case_name_mnc[1]
 
-                #Try to get case info from hca_df
-                try:
-                    index_list = hca_df.index[hca_df['mnc'].str.contains(mnc, case=False, na=False, regex=False)].tolist()
-                    index = index_list[0]
-                    
-                    case_info = {'Case name': case_name, #hca_df.loc[int(index), 'case'], 
-                                 'Medium neutral citation': mnc, #New
-                                 'Hyperlink to High Court Judgments Database': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
-                                 'Reported': hca_df.loc[int(index), 'reported'],
-                                 'Before': hca_df.loc[int(index), 'before'],
-                                 'Date': hca_df.loc[index, 'date']
-                                }
-                    
-                    case_infos.append(case_info)
-                    
-                except Exception as e:
-                    print(f"Can't get case info for {mnc}.")
-                    print(e)
-    
-            #Add cases from case_infos unless filtered out or counter reached
-            
-            for case_info in case_infos:
                 if counter <= judgment_counter_bound:
-                    if hca_judgment_to_exclude(case_info, 
+
+                    index = raw_links.index(raw_link)
+                    #mnc = '[' + raw_link.text.split('[')[-1]
+                    case_name_mnc = split_title_mnc(raw_link.get_text().strip())
+                    case_name = case_name_mnc[0]
+                    mnc = case_name_mnc[1]
+
+                    #Try to get case info from hca_df
+                    try:
+                        index_list = hca_df.index[hca_df['mnc'].str.contains(mnc, case=False, na=False, regex=False)].tolist()
+                        index = index_list[0]
+                        
+                        case_info = {'Case name': case_name, #hca_df.loc[int(index), 'case'], 
+                                     'Medium neutral citation': mnc, #New
+                                     'Hyperlink to High Court Judgments Database': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
+                                     'Reported': hca_df.loc[int(index), 'reported'],
+                                     'Before': hca_df.loc[int(index), 'before'],
+                                     'Date': hca_df.loc[index, 'date']
+                                    }
+    
+                        if hca_judgment_to_exclude(case_info, 
                             collection, 
                             own_parties_include, 
                             own_parties_exclude, 
@@ -1067,20 +1060,28 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
                             own_judges_exclude
                            ) == False:
                         
-                        #links.append(case_info['Hyperlink to High Court Judgments Database'])
-                        links.append(case_info)
+                            #links.append(case_info['Hyperlink to High Court Judgments Database'])
+                            case_infos.append(case_info)
+                            
+                            counter += 1 
+    
+                            pause.seconds(np.random.randint(5, 15))
+    
+                            #case_infos.append(case_info)
                         
-                        counter += 1
-                        
+                    except Exception as e:
+                        print(f"Can't get case info for {mnc}.")
+                        print(e)
+                
                 else:
                     break
-            
-            pause.seconds(np.random.randint(5, 15))
 
         else:
             break    
 
-    return links
+        pause.seconds(np.random.randint(5, 15))
+
+    return case_infos
 
 
 

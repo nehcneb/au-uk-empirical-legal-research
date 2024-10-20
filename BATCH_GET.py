@@ -259,6 +259,10 @@ for index in all_df_masters.index:
             st.success(f'{batch_id} submitted to GPT. Done {batch_request_counter}/{batch_request_total}.')
 
         except Exception as e:
+
+            status = 'error'
+            all_df_masters.loc[index, 'status'] = status
+            
             print(traceback.format_exc())
             print(f'{index} error: {e}')
             st.write(f'{index} error: {e}')
@@ -390,10 +394,12 @@ for index in all_df_masters.index:
             status = batch_record.status
     
             #Print any status change
-            st.info(f"{batch_id}: status == {status}.")
-            print(f"{batch_id}: status == {status}.")
+            if status != 'completed':
+                #If not completed yet
+                st.info(f"{batch_id}: status == {status}.")
+                print(f"{batch_id}: status == {status}.")
             
-            if status == 'completed':
+            else: #status == 'completed': #If completed
                 
                 batch_response = openai.files.content(output_file_id)
         
@@ -427,7 +433,14 @@ for index in all_df_masters.index:
                 #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
     
                 st.success(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
+                st.print(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
+                
         except Exception as e:
+
+            status = 'error'
+            all_df_masters.loc[index, 'status'] = status
+            
+            print(traceback.format_exc())
             print(e)
             st.error(e)
 
@@ -733,6 +746,126 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
 
 
 # %%
+#Define send error email function
+
+def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, BATCH_CODE):
+    #Based on the following upon substituting various arguments, https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
+    
+    # Replace sender@example.com with your "From" address.
+    # This address must be verified with Amazon SES.
+    #SENDER = "name <email>"
+
+    # The subject line for the email.
+    SUBJECT = f"{ULTIMATE_RECIPIENT_EMAIL}"
+    
+    # The email body for recipients with non-HTML email clients.
+
+    #BODY_TEXT is not in used
+    BODY_TEXT = (
+    
+    f"Dear {ULTIMATE_RECIPIENT_NAME}\r\n\r\n"
+    
+    "Thank you for using LawtoData. Unfortunately, LawtoData was unable to produce your requested data. My Apologies. Please feel free to change your search terms or questions and try again.
+        
+    "Kind regards\r\n\r\n"
+    
+    "Ben\r\n\r\n"
+    
+    "Ben Chen | Senior Research Fellow and Senior Lecturer\r\n"
+    "The University of Sydney Law School\r\n"
+    " \r\n"
+    "Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)\r\n"
+    "Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html\r\n"
+    "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
+    )
+
+    #<h1>LawtoData: an Empirical Legal Research Automator</h1>
+
+    # The HTML body of the email.
+    BODY_HTML = f"""<html>
+    <head></head>
+    <body>
+    <p>
+    Dear {ULTIMATE_RECIPIENT_NAME}
+    </p>
+    <p>
+    Thank you for using LawtoData. Unfortunately, LawtoData was unable to produce your requested data. My Apologies. Please feel free to change your search terms or questions and try again.
+    </p>
+    <p>
+    Kind regards
+    </p> 
+    <p>
+    Ben
+    </p>   
+    <p>
+    <b>Ben Chen</b> | Senior Research Fellow and Senior Lecturer
+    <p>
+    The University of Sydney Law School
+    </p>
+    <p>
+    Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)
+    </p>
+    <p>
+    Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html
+    </p>
+    <p>
+    Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006
+    </p> 
+    </body>
+    </html>
+    """              
+    
+    # The character encoding for the email.
+    CHARSET = "UTF-8"
+    
+    # Create a new SES resource and specify a region.
+    #client = boto3.client('ses',region_name=AWS_REGION)
+    
+    # Try to send the email.
+    try:
+        #Provide the contents of the email.
+        response = ses.send_email(
+            Destination={
+                'ToAddresses': [
+                    RECIPIENT,
+                ],
+                #'CcAddresses': [
+                    #CC_RECIPIENT,
+                #]
+            },
+            Message={
+                'Body': {
+                    'Html': {
+                        'Charset': CHARSET,
+                        'Data': BODY_HTML,
+                    },
+                    #'Text': {
+                        #'Charset': CHARSET,
+                        #'Data': BODY_TEXT,
+                    #},
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': SUBJECT,
+                },
+            },
+            Source=SENDER,
+            # If you are not using a configuration set, comment or delete the
+            # following line
+            #ConfigurationSetName=CONFIGURATION_SET,
+        )
+    # Display an error if something goes wrong.	
+    
+    except ClientError as e:
+        st.error(e.response['Error']['Message'])
+        print(e.response['Error']['Message'])
+        
+    else:
+        st.success(f"Email sent! Message ID: {response['MessageId']}.")        
+        print(f"Email sent! Message ID: {response['MessageId']}.")        
+
+
+# %%
 #Get number of notification emails to send
 all_df_masters.fillna('')
 
@@ -749,7 +882,6 @@ for index in all_df_masters.index:
 
 # %%
 #Send emails
-#all_df_masters.fillna('')
 
 email_sent_counter = 0
 
@@ -759,7 +891,7 @@ for index in all_df_masters.index:
 
     status = all_df_masters.loc[index, 'status']
 
-    if ((status == 'completed') and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
+    if sent_to_user not in [True, 1, 'yes', 'Yes', '1']:
         
         batch_id = str(all_df_masters.loc[index, 'batch_id'])
         name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'anonymous user')
@@ -768,27 +900,33 @@ for index in all_df_masters.index:
         link = 'https://lawtodata.streamlit.app/BATCH'
 
         try:
-            send_email(ULTIMATE_RECIPIENT_NAME = name, 
-                       ULTIMATE_RECIPIENT_EMAIL = email, 
-                       ACCESS_LINK = link , 
-                       BATCH_CODE = batch_id
-                      )
+            if status == 'completed':
+                send_email(ULTIMATE_RECIPIENT_NAME = name, 
+                           ULTIMATE_RECIPIENT_EMAIL = email, 
+                           ACCESS_LINK = link , 
+                           BATCH_CODE = batch_id
+                          )
 
+            if status == 'error':
+                send_error_email(ULTIMATE_RECIPIENT_NAME = name, 
+                           ULTIMATE_RECIPIENT_EMAIL = email, 
+                           ACCESS_LINK = link , 
+                           BATCH_CODE = batch_id
+                          )
+            
             all_df_masters.loc[index, 'sent_to_user'] = 1
 
             email_sent_counter += 1
             
-            st.success(f'{batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
-            print(f'{batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+            st.success(f'{status} {batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+            print(f'{status} {batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
 
         except Exception as e:
-            st.error(f"{batch_id} not emailed to user {name} at {email}.")
-            print(f"{batch_id} not emailed to user {name} at {email}.")
+            st.error(f"{status} {batch_id} not emailed to user {name} at {email}.")
+            print(f"{status} {batch_id} not emailed to user {name} at {email}.")
 
             st.error(f"{e}")
             print(f"{e}")
-
-            
 
 
 # %% [markdown]
