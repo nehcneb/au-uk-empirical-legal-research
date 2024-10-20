@@ -73,7 +73,7 @@ def load_corpus():
 #Function for getting texts from a list of cases then match with the mnc
 
 @st.cache_data(show_spinner = False)
-def get_judgment_from_olac(mnc_list):
+def get_judgment_from_oalc(mnc_list):
 
     #Load corpus
     corpus = load_corpus()

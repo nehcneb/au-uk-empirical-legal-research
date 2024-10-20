@@ -697,8 +697,8 @@ def fca_batch(df_master):
                 judgment_dict_direct = fca_meta_judgment_dict(decision)
                 
                 for key in judgment_dict_direct.keys():
-                        if key not in decision.keys():
-                            decision.update({key: judgment_dict_direct[key]})
+                    if key not in decision.keys():
+                        decision.update({key: judgment_dict_direct[key]})
 
                 pause.seconds(np.random.randint(5, 15))
                 
