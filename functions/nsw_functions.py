@@ -691,7 +691,7 @@ def nsw_batch(df_master):
     else: #If running on HuggingFace
         
         #Load oalc
-        from functions.oalc_functions import load_corpus, get_judgment_from_olac
+        from functions.oalc_functions import load_corpus, get_judgment_from_oalc
 
         #Create a list of mncs for HuggingFace:
         mnc_list = []
@@ -720,7 +720,7 @@ def nsw_batch(df_master):
                 break
 
         #Get judgments from oalc first
-        mnc_judgment_dict = get_judgment_from_olac(mnc_list)
+        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
     
         #Append judgment to judgments_file 
         for decision in judgments_file:

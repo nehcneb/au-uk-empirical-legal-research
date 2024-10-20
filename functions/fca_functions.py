@@ -664,7 +664,7 @@ def fca_batch(df_master):
     else: #If running on HuggingFace
 
         #Load oalc
-        from functions.oalc_functions import load_corpus, get_judgment_from_olac
+        from functions.oalc_functions import load_corpus, get_judgment_from_oalc
 
         #Create a list of mncs for HuggingFace:
         mnc_list = []
@@ -678,8 +678,9 @@ def fca_batch(df_master):
             mnc_list.append(case['Medium neutral citation'])
 
         #Get judgments from oalc first
-        mnc_judgment_dict = get_judgment_from_olac(mnc_list)
-        #print(f"mnc_judgment_dict is {mnc_judgment_dict}")
+        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
+        
+        #print(f"{Obtained from OALC: mnc_judgment_dict.keys()}")
     
         #Append judgment to judgments_file 
         for decision in judgments_file:
@@ -693,9 +694,12 @@ def fca_batch(df_master):
                 decision['Hyperlink to Federal Court Digital Law Library'] = link(decision['Hyperlink to Federal Court Digital Law Library'])
             
             else: #Get judgment from FCA if can't get from oalc
+                judgment_dict_direct = fca_meta_judgment_dict(decision)
+                
+                for key in judgment_dict_direct.keys():
+                        if key not in decision.keys():
+                            decision.update({key: judgment_dict_direct[key]})
 
-                judgment_dict = fca_meta_judgment_dict(decision)
-                judgments_file.append(judgment_dict)
                 pause.seconds(np.random.randint(5, 15))
                 
     #Create list of direct judgment links
