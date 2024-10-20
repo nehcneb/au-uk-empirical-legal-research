@@ -88,6 +88,10 @@ def get_judgment_from_olac(mnc_list):
         if mnc in mnc_judgment_dict.keys():
             judgment = record['text']
             mnc_judgment_dict[mnc] = judgment
+
+    for mnc in mnc_judgment_dict.keys():
+        if len(mnc_judgment_dict[mnc]) < 1000:
+            mnc_judgment_dict.pop(mnc)
     
     return mnc_judgment_dict
-    
+

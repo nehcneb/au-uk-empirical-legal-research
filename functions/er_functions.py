@@ -625,7 +625,9 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
     if check_questions_answers() > 0:
     
         try:
-    
+
+            unchecked_questions_json = questions_json.copy()
+            
             labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
     
             labels_output_tokens = labels_output[1]
@@ -635,6 +637,8 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
             questions_json = checked_questions_json(questions_json, labels_output)
 
             print('Questions checked.')
+
+            unanswered_questions(unchecked_questions_json, questions_json)
     
         except Exception as e:
             

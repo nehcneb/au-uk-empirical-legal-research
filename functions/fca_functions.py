@@ -679,6 +679,7 @@ def fca_batch(df_master):
 
         #Get judgments from oalc first
         mnc_judgment_dict = get_judgment_from_olac(mnc_list)
+        #print(f"mnc_judgment_dict is {mnc_judgment_dict}")
     
         #Append judgment to judgments_file 
         for decision in judgments_file:
