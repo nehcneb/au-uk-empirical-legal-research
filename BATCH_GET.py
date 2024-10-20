@@ -877,7 +877,7 @@ for index in all_df_masters.index:
 
     status = all_df_masters.loc[index, 'status']
 
-    if ((status == 'completed') and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
+    if ((status in ['completed', 'error']) and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
         emails_counter_total += 1
 
 # %%
@@ -888,12 +888,13 @@ email_sent_counter = 0
 for index in all_df_masters.index:
 
     email_sent = False
+
+    status = all_df_masters.loc[index, 'status']
     
     sent_to_user = all_df_masters.loc[index, 'sent_to_user']
 
-    if sent_to_user not in [True, 1, 'yes', 'Yes', '1']:
+    if ((status in ['completed', 'error']) and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
 
-        status = all_df_masters.loc[index, 'status']
         batch_id = str(all_df_masters.loc[index, 'batch_id'])
         name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'anonymous user')
         email = str(all_df_masters.loc[index, 'Your email address'])
