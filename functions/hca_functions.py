@@ -688,7 +688,7 @@ def hca_citation_to_link(collection, citation):
             print("Can't get case url for citation")
             print(e)
             return ''
-            
+
 
 # %%
 #Function for turning mnc to judgment_url
@@ -1065,8 +1065,6 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
                             
                             counter += 1 
     
-                            pause.seconds(np.random.randint(5, 15))
-    
                             #case_infos.append(case_info)
                         
                     except Exception as e:
@@ -1221,9 +1219,7 @@ def hca_run(df_master):
             judgment_dict_direct = hca_meta_judgment_dict(direct_link)
             
             judgments_file.append(judgment_dict_direct)
-        
-            pause.seconds(np.random.randint(5, 15))
-            
+                    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
@@ -1321,7 +1317,7 @@ def hca_batch(df_master):
     
             if 'showbyHandle' in judgment_link:
                 
-                judgment_dict = hca_meta_judgment_dict_alt(judgment_link)
+                judgment_dict = hca_meta_judgment_dict_alt(judgment_link)\
     
             else: #If 'showCase' in judgment_link:
     
@@ -1343,8 +1339,6 @@ def hca_batch(df_master):
                 
                 judgments_file.append(judgment_dict_direct)
             
-                pause.seconds(np.random.randint(5, 15))
-
     else: #If running on HuggingFace
         
         #Load oalc
