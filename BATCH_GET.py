@@ -433,7 +433,7 @@ for index in all_df_masters.index:
                 #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
     
                 st.success(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
-                st.print(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
+                print(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
                 
         except Exception as e:
 
