@@ -762,7 +762,7 @@ for index in all_df_masters.index:
     if ((status == 'completed') and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
         
         batch_id = str(all_df_masters.loc[index, 'batch_id'])
-        name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'user')
+        name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'anonymous user')
         email = str(all_df_masters.loc[index, 'Your email address'])
 
         link = 'https://lawtodata.streamlit.app/BATCH'
@@ -778,7 +778,7 @@ for index in all_df_masters.index:
 
             email_sent_counter += 1
             
-            st.success(f'{batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+            st.success(f'{batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
             print(f'{batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
 
         except Exception as e:
