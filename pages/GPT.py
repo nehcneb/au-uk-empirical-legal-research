@@ -269,7 +269,10 @@ if "judgment_counter_max" not in st.session_state:
         else:
             st.session_state["judgment_counter_max"] = default_judgment_counter_bound
 
+#Make unanswered questions session_state
 
+if 'unanswered_questions' not in st.session_state:
+    st.session_state['unanswered_questions'] = ''
 
 # %% [markdown]
 # ## Form for AI and account
@@ -430,7 +433,7 @@ st.markdown("""If you do not agree, then please feel free to close this app. """
 # ## Save entries
 
 # %%
-gpt_keep_button = st.button(label = 'Download entries')
+gpt_keep_button = st.button(label = 'DOWNLOAD entries')
 
 if gpt_keep_button:
     st.success('Scroll down to download your entries.')
@@ -690,7 +693,7 @@ if run_button:
                 jurisdiction_page = st.session_state.jurisdiction_page
                 
                 df_individual = gpt_run(jurisdiction_page, df_master)
-        
+                
                 if len(df_individual) == 0:
                     st.error('Your search terms may not return any cases. Please return to the previous page and press the PREVIEW button to double-check.')
                 
@@ -756,8 +759,6 @@ if run_button:
                 
                 st.exception(e)
             
-
-
 
 # %%
 if return_button:
@@ -897,7 +898,6 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                         )
                 
                         st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-        
                             
                         #Keep record on Google sheet
                         #Obtain google spreadsheet       
@@ -1026,10 +1026,10 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
                                                )
                         
                         st.success('Your request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Please feel free to close this app.')
-
+                        
                         if st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py']:
-                            st.info('This app will largely collect cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
-                    
+                            st.info('This app will largely source cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
+
                     except Exception as e:
                         
                         st.error(e)

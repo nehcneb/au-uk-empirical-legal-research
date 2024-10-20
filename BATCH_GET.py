@@ -130,6 +130,12 @@ ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_A
 #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
 
 
+# %%
+#Make unanswered questions session_state
+
+if 'unanswered_questions' not in st.session_state:
+    st.session_state['unanswered_questions'] = ''
+
 # %% [markdown]
 # # Get all_df_masters and all df_individuals
 
@@ -633,7 +639,9 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     f"Your access code is {BATCH_CODE}\r\n\r\n"
     
     f"{funder_msg} \r\n\r\n"
-        
+
+    "Please don't hesitate to reach out if I could be of assistance.\r\n\r\n"
+    
     "Kind regards\r\n\r\n"
     
     "Ben\r\n\r\n"
@@ -645,10 +653,9 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     "Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html\r\n"
     "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
     )
-
+        
     #<h1>LawtoData: an Empirical Legal Research Automator</h1>
 
-    
     # The HTML body of the email.
     BODY_HTML = f"""<html>
     <head></head>
@@ -657,7 +664,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Dear {ULTIMATE_RECIPIENT_NAME}
     </p>
     <p>
-    Thank you for using LawtoData. You can now view and download your requested data. To do so, please click on the following link:
+    Thank you for using <em>LawtoData</em>. You can now view and download your requested data. To do so, please click on the following link:
     </p>
     <p>
     {ACCESS_LINK}
@@ -668,9 +675,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     <p>
     {funder_msg}
     </p>    
-    <p>
-    Please don't hesitate to reach out if I could be of assistance.
-    </p> 
+    <p>Please don't hesitate to reach out if I could be of assistance.</p> 
     <p>
     Kind regards
     </p> 
@@ -694,7 +699,20 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     </body>
     </html>
     """              
-    
+
+    #Note any answered questions
+    if len(st.session_state.unanswered_questions) > 0:
+
+        old_text = "Please don't hesitate to reach out if I could be of assistance.\r\n\r\n"
+        new_text = f"{st.session_state.unanswered_questions}\r\n\r\n{old_text}"
+        
+        BODY_TEXT.replace(old_text, new_text)
+
+        old_html_text = "<p>Please don't hesitate to reach out if I could be of assistance.</p>"
+        new_html_text = f"<p>{st.session_state.unanswered_questions}</p>{old_html_text}"
+
+        BODY_HTML.replace(old_html_text, new_html_text)
+
     # The character encoding for the email.
     CHARSET = "UTF-8"
     

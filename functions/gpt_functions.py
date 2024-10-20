@@ -410,7 +410,11 @@ def GPT_questions_check(questions_json, gpt_model, questions_check_system_instru
 # %%
 #Display unanswered questions
 def unanswered_questions(unchecked_questions_json, checked_questions_json):
-    
+
+    #Reset unanswered questions text for batch get email
+    st.session_state['unanswered_questions'] = ''
+
+    #Produce unanswered questions
     unanswered_questions_list = []
     
     for question in unchecked_questions_json.values():
@@ -419,9 +423,13 @@ def unanswered_questions(unchecked_questions_json, checked_questions_json):
 
     if len(unanswered_questions_list) > 0:
 
-        witheld_text = 'To avoid exposing personally identifiable information, the following questions are not answered: \n\n' + '\n\n'.join(unanswered_questions_list)
+        witheld_text = 'To avoid exposing personally identifiable information, the following questions were witheld: ' + ' '.join(unanswered_questions_list)
 
+        #Display unanswered questions
         st.warning(witheld_text)
+
+        #Add unanswered questions to session state for batch get email
+        st.session_state['unanswered_questions'] = witheld_text
 
         #bar = st.progress(0, text = f":red[{progress_text}]")
     
@@ -1256,7 +1264,7 @@ def gpt_run(jurisdiction_page, df_master):
     df_individual = run(df_master)
 
     return df_individual
-    
+
 
 
 # %% [markdown]
