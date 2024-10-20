@@ -886,13 +886,14 @@ for index in all_df_masters.index:
 email_sent_counter = 0
 
 for index in all_df_masters.index:
+
+    email_sent = False
     
     sent_to_user = all_df_masters.loc[index, 'sent_to_user']
 
-    status = all_df_masters.loc[index, 'status']
-
     if sent_to_user not in [True, 1, 'yes', 'Yes', '1']:
-        
+
+        status = all_df_masters.loc[index, 'status']
         batch_id = str(all_df_masters.loc[index, 'batch_id'])
         name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'anonymous user')
         email = str(all_df_masters.loc[index, 'Your email address'])
@@ -907,19 +908,25 @@ for index in all_df_masters.index:
                            BATCH_CODE = batch_id
                           )
 
+                email_sent = True
+
             if status == 'error':
                 send_error_email(ULTIMATE_RECIPIENT_NAME = name, 
                            ULTIMATE_RECIPIENT_EMAIL = email, 
                            ACCESS_LINK = link , 
                            BATCH_CODE = batch_id
                           )
-            
-            all_df_masters.loc[index, 'sent_to_user'] = 1
 
-            email_sent_counter += 1
-            
-            st.success(f'{status} {batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
-            print(f'{status} {batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+                email_sent = True
+
+            if email_sent == True:
+    
+                all_df_masters.loc[index, 'sent_to_user'] = 1
+    
+                email_sent_counter += 1
+                
+                st.success(f'{status} {batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+                print(f'{status} {batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
 
         except Exception as e:
             st.error(f"{status} {batch_id} not emailed to user {name} at {email}.")
