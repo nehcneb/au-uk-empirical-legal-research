@@ -762,7 +762,7 @@ for index in all_df_masters.index:
     if ((status == 'completed') and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
         
         batch_id = str(all_df_masters.loc[index, 'batch_id'])
-        name = str(all_df_masters.loc[index, 'Your name'].fillna(''))
+        name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'user')
         email = str(all_df_masters.loc[index, 'Your email address'])
 
         link = 'https://lawtodata.streamlit.app/BATCH'
