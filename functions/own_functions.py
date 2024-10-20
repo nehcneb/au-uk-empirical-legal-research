@@ -168,7 +168,7 @@ def GPT_label_dict(x_list):
 # %%
 # Function to convert each uploaded file to file name, text
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def doc_to_text(uploaded_doc, language, page_bound):
     file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': '', 
 #                  'Page 2': '' #Test page
@@ -223,7 +223,7 @@ def doc_to_text(uploaded_doc, language, page_bound):
 # %%
 #Function for images to text
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def image_to_text(uploaded_image, language, page_bound):
     file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': '', 
 #                  'Page 2': '' #Test page
@@ -340,7 +340,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
@@ -415,7 +415,7 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
@@ -546,7 +546,7 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def run_own(df_master, uploaded_docs, uploaded_images):
     df_master = df_master.fillna('')
 
@@ -625,7 +625,7 @@ from functions.gpt_functions import get_image_dims, calculate_image_token_cost
 
 
 # %%
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def image_to_b64_own(uploaded_image, language, page_bound):
     file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : [],
                    'Page length': '', 'tokens_raw': 0, 
@@ -705,7 +705,7 @@ def image_to_b64_own(uploaded_image, language, page_bound):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
@@ -793,7 +793,7 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
@@ -923,7 +923,7 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
 # %%
 #For gpt-4o vision
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def run_b64_own(df_master, uploaded_images):
 
     df_master = df_master.fillna('')

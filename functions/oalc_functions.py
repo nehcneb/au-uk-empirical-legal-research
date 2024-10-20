@@ -14,83 +14,80 @@
 
 # %%
 from datasets import load_dataset
-from datasets import load_dataset_builder
-from datasets import get_dataset_split_names
+#from datasets import DatasetInfo
+#from datasets import load_dataset_builder
+#from datasets import get_dataset_split_names
 from datasets import load_from_disk
+import os
+import streamlit as st
 
 
 # %%
-corpus = load_from_disk('/Users/Ben/Library/CloudStorage/OneDrive-TheUniversityofSydney(Staff)/My OneDrive/corpus.hf')
+#Determine if running on HuggingFace
+current_dir = ''
+try:
+    current_dir = os.getcwd()
+    print(f"current_dir == {current_dir}")
+except Exception as e:
+    print(f"current_dir not generated.")
+    print(e)
+
+huggingface = False
+
+if '/home/user/app' in current_dir:
+    huggingface = True
+
+print(f'huggingface == {huggingface}')
+
 
 # %%
-corpus.info
+from functions.common_functions import split_title_mnc
+#from common_functions import split_title_mnc
 
 
 # %%
-#Get mnc from olca citation if court is given
-#D/W
+#Load corpus
 
-def get_mnc_w_court(court, olac_citation):
-    
-    mnc_raw = ''
-    
-    olac_citation_list = olac_citation.split('[')
-    
-    for item in olac_citation_list:
-    
-        if court.lower() in item.lower():
-            mnc_raw = item
-            
-            break
+@st.cache_resource(show_spinner = False)
+def load_corpus():
 
+    #Generate current directory, just to check whether running on Github Actions or locally
+    current_dir = ''
     try:
-
-        mnc_list = mnc_raw.lower().split(' ')
-
-        court_index = mnc_list.indeolac_citation(court.lower())
+        current_dir = os.getcwd()
+        print(current_dir)
+    except Exception as e:
+        print(f"current_dir not generated.")
+        print(e)
     
-        mnc = f"[{mnc_list[court_index-1]} {court.upper()} {mnc_list[court_index+1]}"
+    if 'Users/Ben' in current_dir: #If running locally
+        corpus = load_from_disk(st.secrets['huggingface']['oalc_local_path']) #keep_in_memory=False, 
+    else:
+        corpus = load_dataset('umarbutler/open-australian-legal-corpus', split='corpus')#, streaming=True)
+
+    return corpus
     
-        return mnc
 
-    except:
+
+# %%
+#Function for getting texts from a list of cases then match with the mnc
+
+@st.cache_data(show_spinner = False)
+def get_judgment_from_olac(mnc_list):
+
+    corpus = load_corpus()
+
+    mnc_judgment_dict = {}
+    for mnc in mnc_list:
+        mnc_judgment_dict.update({mnc: ''})
+        
+    records = corpus.filter(lambda x: split_title_mnc(x['citation'])[1] in mnc_list)
+
+    for record in records:
+        mnc = split_title_mnc(record['citation'])[1]
+        if mnc in mnc_judgment_dict.keys():
+            judgment = record['text']
+            mnc_judgment_dict[mnc] = judgment
     
-        return mnc_raw
-
-
-
-# %%
-#Get mnc from olca citation if court is not given
-#olca citation doesn't have text like 'this decision has been amended etc'
-
-def get_mnc(olac_citation):
+    return mnc_judgment_dict
     
-    mnc = '[' + olac_citation.split('[')[-1]
-    
-    return mnc
-
-
-
-# %%
-#test_mnc = '[1992] HCA 23' #Mabo
-test_mnc = '[2003] NSWCA 10' #Harris v Digital Pulse
-#test_mnc = '[1997] HCA 45' #Re Davison
-
-# %%
-#test_case = corpus.filter(lambda x: get_mnc_w_court('NSWCA', x['citation']) == test_mnc)
-#test_case[0]['citation']
-
-# %%
-#Use the approach of getting a list of relevant mncs and then scraping the judgment text from oalc
-
-test_mnc_list = ['[1992] HCA 23', '[2003] NSWCA 10', '[1997] HCA 45']
-
-test_case_alt = corpus.filter(lambda x: get_mnc(x['citation']) in test_mnc_list)
-
-# %%
-test_case_alt[2]['citation']
-
-# %%
-type(test_case_alt[0])
-
-# %%

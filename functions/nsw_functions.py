@@ -63,7 +63,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, split_title_mnc
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -217,8 +217,10 @@ def nsw_link(x):
 #Define function for short judgments, which checks if judgment is in PDF
 #returns a list of judgment type and judgment text
 
-@st.cache_data
-def nsw_short_judgment(html_link):
+@st.cache_data(show_spinner = False)
+def nsw_short_judgment(uri):
+    
+    html_link = 'https://www.caselaw.nsw.gov.au'+ uri
     page_html = requests.get(html_link)
     soup_html = BeautifulSoup(page_html.content, "lxml")
 
@@ -310,7 +312,6 @@ from functions.gpt_functions import question_characters_bound, role_content#, in
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
 
-
 # %%
 print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
 print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
@@ -339,6 +340,22 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 def nsw_tidying_up(df_master, df_individual):
 
+    #Rename column titles
+    try:
+        df_individual['Hyperlink to NSW Caselaw'] = df_individual['uri'].apply(nsw_link)
+        df_individual.pop('uri')
+    except:
+        pass
+
+    #Replace abbreviated column names with full names
+    for col_name in headnotes_keys:
+        if col_name in df_individual.columns:
+            col_index = headnotes_keys.index(col_name)
+            new_col_name = headnotes_fields[col_index]
+            df_individual.rename(columns={col_name: new_col_name}, inplace=True)
+            #df_individual[new_col_name] = df_individual[col_name]
+            #df_individual.pop(col_name)
+
     #Reorganise columns
 
     old_columns = list(df_individual.columns)
@@ -360,27 +377,27 @@ def nsw_tidying_up(df_master, df_individual):
             except:
                 pass
     
-    #Remove judgment and uri columns
-    try:
+    #Remove judgment column
+    if 'judgment' in df_individual.columns:
         df_individual.pop("judgment")
-        df_individual.pop("uri")
-        
-    except:
-        pass
         
     #Check case name, medium neutral citation 
 
     for k in df_individual.index:
-        if ' [' in df_individual.loc[k, "Case name"]:
-            case_name_proper = df_individual.loc[k, "Case name"].split(' [')[0]
-            mnc_proper = '[' + df_individual.loc[k, "Case name"].split(' [')[-1]
-            df_individual.loc[k, "Case name"] = case_name_proper
-            df_individual.loc[k, "Medium neutral citation"] = mnc_proper
-        elif ' [' in df_individual.loc[k, "Medium neutral citation"]:
-            case_name_proper = df_individual.loc[k, "Medium neutral citation"].split(' [')[0]
-            mnc_proper = '[' + df_individual.loc[k, "Medium neutral citation"].split(' [')[-1]
-            df_individual.loc[k, "Case name"] = case_name_proper
-            df_individual.loc[k, "Medium neutral citation"] = mnc_proper
+        
+        most_informative_key = ''
+
+        if len(str(df_individual.loc[k, "Case name"])) > len(str(df_individual.loc[k, "Medium neutral citation"])):
+            most_informative_key = "Case name"
+        else:
+            most_informative_key = "Medium neutral citation"
+        
+        case_name_mnc = split_title_mnc(df_individual.loc[k, most_informative_key])
+        case_name = case_name_mnc[0]
+        mnc = case_name_mnc[1]
+        
+        df_individual.loc[k, "Case name"] = case_name
+        df_individual.loc[k, "Medium neutral citation"] = mnc
 
     return df_individual
 
@@ -390,6 +407,22 @@ def nsw_tidying_up(df_master, df_individual):
 
 def nsw_tidying_up_prebatch(df_master, df_individual):
 
+    #Rename column titles
+    try:
+        df_individual['Hyperlink to NSW Caselaw'] = df_individual['uri'].apply(nsw_link)
+        df_individual.pop('uri')
+    except:
+        pass
+
+    #Replace abbreviated column names with full names
+    for col_name in headnotes_keys:
+        if col_name in df_individual.columns:
+            col_index = headnotes_keys.index(col_name)
+            new_col_name = headnotes_fields[col_index]
+            df_individual.rename(columns={col_name: new_col_name}, inplace=True)
+            #df_individual[new_col_name] = df_individual[col_name]
+            #df_individual.pop(col_name)
+    
     #Reorganise columns
 
     old_columns = list(df_individual.columns)
@@ -410,42 +443,37 @@ def nsw_tidying_up_prebatch(df_master, df_individual):
                 df_individual.pop(meta_label)
             except:
                 pass
-    
-    #Remove judgment and uri columns
-    try:
-        #df_individual.pop("judgment")
-        df_individual.pop("uri")
-        
-    except:
-        pass
         
     #Check case name, medium neutral citation 
-
     for k in df_individual.index:
-        if ' [' in df_individual.loc[k, "Case name"]:
-            case_name_proper = df_individual.loc[k, "Case name"].split(' [')[0]
-            mnc_proper = '[' + df_individual.loc[k, "Case name"].split(' [')[-1]
-            df_individual.loc[k, "Case name"] = case_name_proper
-            df_individual.loc[k, "Medium neutral citation"] = mnc_proper
-        elif ' [' in df_individual.loc[k, "Medium neutral citation"]:
-            case_name_proper = df_individual.loc[k, "Medium neutral citation"].split(' [')[0]
-            mnc_proper = '[' + df_individual.loc[k, "Medium neutral citation"].split(' [')[-1]
-            df_individual.loc[k, "Case name"] = case_name_proper
-            df_individual.loc[k, "Medium neutral citation"] = mnc_proper
+
+        most_informative_key = ''
+
+        if len(str(df_individual.loc[k, "Case name"])) > len(str(df_individual.loc[k, "Medium neutral citation"])):
+            most_informative_key = "Case name"
+        else:
+            most_informative_key = "Medium neutral citation"
+        
+        case_name_mnc = split_title_mnc(df_individual.loc[k, most_informative_key])
+        case_name = case_name_mnc[0]
+        mnc = case_name_mnc[1]
+        
+        df_individual.loc[k, "Case name"] = case_name
+        df_individual.loc[k, "Medium neutral citation"] = mnc
 
     return df_individual
+    
 
 
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def nsw_run(df_master):
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-#    df_master['Information to Collect from Judgment Headnotes'] = df_master['Information to Collect from Judgment Headnotes'].apply(headnotes_choice)
     df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
     df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
@@ -496,9 +524,17 @@ def nsw_run(df_master):
     
     for decision in query.results():
         if counter < judgments_counter_bound:
-    
+            #Get case info from results page
+            decision_v = decision.values
+
+            #Get case info from individual case  page
             decision.fetch()
-            decision_v=decision.values
+
+            #Attach new info
+            decision_v_new = decision.values
+            for key in decision_v_new.keys():
+                if key not in decision_v.keys():
+                    decision_v.update({key: decision_v_new[key]})
                                     
             #add search results to json
             judgments_file.append(decision_v)
@@ -507,6 +543,7 @@ def nsw_run(df_master):
             pause.seconds(np.random.randint(5, 15))
             
         else:
+            
             break
 
     #Create and export json file with search results
@@ -518,56 +555,26 @@ def nsw_run(df_master):
 
     for judgment_index in df_individual.index:
 
-        #Checking if judgment text has been scrapped
+        #Checking if judgment text has been scrapped or too short
         try:
             judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
+                    
+            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
+
+                judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
+    
+                #attach judgment text
+                df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
+
+                #judgment_type_text[0] has judgment type, eg 'pdf'
+                
+                pause.seconds(np.random.randint(5, 15))
             
         except Exception as e:
             
             df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
-            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
             print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
             print(e)
-            
-        if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-            html_link = 'https://www.caselaw.nsw.gov.au'+ df_individual.loc[judgment_index, "uri"]
-
-#            page_html = requests.get(html_link)
-#            soup_html = BeautifulSoup(page_html.content, "lxml")
-#            judgment_text = soup_html.get_text(separator="\n", strip=True)
-
-            judgment_type_text = nsw_short_judgment(html_link)
-
-            #attach judgment text
-            df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
-
-            #identify pdf judgment
-
-            if judgment_type_text[0] == 'pdf':
-                try:
-                    mnc_raw = df_individual.loc[judgment_index, "mnc"]
-                    df_individual.loc[judgment_index, "title"] =  mnc_raw.split(' [')[0]
-                    df_individual.loc[judgment_index, "mnc"] = '[' + mnc_raw.split(' [')[1]
-                    df_individual.loc[judgment_index, "catchwords"] = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.'
-                except:
-                    pass
-            
-            pause.seconds(np.random.randint(5, 15))
-
-    #Rename column titles
-    
-    try:
-        df_individual['Hyperlink to NSW Caselaw'] = df_individual['uri'].apply(nsw_link)
-        df_individual.pop('uri')
-    except:
-        pass
-    
-    for col_name in headnotes_keys:
-        if col_name in df_individual.columns:
-            col_index = headnotes_keys.index(col_name)
-            new_col_name = headnotes_fields[col_index]
-            df_individual[new_col_name] = df_individual[col_name]
-            df_individual.pop(col_name)
     
     #Instruct GPT
     
@@ -589,20 +596,24 @@ def nsw_run(df_master):
 
     #tidy up
     df_updated = nsw_tidying_up(df_master, df_updated)
+
+    if 'judgment' in df_updated.columns:
+        df_updated.pop('judgment')
     
     return df_updated
+    
 
 
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def nsw_batch(df_master):
+
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-#    df_master['Information to Collect from Judgment Headnotes'] = df_master['Information to Collect from Judgment Headnotes'].apply(headnotes_choice)
     df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
     df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
@@ -647,24 +658,93 @@ def nsw_batch(df_master):
     #Counter to limit search results to append
     counter = 0
 
-    #Go through search results
-    
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+
+    #Check if running on HuggingFace
+    from functions.oalc_functions import huggingface
     
-    for decision in query.results():
-        if counter < judgments_counter_bound:
+    if huggingface == False: #If not running on HuggingFace
+
+        for decision in query.results():
+            if counter < judgments_counter_bound:
+                #Get case info from results page
+                decision_v = decision.values
     
-            decision.fetch()
-            decision_v=decision.values
-                                    
-            #add search results to json
-            judgments_file.append(decision_v)
-            counter +=1
+                #Get case info from individual case  page
+                decision.fetch()
     
-            pause.seconds(np.random.randint(5, 15))
+                #Attach new info
+                decision_v_new = decision.values
+                for key in decision_v_new.keys():
+                    if key not in decision_v.keys():
+                        decision_v.update({key: decision_v_new[key]})
+                                        
+                #add search results to json
+                judgments_file.append(decision_v)
+                counter +=1
+        
+                pause.seconds(np.random.randint(5, 15))
+                
+            else:
+                break
+
+    else: #If running on HuggingFace
+        
+        #Load oalc
+        from functions.oalc_functions import load_corpus, get_judgment_from_olac
+
+        #Create a list of mncs for HuggingFace:
+        mnc_list = []
+
+        #Create list of relevant cases
+        for decision in query.results():
             
-        else:
-            break
+            if counter < judgments_counter_bound:
+    
+                #Append to judgments_file to create df_individual
+                decision_v = decision.values
+    
+                #Create and mnc
+                mnc = split_title_mnc(decision_v['title'])[1]
+                decision_v.update({'mnc': mnc})
+                
+                #add search results to json
+                judgments_file.append(decision_v)
+
+                #Add mnc to list for HuggingFace
+                mnc_list.append(mnc)
+                
+                counter +=1            
+                
+            else:
+                break
+
+        #Get judgments from oalc first
+        mnc_judgment_dict = get_judgment_from_olac(mnc_list)
+    
+        #Append judgment to judgments_file 
+        for decision in judgments_file:
+            
+            #Append judgments from oalc first
+            if decision['mnc'] in mnc_judgment_dict.keys():
+                decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
+                
+            else: #Get the first case from Caselaw NSW if can't get from oalc
+                
+                case_query = Search(mnc = decision['mnc'])
+                
+                for case in query.results():
+                    case.fetch()
+                    case_v = decision.values
+
+                    #Append judgment and other keys
+                    for key in case_v:
+                        if key not in decision.keys():
+                            decision.update({key: case_v[key]})
+                    
+                    break
+
+                pause.seconds(np.random.randint(5, 15))
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -675,56 +755,27 @@ def nsw_batch(df_master):
 
     for judgment_index in df_individual.index:
 
-        #Checking if judgment text has been scrapped
+        #Checking if judgment text has been scrapped or too short
         try:
+            
             judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
+                    
+            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
+
+                judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
+    
+                #attach judgment text
+                df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
+
+                #judgment_type_text[0] has judgment type, eg 'pdf'
+                
+                pause.seconds(np.random.randint(5, 15))
             
         except Exception as e:
             
             df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
-            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
             print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
             print(e)
-            
-        if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-            html_link = 'https://www.caselaw.nsw.gov.au'+ df_individual.loc[judgment_index, "uri"]
-
-#            page_html = requests.get(html_link)
-#            soup_html = BeautifulSoup(page_html.content, "lxml")
-#            judgment_text = soup_html.get_text(separator="\n", strip=True)
-
-            judgment_type_text = nsw_short_judgment(html_link)
-
-            #attach judgment text
-            df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
-
-            #identify pdf judgment
-
-            if judgment_type_text[0] == 'pdf':
-                try:
-                    mnc_raw = df_individual.loc[judgment_index, "mnc"]
-                    df_individual.loc[judgment_index, "title"] =  mnc_raw.split(' [')[0]
-                    df_individual.loc[judgment_index, "mnc"] = '[' + mnc_raw.split(' [')[1]
-                    df_individual.loc[judgment_index, "catchwords"] = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.'
-                except:
-                    pass
-            
-            pause.seconds(np.random.randint(5, 15))
-
-    #Rename column titles
-    
-    try:
-        df_individual['Hyperlink to NSW Caselaw'] = df_individual['uri'].apply(nsw_link)
-        df_individual.pop('uri')
-    except:
-        pass
-    
-    for col_name in headnotes_keys:
-        if col_name in df_individual.columns:
-            col_index = headnotes_keys.index(col_name)
-            new_col_name = headnotes_fields[col_index]
-            df_individual[new_col_name] = df_individual[col_name]
-            df_individual.pop(col_name)
 
     #tidy up
     df_individual = nsw_tidying_up_prebatch(df_master, df_individual)

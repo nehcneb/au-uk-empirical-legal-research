@@ -99,20 +99,23 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 
 
 # %%
-#Generate current directory, just to check whether running on Github Actions or locally
-current_dir = ''
-try:
-    current_dir = os.getcwd()
-    print(current_dir)
-except Exception as e:
-    print(f"current_dir not generated.")
-    print(e)
-
-# %%
 #Initiate aws s3 and ses
 
-#If using Github Actions
-if 'Users/Ben' not in current_dir:
+#If running on Github Actions, then '/home/runner/' in current_dir
+
+#Try local or streamlit first
+
+try:
+    AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
+    AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+    
+    SENDER = st.secrets["email_notifications"]["email_sender"]
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+
+    print('Running locally or on Streamlit')
+    
+except:
     AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
     AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
     AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
@@ -120,14 +123,7 @@ if 'Users/Ben' not in current_dir:
     SENDER = os.environ['EMAIL_SENDER']
     RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
 
-else:#If using on streamlit
-
-    AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
-    AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-    AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
-    
-    SENDER = st.secrets["email_notifications"]["email_sender"]
-    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+    print('Running on GitHub Actions or HuggingFace')
 
 s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -499,8 +495,14 @@ for df_batch_response in df_batch_id_response_list:
             judgment_index = judgment_index_list[0]
 
             #Get gpt specific answers
+            answers_string = df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content']
             
-            answers_dict = json.loads(df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content'])
+            try:
+                answers_dict = json.loads(answers_string)
+            except Exception as e:
+                answers_dict = {'ERROR': 'Unfortunately GPT did not produce a valid answer. Please change your questions and try again.'}
+                print(f"{batch_id}: GPT did not produce a valid JSON.")
+                st.error(f"{batch_id}: GPT did not produce a valid JSON.")
 
             input_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['prompt_tokens']
 
@@ -531,7 +533,6 @@ for df_batch_response in df_batch_id_response_list:
                 except Exception as e:
         
                     print('Answers check failed.')
-        
                     print(e)
 
             #Add costs column
@@ -542,12 +543,6 @@ for df_batch_response in df_batch_id_response_list:
             
             for answer_index in answers_dict.keys():
     
-                #Check any question override
-                if 'Say "n/a" only' in str(answer_index):
-                    answer_header = f'GPT question {q_counter}: ' + 'Not answered due to potential privacy violation'
-                else:
-                    answer_header = f'GPT question {q_counter}: ' + answer_index
-    
                 #Check any errors
                 answer_string = str(answers_dict[answer_index]).lower()
                 
@@ -556,6 +551,8 @@ for df_batch_response in df_batch_id_response_list:
                     answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
     
                 #Append answer to spreadsheet
+                answer_header = f'GPT question {q_counter}: ' + answer_index
+
                 try:
                 
                     df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
@@ -765,7 +762,7 @@ for index in all_df_masters.index:
     if ((status == 'completed') and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
         
         batch_id = str(all_df_masters.loc[index, 'batch_id'])
-        name = str(all_df_masters.loc[index, 'Your name'])
+        name = str(all_df_masters.loc[index, 'Your name'].fillna(''))
         email = str(all_df_masters.loc[index, 'Your email address'])
 
         link = 'https://lawtodata.streamlit.app/BATCH'

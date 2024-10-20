@@ -114,7 +114,7 @@ def er_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     page = requests.get(url_search_results)
@@ -180,7 +180,7 @@ def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
@@ -296,7 +296,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_run(df_master):
     df_master = df_master.fillna('')
 
@@ -370,7 +370,7 @@ from functions.gpt_functions import get_image_dims, calculate_image_token_cost
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_judgment_tokens_b64(case_link_pair):
 
     output_b64 = {'judgment':[], 'tokens_raw': 0}
@@ -463,7 +463,7 @@ def er_meta_judgment_dict_b64(case_link_pair):
 #Define GPT answer function for answers in json form, YES TOKENS
 #For gpt-4o vision
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
@@ -603,7 +603,7 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
@@ -619,9 +619,6 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
     #openai.api_key = API_key
     
     #client = OpenAI()
-
-    #Make a copy of questions for making headings later
-    unchecked_questions_json = questions_json.copy()
 
     #Check questions for privacy violation
 
@@ -795,7 +792,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
 # %%
 #For gpt-4o vision
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def er_run_b64(df_master):
 
     df_master = df_master.fillna('')

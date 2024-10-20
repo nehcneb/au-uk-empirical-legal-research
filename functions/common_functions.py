@@ -28,6 +28,7 @@ import requests
 import pypdf
 import io
 from io import BytesIO
+import pause
 
 #Excel
 from io import BytesIO
@@ -107,6 +108,46 @@ today = datetime.now().strftime("%d/%m/%Y")
 # %%
 # Generate placeholder list of errors
 errors_list = set()
+
+
+# %%
+#Split title and mnc from full case full title
+
+def split_title_mnc(full_title):
+    #Returns a list where first item is full_title and second item mnc
+
+    full_title = str(full_title)
+    
+    #Get rid of extra spaces
+    while '  ' in full_title:
+        full_title = full_title.replace('  ', ' ')
+
+    #Get mnc
+    mnc = full_title
+    if '[' in full_title:
+        mnc = '[' + full_title.split('[')[-1]
+
+    #Check if mnc is in [year] COURT XXXX format
+    mnc_list = mnc.split(' ')
+    
+    if len(mnc_list) > 3:
+        mnc = f"{mnc_list[0]} {mnc_list[1]} {mnc_list[2]}"
+
+    #Get title 
+    if mnc in full_title:
+        
+        title = full_title.split(mnc)[0]
+
+        if len(title) > 0:
+            
+            while title[-1] == ' ':
+                title = title[:-1]
+    else:
+        title = full_title
+    
+    return [title, mnc]
+
+
 
 # %%
 #Pause between judgment scraping
@@ -292,7 +333,7 @@ def save_input(df_master):
                          'status', 
                           'jurisdiction_page', 
                           'Consent',
-                          'CourtListener API token' #US specific
+                          #'CourtListener API token' #US specific
                          ]
     
     df_master = df_master.replace({np.nan: None})
@@ -389,4 +430,10 @@ def streamlit_cloud_date_format(date):
     else:
         date_to_send = parser.parse(date, dayfirst=True).strftime("%m/%d/%Y")
     return date_to_send
+
+
+# %%
+#Default spinner_text
+
+spinner_text = r"$\textsf{\normalsize In progress... }$"
 

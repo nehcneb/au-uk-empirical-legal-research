@@ -95,7 +95,7 @@ options.add_argument("--headless")
 options.add_argument('--no-sandbox')  
 options.add_argument('--disable-dev-shm-usage')  
 
-@st.cache_resource
+@st.cache_resource(show_spinner = False)
 def get_driver():
     return webdriver.Chrome(
         #service=Service(
@@ -614,7 +614,7 @@ all_subjects = ['Access to information and privacy', 'Administrative remedies', 
 
 # %%
 #Function turning search terms to search results url
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def ca_search(jurisdiction  =  'All', 
               court = 'All', 
               phrase = '', 
@@ -734,7 +734,7 @@ def ca_search(jurisdiction  =  'All',
 
 
 # %%
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Start counter
     
@@ -822,7 +822,7 @@ ca_meta_dict = {
 
 
 # %%
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def ca_meta_judgment_dict(judgment_url):
 
     headers = {'User-Agent': 'whatever'}
@@ -940,7 +940,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def ca_run(df_master):
     df_master = df_master.fillna('')
 

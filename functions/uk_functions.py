@@ -186,7 +186,7 @@ def uk_search(query= '',
 # %%
 #Define function turning search results url to links to judgments
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     page = requests.get(url_search_results)
@@ -263,7 +263,7 @@ uk_meta_labels_droppable = ['Date',
                          'Header'
                         ]
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def uk_meta_judgment_dict(judgment_url_xml):
     page = requests.get(judgment_url_xml)
     soup = BeautifulSoup(page.content, "lxml")
@@ -391,7 +391,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def uk_run(df_master):
     df_master = df_master.fillna('')
 

@@ -76,7 +76,8 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # Federal Courts search engine
 
 # %%
-from functions.fca_functions import fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+from functions.fca_functions import fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+#fca_link_to_doc
 
 
 # %%

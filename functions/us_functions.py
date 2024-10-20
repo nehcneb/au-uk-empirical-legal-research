@@ -1377,7 +1377,7 @@ class us_search_tool:
             self.results_to_show.append(result_to_show)
 
     #Function for getting opinion text from opinion_raw
-    @st.cache_data
+    @st.cache_data(show_spinner = False)
     def clean_opinion_json(_self, opinion_raw, headers):
 
         opinion_id = opinion_raw['id']
@@ -1490,7 +1490,7 @@ class us_search_tool:
                         self.metadata_droppable.append(key)
 
     #Define function for getting PDF from one link
-    @st.cache_data
+    @st.cache_data(show_spinner = False)
     def clean_doc_json(_self, recap_document, headers):
 
         headers.update({'User-Agent': 'whatever'})
@@ -1543,12 +1543,16 @@ class us_search_tool:
 
 
 # %%
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def us_search_preview(df_master):
     
     df_master = df_master.fillna('')
 
     court_listener_token = df_master.loc[0, 'CourtListener API token']
+
+    #Use own token if user hasn't entered a valid one
+    if len(str(df_master.loc[0, 'CourtListener API token'])) < 20:
+        court_listener_token = st.secrets["courtlistener"]["token"]
 
     #st.write(court_listener_token)
     
@@ -1633,7 +1637,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def us_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1649,6 +1653,10 @@ def us_run(df_master):
         
     court_listener_token = df_master.loc[0, 'CourtListener API token']
 
+    #Use own token if user hasn't entered a valid one
+    if len(str(df_master.loc[0, 'CourtListener API token'])) < 20:
+        court_listener_token = st.secrets["courtlistener"]["token"]
+        
     #st.write(f"court_listener_token is {court_listener_token}")
 
     us_search = us_search_tool(token = court_listener_token, judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']))
@@ -1750,7 +1758,7 @@ def us_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def us_batch(df_master):
     df_master = df_master.fillna('')
 
@@ -1765,7 +1773,7 @@ def us_batch(df_master):
     #Conduct search
 
     court_listener_token = df_master.loc[0, 'CourtListener API token']
-
+        
     #st.write(f"court_listener_token is {court_listener_token}")
     
     us_search = us_search_tool(token = court_listener_token, judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']))

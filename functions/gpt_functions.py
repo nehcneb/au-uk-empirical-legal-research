@@ -40,6 +40,7 @@ from math import ceil
 import matplotlib.pyplot as plt
 import ast
 import copy
+#import time
 
 #OpenAI
 import openai
@@ -111,7 +112,7 @@ def GPT_label_dict(x_list):
 # %%
 #Check validity of API key
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def is_api_key_valid(key_to_check):
     openai.api_key = key_to_check
     
@@ -223,7 +224,7 @@ def max_output(gpt_model, messages_for_GPT):
 # %%
 default_msg = f'**Please enter your search terms.** By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from each case.'
 
-default_caption = f'During the pilot stage, the number of cases to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases, courts, or tribunals.'
+default_caption = f'During the pilot stage, the number of cases to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases'
 
 
 # %%
@@ -338,7 +339,7 @@ For example, the question "What's the defendant's age?" should be labelled "0".
 # %%
 #Check questions for potential privacy infringement
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
@@ -407,6 +408,33 @@ def GPT_questions_check(questions_json, gpt_model, questions_check_system_instru
 
 
 # %%
+#Display unanswered questions
+def unanswered_questions(unchecked_questions_json, checked_questions_json):
+    
+    unanswered_questions_list = []
+    
+    for question in unchecked_questions_json.values():
+        if question not in checked_questions_json.values():
+            unanswered_questions_list.append(question)
+
+    if len(unanswered_questions_list) > 0:
+
+        witheld_text = 'To avoid exposing personally identifiable information, the following questions are not answered: \n\n' + '\n\n'.join(unanswered_questions_list)
+
+        st.warning(witheld_text)
+
+        #bar = st.progress(0, text = f":red[{progress_text}]")
+    
+        #for percent_complete in range(100):
+            #pause.seconds(0.1)
+            #bar.progress(percent_complete + 1, text = f":red[{progress_text}]")
+        
+        #pause.seconds(1)
+        #bar.empty()
+    
+
+
+# %%
 #Function to replace unchecked questions with checked questions
 def checked_questions_json(questions_json, gpt_labels_output):
     
@@ -416,10 +444,10 @@ def checked_questions_json(questions_json, gpt_labels_output):
         
         if str(gpt_labels_output[0][q_key]) == '1':
             
-            checked_questions_json[q_key] = 'Say "n/a" only.'
+            checked_questions_json.pop(q_key)
     
     return checked_questions_json
-    
+
 
 
 # %%
@@ -439,7 +467,7 @@ For example, if the text given to you is "John Smith, born 1 January 1950, died 
 # %%
 #Check answers_to_check_json for potential privacy infringement
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_instruction):
     #'question_json' variable is a json of answers_to_check_json to GPT
     #'jugdment' variable is a judgment_json   
@@ -531,7 +559,7 @@ If you cannot answer the questions based on the judgment, record or metadata, do
 #Define GPT answer function for answers in json form, YES TOKENS
 #IN USE
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
@@ -639,7 +667,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
@@ -656,15 +684,14 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     
     #client = OpenAI()
 
-    #Make a copy of questions for making headings later
-    unchecked_questions_json = questions_json.copy()
-
     #Check questions for privacy violation
 
     if check_questions_answers() > 0:
     
         try:
-    
+
+            unchecked_questions_json = questions_json.copy()
+            
             labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
     
             labels_output_tokens = labels_output[1]
@@ -674,6 +701,8 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             questions_json = checked_questions_json(questions_json, labels_output)
 
             print('Questions checked.')
+
+            unanswered_questions(unchecked_questions_json, questions_json)
     
         except Exception as e:
             
@@ -782,12 +811,6 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
         
         for answer_index in answers_dict.keys():
 
-            #Check any question override
-            if 'Say "n/a" only' in str(answer_index):
-                answer_header = f'GPT question {q_counter}: ' + 'Not answered due to potential privacy violation'
-            else:
-                answer_header = f'GPT question {q_counter}: ' + answer_index
-
             #Check any errors
             answer_string = str(answers_dict[answer_index]).lower()
             
@@ -796,6 +819,8 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
                 answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
 
             #Append answer to spreadsheet
+            answer_header = f'GPT question {q_counter}: ' + answer_index
+
             try:
             
                 df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
@@ -930,7 +955,7 @@ def gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_ins
 # %%
 #Define function for creating jsonl file for batching together with df_individual with custom id inserted
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
@@ -947,15 +972,14 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
     
     #client = OpenAI()
 
-    #Make a copy of questions for making headings later
-    unchecked_questions_json = questions_json.copy()
-
     #Check questions for privacy violation
 
     if check_questions_answers() > 0:
     
         try:
-    
+
+            unchecked_questions_json = questions_json.copy()
+            
             labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
     
             labels_output_tokens = labels_output[1]
@@ -965,6 +989,8 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
             questions_json = checked_questions_json(questions_json, labels_output)
 
             print('Questions checked.')
+
+            unanswered_questions(unchecked_questions_json, questions_json)
     
         except Exception as e:
             
@@ -1141,8 +1167,9 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.hca_functions import hca_run, hca_collections, hca_search, hca_search_results_to_judgment_links, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df
-    
+        from functions.hca_functions import hca_run, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df
+        #hca_search_results_to_judgment_links
+        
         run = copy.copy(hca_run)
 
     if jurisdiction_page == 'pages/NSW.py':
@@ -1159,8 +1186,9 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.fca_functions import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
-    
+        from functions.fca_functions import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        #fca_link_to_doc
+        
         run = copy.copy(fca_run)
 
     if jurisdiction_page == 'pages/US.py':
@@ -1243,8 +1271,9 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.hca_functions import hca_batch, hca_collections, hca_search, hca_search_results_to_judgment_links, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df
-    
+        from functions.hca_functions import hca_batch, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df
+        #hca_search_results_to_judgment_links
+        
         batch =  copy.copy(hca_batch)
 
     if jurisdiction_page == 'pages/NSW.py':
@@ -1261,8 +1290,8 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.fca_functions import fca_batch, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_link_to_doc, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
-    
+        from functions.fca_functions import fca_batch, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        #fca_link_to_doc
         batch = copy.copy(fca_batch)
 
     if jurisdiction_page == 'pages/US.py':

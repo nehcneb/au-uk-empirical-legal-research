@@ -76,7 +76,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # Federal Courts search engine
 
 # %%
-from functions.common_functions import link
+from functions.common_functions import link, split_title_mnc
 
 # %%
 #Define format functions for courts choice, and GPT questions
@@ -149,7 +149,7 @@ def fca_search(court = '',
 # %%
 #Define function turning search results url to links to judgments
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     page = requests.get(url_search_results)
@@ -170,7 +170,17 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
             remove_title = str(i).split('" title=')[0]
             remove_leading_words = remove_title.replace('<a href="', '')
             if 'a class=' not in remove_leading_words:
-                links.append(remove_leading_words)
+                case_name_mnc = split_title_mnc(i.get_text(strip = True))
+                case_name = case_name_mnc[0]
+                mnc = case_name_mnc[1]
+                if '(PDF' in mnc:
+                    mnc = mnc.replace('(PDF', '')
+                    
+                case_info = {'Case name': case_name,
+                     'Medium neutral citation': mnc,
+                    'Hyperlink to Federal Court Digital Law Library' : remove_leading_words
+                            }
+                links.append(case_info)
                 counter = counter + 1
 
     #Go beyond first 20 results
@@ -197,7 +207,17 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
                         remove_title = str(i).split('" title=')[0]
                         remove_leading_words = remove_title.replace('<a href="', '')
                         if 'a class=' not in remove_leading_words:
-                            links.append(remove_leading_words)
+                            case_name_mnc = split_title_mnc(i.get_text(strip = True))
+                            case_name = case_name_mnc[0]
+                            mnc = case_name_mnc[1]
+                            if '(PDF' in mnc:
+                                mnc = mnc.replace('(PDF', '')
+                                
+                            case_info = {'Case name': case_name,
+                                 'Medium neutral citation': mnc,
+                                'Hyperlink to Federal Court Digital Law Library' : remove_leading_words
+                                        }
+                            links.append(case_info)
                             counter = counter + 1
 
             else:
@@ -207,31 +227,19 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
 
 
 # %%
-#judgment url to word document
-#NOT in use
-def fca_link_to_doc(url_judgment):
-    page_judgment = requests.get(url_judgment)
-    soup_judgment = BeautifulSoup(page_judgment.content, "lxml")
-    link_word_raw = soup_judgment.find_all('a', string=re.compile('Word'))
-    if len(link_word_raw)> 0:
-        link_to_word = str(link_word_raw).split('>')[0].replace('[<a href="', '')
-        return link_to_word
-    else:
-        return url_judgment
-
-
-# %%
 #Meta labels and judgment combined
 #IN USE
-fca_metalabels = ['MNC', 'Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to']
+fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to']
+#'MNC', 
 fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to', 'Order']
 
-@st.cache_data
-def fca_meta_judgment_dict(judgment_url):
+@st.cache_data(show_spinner = False)
+def fca_meta_judgment_dict(case_info):
+#def fca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
                 'Hyperlink to Federal Court Digital Law Library' : '', 
-                'MNC' : '',  
+                #'MNC' : '',  
                  'Year' : '',  
                  'Appeal' : '',  
                  'File_Number' : '',  
@@ -259,8 +267,17 @@ def fca_meta_judgment_dict(judgment_url):
                 'judgment' : ''
                 }
 
+
+    if 'Case name' in case_info.keys():
+        judgment_dict['Case name'] = case_info['Case name']
+
+    if 'Medium neutral citation' in case_info.keys():
+        judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
+
     #Attach hyperlink
 
+    judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
+    
     judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
     
     page = requests.get(judgment_url)
@@ -279,13 +296,18 @@ def fca_meta_judgment_dict(judgment_url):
 
     if '.pdf' not in judgment_url.lower():
     
-        try:
-            judgment_dict['Case name'] = judgment_dict['MNC'].split('[')[0]
-            judgment_dict['Medium neutral citation'] = '[' + judgment_dict['MNC'].split('[')[1]
-            del judgment_dict['MNC']
+        #try:
+            #case_name_mnc = split_title_mnc(judgment_dict['MNC'])
+            #case_name = case_name_mnc[0]
+            #mnc = case_name_mnc[1]
+            
+            #judgment_dict['Case name'] = case_name
+            #judgment_dict['Medium neutral citation'] = mnc
+            
+            #del judgment_dict['MNC']
     
-        except:
-            pass
+        #except:
+            #pass
 
         #Attach order_text and judgment
     
@@ -317,7 +339,7 @@ def fca_meta_judgment_dict(judgment_url):
 
     else:
         #Attach case name
-        judgment_dict['Case name'] = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.'
+        #judgment_dict['Case name'] = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.'
 
         #Attach judgment pdf text
         try:
@@ -328,23 +350,21 @@ def fca_meta_judgment_dict(judgment_url):
             pass
     
         #Attach medium neutral citation
-        try:
-            mnc_raw = judgment_url.split('/')[-1].replace('.pdf', '')
+        #try:
+            #mnc_raw = judgment_url.split('/')[-1].replace('.pdf', '')
 
-            #for court_i in ['fca', 'fcafc']: #If want to search FCA only
-            for court_i in ['fca', 'fcafc', 'irc', 'acompt', 'acopyt', 'adfdat', 'fpdt', 'atpt', 'nfsc']:
-                if court_i in mnc_raw.lower():
-                    mnc_list = mnc_raw.lower().split(court_i)
-                    judgment_dict['Medium neutral citation'] = '[' + mnc_list[0] + '] ' + court_i.upper()  + ' ' +  mnc_list[1]
-                    judgment_dict['Medium neutral citation']=judgment_dict['Medium neutral citation']
+            #for court_i in ['fca', 'fcafc', 'irc', 'acompt', 'acopyt', 'adfdat', 'fpdt', 'atpt', 'nfsc']:
+                #if court_i in mnc_raw.lower():
+                    #mnc_list = mnc_raw.lower().split(court_i)
+                    #judgment_dict['Medium neutral citation'] = '[' + mnc_list[0] + '] ' + court_i.upper()  + ' ' +  mnc_list[1]
 
-                    while ' 0' in judgment_dict['Medium neutral citation']:
-                        judgment_dict['Medium neutral citation'] = judgment_dict['Medium neutral citation'].replace(' 0', ' ')
+                    #while ' 0' in judgment_dict['Medium neutral citation']:
+                        #judgment_dict['Medium neutral citation'] = judgment_dict['Medium neutral citation'].replace(' 0', ' ')
             
-            del judgment_dict['MNC']
+            #del judgment_dict['MNC']
     
-        except:
-            pass        
+        #except:
+            #pass        
             
     return judgment_dict
 
@@ -352,7 +372,7 @@ def fca_meta_judgment_dict(judgment_url):
 # %%
 #Preliminary function for changing names for any PDF judgments
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def fca_pdf_name_mnc_list(url_search_results, judgment_counter_bound):
                       
     #Scrape webpage of search results
@@ -404,6 +424,7 @@ def fca_pdf_name_mnc_list(url_search_results, judgment_counter_bound):
 
 # %%
 #Function for changing names for any PDF judgments
+#NOT IN USE
 
 def fca_pdf_name(name_mnc_list, mnc):
     #Placeholder
@@ -483,7 +504,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def fca_run(df_master):
     df_master = df_master.fillna('')
 
@@ -518,20 +539,25 @@ def fca_run(df_master):
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    #Get relevant cases
+    case_infos = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
 
-    for link in judgments_links:
-
-        judgment_dict = fca_meta_judgment_dict(link)
-
-#        meta_data = meta_dict(link)  
-#        doc_link = fca_link_to_doc(link)
-#        judgment_dict = doc_link_to_dict(doc_link)
-#        judgment_dict = link_to_dict(link)
-#        judgments_all_info = { **meta_data, **judgment_dict}
-#        judgments_file.append(judgments_all_info)
+    for case_info in case_infos:
+        judgment_dict = fca_meta_judgment_dict(case_info)
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(5, 15))
+
+    #Create list of direct judgment links
+    #judgments_links  = []
+
+    #for case in case_infos:
+        #judgments_links.append(case['Hyperlink to Federal Court Digital Law Library'])
+    
+    #for link in judgments_links:
+
+        #judgment_dict = fca_meta_judgment_dict(link)
+        #judgments_file.append(judgment_dict)
+        #pause.seconds(np.random.randint(5, 15))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -539,27 +565,19 @@ def fca_run(df_master):
 #    df_individual = pd.DataFrame(judgments_file)
     
     df_individual = pd.read_json(json_individual)
-    
-    #Rename column titles
-    
-#    try:
-#        df_individual['Hyperlink (double click)'] = df_individual['Hyperlink'].apply(link)
-#        df_individual.pop('Hyperlink')
-#    except:
-#        pass
 
     #Correct case names for any PDFs
 
-    name_mnc_list = fca_pdf_name_mnc_list(url_search_results, judgments_counter_bound)
+    #name_mnc_list = fca_pdf_name_mnc_list(url_search_results, judgments_counter_bound)
 
-    for judgment_index in df_individual.index:
+    #for judgment_index in df_individual.index:
         
-        if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to Federal Court Digital Law Library']).lower())):
-            try:
-                df_individual.loc[judgment_index, 'Case name'] = fca_pdf_name(name_mnc_list, df_individual.loc[judgment_index, 'Medium neutral citation'])
-            except Exception as e:
-                print(f"{df_individual.loc[judgment_index, 'Medium neutral citation']}: cannot change case name for PDF.")
-                print(e)
+        #if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to Federal Court Digital Law Library']).lower())):
+            #try:
+                #df_individual.loc[judgment_index, 'Case name'] = fca_pdf_name(name_mnc_list, df_individual.loc[judgment_index, 'Medium neutral citation'])
+            #except Exception as e:
+                #print(f"{df_individual.loc[judgment_index, 'Medium neutral citation']}: cannot change case name for PDF.")
+                #print(e)
                     
     #Instruct GPT
     
@@ -596,7 +614,7 @@ def fca_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def fca_batch(df_master):
     df_master = df_master.fillna('')
 
@@ -605,11 +623,7 @@ def fca_batch(df_master):
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
-    #Create judgments file
-    judgments_file = []
-    
-    #Conduct search
-    
+    #Conduct search    
     url_search_results = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
@@ -631,20 +645,70 @@ def fca_batch(df_master):
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    #Get relevant cases
+    case_infos = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
 
-    for link in judgments_links:
+    #Create judgments file
+    judgments_file = []
+        
+    #Check if running on HuggingFace
+    from functions.oalc_functions import huggingface
+    
+    if huggingface == False: #If not running on HuggingFace
+        
+        for case_info in case_infos:
+            judgment_dict = fca_meta_judgment_dict(case_info)
+            judgments_file.append(judgment_dict)
+            pause.seconds(np.random.randint(5, 15))
 
-        judgment_dict = fca_meta_judgment_dict(link)
+    else: #If running on HuggingFace
 
-#        meta_data = meta_dict(link)  
-#        doc_link = fca_link_to_doc(link)
-#        judgment_dict = doc_link_to_dict(doc_link)
-#        judgment_dict = link_to_dict(link)
-#        judgments_all_info = { **meta_data, **judgment_dict}
-#        judgments_file.append(judgments_all_info)
-        judgments_file.append(judgment_dict)
-        pause.seconds(np.random.randint(5, 15))
+        #Load oalc
+        from functions.oalc_functions import load_corpus, get_judgment_from_olac
+
+        #Create a list of mncs for HuggingFace:
+        mnc_list = []
+
+        for case in case_infos:
+
+            #add search results to json
+            judgments_file.append(case)
+
+            #Add mnc to list for HuggingFace
+            mnc_list.append(case['Medium neutral citation'])
+
+        #Get judgments from oalc first
+        mnc_judgment_dict = get_judgment_from_olac(mnc_list)
+    
+        #Append judgment to judgments_file 
+        for decision in judgments_file:
+            
+            #Append judgments from oalc first
+            if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
+                
+                decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
+
+                #Make judgment_link clickable
+                decision['Hyperlink to Federal Court Digital Law Library'] = link(decision['Hyperlink to Federal Court Digital Law Library'])
+            
+            else: #Get judgment from FCA if can't get from oalc
+
+                judgment_dict = fca_meta_judgment_dict(decision)
+                judgments_file.append(judgment_dict)
+                pause.seconds(np.random.randint(5, 15))
+                
+    #Create list of direct judgment links
+    #judgments_links  = []
+
+    #for case in case_infos:
+        #judgments_links.append(case['Hyperlink to Federal Court Digital Law Library'])
+        
+
+    #for link in judgments_links:
+
+        #judgment_dict = fca_meta_judgment_dict(link)
+        #judgments_file.append(judgment_dict)
+        #pause.seconds(np.random.randint(5, 15))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -653,26 +717,18 @@ def fca_batch(df_master):
     
     df_individual = pd.read_json(json_individual)
     
-    #Rename column titles
-    
-#    try:
-#        df_individual['Hyperlink (double click)'] = df_individual['Hyperlink'].apply(link)
-#        df_individual.pop('Hyperlink')
-#    except:
-#        pass
-
     #Correct case names for any PDFs
 
-    name_mnc_list = fca_pdf_name_mnc_list(url_search_results, judgments_counter_bound)
+    #name_mnc_list = fca_pdf_name_mnc_list(url_search_results, judgments_counter_bound)
 
-    for judgment_index in df_individual.index:
+    #for judgment_index in df_individual.index:
         
-        if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to Federal Court Digital Law Library']).lower())):
-            try:
-                df_individual.loc[judgment_index, 'Case name'] = fca_pdf_name(name_mnc_list, df_individual.loc[judgment_index, 'Medium neutral citation'])
-            except Exception as e:
-                print(f"{df_individual.loc[judgment_index, 'Medium neutral citation']}: cannot change case name for PDF.")
-                print(e)
+        #if (('pdf' in df_individual.loc[judgment_index, 'Case name'].lower()) or ('.pdf' in str(df_individual.loc[judgment_index, 'Hyperlink to Federal Court Digital Law Library']).lower())):
+            #try:
+                #df_individual.loc[judgment_index, 'Case name'] = fca_pdf_name(name_mnc_list, df_individual.loc[judgment_index, 'Medium neutral citation'])
+            #except Exception as e:
+                #print(f"{df_individual.loc[judgment_index, 'Medium neutral citation']}: cannot change case name for PDF.")
+                #print(e)
                     
     #Drop metadata if not wanted
 

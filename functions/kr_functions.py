@@ -114,7 +114,7 @@ def kr_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     headers = {'User-Agent': 'whatever'}
@@ -179,7 +179,7 @@ def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def kr_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
@@ -290,7 +290,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def kr_run(df_master):
     df_master = df_master.fillna('')
 

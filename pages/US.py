@@ -84,7 +84,7 @@ from functions.us_functions import us_search_tool, us_search_preview, us_court_c
 
 
 # %%
-from functions.common_functions import link, hide_own_token, reverse_link
+from functions.common_functions import link, reverse_link
 
 
 # %%
@@ -435,7 +435,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Party name'] = None
     st.session_state['df_master'].loc[0, 'Attorney name'] = None
     st.session_state['df_master'].loc[0, 'Only show results with PDFs'] = True
-    st.session_state['df_master'].loc[0, 'CourtListener API token'] = st.secrets["courtlistener"]["token"]
+    st.session_state['df_master'].loc[0, 'CourtListener API token'] = None
 
     st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
     
@@ -446,18 +446,6 @@ if 'df_individual_output' not in st.session_state:
 #Disable toggles
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
-
-
-# %%
-#US specific session states
-
-#For opinions
-#if (('court_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
-    #st.session_state["court_filter_status"] = False
-
-#For pacer records
-#if (('court_pacer_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
-    #st.session_state["court_pacer_filter_status"] = False
 
 
 # %%
@@ -640,12 +628,7 @@ else: #If PACER records chosen
 
 st.subheader("Your CourtListener API token")
 
-token_entry = st.text_input(label = 'Optional', value = hide_own_token(user_token = st.session_state['df_master'].loc[0, 'CourtListener API token'], own_token = st.secrets["courtlistener"]["token"]))
-
-if token_entry:
-    st.session_state['df_master'].loc[0, 'CourtListener API token'] = token_entry
-
-#st.write(st.session_state['df_master'].loc[0, 'CourtListener API token'])
+token_entry = st.text_input(label = 'Optional', value = st.session_state['df_master'].loc[0, 'CourtListener API token'])
 
 st.write('By default, this app will process up to 500 queries per day. If that limit is exceeded, you can still use this app with your own CourtListen API token (click [here](https://www.courtlistener.com/sign-in/) to sign up for one).')
 

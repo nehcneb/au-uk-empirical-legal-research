@@ -77,11 +77,10 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # High Court of Australia search engine
 
 # %%
-from functions.common_functions import link, is_date, list_value_check, au_date
+from functions.common_functions import link, is_date, list_value_check, au_date, split_title_mnc
 
 # %%
 #Collections available
-
 hca_collections = ['Judgments 2000-present', 'Judgments 1948-1999', '1 CLR - 100 CLR (judgments 1903-1958)']
 
 
@@ -118,8 +117,6 @@ def hca_search(collection = '',
     #Get response page
     response = requests.get(base_url, params=params)
     response.raise_for_status()
-    # Process the response (e.g., extract relevant information)
-    # Your code here...
 
     #Get url_search_results
     url_search_results = response.url
@@ -132,9 +129,10 @@ def hca_search(collection = '',
 
 
 # %%
-#Define function turning search results url to links to judgments
+#Define function turning search results url to cases_w_mnc_links to judgments
+#NOT IN USE
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     
@@ -149,8 +147,8 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
     #There are up to 20 pages per page
     number_of_pages = soup.find("span", id="lastItem").text
     
-    #Start links list
-    links = []
+    #Start cases_w_mnc_links list
+    cases_w_mnc_links = []
     
     #Get first page of results
     raw_links = soup.find_all(class_='case')
@@ -160,7 +158,10 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
         for raw_link in raw_links:
             if counter <= judgment_counter_bound:
                 link = 'https://eresources.hcourt.gov.au' + raw_link['href']
-                links.append(link)
+                case_name_mnc = split_title_mnc(raw_links.get_text().strip())
+                case_name = case_name_mnc[0]
+                mnc = case_name_mnc[1]
+                cases_w_mnc_links.append({'Case name': case_name, 'Medium neutral citation': mnc, 'Hyperlink to High Court Judgments Database': link})
                 counter += 1
             else:
                 break
@@ -181,22 +182,23 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
                     for raw_link in raw_links_new_page:
                         if counter <= judgment_counter_bound:
                             link = 'https://eresources.hcourt.gov.au' + raw_link['href']
-                            links.append(link)
+                            case_name = case_name_mnc[0]
+                            mnc = case_name_mnc[1]
+                            cases_w_mnc_links.append({'Case name': case_name, 'Medium neutral citation': mnc, 'Hyperlink to High Court Judgments Database': link})
                             counter += 1
                         else:
                             break
                 else:
                     break
     
-
-    return links
+    return cases_w_mnc_links
 
 
 
 # %%
 #Define function for judgment link containing PDF
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_pdf_judgment(url):
     pdf_url = url.replace('showCase', 'downloadPdf')
     headers = {'User-Agent': 'whatever'}
@@ -221,7 +223,7 @@ hca_meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catch
 # %%
 #If judgment link contains 'showCase'
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
@@ -356,7 +358,7 @@ def hca_meta_judgment_dict(judgment_url):
 # %%
 #If judgment link contains 'showbyHandle'
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_meta_judgment_dict_alt(judgment_url):
     
     judgment_dict = {'Case name': '',
@@ -520,7 +522,7 @@ def hca_meta_judgment_dict_alt(judgment_url):
 # %%
 #Slow way of finding a case from mnc
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_mnc_to_link_browse(collection, year, num):
 
     #Default judgment without the prefix https://eresources.hcourt.gov.au
@@ -821,7 +823,7 @@ def hca_max_year_validity(collection, max_year_entry):
 # %%
 #Load hca_data
 
-@st.cache_resource
+@st.cache_resource(show_spinner = False)
 def hca_load_data(url):
     df = pd.read_csv(url)
     return df
@@ -857,7 +859,7 @@ def hca_judgment_to_exclude(case_info = {},
 
     for party in own_parties_include.replace(';', ',').split(','):
         
-        if ((len(party) > 0) and (party.lower() not in case_info['name'].lower())):
+        if ((len(party) > 0) and (party.lower() not in case_info['Case name'].lower())):
         
             exclude_status = True
         
@@ -865,17 +867,17 @@ def hca_judgment_to_exclude(case_info = {},
 
     for party in own_parties_exclude.replace(';', ',').split(','):
         
-        if ((len(party) > 0) and (party.lower() in case_info['name'].lower())):
+        if ((len(party) > 0) and (party.lower() in case_info['Case name'].lower())):
         
             exclude_status = True
         
             break
 
-    #Exclude date
+    #Exclude Date
 
-    if is_date(case_info['date'], fuzzy=False):
+    if is_date(case_info['Date'], fuzzy=False):
         
-        date_datetime = parser.parse(case_info['date'], dayfirst=True)
+        date_datetime = parser.parse(case_info['Date'], dayfirst=True)
         
         #if collection != 'Judgments 2000-present':
             #Reducing 100 because if year is 2 digits, parser assumes current century
@@ -902,7 +904,7 @@ def hca_judgment_to_exclude(case_info = {},
 
     #potential_year_list = []
 
-    #potential_year_raw_list = case_info['name'].split('[')
+    #potential_year_raw_list = case_info['Case name'].split('[')
 
     #for potential_year in potential_year_raw_list:
 
@@ -943,15 +945,15 @@ def hca_judgment_to_exclude(case_info = {},
 
     #Exclude judges
 
-    if type(case_info['before']) == str:
+    if type(case_info['Before']) == str:
         
-        #if len(case_info['before']) > 2:
+        #if len(case_info['Before']) > 2:
     
         for judge in own_judges_include.replace(';', ',').split(','):
 
             judge = judge.replace('.', '').replace(' J', '').replace(' CJ', '').replace(' ACJ', '').replace(' JJ', '')
             
-            if ((len(judge) > 2) and (judge.lower() not in case_info['before'].lower())):
+            if ((len(judge) > 2) and (judge.lower() not in case_info['Before'].lower())):
             
                 exclude_status = True
             
@@ -961,7 +963,7 @@ def hca_judgment_to_exclude(case_info = {},
 
             judge = judge.replace('.', '').replace(' J', '').replace(' CJ', '').replace(' ACJ', '').replace(' JJ', '')
             
-            if ((len(judge) > 2) and (judge.lower() in case_info['before'].lower())):
+            if ((len(judge) > 2) and (judge.lower() in case_info['Before'].lower())):
             
                 exclude_status = True
             
@@ -974,7 +976,7 @@ def hca_judgment_to_exclude(case_info = {},
 # %%
 #Function to get judgment links with filters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgment_counter_bound,
                                       collection, 
@@ -1025,18 +1027,22 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
 
             for raw_link in raw_links:
                 index = raw_links.index(raw_link)
-                mnc = '[' + raw_link.text.split('[')[-1]
+                #mnc = '[' + raw_link.text.split('[')[-1]
+                case_name_mnc = split_title_mnc(raw_link.get_text().strip())
+                case_name = case_name_mnc[0]
+                mnc = case_name_mnc[1]
 
                 #Try to get case info from hca_df
                 try:
                     index_list = hca_df.index[hca_df['mnc'].str.contains(mnc, case=False, na=False, regex=False)].tolist()
                     index = index_list[0]
                     
-                    case_info = {'name': hca_df.loc[int(index), 'case'], 
-                                 'url': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
-                                 'reported': hca_df.loc[int(index), 'reported'],
-                                 'before': hca_df.loc[int(index), 'before'],
-                                 'date': hca_df.loc[index, 'date']
+                    case_info = {'Case name': case_name, #hca_df.loc[int(index), 'case'], 
+                                 'Medium neutral citation': mnc, #New
+                                 'Hyperlink to High Court Judgments Database': 'https://eresources.hcourt.gov.au' + raw_link['href'], 
+                                 'Reported': hca_df.loc[int(index), 'reported'],
+                                 'Before': hca_df.loc[int(index), 'before'],
+                                 'Date': hca_df.loc[index, 'date']
                                 }
                     
                     case_infos.append(case_info)
@@ -1061,7 +1067,8 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
                             own_judges_exclude
                            ) == False:
                         
-                        links.append(case_info['url'])
+                        #links.append(case_info['Hyperlink to High Court Judgments Database'])
+                        links.append(case_info)
                         
                         counter += 1
                         
@@ -1148,7 +1155,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1168,12 +1175,9 @@ def hca_run(df_master):
                         )['url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #Use the following if don't want to filter results
-    #judgments_links = hca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
     
-    #Use the following if want to filter results. Will be slow.
-    judgments_links = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+    #Use the following if want to filter results.
+    case_infos = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgments_counter_bound,
                                     #hca_df, 
                                     df_master.loc[0, 'Collection'], 
@@ -1185,16 +1189,22 @@ def hca_run(df_master):
                                     #df_master.loc[0, 'Case numbers do not include'], 
                                     df_master.loc[0, 'Judges include'], 
                                     df_master.loc[0, 'Judges do not include'])
+    
+    #Create list of direct judgment links
+    judgments_links  = []
 
-    for link in judgments_links:
+    for case in case_infos:
+        judgments_links.append(case['Hyperlink to High Court Judgments Database'])
+    
+    for judgment_link in judgments_links:
 
-        if 'showbyHandle' in link:
+        if 'showbyHandle' in judgment_link:
             
-            judgment_dict = hca_meta_judgment_dict_alt(link)
+            judgment_dict = hca_meta_judgment_dict_alt(judgment_link)
 
-        else: #If 'showCase' in link:
+        else: #If 'showCase' in judgment_link:
 
-            judgment_dict = hca_meta_judgment_dict(link)
+            judgment_dict = hca_meta_judgment_dict(judgment_link)
     
         judgments_file.append(judgment_dict)
         
@@ -1203,7 +1213,6 @@ def hca_run(df_master):
     #Add judgment if mnc entered
 
     if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
-        #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
         direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
 
         if len(direct_link) > 0:
@@ -1243,7 +1252,8 @@ def hca_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    df_updated.pop('judgment')
+    if 'judgment' in df_updated.columns:
+        df_updated.pop('judgment')
 
     #Drop metadata if not wanted
 
@@ -1260,7 +1270,7 @@ def hca_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data
+@st.cache_data(show_spinner = False)
 def hca_batch(df_master):
     df_master = df_master.fillna('')
 
@@ -1268,9 +1278,6 @@ def hca_batch(df_master):
      
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Create judgments file
-    judgments_file = []
     
     #Conduct search
     
@@ -1280,12 +1287,9 @@ def hca_batch(df_master):
                         )['url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #Use the following if don't want to filter results
-    #judgments_links = hca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
     
-    #Use the following if want to filter results. Will be slow.
-    judgments_links = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+    #Use the following if want to filter results.
+    case_infos = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
                                      judgments_counter_bound,
                                     #hca_df, 
                                     df_master.loc[0, 'Collection'], 
@@ -1298,34 +1302,92 @@ def hca_batch(df_master):
                                     df_master.loc[0, 'Judges include'], 
                                     df_master.loc[0, 'Judges do not include'])
 
-    for link in judgments_links:
-
-        if 'showbyHandle' in link:
-            
-            judgment_dict = hca_meta_judgment_dict_alt(link)
-
-        else: #If 'showCase' in link:
-
-            judgment_dict = hca_meta_judgment_dict(link)
+    #Create judgments file
+    judgments_file = []
+        
+    #Check if running on HuggingFace
+    from functions.oalc_functions import huggingface
     
-        judgments_file.append(judgment_dict)
+    if huggingface == False: #If not running on HuggingFace
         
-        pause.seconds(np.random.randint(5, 15))
-
-    #Add judgment if mnc entered
-
-    if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
-        #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
-        direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
-
-        if len(direct_link) > 0:
-            
-            judgment_dict_direct = hca_meta_judgment_dict(direct_link)
-            
-            judgments_file.append(judgment_dict_direct)
+        #Create list of direct judgment links
+        judgments_links  = []
+    
+        for case in case_infos:
+            judgments_links.append(case['Hyperlink to High Court Judgments Database'])
+    
+        for judgment_link in judgments_links:
+    
+            if 'showbyHandle' in judgment_link:
+                
+                judgment_dict = hca_meta_judgment_dict_alt(judgment_link)
+    
+            else: #If 'showCase' in judgment_link:
+    
+                judgment_dict = hca_meta_judgment_dict(judgment_link)
         
+            judgments_file.append(judgment_dict)
+            
             pause.seconds(np.random.randint(5, 15))
+    
+        #Add judgment if mnc entered
+    
+        if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
             
+            direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+    
+            if len(direct_link) > 0:
+                
+                judgment_dict_direct = hca_meta_judgment_dict(direct_link)
+                
+                judgments_file.append(judgment_dict_direct)
+            
+                pause.seconds(np.random.randint(5, 15))
+
+    else: #If running on HuggingFace
+        
+        #Load oalc
+        from functions.oalc_functions import load_corpus, get_judgment_from_olac
+
+        #Create a list of mncs for HuggingFace:
+        mnc_list = []
+
+        for case in case_infos:
+
+            #add search results to json
+            judgments_file.append(case)
+
+            #Add mnc to list for HuggingFace
+            mnc_list.append(case['Medium neutral citation'])
+
+        #Get judgments from oalc first
+        mnc_judgment_dict = get_judgment_from_olac(mnc_list)
+    
+        #Append judgment to judgments_file 
+        for decision in judgments_file:
+            
+            #Append judgments from oalc first
+            if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
+                
+                decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
+
+                #Make judgment_link clickable
+                decision['Hyperlink to High Court Judgments Database'] = link(decision['Hyperlink to High Court Judgments Database'])
+                
+            else: #Get judgment from HCA if can't get from oalc
+                
+                direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], decision['Medium neutral citation'])
+        
+                if len(direct_link) > 0:
+                    
+                    judgment_dict_direct = hca_meta_judgment_dict(direct_link)
+
+                    for key in judgment_dict_direct.keys():
+                        if key not in decision.keys():
+                            decision.update({key: judgment_dict_direct[key]})
+                    
+                    pause.seconds(np.random.randint(5, 15))
+        
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
