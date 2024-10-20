@@ -75,8 +75,10 @@ def load_corpus():
 @st.cache_data(show_spinner = False)
 def get_judgment_from_olac(mnc_list):
 
+    #Load corpus
     corpus = load_corpus()
 
+    #Get judgments from corpus
     mnc_judgment_dict = {}
     for mnc in mnc_list:
         mnc_judgment_dict.update({mnc: ''})
@@ -89,9 +91,15 @@ def get_judgment_from_olac(mnc_list):
             judgment = record['text']
             mnc_judgment_dict[mnc] = judgment
 
+    #Remove any blank or very short judgments
+    mncs_to_pop = []
+    
     for mnc in mnc_judgment_dict.keys():
         if len(mnc_judgment_dict[mnc]) < 1000:
-            mnc_judgment_dict.pop(mnc)
+            mncs_to_pop.append(mnc)
+
+    for mnc in mncs_to_pop:
+        mnc_judgment_dict.pop(mnc)
     
     return mnc_judgment_dict
 
