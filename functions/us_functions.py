@@ -1284,7 +1284,8 @@ class us_search_tool:
         self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
 
         try:
-            page_json = json.loads(self.page.content.decode('utf-8')) 
+            #page_json = json.loads(self.page.content.decode('utf-8')) 
+            page_json = self.page.json()
             
             self.results_count = page_json["count"]
     
@@ -1319,7 +1320,8 @@ class us_search_tool:
                 
                         self.next_page = requests.get(next_page_url, headers=self.headers)
                         
-                        next_page_json = json.loads(next_page.content.decode('utf-8'))
+                        #next_page_json = json.loads(next_page.content.decode('utf-8'))
+                        next_page_json = self.next_page.json()
         
                         results_raw = next_page_json['results']
                             
@@ -1383,9 +1385,9 @@ class us_search_tool:
         opinion_id = opinion_raw['id']
         opinion_url = f"https://www.courtlistener.com/api/rest/v4/opinions/{opinion_id}/"
         opinion_page = requests.get(opinion_url, headers=headers)
-        #opinion_soup = BeautifulSoup(opinion_page.content, "lxml")
-        #opinion_json = json.loads(opinion_soup.text)
-        opinion_json = json.loads(opinion_page.content.decode('utf-8'))
+        #opinion_json = json.loads(opinion_page.content.decode('utf-8'))
+        opinion_json = opinion_page.json()
+
 
         #Placeholders        
         opinion_snippet = ''

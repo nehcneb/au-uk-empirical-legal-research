@@ -269,10 +269,6 @@ if "judgment_counter_max" not in st.session_state:
         else:
             st.session_state["judgment_counter_max"] = default_judgment_counter_bound
 
-#Make unanswered questions session_state
-
-if 'unanswered_questions' not in st.session_state:
-    st.session_state['unanswered_questions'] = ''
 
 # %% [markdown]
 # ## Form for AI and account
@@ -758,7 +754,7 @@ if run_button:
                 st.error('Sorry, an error has arisen. Please press PRODUCE data again, or return to the previous page and check your search terms.')
                 
                 st.exception(e)
-            
+
 
 # %%
 if return_button:

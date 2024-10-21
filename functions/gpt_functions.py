@@ -422,15 +422,20 @@ def unanswered_questions(unchecked_questions_json, checked_questions_json):
             unanswered_questions_list.append(question)
 
     if len(unanswered_questions_list) > 0:
+                
+        if len(unanswered_questions_list) == 1:
 
-        witheld_text = 'To avoid exposing personally identifiable information, the following questions were witheld: ' + ' '.join(unanswered_questions_list)
+            witheld_text = 'To avoid exposing personally identifiable information, the following question was witheld:\n\n'
+        
+        if len(unanswered_questions_list) > 1: 
+            
+            witheld_text = 'To avoid exposing personally identifiable information, the following questions were witheld:\n\n'
 
+        witheld_text += '\n\n'.join(unanswered_questions_list)
+    
         #Display unanswered questions
         st.warning(witheld_text)
-
-        #Add unanswered questions to session state for batch get email
-        st.session_state['unanswered_questions'] = witheld_text
-
+            
         #bar = st.progress(0, text = f":red[{progress_text}]")
     
         #for percent_complete in range(100):
