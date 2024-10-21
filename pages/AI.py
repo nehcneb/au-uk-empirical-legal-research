@@ -266,7 +266,7 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 
 def pandasai_ask_test():
 
-    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
+    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
 
         #Get response and keep in session state
 
@@ -312,7 +312,7 @@ def pandasai_ask_test():
 # %%
 def pandasai_ask():
     
-    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
+    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
 
         #Proess prompt
         
@@ -583,7 +583,7 @@ def langchain_write(response_json):
 #Langchain ask function
 
 def langchain_ask():
-    with langchain_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
+    with langchain_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
 
         #Process prompt
 
@@ -1214,7 +1214,8 @@ else: #len(st.session_state.df_uploaded) > 0:
 if len(st.session_state.df_to_analyse) == 0:
 
     st.warning('Please upload a spreadsheet.')
-    quit()
+    #quit()
+    st.stop()
 
 st.subheader('Your spreadsheet')
 
@@ -1406,7 +1407,6 @@ if ((len(conversion_msg_to_show) > 0) or (len(st.session_state.df_produced) > 0)
             st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
 
 
-
 # %% [markdown]
 # ## AI activation and prompt
 
@@ -1433,7 +1433,8 @@ try:
 except Exception as e:
     st.error('Please double-check your API key.')
     st.exception(e)
-    quit()
+    #quit()
+    st.stop()
 
 #Area for entering instructions
 st.subheader(f'Enter your instructions for {st.session_state.ai_choice}')
@@ -1520,7 +1521,8 @@ if ask_button:
 
     if int(consent) == 0:
         st.warning("You must tick '[y]es, I agree[]' to use the app.")
-        quit()
+        #quit()
+        st.stop()
 
     elif st.session_state.instruction_left == 0:
         no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
@@ -1528,13 +1530,13 @@ if ask_button:
         
         #Keep record of response
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'error': no_more_instructions}})
-
-        quit()
+        #quit()
+        st.stop()
 
     elif len(st.session_state.prompt) == 0:
         st.warning("Please enter some instruction.")
-
-        quit()
+        #quit()
+        st.stop()
 
     else:
 
@@ -1547,8 +1549,8 @@ if ask_button:
                 st.session_state['gpt_api_key_validity'] = False
                 
                 st.error('Your API key is not valid.')
-    
-                quit()
+                #quit()
+                st.stop()
                 
             else:
                 
@@ -1643,7 +1645,7 @@ if st.session_state.ai_choice == 'GPT':
         if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
         #if clarification_questions_toggle:
         
-            with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize \textbf{Running...}}$"):
+            with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
                 
                 prompt = st.session_state.prompt
     
