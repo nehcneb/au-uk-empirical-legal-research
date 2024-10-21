@@ -807,7 +807,7 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     Dear {ULTIMATE_RECIPIENT_NAME}
     </p>
     <p>
-    Thank you for using LawtoData. Unfortunately, LawtoData was unable to produce your requested data. My Apologies. Please feel free to change your search terms or questions and try again.
+    Thank you for using <em>LawtoData</em>. Unfortunately, <em>LawtoData</em> was unable to produce your requested data. My Apologies. Please feel free to change your search terms or questions and try again.
     </p>
     <p>
     Kind regards

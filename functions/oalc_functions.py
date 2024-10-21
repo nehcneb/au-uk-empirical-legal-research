@@ -34,7 +34,8 @@ except Exception as e:
 
 huggingface = False
 
-if '/home/user/app' in current_dir:
+#if '/home/user/app' in current_dir:
+if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
     huggingface = True
 
 print(f'huggingface == {huggingface}')
@@ -60,10 +61,13 @@ def load_corpus():
         print(f"current_dir not generated.")
         print(e)
     
-    if 'Users/Ben' in current_dir: #If running locally
-        corpus = load_from_disk(st.secrets['huggingface']['oalc_local_path']) #keep_in_memory=False, 
-    else:
-        corpus = load_dataset('umarbutler/open-australian-legal-corpus', split='corpus')#, streaming=True)
+    if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
+        corpus = load_dataset('nehcneb/oalc_cases', split='train')#, streaming=True)
+        #corpus = load_dataset('umarbutler/open-australian-legal-corpus', split='corpus')#, streaming=True)
+    else:        
+        #If running locally
+        corpus = load_from_disk(st.secrets['huggingface']['oalc_cases_local_path']) #keep_in_memory=False, 
+        #corpus = load_from_disk(st.secrets['huggingface']['oalc_local_path']) #keep_in_memory=False, 
 
     return corpus
     
