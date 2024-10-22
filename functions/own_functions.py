@@ -356,7 +356,7 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
     
     for q_index in q_keys:
         answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
-    
+
     #Create questions, which include the answer format
     
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
@@ -735,7 +735,7 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
     
     for q_index in q_keys:
         answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
-    
+
     #Create questions, which include the answer format
     
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]

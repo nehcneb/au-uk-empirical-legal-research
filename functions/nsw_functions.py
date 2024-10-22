@@ -527,7 +527,7 @@ def nsw_run(df_master):
             #Get case info from results page
             decision_v = decision.values
 
-            #Get case info from individual case  page
+            #Get case info from individual case page
             decision.fetch()
 
             #Attach new info

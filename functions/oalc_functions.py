@@ -62,7 +62,7 @@ def load_corpus():
         print(e)
     
     if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
-        corpus = load_dataset('nehcneb/oalc_cases', split='train')#, streaming=True)
+        corpus = load_dataset('nehcneb/oalc_cases', split='train', revision='refs/convert/parquet')#, streaming=True)
         #corpus = load_dataset('umarbutler/open-australian-legal-corpus', split='corpus')#, streaming=True)
     else:        
         #If running locally
