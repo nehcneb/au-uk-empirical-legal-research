@@ -230,7 +230,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
                         }
             case_infos.append(case_info)
             counter = counter + 1
-            print(counter)
+            #print(counter)
 
     #Go beyond first 20 results
 
@@ -323,7 +323,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
                                     }
                         case_infos.append(case_info)
                         counter = counter + 1
-                        print(counter)
+                        #print(counter)
 
     return case_infos
 

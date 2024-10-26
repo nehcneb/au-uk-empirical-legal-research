@@ -465,6 +465,8 @@ st.header(f"Search :blue[cases of select United States courts]")
 
 st.success(default_msg)
 
+st.write(f'This app sources cases from [CourtListener](https://www.courtlistener.com/help/search-operators/).')
+
 st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
