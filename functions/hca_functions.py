@@ -1273,7 +1273,7 @@ def hca_run_direct(df_master):
 
         for key in judgment_dict.keys():
             if key not in case.keys():
-                case.update({key: judgment_dict['key']}) 
+                case.update({key: judgment_dict[key]}) 
         
         judgments_file.append(case)
         
@@ -1388,7 +1388,7 @@ def hca_run(df_master):
     
             for key in judgment_dict.keys():
                 if key not in case.keys():
-                    case.update({key: judgment_dict['key']}) 
+                    case.update({key: judgment_dict[key]}) 
             
             judgments_file.append(case)
             
@@ -1561,7 +1561,7 @@ def hca_batch(df_master):
     
             for key in judgment_dict.keys():
                 if key not in case.keys():
-                    case.update({key: judgment_dict['key']}) 
+                    case.update({key: judgment_dict[key]}) 
             
             judgments_file.append(case)
             
