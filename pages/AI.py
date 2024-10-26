@@ -83,18 +83,15 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, clear_cache, reverse_link
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, reverse_link
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
+from functions.common_functions import today_in_nums
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
 else:
     print(f'By default, users are NOT allowed to use their own account')
 
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # AI model and context
@@ -1498,31 +1495,13 @@ with stylable_container(
     ask_button = st.button("ASK", disabled = st.session_state.disable_input)
 
 
-
 # %%
 # Generate output
-
-#if st.button('Test'):
-
-    #pandasai_ask_test()
-
-    #st.dataframe(st.session_state.edited_df)
-
-    #non_num_cols = num_non_num_headings_picker(st.session_state.df_to_analyse)["Non-numerical columns"]
-
-    #st.session_state.edited_df[non_num_cols] = st.session_state.edited_df[non_num_cols].astype(str)
-
-    #st.dataframe(st.session_state.edited_df)
-
-
-#if st.button("ASK"):
 
 if ask_button:
 
     if int(consent) == 0:
-        st.warning("You must tick '[y]es, I agree[]' to use the app.")
-        #quit()
-        st.stop()
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
 
     elif st.session_state.instruction_left == 0:
         no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
@@ -1530,13 +1509,9 @@ if ask_button:
         
         #Keep record of response
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'error': no_more_instructions}})
-        #quit()
-        st.stop()
 
     elif len(st.session_state.prompt) == 0:
         st.warning("Please enter some instruction.")
-        #quit()
-        st.stop()
 
     else:
 
@@ -1558,10 +1533,10 @@ if ask_button:
     
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
+        
         #Close clarifying questions form
         st.session_state["q_and_a_toggle"] = False
-        #clarification_questions_toggle = False
-
+        
         if st.session_state.ai_choice == 'GPT':
             
             pandasai_ask()

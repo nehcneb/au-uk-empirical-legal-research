@@ -365,6 +365,8 @@ st.header(f"Search :blue[judgments of the Federal Court of Australia]")
 
 st.success(default_msg)
 
+st.write(f'This app sources cases from the [Federal Court Digital Law Library](https://www.fedcourt.gov.au/digital-law-library/judgments/search)  and the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
+
 st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
@@ -427,14 +429,15 @@ with stylable_container(
 ):
     preview_button = st.button(label = 'PREVIEW on the Federal Court Digital Law Library (in a popped up window)')
 
-st.subheader("Judgment metadata collection")
+#st.subheader("Judgment metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+#st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
 
-Case name and medium neutral citation are always included with your results.
-""")
+#Case name and medium neutral citation are always included with your results.
+#""")
 
-meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+meta_data_entry = True
 
 
 # %% [markdown]

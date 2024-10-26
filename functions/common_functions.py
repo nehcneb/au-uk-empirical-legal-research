@@ -16,6 +16,44 @@
 # # Preliminaries
 
 # %%
+def own_account_allowed():
+    return 0
+
+
+# %%
+def check_questions_answers():
+    return 1
+
+
+# %%
+def batch_mode_allowed():
+    return 1
+
+
+# %%
+huggingface = True
+
+#if depends on director
+
+huggingface_directory = 0
+
+if huggingface_directory > 1:
+    
+    current_dir = ''
+    try:
+        current_dir = os.getcwd()
+        print(f"current_dir == {current_dir}")
+    except Exception as e:
+        print(f"current_dir not generated.")
+        print(e)
+    
+    if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
+        huggingface = True
+        
+print(f'huggingface == {huggingface}')
+
+
+# %%
 #Preliminaries
 import datetime
 from datetime import date
@@ -41,24 +79,13 @@ import streamlit as st
 from streamlit.components.v1 import html
 import streamlit_ext as ste
 
+#AWS
+import boto3
+from botocore.config import Config
+from botocore.exceptions import ClientError
 
 # %% [markdown]
 # # Scraper, GPT etc
-
-# %%
-def own_account_allowed():
-    return 0
-
-
-# %%
-def check_questions_answers():
-    return 1
-
-
-# %%
-def batch_mode_allowed():
-    return 1
-
 
 # %%
 #Default judgment counter bound
@@ -122,12 +149,12 @@ def split_title_mnc(full_title):
     while '  ' in full_title:
         full_title = full_title.replace('  ', ' ')
 
-    #Get mnc
+    #Get mnc with potentially extra words after
     mnc = full_title
     if '[' in full_title:
         mnc = '[' + full_title.split('[')[-1]
 
-    #Check if mnc is in [year] COURT XXXX format
+    #Get rid of extra words after mnc
     mnc_list = mnc.split(' ')
     
     if len(mnc_list) > 3:
@@ -160,50 +187,18 @@ scraper_pause_mean = int((15-5)/2)
 # %%
 #Lowerbound on length of judgment text to proccess, in tokens
 
-judgment_text_lower_bound = 5000
-
-
-# %%
-#Create function for saving responses and results
-def convert_df_to_json(df):
-    return df.to_json(orient = 'split', compression = 'infer', default_handler=str, indent=4)
-
-def convert_df_to_csv(df):
-   return df.to_csv(index=False).encode('utf-8')
-
-def convert_df_to_excel(df):
-    #Excel metadata
-    excel_author = 'LawtoData'
-    excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA) partially funded the development of LawtoData, which generated this spreadsheet.'
-    output = BytesIO()
-    #writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
-    writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
-    workbook = writer.book
-    workbook.set_properties({"author": excel_author, "comments": excel_description})
-    worksheet = writer.sheets['Sheet1']
-#    format1 = workbook.add_format({'num_format': '0.00'}) 
-    worksheet.set_column('A:A', None)#, format1)  
-    writer.save()
-    processed_data = output.getvalue()
-    return processed_data
-
-
-# %%
-#Funder
-funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
+judgment_text_lower_bound = 4000 #~3000 words
 
 
 # %%
 #Tidy up medium neutral citation
-def mnc_cleaner(x):
-    if '[' in x:
-        x_clean=str(x).split("[")
-        y = '[' + x_clean[-1]
-        return y
-    else:
-        return x
-
+#def mnc_cleaner(x):
+    #if '[' in x:
+        #x_clean=str(x).split("[")
+        #y = '[' + x_clean[-1]
+        #return y
+    #else:
+        #return x
 
 
 # %%
@@ -360,7 +355,7 @@ def hide_own_token(user_token, own_token):
             return user_token
     else:
         return None
-        
+
 
 
 # %%
@@ -368,10 +363,6 @@ def hide_own_token(user_token, own_token):
 def reverse_link(x):
     value = str(x).replace('=HYPERLINK("', '').replace('")', '')
     return value
-
-
-# %%
-no_results_msg = 'Your search terms returned 0 results. Please change your search terms and try again.'
 
 
 # %% [markdown]
@@ -433,7 +424,230 @@ def streamlit_cloud_date_format(date):
 
 
 # %%
+#No results msg
+no_results_msg = 'Your search terms returned 0 results. Please change your search terms and try again.'
+
+# %%
 #Default spinner_text
 
 spinner_text = r"$\textsf{\normalsize In progress... }$"
 
+
+# %%
+#Funder
+funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
+
+
+# %%
+#Create function for saving responses and results
+def convert_df_to_json(df):
+    return df.to_json(orient = 'split', compression = 'infer', default_handler=str, indent=4)
+
+def convert_df_to_csv(df):
+   return df.to_csv(index=False).encode('utf-8')
+
+def convert_df_to_excel(df):
+    #Excel metadata
+    excel_author = 'LawtoData'
+    excel_description = 'A 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA) partially funded the development of LawtoData, which generated this spreadsheet.'
+    output = BytesIO()
+    #writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
+    writer = pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'strings_to_urls': False}})
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    workbook.set_properties({"author": excel_author, "comments": excel_description})
+    worksheet = writer.sheets['Sheet1']
+#    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None)#, format1)  
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
+
+
+# %%
+#Download entries and results
+
+def download_buttons(df_master, df_individual = [], saving = False, previous = False):
+    #Enable the saving argument if want to allow saving of entries
+    #Enable the previous argument if want to allow saving of last produced results
+    #Default df_individual is empty to ensure no buttons for downloading data is shown
+    
+    #For downloading entries
+    if saving:
+
+        if 'Your GPT API key' in df_master.columns:
+            df_master.pop("Your GPT API key")
+
+        if 'CourtListener API token' in df_master.columns:
+            #Essential to avoiding both default and user secrets
+            df_master.pop("CourtListener API token")
+
+        if previous:
+            
+            st.warning('Looking for your entries?')
+            
+            previous_str = 'your last produced '
+            
+        else:
+            
+            st.success('Your entries are now available for download.')
+        
+        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+        
+        xlsx = convert_df_to_excel(df_master)
+        
+        ste.download_button(label='DOWNLOAD your entries as an Excel spreadsheet (XLSX)',
+                            data=xlsx,
+                            file_name=responses_output_name + '.xlsx', 
+                            mime='application/vnd.ms-excel',
+                           )
+    
+        csv = convert_df_to_csv(df_master)
+    
+        ste.download_button(
+            label="DOWNLOAD your entries as a CSV", 
+            data = csv,
+            file_name=responses_output_name + '.csv', 
+            mime= "text/csv", 
+        )
+    
+        json = convert_df_to_json(df_master)
+        
+        ste.download_button(
+            label="DOWNLOAD your entries as a JSON", 
+            data = json,
+            file_name= responses_output_name + '.json', 
+            mime= "application/json", 
+        )
+    
+    #For downloading data
+    if len(df_individual) > 0:
+
+        #Determine whether to note previous results
+        previous_str = ''
+        
+        if previous:
+            st.warning('Looking for your last produced data?')
+            
+            previous_str = 'your last produced '
+            
+        else:
+            
+            st.success("Your data is now available for download. Thank you for using *LawtoData*!")
+
+        #Produce output spreadsheets
+        output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
+
+        excel_xlsx = convert_df_to_excel(df_individual)
+        
+        ste.download_button(label=f'DOWNLOAD {previous_str}data as an Excel spreadsheet (XLSX)',
+                            data=excel_xlsx,
+                            file_name= output_name + '.xlsx', 
+                            mime='application/vnd.ms-excel',
+                           )
+    
+        csv_output = convert_df_to_csv(df_individual)
+        
+        ste.download_button(
+            label=f'DOWNLOAD {previous_str}data as a CSV', 
+            data = csv_output,
+            file_name= output_name + '.csv', 
+            mime= "text/csv", 
+        )
+        
+        json_output = convert_df_to_json(df_individual)
+        
+        ste.download_button(
+            label=f'DOWNLOAD {previous_str}data as a JSON', 
+            data = json_output,
+            file_name= output_name + '.json', 
+            mime= "application/json", 
+        )
+    
+        st.page_link('pages/AI.py', label=f"ANALYSE {previous_str}data with an AI", icon = '🤔')
+
+    #For noting a lack of data
+    if ((not saving) and (len(df_individual) == 0)):
+        
+        st.error('Sorry, no data was produced. Please return to the previous page, check your search terms and try again.')
+
+
+
+# %% [markdown]
+# # AWS
+
+# %%
+#AWS email
+#Define send email function
+
+def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL):
+
+    ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+    
+    #Based on the following upon substituting various arguments, https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
+    
+    # Replace sender@example.com with your "From" address.
+    # This address must be verified with Amazon SES.
+    SENDER = st.secrets["email_notifications"]["email_sender"]
+    
+    # Replace recipient@example.com with a "To" address. If your account 
+    # is still in the sandbox, this address must be verified.
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_personal"]
+    
+    # The subject line for the email.
+    SUBJECT = f"LawtoData: {ULTIMATE_RECIPIENT_NAME} has requested data"
+    
+    BODY_TEXT = (
+    
+    f"{ULTIMATE_RECIPIENT_NAME} at {ULTIMATE_RECIPIENT_EMAIL} has requested data via LawtoData."
+    
+    )
+      
+    # The character encoding for the email.
+    CHARSET = "UTF-8"
+
+    # Try to send the email.
+    try:
+        #Provide the contents of the email.
+        response = ses.send_email(
+            Destination={
+                'ToAddresses': [
+                    RECIPIENT,
+                ],
+            },
+            Message={
+                'Body': {
+                    'Text': {
+                        'Charset': CHARSET,
+                        'Data': BODY_TEXT,
+                    },
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': SUBJECT,
+                },
+            },
+            Source=SENDER,
+        )
+    # Display an error if something goes wrong.	
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+    #else:
+        #print("Email sent! Message ID:"),
+        #print(response['MessageId'])
+
+
+# %% [markdown]
+# # [NOT IN USE] Google Sheets
+
+# %%
+#Keep record on Google sheet
+#Obtain google spreadsheet       
+#conn = st.connection("gsheets_nsw", type=GSheetsConnection)
+#df_google = conn.read()
+#df_google = df_google.fillna('')
+#df_google=df_google[df_google["Processed"]!='']
+#df_master["Processed"] = datetime.now()
+#df_master.pop("Your GPT API key")
+#df_to_update = pd.concat([df_google, df_master])
+#conn.update(worksheet="CTH", data=df_to_update, )

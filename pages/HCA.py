@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, mnc_cleaner, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -406,6 +406,8 @@ st.header(f"Search :blue[judgments of the High Court of Australia]")
 
 st.success(default_msg)
 
+st.write(f'This app sources cases from the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=)  and the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
+
 st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
@@ -544,14 +546,14 @@ else: #if filter_toggle == False
     st.session_state.df_master.loc[0, 'Judges do not include']  = None
 
 
-st.subheader("Judgment metadata collection")
+#st.subheader("Judgment metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+#st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
 
-Case name and medium neutral citation are always included with your results.
-""")
+#Case name and medium neutral citation are always included with your results.""")
 
-meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+meta_data_entry = True
 
 
 # %% [markdown]

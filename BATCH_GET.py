@@ -112,7 +112,7 @@ try:
     
     SENDER = st.secrets["email_notifications"]["email_sender"]
     RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
-
+        
     print('Running locally or on Streamlit')
     
 except:

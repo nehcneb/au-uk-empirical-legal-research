@@ -248,7 +248,7 @@ if retrive_button:
                 mime= "application/json", 
             )
         
-            st.page_link('pages/AI.py', label="ANALYSE your data with an AI", icon = '🤔')        
+            st.page_link('pages/AI.py', label="Analyse your data with an AI", icon = '🤔')        
 
 # %%
 

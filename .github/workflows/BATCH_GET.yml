@@ -6,7 +6,7 @@ on:
     #branches:
       #- main
   #schedule:
-    #- cron: '32 */6 * * *' # Run every 6 hour
+    #- cron: '42 */6 * * *' # Run every 6 hour
 
 #see https://jasonet.co/posts/scheduled-actions/
 
@@ -36,4 +36,5 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           EMAIL_RECEIVER_WORK: ${{ secrets.EMAIL_RECEIVER_WORK }}
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: python BATCH_GET.py

@@ -66,7 +66,8 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input
+from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons
+
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text
 
@@ -369,9 +370,9 @@ st.header(":blue[Would you to ask GPT questions about your files?]")
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
-if gpt_activation_entry:
+#if gpt_activation_entry:
     
-    st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
+st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
     
 st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/pricing) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates.")
 
@@ -389,9 +390,9 @@ if st.toggle('Tips for using GPT'):
 
 gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-if gpt_questions_entry:
+#if gpt_questions_entry:
     
-    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
+st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
 
 #Disable toggles while prompt is not entered or the same as the last processed prompt
 
@@ -427,15 +428,15 @@ if own_account_allowed() > 0:
         
         name_entry = st.text_input(label = "Your name", value = st.session_state['df_master'].loc[0, 'Your name'])
 
-        if name_entry:
+        #if name_entry:
             
-            st.session_state['df_master'].loc[0, 'Your name'] = name_entry
+        st.session_state['df_master'].loc[0, 'Your name'] = name_entry
         
         email_entry = st.text_input(label = "Your email address", value =  st.session_state['df_master'].loc[0, 'Your email address'])
 
-        if email_entry:
+        #if email_entry:
             
-            st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+        st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
         
@@ -572,97 +573,15 @@ if st.session_state.need_resetting == 1:
 # %%
 #Create placeholder download buttons if previous entries and output in st.session_state:
 
-if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual)>0)):
+#if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual)>0)):
+
+if len(st.session_state.df_individual) >0:
+
+    download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
     
-    #Load previous entries and output
-    
-    df_master = st.session_state.df_master
-    df_individual = st.session_state.df_individual
-
-    #Buttons for downloading entries
-    st.subheader('Looking for your previous entries and output?')
-
-    st.write('Previous entries')
-
-    entries_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
-
-    csv = convert_df_to_csv(df_master)
-
-    ste.download_button(
-        label="Download your previous entries as a CSV (for use in Excel etc)", 
-        data = csv,
-        file_name=entries_output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    xlsx = convert_df_to_excel(df_master)
-    
-    ste.download_button(label='Download your previous entries as an Excel spreadsheet (XLSX)',
-                        data=xlsx,
-                        file_name=entries_output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    json = convert_df_to_json(df_master)
-    
-    ste.download_button(
-        label="Download your previous entries as a JSON", 
-        data = json,
-        file_name= entries_output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.write('Previous output')
-
-    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
-
-    csv_output = convert_df_to_csv(df_individual)
-    
-    ste.download_button(
-        label="Download your previous output as a CSV (for use in Excel etc)", 
-        data = csv_output,
-        file_name= output_name + '.csv', 
-        mime= "text/csv", 
-#            key='download-csv'
-    )
-
-    excel_xlsx = convert_df_to_excel(df_individual)
-    
-    ste.download_button(label='Download your previous output as an Excel spreadsheet (XLSX)',
-                        data=excel_xlsx,
-                        file_name= output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-    
-    json_output = convert_df_to_json(df_individual)
-    
-    ste.download_button(
-        label="Download your previous output as a JSON", 
-        data = json_output,
-        file_name= output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.page_link('pages/AI.py', label="ANALYSE your previous spreadsheet with an AI", icon = '🤔')
 
 # %% [markdown]
 # # Save and run
-
-# %%
-#if test_button:
-    #for uploaded_doc in uploaded_docs:
-        #output = doc_to_text(uploaded_doc, language_entry, st.session_state['df_master'].loc[0,'Maximum number of pages per file'])
-        #st.write(output)
-
-#    for uploaded_image in uploaded_images:
-#        output = image_to_text(uploaded_image, language_entry, st.session_state['df_master'].loc[0,'Maximum number of pages per file'])
-#        st.write(output)
-
-    #for uploaded_image in uploaded_images:
-        #output = image_to_b64_own(uploaded_image, language_entry, st.session_state['df_master'].loc[0,'Maximum number of pages per file'])
-        #st.write(output)
-
 
 # %%
 if run_button:
@@ -671,17 +590,17 @@ if run_button:
 
         st.warning('You must upload some file(s).')
 
-    elif len(gpt_questions_entry) < 5:
+    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
 
-        st.warning('You must enter some questions for GPT.')
-
+        st.warning("You must tick 'Use GPT' and enter some questions.")
+        
     elif int(consent) == 0:
         
-        st.warning("You must tick '[y]es, I agree[]' to use the app.")
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
     
     elif len(st.session_state.df_individual)>0:
         
-        st.warning('You must :red[REMOVE] the data already produced before producing new data.')
+        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
 
     else:
 
@@ -689,11 +608,8 @@ if run_button:
                                 
             if is_api_key_valid(gpt_api_key_entry) == False:
                 st.error('Your API key is not valid.')
-                quit()
+                st.stop()
                 
-        #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
-        #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')     
-
         with st.spinner(spinner_text):
 
             try:
@@ -719,67 +635,20 @@ if run_button:
     
                 #Change session states
                 st.session_state['need_resetting'] = 1
-                
                 st.session_state["page_from"] = 'pages/OWN.py'
-        
-                #Write output
-        
-                st.success('Your output are now available for download. Thank you for using LawtoData!')
-        
-                if df_master.loc[0, 'Language choice'] != 'English':
-        
-                    st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
-        
-                #Button for downloading output
-                output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
-        
-                csv_output = convert_df_to_csv(df_individual)
                 
-                ste.download_button(
-                    label="Download your output as a CSV (for use in Excel etc)", 
-                    data = csv_output,
-                    file_name= output_name + '.csv', 
-                    mime= "text/csv", 
-        #            key='download-csv'
-                )
-        
-                excel_xlsx = convert_df_to_excel(df_individual)
-                
-                ste.download_button(label='Download your output as an Excel spreadsheet (XLSX)',
-                                    data=excel_xlsx,
-                                    file_name= output_name + '.xlsx', 
-                                    mime='application/vnd.ms-excel',
-                                   )
-                
-                json_output = convert_df_to_json(df_individual)
-                
-                ste.download_button(
-                    label="Download your output as a JSON", 
-                    data = json_output,
-                    file_name= output_name + '.json', 
-                    mime= "application/json", 
-                )
-        
-                st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-    
-                #Keep record on Google sheet
-                #Obtain google spreadsheet       
-                #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                #df_google = conn.read()
-                #df_google = df_google.fillna('')
-                #df_google=df_google[df_google["Processed"]!='']
-                #df_master["Processed"] = datetime.now()
-                #df_master.pop("Your GPT API key")
-                #df_to_update = pd.concat([df_google, df_master])
-                #conn.update(worksheet="OWN", data=df_to_update, )
+                #Keep data in session state
+                st.session_state["df_individual"] = df_individual
+
+                #Download data
+                download_buttons(df_master, df_individual)
             
             except Exception as e:
 
-                st.error('Sorry, an error has arisen. Please try again.')
+                st.error('Sorry, an error has occurred. Please try again.')
 
                 st.exception(e)
                 
-
 
 # %%
 if ((st.session_state.own_account == True) and (uploaded_images)):
@@ -790,12 +659,12 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
     
             st.warning('You must upload some image(s).')
     
-        elif len(gpt_questions_entry) < 5:
+        elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
     
-            st.warning('You must enter some questions for GPT.')
+            st.warning("You must tick 'Use GPT' and enter some questions.")
     
         elif int(consent) == 0:
-            st.warning("You must tick '[y]es, I agree[]' to use the app.")
+            st.warning("You must tick 'Yes, I agree.' to use the app.")
         
         elif len(st.session_state.df_individual)>0:
             st.warning('You must :red[REMOVE] the data already produced before producing new data.')
@@ -806,7 +675,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                                     
                 if is_api_key_valid(gpt_api_key_entry) == False:
                     st.error('Your API key is not valid.')
-                    quit()
+                    st.stop()
                     
             #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
             #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
@@ -820,12 +689,12 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                     #Check for non-supported file types
     
                     if '.bmp' in str(df_master['Your uploaded files']).lower():
-                        st.error('This function does not support BMP images.')
-                        quit()
+                        st.error('Sorry, this app does not support BMP images.')
+                        st.stop()
                         
-                    elif '.tiff' in str(df_master['Your uploaded files']).lower():
-                        st.error('This function does not support TIFF images.')
-                        quit()
+                    if '.tiff' in str(df_master['Your uploaded files']).lower():
+                        st.error('Sorry, this app does not support TIFF images.')
+                        st.stop()
                     
                     #Activate user's own key or mine
                     if st.session_state.own_account == True:
@@ -833,6 +702,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                         API_key = df_master.loc[0, 'Your GPT API key']
         
                     else:
+                        
                         API_key = st.secrets["openai"]["gpt_api_key"]
         
                     openai.api_key = API_key
@@ -844,69 +714,26 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                     st.session_state["df_individual"] = df_individual
             
                     st.session_state["df_master"] = df_master
-    
+                
                     #Change session states
                     st.session_state['need_resetting'] = 1
-                    
                     st.session_state["page_from"] = 'pages/OWN.py'
+                    
+                    #Keep data in session state
+                    st.session_state["df_individual"] = df_individual
     
-                    #Write output
-            
-                    st.success('Your output are now available for download. Thank you for using LawtoData!')
-            
+                    #Download data
+                    download_buttons(df_master, df_individual)
+                    
                     if df_master.loc[0, 'Language choice'] != 'English':
             
                         st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
-            
-                    #Button for downloading output
-                    output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
-            
-                    csv_output = convert_df_to_csv(df_individual)
-                    
-                    ste.download_button(
-                        label="Download your output as a CSV (for use in Excel etc)", 
-                        data = csv_output,
-                        file_name= output_name + '.csv', 
-                        mime= "text/csv", 
-            #            key='download-csv'
-                    )
-            
-                    excel_xlsx = convert_df_to_excel(df_individual)
-                    
-                    ste.download_button(label='Download your output as an Excel spreadsheet (XLSX)',
-                                        data=excel_xlsx,
-                                        file_name= output_name + '.xlsx', 
-                                        mime='application/vnd.ms-excel',
-                                       )
-                    
-                    json_output = convert_df_to_json(df_individual)
-                    
-                    ste.download_button(
-                        label="Download your output as a JSON", 
-                        data = json_output,
-                        file_name= output_name + '.json', 
-                        mime= "application/json", 
-                    )
-            
-                    st.page_link('pages/AI.py', label="ANALYSE your spreadsheet with an AI", icon = '🤔')
-        
-                    #Keep record on Google sheet
-                    #Obtain google spreadsheet       
-                    #conn = st.connection("gsheets_nsw", type=GSheetsConnection)
-                    #df_google = conn.read()
-                    #df_google = df_google.fillna('')
-                    #df_google=df_google[df_google["Processed"]!='']
-                    #df_master["Processed"] = datetime.now()
-                    #df_master.pop("Your GPT API key")
-                    #df_to_update = pd.concat([df_google, df_master])
-                    #conn.update(worksheet="OWN", data=df_to_update, )
-
+                
                 except Exception as e:
         
-                    st.error('Sorry, an error has arisen. Please try again.')
+                    st.error('Sorry, an error has occurred. Please try again.')
     
                     st.exception(e)
-
 
 
 # %%
@@ -926,42 +753,12 @@ if keep_button:
 
         df_master = own_create_df()
 
-        st.session_state["df_master"] = df_master.copy(deep=True)
+        #st.session_state["df_master"] = df_master.copy(deep=True)
 
-        if 'Your GPT API key' in df_master.columns:
-    
-            df_master.pop("Your GPT API key")
-    
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
-        #Produce a file to download
-    
-        csv = convert_df_to_csv(df_master)
-        
-        ste.download_button(
-            label="Download as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=responses_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
+        st.session_state["df_master"] = df_master
 
-        xlsx = convert_df_to_excel(df_master)
-        
-        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=responses_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-    
-        json = convert_df_to_json(df_master)
-        
-        ste.download_button(
-            label="Download as a JSON", 
-            data = json,
-            file_name= responses_output_name + '.json', 
-            mime= "application/json", 
-        )
+        download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
+
 
 
 # %%
@@ -972,6 +769,7 @@ if return_button:
         df_master = own_create_df()
     
         save_input(df_master)
+        
     except:
         print('df_master not created.')
 
@@ -980,26 +778,11 @@ if return_button:
     st.switch_page("Home.py")
     
 
-
 # %%
 if reset_button:
 
     st.session_state['df_individual'] = pd.DataFrame([])
     
     st.session_state['need_resetting'] = 0
-
-    #To prevent page from showing content of jurisdiction page
-    #st.session_state["page_from"] = st.session_state.jurisdiction_page
-    
-    #st.session_state['df_master'].loc[0, 'Your name'] = ''
-    #st.session_state['df_master'].loc[0, 'Your email address'] = ''
-    #st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    #st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
-    #st.session_state['df_master'].loc[0, 'Use GPT'] = False
-    #st.session_state['df_master'].loc[0, 'Use own account'] = False
-    #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    
-    #clear_cache_except_validation_df_master()
     
     st.rerun()

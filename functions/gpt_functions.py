@@ -735,6 +735,9 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
         labels_prompt_tokens = 0
 
     #Process questions
+
+    #GPT use counter
+    gpt_use_counter = 0
     
     for judgment_index in df_individual.index:
         
@@ -775,7 +778,10 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             
             GPT_time_difference = GPT_finish_time - GPT_start_time
     
-            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()        
+            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()    
+
+            gpt_use_counter += 1
+            print(f"Used GPT {gpt_use_counter} time(s)")
 
         else:
             answers_dict = {}
@@ -1190,7 +1196,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
         
-        from functions.nsw_functions import nsw_run, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_prebatch, nsw_search_url
+        from functions.nsw_functions import nsw_run, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt, nsw_search_url
     
         run = copy.copy(nsw_run)
     
@@ -1294,7 +1300,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
 
-        from functions.nsw_functions import nsw_batch, nsw_tidying_up_prebatch, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
+        from functions.nsw_functions import nsw_batch, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
     
         batch =  copy.copy(nsw_batch)
     

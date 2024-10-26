@@ -80,7 +80,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # CaseLaw NSW functions and parameters
 
 # %%
-from functions.nsw_functions import nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_prebatch, nsw_search_url
+from functions.nsw_functions import nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt, nsw_search_url
 
 
 # %%
@@ -360,7 +360,7 @@ st.header("Search :blue[judgments of the New South Wales courts and tribunals]")
 
 st.success(default_msg)
 
-st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to collect judgments from New South Wales.')
+st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to search for and collect cases from New South Wales. It also sources cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
 
 st.caption(default_caption)
 
@@ -431,14 +431,15 @@ with stylable_container(
 
 #    headnotes_entry = st.multiselect("Please select", headnotes_choices)
 
-st.subheader("Judgment metadata collection")
+#st.subheader("Judgment metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+#st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
 
-Case name and medium neutral citation are always included with your results.
-""")
+#Case name and medium neutral citation are always included with your results.
+#""")
 
-meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+meta_data_entry = True
 
 
 # %% [markdown]

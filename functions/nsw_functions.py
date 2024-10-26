@@ -65,7 +65,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, split_title_mnc
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -405,7 +405,7 @@ def nsw_tidying_up(df_master, df_individual):
 # %%
 #function to tidy up output
 
-def nsw_tidying_up_prebatch(df_master, df_individual):
+def nsw_tidying_up_pre_gpt(df_master, df_individual):
 
     #Rename column titles
     try:
@@ -466,10 +466,11 @@ def nsw_tidying_up_prebatch(df_master, df_individual):
 
 
 # %%
-#Obtain parameters
+#Download directly from Caselaw NSW without looking in OALC first
+#NOT IN USE
 
 @st.cache_data(show_spinner = False)
-def nsw_run(df_master):
+def nsw_run_direct(df_master):
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -525,19 +526,21 @@ def nsw_run(df_master):
     for decision in query.results():
         if counter < judgments_counter_bound:
             #Get case info from results page
-            decision_v = decision.values
+            decision_w_meta = decision.values.copy()
 
             #Get case info from individual case page
             decision.fetch()
 
             #Attach new info
-            decision_v_new = decision.values
-            for key in decision_v_new.keys():
-                if key not in decision_v.keys():
-                    decision_v.update({key: decision_v_new[key]})
-                                    
+            decision_w_meta_judgment = decision.values
+            #for key in decision_w_meta_judgment.keys():
+                #if key not in decision_w_meta.keys():
+                    #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+
+            decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+            
             #add search results to json
-            judgments_file.append(decision_v)
+            judgments_file.append(decision_w_meta)
             counter +=1
     
             pause.seconds(np.random.randint(5, 15))
@@ -605,9 +608,209 @@ def nsw_run(df_master):
 
 
 # %%
-#Obtain parameters
+#Download from Caselaw NSW if can't find judgment in OALC
 
 @st.cache_data(show_spinner = False)
+def nsw_run(df_master):
+    
+    df_master = df_master.fillna('')
+    
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
+    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
+    
+    #Do search
+
+    search_dict = {'body': df_master.loc[0, 'Free text']}
+    search_dict.update({'title': df_master.loc[0, 'Case name']})
+    search_dict.update({'before': df_master.loc[0, 'Before']})
+    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
+    search_dict.update({'party': df_master.loc[0, 'Party names']})
+    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
+    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
+    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
+    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
+    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
+    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
+    df_master.loc[0, 'SearchCriteria']=[search_dict]
+
+    #Conduct search
+    
+    query = Search(courts=df_master.loc[0, 'Courts'], 
+                   tribunals=df_master.loc[0, 'Tribunals'], 
+                   body = df_master.loc[0, "SearchCriteria"]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
+                   pause = 0
+                  )
+
+    #Create judgments file
+    judgments_file = []
+
+    #Counter to limit search results to append
+    counter = 0
+
+    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+
+    if huggingface == False: #If not running on HuggingFace
+
+        for decision in query.results():
+            if counter < judgments_counter_bound:
+                #Get case info from results page
+                decision_w_meta = decision.values.copy()
+                    
+                #Get case info from individual case  page
+                decision.fetch()
+    
+                #Attach new info
+                decision_w_meta_judgment = decision.values
+                #for key in decision_w_meta_judgment.keys():
+                    #if #key not in decision_w_meta.keys():
+                        #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+
+                decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+                
+                #add search results to json
+                judgments_file.append(decision_w_meta)
+                counter +=1
+        
+                pause.seconds(np.random.randint(5, 15))
+                
+            else:
+                break
+
+    else: #If running on HuggingFace
+        
+        #Load oalc
+        from functions.oalc_functions import load_corpus, get_judgment_from_oalc
+
+        #Create a list of mncs for HuggingFace:
+        mnc_list = []
+
+        #Create list of relevant cases
+        for decision in query.results():
+            
+            if counter < judgments_counter_bound:
+    
+                #Append to judgments_file to create df_individual
+                decision_w_meta = decision.values.copy()
+    
+                #Create and mnc
+                mnc = split_title_mnc(decision_w_meta['title'])[1]
+                decision_w_meta.update({'mnc': mnc})
+                
+                #add search results to json
+                judgments_file.append(decision_w_meta)
+
+                #Add mnc to list for HuggingFace
+                mnc_list.append(mnc)
+                
+                counter +=1            
+                
+            else:
+                break
+
+        #Get judgments from oalc first
+        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
+    
+        #Append judgment to judgments_file 
+        for decision in judgments_file:
+            
+            #Append judgments from oalc first
+            if decision['mnc'] in mnc_judgment_dict.keys():
+                decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
+                print(f"{decision['title']} got judgment from huggingface.")
+                
+            else: #Get case from Caselaw NSW if can't get from oalc
+                
+                for case in query.results():
+
+                    case_meta = case.values.copy()
+
+                    #st.write(case_meta)
+                    
+                    if decision['mnc'] in case_meta['title']:
+                        case.fetch()
+                        case_w_meta_jugdment = case.values.copy()
+                        decision_w_meta.update({'judgment': str(case_w_meta_jugdment)})
+                        pause.seconds(np.random.randint(5, 15))
+                        
+                        break
+
+
+    #Create and export json file with search results
+    json_individual = json.dumps(judgments_file, indent=2)
+    
+    df_individual = pd.read_json(json_individual)
+
+    #Check length of judgment text, replace with raw html if smaller than lower boound
+
+    for judgment_index in df_individual.index:
+
+        #Checking if judgment text has been scrapped or too short
+        try:
+            
+            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
+                    
+            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
+
+                judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
+    
+                #attach judgment text
+                df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
+
+                #judgment_type_text[0] has judgment type, eg 'pdf'
+                
+                pause.seconds(np.random.randint(5, 15))
+            
+        except Exception as e:
+            
+            df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
+            print(f'{df_individual.loc[judgment_index, "Case name"]}: judgment text scraping error.')
+            print(e)
+
+    #tidy up
+    #df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
+    
+    #Instruct GPT
+    
+    #GPT model
+
+    if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        gpt_model = "gpt-4o-2024-08-06"
+    else:        
+        gpt_model = "gpt-4o-mini"
+    
+    #apply GPT_individual to each respondent's judgment spreadsheet
+    
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+    
+    questions_json = df_master.loc[0, 'questions_json']
+
+    #Engage GPT
+    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+
+    #tidy up
+    df_updated = nsw_tidying_up(df_master, df_updated)
+
+    return df_updated
+    
+
+# %%
+#For batch mode
+
+@st.cache_data#(show_spinner = False)
 def nsw_batch(df_master):
 
     df_master = df_master.fillna('')
@@ -659,28 +862,27 @@ def nsw_batch(df_master):
     counter = 0
 
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #Check if running on HuggingFace
-    from functions.oalc_functions import huggingface
     
     if huggingface == False: #If not running on HuggingFace
 
         for decision in query.results():
             if counter < judgments_counter_bound:
                 #Get case info from results page
-                decision_v = decision.values
+                decision_w_meta = decision.values.copy()
     
                 #Get case info from individual case  page
                 decision.fetch()
     
                 #Attach new info
-                decision_v_new = decision.values
-                for key in decision_v_new.keys():
-                    if key not in decision_v.keys():
-                        decision_v.update({key: decision_v_new[key]})
-                                        
+                decision_w_meta_judgment = decision.values
+                #for key in decision_w_meta_judgment.keys():
+                    #if #key not in decision_w_meta.keys():
+                        #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+
+                decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+                
                 #add search results to json
-                judgments_file.append(decision_v)
+                judgments_file.append(decision_w_meta)
                 counter +=1
         
                 pause.seconds(np.random.randint(5, 15))
@@ -702,14 +904,14 @@ def nsw_batch(df_master):
             if counter < judgments_counter_bound:
     
                 #Append to judgments_file to create df_individual
-                decision_v = decision.values
+                decision_w_meta = decision.values.copy()
     
                 #Create and mnc
-                mnc = split_title_mnc(decision_v['title'])[1]
-                decision_v.update({'mnc': mnc})
+                mnc = split_title_mnc(decision_w_meta['title'])[1]
+                decision_w_meta.update({'mnc': mnc})
                 
                 #add search results to json
-                judgments_file.append(decision_v)
+                judgments_file.append(decision_w_meta)
 
                 #Add mnc to list for HuggingFace
                 mnc_list.append(mnc)
@@ -728,21 +930,23 @@ def nsw_batch(df_master):
             #Append judgments from oalc first
             if decision['mnc'] in mnc_judgment_dict.keys():
                 decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
+                print(f"{decision['title']} got judgment from huggingface.")
                 
-            else: #Get the first case from Caselaw NSW if can't get from oalc
-                
-                case_query = Search(mnc = decision['mnc'])
+            else: #Get case from Caselaw NSW if can't get from oalc
                 
                 for case in query.results():
-                    case.fetch()
-                    case_v = decision.values
 
-                    #Append judgment and other keys
-                    for key in case_v:
-                        if key not in decision.keys():
-                            decision.update({key: case_v[key]})
+                    case_meta = case.values.copy()
+
+                    #st.write(case_meta)
                     
-                    break
+                    if decision['mnc'] in case_meta['title']:
+                        case.fetch()
+                        case_w_meta_jugdment = case.values.copy()
+                        decision_w_meta.update({'judgment': str(case_w_meta_jugdment)})
+                        pause.seconds(np.random.randint(5, 15))
+                        
+                        break
 
                 pause.seconds(np.random.randint(5, 15))
 
@@ -778,7 +982,7 @@ def nsw_batch(df_master):
             print(e)
 
     #tidy up
-    df_individual = nsw_tidying_up_prebatch(df_master, df_individual)
+    df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
     
     #Instruct GPT
     
