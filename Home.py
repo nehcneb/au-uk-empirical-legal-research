@@ -149,7 +149,7 @@ if source_entry:
     
     i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
-home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), help = 'To use this app, you must select a source of information and tick "[y]es, I understand[]".')
+home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), help = "To use this app, you must select a source of information and tick 'Yes, I understand'.")
 
 if source_entry:
 

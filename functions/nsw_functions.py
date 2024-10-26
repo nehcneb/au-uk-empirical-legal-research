@@ -805,7 +805,7 @@ def nsw_run(df_master):
     df_updated = nsw_tidying_up(df_master, df_updated)
 
     return df_updated
-    
+
 
 # %%
 #For batch mode

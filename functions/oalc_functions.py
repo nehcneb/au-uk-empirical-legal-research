@@ -134,6 +134,19 @@ def oalc_filter(dataset, split, config = 'default', where = None, orderby = None
 @st.cache_data(show_spinner = False)
 def get_judgment_from_oalc(mnc_list):
 
+
+    #Figure out jurisdiction
+    subset = 'default'
+    #ENABLE after splitting corpus into jurisdiction subsets
+    #if 'nsc' in mnc_list[0].lower():
+        #subset = 'nsw_caselaw'
+    
+    #if 'fca' in mnc_list[0].lower():
+        #subset = 'federal_court_of_australia'
+    
+    #if 'hca' in mnc_list[0].lower():
+        #subset = 'high_court_of_australia'
+    
     #Create list of mncs for use in the where argument of oalc_filter
     where_list = []
 
@@ -148,7 +161,7 @@ def get_judgment_from_oalc(mnc_list):
     #Get judgments from corpus online
     data = oalc_filter(dataset = 'nehcneb/oalc_cases', 
                  split = 'train', 
-                   #config #For jursdiction subset
+               config = subset, 
                 where = where_str, 
                  #where = """
                  #("citation" ILIKE '%[1995] FCA 23' OR "citation" ILIKE '%[1995] HCA 1')

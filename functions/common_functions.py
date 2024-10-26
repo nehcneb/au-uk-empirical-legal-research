@@ -191,17 +191,6 @@ judgment_text_lower_bound = 4000 #~3000 words
 
 
 # %%
-#Tidy up medium neutral citation
-#def mnc_cleaner(x):
-    #if '[' in x:
-        #x_clean=str(x).split("[")
-        #y = '[' + x_clean[-1]
-        #return y
-    #else:
-        #return x
-
-
-# %%
 #Tidy up hyperlink
 def link(x):
     value = '=HYPERLINK("' + str(x) + '")'
