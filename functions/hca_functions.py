@@ -1289,7 +1289,13 @@ def hca_run_direct(df_master):
             judgment_dict_direct = hca_meta_judgment_dict(direct_link)
             
             judgments_file.append(judgment_dict_direct)
-                    
+
+    #Make judgment_link clickable
+    for decision in judgments_file:
+        if '=HYPERLINK' not in decision['Hyperlink to High Court Judgments Database']:
+            clickable_link =  link(decision['Hyperlink to High Court Judgments Database'])
+            decision.update({'Hyperlink to High Court Judgments Database': clickable_link})
+    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
@@ -1432,10 +1438,6 @@ def hca_run(df_master):
             if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
                 decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
-
-                #Make judgment_link clickable
-                clickable_link =  link(decision['Hyperlink to High Court Judgments Database'])
-                decision.update({'Hyperlink to High Court Judgments Database': clickable_link})
                 
             else: #Get judgment from HCA if can't get from oalc
                 
@@ -1450,7 +1452,13 @@ def hca_run(df_master):
                             decision.update({key: judgment_dict_direct[key]})
                     
                     pause.seconds(np.random.randint(5, 15))
-        
+
+    #Make judgment_link clickable
+    for decision in judgments_file:
+        if '=HYPERLINK' not in decision['Hyperlink to High Court Judgments Database']:
+            clickable_link =  link(decision['Hyperlink to High Court Judgments Database'])
+            decision.update({'Hyperlink to High Court Judgments Database': clickable_link})
+    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
@@ -1605,10 +1613,6 @@ def hca_batch(df_master):
             if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
                 decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
-
-                #Make judgment_link clickable
-                clickable_link =  link(decision['Hyperlink to High Court Judgments Database'])
-                decision.update({'Hyperlink to High Court Judgments Database': clickable_link})
                 
             else: #Get judgment from HCA if can't get from oalc
                 
@@ -1623,7 +1627,13 @@ def hca_batch(df_master):
                             decision.update({key: judgment_dict_direct[key]})
                     
                     pause.seconds(np.random.randint(5, 15))
-        
+
+    #Make judgment_link clickable
+    for decision in judgments_file:
+        if '=HYPERLINK' not in decision['Hyperlink to High Court Judgments Database']:
+            clickable_link =  link(decision['Hyperlink to High Court Judgments Database'])
+            decision.update({'Hyperlink to High Court Judgments Database': clickable_link})
+    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
