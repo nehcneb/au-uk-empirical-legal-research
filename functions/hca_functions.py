@@ -1348,7 +1348,30 @@ def hca_run(df_master):
     
     #Create judgments file
     judgments_file = []
+    
+    #Conduct search
+    
+    url_search_results = hca_search(collection = df_master.loc[0, 'Collection'], 
+                        quick_search = df_master.loc[0, 'Quick search'], 
+                        full_text = df_master.loc[0, 'Full text search']
+                        )['url']
         
+    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    
+    #Use the following if want to filter results.
+    case_infos = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+                                     judgments_counter_bound,
+                                    #hca_df, 
+                                    df_master.loc[0, 'Collection'], 
+                                    df_master.loc[0, 'Parties include'], 
+                                    df_master.loc[0, 'Parties do not include'], 
+                                    df_master.loc[0, 'Decision date is after'],
+                                      df_master.loc[0, 'Decision date is before'], 
+                                    #df_master.loc[0, 'Case numbers include'], 
+                                    #df_master.loc[0, 'Case numbers do not include'], 
+                                    df_master.loc[0, 'Judges include'], 
+                                    df_master.loc[0, 'Judges do not include'])
+    
     if huggingface == False: #If not running on HuggingFace
         
         #Get judgments from HCA database

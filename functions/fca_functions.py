@@ -166,7 +166,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
     results_list = soup.find_all('div', attrs={'class' : 'result'})
     
     for result in results_list:
-        if counter <judgment_counter_bound:
+        if counter < judgment_counter_bound:
 
             #Initialise default values
             title = ''
@@ -243,7 +243,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
     
     for ending in further_page_ending_list:
         
-        if counter <judgment_counter_bound:
+        if counter < judgment_counter_bound:
 
             pause.seconds(np.random.randint(5, 15))
 
@@ -259,7 +259,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
                 
             else:
                 for result in results_list:
-                    if counter <judgment_counter_bound:
+                    if counter < judgment_counter_bound:
             
                         #Initialise default values
                         title = ''
