@@ -118,14 +118,17 @@ uk_courts ={'United Kingdom Supreme Court': 'uksc',
 
 uk_courts_list = list(uk_courts.keys())
 
-def uk_court_choice(x):
+def uk_court_choice(chosen_list):
 
-    individual_choice = []
+    chosen_indice = []
 
-    for j in x:
-        individual_choice.append(uk_courts[j])
+    if isinstance(chosen_list, str):
+        chosen_list = ast.literal_eval(chosen_list)
+
+    for i in chosen_list:
+        chosen_indice.append(nsw_tribunals_positioning.index(i))
     
-    return individual_choice
+    return chosen_indice
 
 #Tidy up hyperlink
 def uk_link(x):

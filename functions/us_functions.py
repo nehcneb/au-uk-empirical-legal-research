@@ -830,25 +830,15 @@ all_us_pacer_jurisdictions = {'Federal Appellate Courts': us_pacer_fed_app_court
 
 # %%
 #Court string to list
-#NOT IN USE
+#Need for batch mode because df_master from aws only has strings
 
-def us_court_choice_to_list(court_string):
+def us_court_choice_to_list(str_or_list):
 
-    #Return list if is list already
-    if isinstance(court_string, list):
-        
-        return court_string
+    #Convert to list if type is string
+    if isinstance(str_or_list, str):
+        str_or_list = ast.literal_eval(str_or_list)
 
-    else:
-
-        if court_string:
-    
-            court_list = court_string.split("; ")
-        
-            return court_list
-    
-        else:
-            return []
+    return str_or_list
         
 
 

@@ -139,10 +139,15 @@ nsw_courts_positioning = ["Placeholder", "Children's Court",
  'Supreme Court']
 
 def nsw_court_choice(chosen_list):
-    chosen_indice = []
-    for i in chosen_list:
-        chosen_indice.append(nsw_courts_positioning.index(i))            
     
+    chosen_indice = []
+
+    if isinstance(chosen_list, str):
+        chosen_list = ast.literal_eval(chosen_list)
+
+    for i in chosen_list:
+        chosen_indice.append(nsw_tribunals_positioning.index(i))       
+        
     return chosen_indice
 
 nsw_tribunals_positioning = ['Placeholder',
@@ -162,10 +167,15 @@ nsw_tribunals_positioning = ['Placeholder',
  'Transport Appeal Boards']
 
 def nsw_tribunal_choice(chosen_list):
+    
     chosen_indice = []
+
+    if isinstance(chosen_list, str):
+        chosen_list = ast.literal_eval(chosen_list)
+
     for i in chosen_list:
         chosen_indice.append(nsw_tribunals_positioning.index(i))            
-    
+
     return chosen_indice
 
 
