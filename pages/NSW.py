@@ -345,7 +345,7 @@ st.header("Search :blue[judgments of the New South Wales courts and tribunals]")
 
 st.success(default_msg)
 
-st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to search for and collect cases from New South Wales. It also sources cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
+st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to search for and collect cases from [NSW Caselaw](https://www.caselaw.nsw.gov.au/search/advanced). It also sources cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
 
 st.caption(default_caption)
 
