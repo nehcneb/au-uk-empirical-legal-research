@@ -368,105 +368,76 @@ def fca_meta_judgment_dict(case_info):
                 'judgment' : ''
                 }
 
-
-    if 'Case name' in case_info.keys():
-        judgment_dict['Case name'] = case_info['Case name']
-
-    if 'Medium neutral citation' in case_info.keys():
-        judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
-
-    #Attach hyperlink
-
-    judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
+    try:
     
-    judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
+        if 'Case name' in case_info.keys():
+            judgment_dict['Case name'] = case_info['Case name']
     
-    page = requests.get(judgment_url)
-    soup = BeautifulSoup(page.content, "lxml")
-    meta_tags = soup.find_all("meta")
-
-    #Attach meta tags
-    if len(meta_tags)>0:
-        for tag_index in range(len(meta_tags)):
-            meta_name = meta_tags[tag_index].get("name")
-            if meta_name in fca_metalabels:
-                meta_content = meta_tags[tag_index].get("content")
-                judgment_dict[meta_name] = meta_content
-
-    #Check if not gets taken to a PDF
-
-    if '.pdf' not in judgment_url.lower():
+        if 'Medium neutral citation' in case_info.keys():
+            judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
     
-        #try:
-            #case_name_mnc = split_title_mnc(judgment_dict['MNC'])
-            #case_name = case_name_mnc[0]
-            #mnc = case_name_mnc[1]
-            
-            #judgment_dict['Case name'] = case_name
-            #judgment_dict['Medium neutral citation'] = mnc
-            
-            #del judgment_dict['MNC']
+        #Attach hyperlink
     
-        #except:
-            #pass
-
-        #Attach order_text and judgment
-    
-        judgment_text = ''
-        order_text = ''
-    
-        try:
-            judgment_raw = ''
-            judgment_raw = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
-    
-            above_reasons_for_judgment = str(re.split("REASONS FOR JUDGMENT", judgment_raw, flags=re.IGNORECASE)[0])
-    
-            below_reasons_for_judgment = str(re.split("REASONS FOR JUDGMENT", judgment_raw, flags=re.IGNORECASE)[1:])
-    
-            order_text = "BETWEEEN:" + str(re.split("BETWEEN:", above_reasons_for_judgment, flags=re.IGNORECASE)[1:])[2:][:-2]
-    
-            judgment_text = below_reasons_for_judgment
-    
-        except:
-            try:
-                judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
-            except:
-                judgment_text = soup.get_text(separator="\n", strip=True)
+        judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
         
-        judgment_dict['judgment'] = judgment_text
-        judgment_dict['Order'] = order_text
-
-    #Check if gets taken to a PDF
-
-    else:
-        #Attach case name
-        #judgment_dict['Case name'] = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.'
-
-        #Attach judgment pdf text
-        try:
-            judgment_pdf_raw = pdf_judgment(judgment_url)
-            judgment_dict['judgment'] = judgment_pdf_raw
-            
-        except:
-            pass
+        judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
+        
+        page = requests.get(judgment_url)
+        soup = BeautifulSoup(page.content, "lxml")
+        meta_tags = soup.find_all("meta")
     
-        #Attach medium neutral citation
-        #try:
-            #mnc_raw = judgment_url.split('/')[-1].replace('.pdf', '')
-
-            #for court_i in ['fca', 'fcafc', 'irc', 'acompt', 'acopyt', 'adfdat', 'fpdt', 'atpt', 'nfsc']:
-                #if court_i in mnc_raw.lower():
-                    #mnc_list = mnc_raw.lower().split(court_i)
-                    #judgment_dict['Medium neutral citation'] = '[' + mnc_list[0] + '] ' + court_i.upper()  + ' ' +  mnc_list[1]
-
-                    #while ' 0' in judgment_dict['Medium neutral citation']:
-                        #judgment_dict['Medium neutral citation'] = judgment_dict['Medium neutral citation'].replace(' 0', ' ')
-            
-            #del judgment_dict['MNC']
+        #Attach meta tags
+        if len(meta_tags)>0:
+            for tag_index in range(len(meta_tags)):
+                meta_name = meta_tags[tag_index].get("name")
+                if meta_name in fca_metalabels:
+                    meta_content = meta_tags[tag_index].get("content")
+                    judgment_dict[meta_name] = meta_content
     
-        #except:
-            #pass        
+        #Check if not gets taken to a PDF
+    
+        if '.pdf' not in judgment_url.lower():
+        
+            judgment_text = ''
+            order_text = ''
+        
+            try:
+                judgment_raw = ''
+                judgment_raw = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
+        
+                above_reasons_for_judgment = str(re.split("REASONS FOR JUDGMENT", judgment_raw, flags=re.IGNORECASE)[0])
+        
+                below_reasons_for_judgment = str(re.split("REASONS FOR JUDGMENT", judgment_raw, flags=re.IGNORECASE)[1:])
+        
+                order_text = "BETWEEEN:" + str(re.split("BETWEEN:", above_reasons_for_judgment, flags=re.IGNORECASE)[1:])[2:][:-2]
+        
+                judgment_text = below_reasons_for_judgment
+        
+            except:
+                try:
+                    judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
+                except:
+                    judgment_text = soup.get_text(separator="\n", strip=True)
             
+            judgment_dict['judgment'] = judgment_text
+            judgment_dict['Order'] = order_text
+    
+        #Check if gets taken to a PDF
+    
+        else:
+
+            #Attach judgment pdf text
+            try:
+                judgment_pdf_raw = pdf_judgment(judgment_url)
+                judgment_dict['judgment'] = judgment_pdf_raw
+                
+            except:
+                pass
+        
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
+    
     return judgment_dict
 
 

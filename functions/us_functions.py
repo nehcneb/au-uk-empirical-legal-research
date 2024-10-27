@@ -62,18 +62,10 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # US search engine
@@ -832,19 +824,13 @@ all_us_pacer_jurisdictions = {'Federal Appellate Courts': us_pacer_fed_app_court
                     'More Courts': us_pacer_more_courts,
                        }
 
+
 # %% [markdown]
 # ### Functions
 
 # %%
-test = ['1', '2']
-
-for item in []:
-    if item in test:
-        print('Yes')
-
-
-# %%
 #Court string to list
+#NOT IN USE
 
 def us_court_choice_to_list(court_string):
 
@@ -1385,14 +1371,12 @@ class us_search_tool:
         opinion_id = opinion_raw['id']
         opinion_url = f"https://www.courtlistener.com/api/rest/v4/opinions/{opinion_id}/"
         opinion_page = requests.get(opinion_url, headers=headers)
-        #opinion_json = json.loads(opinion_page.content.decode('utf-8'))
         opinion_json = opinion_page.json()
 
 
         #Placeholders        
         opinion_snippet = ''
         opinion_type = ''
-        #opinion_id = ''
         opinion_text = ''
 
         opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
@@ -1437,10 +1421,17 @@ class us_search_tool:
             if len(opinion_json['html_with_citations']) > 0:
                 opinion_text = opinion_json['html_with_citations']
 
+        if 'local_path' in opinion_json.keys():
+            if '.pdf' in str(opinion_json['local_path']).lower():
+                pdf_url = 'https://storage.courtlistener.com/' + opinion_json['local_path']
+                opinion_text = pdf_judgment(pdf_url)
+
+        #st.write(opinion_json.keys())
+        
         opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
         
         if len(opinion_json_cleaned['text']) == 0:
-            st.write(f'Opinion id {opinion_id}: no text scraped. Please check {opinion_url}.')
+            print(f'Opinion id {opinion_id}: no text scraped. Please check {opinion_url}.')
 
         return opinion_json_cleaned
 
@@ -1484,10 +1475,10 @@ class us_search_tool:
     
                     else: #'concur' in opinion_json_cleaned['type']:
                         self.results_w_opinions[result_index]['opinions'].append(opinion_json_cleaned)
-    
+                
                 #Add case-specific metadata to results_w_opinions, create list of dropable metadata
                 for key in result.keys():
-                    if key not in self.renamed_keys:
+                    if ((key not in self.renamed_keys) and (key not in self.results_w_opinions[result_index].keys())):
                         self.results_w_opinions[result_index][key] = result[key]
                         self.metadata_droppable.append(key)
 
@@ -1499,16 +1490,8 @@ class us_search_tool:
     
         if ('filepath_local' in recap_document.keys()) and ('is_available' in recap_document.keys()):
             if (('.pdf' in str(recap_document['filepath_local']).lower()) and (str(recap_document['is_available']).lower() == 'true')):
-                pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']
-                r = requests.get(pdf_url, headers=headers)
-                remote_file_bytes = io.BytesIO(r.content)
-                pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
-                text_list = []
-            
-                for page in pdfdoc_remote.pages:
-                    text_list.append(page.extract_text())
-    
-                recap_document['file_content'] = str(text_list)
+                pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']    
+                recap_document['file_content'] = pdf_judgment(pdf_url)
         
         return recap_document
 
@@ -1538,7 +1521,7 @@ class us_search_tool:
 
                 #Add case-specific metadata key/values to results_w_docs, create list of dropable metadata
                 for key in result.keys():
-                    if key not in self.renamed_keys:
+                    if ((key not in self.renamed_keys) and (key not in self.results_w_docs[result_index].keys())):
                         self.results_w_docs[result_index][key] = result[key]
                         self.metadata_droppable.append(key)
                         
@@ -1719,7 +1702,8 @@ def us_run(df_master):
 #    df_individual = pd.DataFrame(judgments_file)
     
     df_individual = pd.read_json(json_individual)
-                        
+
+    #st.dataframe(df_individual)
     #Instruct GPT
     
     #GPT model
@@ -1738,9 +1722,9 @@ def us_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    #Remove 'judgment' column if opinions sought #, or 'recap_documents' column if PACER docs sought
-    if 'judgment' in df_updated.columns:
-        df_updated.pop('judgment')
+    #Remove 'opinions' column if opinions sought #, or 'recap_documents' column if PACER docs sought
+    if 'opinions' in df_updated.columns:
+        df_updated.pop('opinions')
 
     if 'recap_documents' in df_updated.columns:
         df_updated.pop('recap_documents')

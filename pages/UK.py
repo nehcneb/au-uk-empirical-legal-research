@@ -57,18 +57,10 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, list_range_check, au_date, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, save_input, search_error_display
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # UK Courts search engine
@@ -162,9 +154,7 @@ def uk_create_df():
     
     #Courts
     courts_list = courts_entry
-    court_string = ', '.join(courts_list)
-    court = court_string
-    
+
     #Other entries
     party = party_entry
     judge =  judge_entry
@@ -199,7 +189,7 @@ def uk_create_df():
             'To day': to_day,
             'To month': to_month,
             'To year' : to_year,
-            'Courts' : court, 
+            'Courts' : courts_list, 
             'Party' : party,
             'Judge' : judge, 
             'Metadata inclusion' : meta_data_choice,
@@ -210,7 +200,7 @@ def uk_create_df():
             'Use flagship version of GPT' : gpt_enhancement
           }
 
-    df_master_new = pd.DataFrame(new_row, index = [0])
+    df_master_new = pd.DataFrame([new_row])
     
 #    df_master_new.to_json(current_dir + '/df_master.json', orient = 'split', compression = 'infer')
 #    df_master_new.to_excel(current_dir + '/df_master.xlsx', index=False)
@@ -273,12 +263,6 @@ from functions.common_functions import open_page, clear_cache_except_validation_
 # ## Initialize session states
 
 # %%
-#Initialize default_courts
-
-if 'default_courts' not in st.session_state:
-    st.session_state['default_courts'] = []
-
-# %%
 #Initialize default values
 
 if 'gpt_api_key_validity' not in st.session_state:
@@ -291,35 +275,6 @@ if 'need_resetting' not in st.session_state:
         
     st.session_state['need_resetting'] = 0
 
-if 'df_master' not in st.session_state:
-
-    #Generally applicable
-    st.session_state['df_master'] = pd.DataFrame([])
-    st.session_state['df_master'].loc[0, 'Your name'] = ''
-    st.session_state['df_master'].loc[0, 'Your email address'] = ''
-    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
-    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
-    st.session_state['df_master'].loc[0, 'Use GPT'] = False
-    st.session_state['df_master'].loc[0, 'Use own account'] = False
-    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-
-    #Jurisdiction specific
-    st.session_state.df_master.loc[0, 'Free text'] = None 
-    st.session_state.df_master.loc[0, 'From day'] = None
-    st.session_state.df_master.loc[0, 'From month'] = None 
-    st.session_state.df_master.loc[0, 'From year'] = None 
-    st.session_state.df_master.loc[0, 'To day'] = None 
-    st.session_state.df_master.loc[0, 'To month'] = None 
-    st.session_state.df_master.loc[0, 'To year'] = None 
-    st.session_state.df_master.loc[0, 'Courts'] = '' 
-    st.session_state.df_master.loc[0, 'Party'] = None 
-    st.session_state.df_master.loc[0, 'Judge'] = None
-
-    #Generally applicable
-    st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
-
 if 'df_individual_output' not in st.session_state:
 
     st.session_state['df_individual_output'] = pd.DataFrame([])
@@ -327,6 +282,39 @@ if 'df_individual_output' not in st.session_state:
 #Disable toggles
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
+
+if 'df_master' not in st.session_state:
+
+    #Generally applicable
+    df_master_dict = {'Your name' : '', 
+    'Your email address' : '', 
+    'Your GPT API key' : '', 
+    'Metadata inclusion' : True, 
+    'Maximum number of judgments' : default_judgment_counter_bound, 
+    'Enter your questions for GPT' : '', 
+    'Use GPT' : False, 
+    'Use own account' : False, 
+    'Use flagship version of GPT' : False
+    }
+
+    #Jurisdiction specific
+    jurisdiction_specific_dict = {'Free text' : None,
+    'From day' : None,
+    'From month' : None,
+    'From year' : None,
+    'To day' : None,
+    'To month' : None,
+    'To year' : None,
+    'Courts' : [],
+    'Party' : None,
+    'Judge' : None
+    }
+
+    #Make into  df
+    df_master_dict.update(jurisdiction_specific_dict)
+    
+    st.session_state['df_master'] = pd.DataFrame([df_master_dict])
+
 
 # %%
 #If landing page is not home
@@ -356,13 +344,10 @@ st.subheader("Courts and tribunals to cover")
 default_on = st.checkbox('Prefill the Supreme Court, the Privy Council, the Court of Appeal, the High Court of England & Wales')
 
 if default_on:
+    st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
+    st.session_state['df_master'].at[0, 'Courts'] = uk_courts_default_list
 
-    st.session_state.default_courts = uk_courts_default_list
-
-else:
-    st.session_state.default_courts = list_range_check(uk_courts, st.session_state['df_master'].loc[0, 'Courts'])
-
-courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to search', options = uk_courts_list, default = st.session_state.default_courts)
+courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to search', options = uk_courts_list, default = st.session_state['df_master'].loc[0, 'Courts'])
     
 #st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
 
@@ -534,17 +519,25 @@ if next_button:
         
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+            
+            try:
 
-            uk_url_to_check = uk_search_url(df_master)
-            uk_html = requests.get(uk_url_to_check)
-            uk_soup = BeautifulSoup(uk_html.content, "lxml")
-            if 'No matching results' in str(uk_soup):
-                st.error(no_results_msg)
+                uk_url_to_check = uk_search_url(df_master)
+                uk_html = requests.get(uk_url_to_check)
+                uk_soup = BeautifulSoup(uk_html.content, "lxml")
+                if 'No matching results' in str(uk_soup):
+                    st.error(no_results_msg)
+    
+                else:
+    
+                    save_input(df_master)
+    
+                    st.session_state["page_from"] = 'pages/UK.py'
+                    
+                    st.switch_page('pages/GPT.py')
 
-            else:
-
-                save_input(df_master)
-
-                st.session_state["page_from"] = 'pages/UK.py'
-                
-                st.switch_page('pages/GPT.py')
+            except Exception as e:
+                print(search_error_display)
+                print(e)
+                st.error(search_error_display)
+                st.error(e)

@@ -64,16 +64,8 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # High Court of Australia search engine
@@ -688,15 +680,22 @@ if next_button:
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
-            judgments_url_num = hca_search_url(df_master)
-            judgments_num = judgments_url_num['results_num']
-            if int(judgments_num) == 0:
-                st.error(no_results_msg)
-
-            else:
-                
-                save_input(df_master)
-                
-                st.session_state["page_from"] = 'pages/HCA.py'
-                
-                st.switch_page('pages/GPT.py')
+            try:
+                judgments_url_num = hca_search_url(df_master)
+                judgments_num = judgments_url_num['results_num']
+                if int(judgments_num) == 0:
+                    st.error(no_results_msg)
+    
+                else:
+                    
+                    save_input(df_master)
+                    
+                    st.session_state["page_from"] = 'pages/HCA.py'
+                    
+                    st.switch_page('pages/GPT.py')
+           
+            except Exception as e:
+                print(search_error_display)
+                print(e)
+                st.error(search_error_display)
+                st.error(e)

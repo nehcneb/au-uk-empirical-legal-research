@@ -68,7 +68,7 @@ from pyxlsb import open_workbook as open_xlsb
 from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link
 
 #Import variables
-from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, spinner_text
+from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, spinner_text, search_error_display
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -523,11 +523,10 @@ if run_button:
                 
             except Exception as e:
     
-                st.error('Sorry, an error has occurred. Please return to the previous page, check your search terms and try again.')
+                st.error(search_error_display)
                 
                 st.exception(e)
                 
-
 
 # %%
 if return_button:
@@ -611,7 +610,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     
                 except Exception as e:
                     
-                    st.error('Sorry, an error has occurred. Please return to the previous page, check your search terms and try again.')
+                    st.error(search_error_display)
                     
                     st.exception(e)
 
@@ -715,7 +714,7 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
                         
                     except Exception as e:
 
-                        st.error('Sorry, an error has occurred. Please return to the previous page, check your search terms and try again.')
+                        st.error(search_error_display)
                         
                         st.error(e)
 

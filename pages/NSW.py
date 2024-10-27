@@ -63,24 +63,15 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, au_date, save_input, download_buttons
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
-
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
 # %% [markdown]
 # # CaseLaw NSW functions and parameters
 
 # %%
-from functions.nsw_functions import nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt, nsw_search_url
+from functions.nsw_functions import nsw_courts, nsw_default_courts, nsw_tribunals, nsw_search_url
 
 
 # %%
@@ -109,6 +100,7 @@ def nsw_create_df():
     except:
         print('Email not entered')
 
+    gpt_api_key = ''
     try:
         gpt_api_key = gpt_api_key_entry
         #This is the user's entered API key whether valid or invalid, not necessarily the one used to produce outputs
@@ -134,15 +126,10 @@ def nsw_create_df():
     
     #NSW court choices
 
-    courts_list = courts_entry
-
-    courts = ', '.join(courts_list)
+    courts = courts_entry
     
-    #NSW tribunals choices
-    
-    tribunals_list = tribunals_entry
-
-    tribunals = ', '.join(tribunals_list)
+    #NSW tribunals choices    
+    tribunals = tribunals_entry
 
     #Search terms
     
@@ -155,24 +142,20 @@ def nsw_create_df():
 
     startDate = ''
 
-    if startDate_entry != 'None':
+    try:
 
-        try:
+        startDate = startDate_entry.strftime('%d/%m/%Y')
 
-            startDate = startDate_entry.strftime('%d/%m/%Y')
-
-        except:
-            pass
+    except:
+        print('startDate not entered')
         
     endDate = ''
-
-    if endDate_entry != 'None':
         
-        try:
-            endDate = endDate_entry.strftime('%d/%m/%Y')
-            
-        except:
-            pass
+    try:
+        endDate = endDate_entry.strftime('%d/%m/%Y')
+        
+    except:
+        print('endDate not entered')
     
     fileNumber = fileNumber_entry
     legislationCited = legislationCited_entry
@@ -224,7 +207,7 @@ def nsw_create_df():
             'Use flagship version of GPT' : gpt_enhancement
           }
     
-    df_master_new = pd.DataFrame(new_row, index = [0])
+    df_master_new = pd.DataFrame([new_row])
         
     return df_master_new
 
@@ -283,16 +266,12 @@ from functions.common_functions import open_page, clear_cache_except_validation_
 # ## Initialize session states
 
 # %%
+#If landing page is not home
+if 'page_from' not in st.session_state:
+    st.session_state['page_from'] = 'Home.py'
+
+# %%
 #Initialize default values
-
-if 'default_courts' not in st.session_state:
-    st.session_state['default_courts'] = []
-
-if 'dafault_courts_status' not in st.session_state:
-    st.session_state['dafault_courts_status'] = False
-
-#if 'default_tribunals' not in st.session_state:
-    #st.session_state['default_tribunals'] = []
 
 if 'own_account' not in st.session_state:
     st.session_state['own_account'] = False
@@ -301,38 +280,6 @@ if 'need_resetting' not in st.session_state:
         
     st.session_state['need_resetting'] = 0
 
-if 'df_master' not in st.session_state:
-
-    #Generally applicable
-    st.session_state['df_master'] = pd.DataFrame([])
-    st.session_state['df_master'].loc[0, 'Your name'] = ''
-    st.session_state['df_master'].loc[0, 'Your email address'] = ''
-    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
-    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
-    st.session_state['df_master'].loc[0, 'Use GPT'] = False
-    st.session_state['df_master'].loc[0, 'Use own account'] = False
-    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-
-    #Jurisdiction specific
-    st.session_state['df_master'].loc[0, 'Courts'] = ''
-    st.session_state['df_master'].loc[0, 'Tribunals'] = ''
-    st.session_state['df_master'].loc[0, 'Free text']  = None
-    st.session_state['df_master'].loc[0, 'Case name']  = None
-    st.session_state['df_master'].loc[0, 'Before']  = None
-    st.session_state['df_master'].loc[0, 'Catchwords']  = None
-    st.session_state['df_master'].loc[0, 'Party names']  = None
-    st.session_state['df_master'].loc[0, 'Medium neutral citation']  = None
-    st.session_state['df_master'].loc[0, 'Decision date from']  = None
-    st.session_state['df_master'].loc[0, 'Decision date to']  = None
-    st.session_state['df_master'].loc[0, 'File number']  = None
-    st.session_state['df_master'].loc[0, 'Legislation cited']  = None
-    st.session_state['df_master'].loc[0, 'Cases cited']  = None
-
-    #Generally applicable
-    st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
-    
 if 'df_individual_output' not in st.session_state:
 
     st.session_state['df_individual_output'] = pd.DataFrame([])
@@ -341,10 +288,48 @@ if 'df_individual_output' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
+if 'df_master' not in st.session_state:
+
+    #Generally applicable
+    df_master_dict = {'Your name' : '', 
+    'Your email address' : '', 
+    'Your GPT API key' : '', 
+    'Metadata inclusion' : True, 
+    'Maximum number of judgments' : default_judgment_counter_bound, 
+    'Enter your questions for GPT' : '', 
+    'Use GPT' : False, 
+    'Use own account' : False, 
+    'Use flagship version of GPT' : False
+    }
+
+    #Jurisdiction specific
+    jurisdiction_specific_dict = {'Courts' : [],
+    'Tribunals' : [],
+    'Free text'  : None,
+    'Case name'  : None,
+    'Before'  : None,
+    'Catchwords'  : None,
+    'Party names'  : None,
+    'Medium neutral citation'  : None,
+    'Decision date from'  : None,
+    'Decision date to'  : None,
+    'File number'  : None,
+    'Legislation cited'  : None,
+    'Cases cited'  : None
+    }
+
+    #Make into  df
+    df_master_dict.update(jurisdiction_specific_dict)
+    
+    st.session_state['df_master'] = pd.DataFrame([df_master_dict])
+
+
 # %%
-#If landing page is not home
-if 'page_from' not in st.session_state:
-    st.session_state['page_from'] = 'Home.py'
+#NSW-specific session_states
+
+#if 'dafault_courts_status' not in st.session_state:
+    #st.session_state['dafault_courts_status'] = False
+
 
 # %% [markdown]
 # ## Form before AI
@@ -368,21 +353,15 @@ reset_button = st.button(label='RESET', type = 'primary')
 
 st.subheader("Courts and tribunals to cover")
 
-default_on_courts = st.checkbox(label = 'Prefill the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court', value = st.session_state.dafault_courts_status)
+default_on_courts = st.checkbox(label = 'Prefill the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court')#, value = st.session_state.dafault_courts_status)
 
 if default_on_courts:
+    st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
+    st.session_state['df_master'].at[0, 'Courts'] = nsw_default_courts
 
-    st.session_state.default_courts = nsw_default_courts
+courts_entry = st.multiselect(label = 'Courts', options = nsw_courts, default = st.session_state['df_master'].loc[0, 'Courts'])
 
-else:
-    #st.session_state.default_courts = []
-    st.session_state.default_courts = list_range_check(nsw_courts, st.session_state['df_master'].loc[0, 'Courts'])
-
-courts_entry = st.multiselect(label = 'Courts', options = nsw_courts, default = st.session_state.default_courts)
-
-tribunals_entry = st.multiselect(label = 'Tribunals', options = nsw_tribunals, default = list_range_check(nsw_tribunals, st.session_state['df_master'].loc[0, 'Tribunals']))
-
-#st.caption(f"All courts and tribunals listed in these menus will be covered if left blank.")
+tribunals_entry = st.multiselect(label = 'Tribunals', options = nsw_tribunals, default = st.session_state['df_master'].loc[0, 'Tribunals'])
 
 st.subheader("Your search terms")
 
@@ -404,7 +383,7 @@ mnc_entry = st.text_input(label = "Medium neutral citation", value = st.session_
 
 st.caption("Must include square brackets eg [2022] NSWSC 922")
 
-startDate_entry = st.date_input(label = "Decision date from (01/01/1999 the earliest)", value = au_date(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+startDate_entry = st.date_input(label = "Decision date from", value = au_date(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 st.caption("Pre-1999 decisions are usually [not available](https://www.caselaw.nsw.gov.au/about) from NSW Caselaw and will unlikely to be collected.")
 
@@ -501,38 +480,8 @@ if keep_button:
         
         save_input(df_master)
 
-        #Create outputs
-    
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
-        #Buttons for downloading responses
-    
-        csv = convert_df_to_csv(df_master)
-        
-        ste.download_button(
-            label="Download as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=responses_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
+        download_buttons(df_master, df_individual = [], saving = True, previous = False)
 
-        xlsx = convert_df_to_excel(df_master)
-        
-        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=responses_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-    
-        json = convert_df_to_json(df_master)
-        
-        ste.download_button(
-            label="Download as a JSON", 
-            data = json,
-            file_name= responses_output_name + '.json', 
-            mime= "application/json", 
-        )
 
 # %%
 if return_button:
@@ -571,19 +520,26 @@ if next_button:
         
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+            try:
+                nsw_url_to_check = nsw_search_url(df_master)
+                nsw_html = requests.get(nsw_url_to_check)
+                nsw_soup = BeautifulSoup(nsw_html.content, "lxml")
+                if 'totalElements' not in str(nsw_soup):
+                    
+                    st.error(no_results_msg)
+    
+                else:
+                    
+                    save_input(df_master)
+    
+                    st.session_state["page_from"] = 'pages/NSW.py'
+                    
+                    st.switch_page('pages/GPT.py')
+        
+            except Exception as e:
+                print(search_error_display)
+                print(e)
+                st.error(search_error_display)
+                st.error(e)
 
-            nsw_url_to_check = nsw_search_url(df_master)
-            nsw_html = requests.get(nsw_url_to_check)
-            nsw_soup = BeautifulSoup(nsw_html.content, "lxml")
-            if 'totalElements' not in str(nsw_soup):
-                
-                st.error(no_results_msg)
-
-            else:
-                
-                save_input(df_master)
-
-                st.session_state["page_from"] = 'pages/NSW.py'
-                
-                st.switch_page('pages/GPT.py')
 

@@ -63,18 +63,10 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, split_title_mnc
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, au_date, save_input, split_title_mnc, pdf_judgment
 #Import variables
-from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # CaseLaw NSW functions and parameters
@@ -104,21 +96,8 @@ nsw_courts =["Court of Appeal",
              'Industrial Relations Commission (Commissioners)'
             ] #, "All of the above Courts"]
 
-#For positioning
-nsw_courts_positioning = ["Placeholder", "Children's Court",
- 'Compensation Court',
- 'Court of Appeal',
- 'Court of Criminal Appeal',
- 'District Court',
- 'Drug Court',
- 'Industrial Court',
- 'Industrial Relations Commission (Commissioners)',
- 'Industrial Relations Commission (Judges)',
- 'Land and Environment Court (Commissioners)',
- 'Land and Environment Court (Judges)',
- 'Local Court',
- 'Supreme Court']
 
+# %%
 #Default courts
 nsw_default_courts = ["Court of Appeal", "Court of Criminal Appeal", "Supreme Court"]
 
@@ -140,6 +119,32 @@ nsw_tribunals = ['Administrative Decisions Tribunal (Appeal Panel)',
  'Medical Tribunal',
  'Transport Appeal Boards']
 
+
+# %%
+#Create function to convert the list of chosen courts to a list; 13 = NSWSC, 3 = NSWCA, 4 = NSWCCA
+#For more, see https://github.com/Sydney-Informatics-Hub/nswcaselaw/blob/main/src/nswcaselaw/constants.py
+
+nsw_courts_positioning = ["Placeholder", "Children's Court",
+ 'Compensation Court',
+ 'Court of Appeal',
+ 'Court of Criminal Appeal',
+ 'District Court',
+ 'Drug Court',
+ 'Industrial Court',
+ 'Industrial Relations Commission (Commissioners)',
+ 'Industrial Relations Commission (Judges)',
+ 'Land and Environment Court (Commissioners)',
+ 'Land and Environment Court (Judges)',
+ 'Local Court',
+ 'Supreme Court']
+
+def nsw_court_choice(chosen_list):
+    chosen_indice = []
+    for i in chosen_list:
+        chosen_indice.append(nsw_courts_positioning.index(i))            
+    
+    return chosen_indice
+
 nsw_tribunals_positioning = ['Placeholder',
  'Administrative Decisions Tribunal (Appeal Panel)',
  'Administrative Decisions Tribunal (Divisions)',
@@ -156,45 +161,21 @@ nsw_tribunals_positioning = ['Placeholder',
  'Medical Tribunal',
  'Transport Appeal Boards']
 
+def nsw_tribunal_choice(chosen_list):
+    chosen_indice = []
+    for i in chosen_list:
+        chosen_indice.append(nsw_tribunals_positioning.index(i))            
+    
+    return chosen_indice
+
+
 
 # %%
-#Create function to convert the string of chosen courts to a list; 13 = NSWSC, 3 = NSWCA, 4 = NSWCCA
-#For more, see https://github.com/Sydney-Informatics-Hub/nswcaselaw/blob/main/src/nswcaselaw/constants.py
-
-def nsw_court_choice(x):
-    individual_choice = []
-
-    if len(x) < 5:
-        pass #If want to select no court absent any choice
-        #individual_choice = [3, 4, 13] #If want to select NSWSC, CA and CCA absent any choice
-        #for j in range(1, len(nsw_courts_positioning)):
-            #individual_choice.append(j) #If want to select all courts absent any choice
-    else:
-        y = x.split(', ')
-        for i in y:
-            individual_choice.append(nsw_courts_positioning.index(i))            
-    
-    return individual_choice
-
-def nsw_tribunal_choice(x):
-    individual_choice = []
-
-    if len(x) < 5:
-        pass #If want to select no tribunal absent any choice
-        #for j in range(1, len(nsw_tribunals_positioning)):
-            #individual_choice.append(j) #If want to select all tribunals absent any choice
-    else:
-        y = x.split(', ')
-        for i in y:
-            individual_choice.append(nsw_tribunals_positioning.index(i))            
-    
-    return individual_choice
-
 #Functions for tidying up
 
 #Tidy up dates
 def nsw_date(x):
-    if len(str(x)) >0:
+    if len(str(x)) > 0:
         return str(x).split()[0]
     else:
         return str(x)
@@ -232,24 +213,15 @@ def nsw_short_judgment(uri):
     if str(PDF_raw_link).lower() != 'none':
         PDF_link = 'https://www.caselaw.nsw.gov.au' + PDF_raw_link.get('href')    
         headers = {'User-Agent': 'whatever'}
-        r = requests.get(PDF_link, headers=headers)
-        remote_file_bytes = io.BytesIO(r.content)
-        pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
-        text_list = []
-        
-        for page in pdfdoc_remote.pages:
-            text_list.append(page.extract_text())
-
+        judgment_text = pdf_judgment(PDF_link)
         judgment_type = 'pdf'
         
-        return [judgment_type, str(text_list)]
-
     #Return html text if no PDF
     else:
         judgment_text = soup_html.get_text(separator="\n", strip=True)
         judgment_type = 'html'
 
-        return [judgment_type, judgment_text]
+    return [judgment_type, judgment_text]
 
 
 # %%
@@ -280,7 +252,6 @@ def nsw_search_url(df_master):
     df_master.loc[0, 'SearchCriteria']=[search_dict]
 
     #Conduct search
-    
     query = Search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
@@ -295,9 +266,9 @@ def nsw_search_url(df_master):
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
                    casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
                    pause = 0
-                  )
-    
+                  )    
     return query.url
+
 
 
 # %% [markdown]
@@ -307,7 +278,7 @@ def nsw_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content#, intro_for_GPT
+from functions.gpt_functions import question_characters_bound, role_content
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
@@ -336,7 +307,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 
 # %%
-#function to tidy up output
+#function to tidy up after GPT output is produced
 
 def nsw_tidying_up(df_master, df_individual):
 
@@ -368,16 +339,15 @@ def nsw_tidying_up(df_master, df_individual):
     
     df_individual = df_individual.reindex(columns=new_columns)
 
-    #Drop metadata if not wanted
-    
+    #Drop metadata if not wanted 
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in nsw_meta_labels_droppable:
-            try:
+            if meta_label in df_individual.columns:
                 df_individual.pop(meta_label)
-            except:
-                pass
-    
+
     #Remove judgment column
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+    
     if 'judgment' in df_individual.columns:
         df_individual.pop("judgment")
         
@@ -400,10 +370,11 @@ def nsw_tidying_up(df_master, df_individual):
         df_individual.loc[k, "Medium neutral citation"] = mnc
 
     return df_individual
+    
 
 
 # %%
-#function to tidy up output
+#function to tidy up before GPT output is produced
 
 def nsw_tidying_up_pre_gpt(df_master, df_individual):
 
@@ -420,11 +391,8 @@ def nsw_tidying_up_pre_gpt(df_master, df_individual):
             col_index = headnotes_keys.index(col_name)
             new_col_name = headnotes_fields[col_index]
             df_individual.rename(columns={col_name: new_col_name}, inplace=True)
-            #df_individual[new_col_name] = df_individual[col_name]
-            #df_individual.pop(col_name)
-    
-    #Reorganise columns
 
+    #Reorganise columns
     old_columns = list(df_individual.columns)
     
     for i in ['Case name', 'Medium neutral citation', 'Hyperlink to NSW Caselaw']:
@@ -436,13 +404,10 @@ def nsw_tidying_up_pre_gpt(df_master, df_individual):
     df_individual = df_individual.reindex(columns=new_columns)
 
     #Drop metadata if not wanted
-    
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in nsw_meta_labels_droppable:
-            try:
+            if meta_label in df_individual.columns:
                 df_individual.pop(meta_label)
-            except:
-                pass
         
     #Check case name, medium neutral citation 
     for k in df_individual.index:
@@ -528,22 +493,27 @@ def nsw_run_direct(df_master):
             #Get case info from results page
             decision_w_meta = decision.values.copy()
 
-            #Get case info from individual case page
-            decision.fetch()
-
-            #Attach new info
-            decision_w_meta_judgment = decision.values
-            #for key in decision_w_meta_judgment.keys():
-                #if key not in decision_w_meta.keys():
-                    #decision_w_meta.update({key: decision_w_meta_judgment[key]})
-
-            decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+            try:
+                #Get case info from individual case page
+                decision.fetch()
+    
+                #Attach new info
+                decision_w_meta_judgment = decision.values
+                #for key in decision_w_meta_judgment.keys():
+                    #if key not in decision_w_meta.keys():
+                        #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+    
+                decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
             
+            except:
+                decision_w_meta.update({'judgment': ''})
+                print(f'{decision_w_meta["title"]}: judgment text scraping error.')
+
             #add search results to json
             judgments_file.append(decision_w_meta)
             counter +=1
     
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
         else:
             
@@ -555,7 +525,6 @@ def nsw_run_direct(df_master):
     df_individual = pd.read_json(json_individual)
 
     #Check length of judgment text, replace with raw html if smaller than lower boound
-
     for judgment_index in df_individual.index:
 
         #Checking if judgment text has been scrapped or too short
@@ -563,19 +532,17 @@ def nsw_run_direct(df_master):
             judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
                     
             if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-
+                
                 judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
     
-                #attach judgment text
+                #attach judgment text; judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] is the judgment text
                 df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
 
-                #judgment_type_text[0] has judgment type, eg 'pdf'
-                
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
         except Exception as e:
             
-            df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
+            df_individual.loc[judgment_index, "judgment"] = ''
             print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
             print(e)
     
@@ -599,9 +566,6 @@ def nsw_run_direct(df_master):
 
     #tidy up
     df_updated = nsw_tidying_up(df_master, df_updated)
-
-    if 'judgment' in df_updated.columns:
-        df_updated.pop('judgment')
     
     return df_updated
     
@@ -669,23 +633,28 @@ def nsw_run(df_master):
             if counter < judgments_counter_bound:
                 #Get case info from results page
                 decision_w_meta = decision.values.copy()
-                    
-                #Get case info from individual case  page
-                decision.fetch()
-    
-                #Attach new info
-                decision_w_meta_judgment = decision.values
-                #for key in decision_w_meta_judgment.keys():
-                    #if #key not in decision_w_meta.keys():
-                        #decision_w_meta.update({key: decision_w_meta_judgment[key]})
 
-                decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+                try:
+                    #Get case info from individual case  page
+                    decision.fetch()
+        
+                    #Attach new info
+                    decision_w_meta_judgment = decision.values
+                    #for key in decision_w_meta_judgment.keys():
+                        #if #key not in decision_w_meta.keys():
+                            #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+    
+                    decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+
+                except:
+                    decision_w_meta.update({'judgment': ''})
+                    print(f'{decision_w_meta["title"]}: judgment text scraping error.')
                 
                 #add search results to json
                 judgments_file.append(decision_w_meta)
                 counter +=1
         
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
                 
             else:
                 break
@@ -741,12 +710,19 @@ def nsw_run(df_master):
                     #st.write(case_meta)
                     
                     if decision['mnc'] in case_meta['title']:
-                        case.fetch()
-                        case_w_meta_jugdment = case.values.copy()
-                        decision_w_meta.update({'judgment': str(case_w_meta_jugdment)})
-                        pause.seconds(np.random.randint(5, 15))
-                        
+                        try:
+                            case.fetch()
+                            case_w_meta_jugdment = case.values.copy()
+                            decision.update({'judgment': str(case_w_meta_jugdment)})
+                            
+                        except:
+                            decision.update({'judgment': ''})
+                            print(f'{decision["title"]}: judgment text scraping error.')
+
                         break
+
+                #Pause only if need to get judgment from Caselaw NSW
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
 
 
     #Create and export json file with search results
@@ -772,17 +748,14 @@ def nsw_run(df_master):
 
                 #judgment_type_text[0] has judgment type, eg 'pdf'
                 
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
         except Exception as e:
             
-            df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
+            df_individual.loc[judgment_index, "judgment"] = ''
             print(f'{df_individual.loc[judgment_index, "Case name"]}: judgment text scraping error.')
             print(e)
 
-    #tidy up
-    #df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
-    
     #Instruct GPT
     
     #GPT model
@@ -862,30 +835,35 @@ def nsw_batch(df_master):
     counter = 0
 
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-    
+
     if huggingface == False: #If not running on HuggingFace
 
         for decision in query.results():
             if counter < judgments_counter_bound:
                 #Get case info from results page
                 decision_w_meta = decision.values.copy()
-    
-                #Get case info from individual case  page
-                decision.fetch()
-    
-                #Attach new info
-                decision_w_meta_judgment = decision.values
-                #for key in decision_w_meta_judgment.keys():
-                    #if #key not in decision_w_meta.keys():
-                        #decision_w_meta.update({key: decision_w_meta_judgment[key]})
 
-                decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+                try:
+                    #Get case info from individual case  page
+                    decision.fetch()
+        
+                    #Attach new info
+                    decision_w_meta_judgment = decision.values
+                    #for key in decision_w_meta_judgment.keys():
+                        #if #key not in decision_w_meta.keys():
+                            #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+    
+                    decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
+
+                except:
+                    decision_w_meta.update({'judgment': ''})
+                    print(f'{decision_w_meta["title"]}: judgment text scraping error.')
                 
                 #add search results to json
                 judgments_file.append(decision_w_meta)
                 counter +=1
         
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
                 
             else:
                 break
@@ -941,14 +919,20 @@ def nsw_batch(df_master):
                     #st.write(case_meta)
                     
                     if decision['mnc'] in case_meta['title']:
-                        case.fetch()
-                        case_w_meta_jugdment = case.values.copy()
-                        decision_w_meta.update({'judgment': str(case_w_meta_jugdment)})
-                        pause.seconds(np.random.randint(5, 15))
-                        
+                        try:
+                            case.fetch()
+                            case_w_meta_jugdment = case.values.copy()
+                            decision.update({'judgment': str(case_w_meta_jugdment)})
+                            
+                        except:
+                            decision.update({'judgment': ''})
+                            print(f'{decision["title"]}: judgment text scraping error.')
+
                         break
 
-                pause.seconds(np.random.randint(5, 15))
+                #Pause only if need to get judgment from Caselaw NSW
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -973,17 +957,14 @@ def nsw_batch(df_master):
 
                 #judgment_type_text[0] has judgment type, eg 'pdf'
                 
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
         except Exception as e:
             
-            df_individual.loc[judgment_index, "judgment"] = ['Error. Judgment text not scrapped.']
-            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
+            df_individual.loc[judgment_index, "judgment"] = ''
+            print(f'{df_individual.loc[judgment_index, "Case name"]}: judgment text scraping error.')
             print(e)
 
-    #tidy up
-    df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
-    
     #Instruct GPT
     
     #GPT model
@@ -999,7 +980,9 @@ def nsw_batch(df_master):
     
     questions_json = df_master.loc[0, 'questions_json']
             
-    #Send batch input to gpt
+    #Tidu up then send batch input to gpt
+    df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
+    
     batch_record_df_individual = gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
     
     return batch_record_df_individual

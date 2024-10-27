@@ -61,14 +61,6 @@ from functions.common_functions import own_account_allowed, convert_df_to_json, 
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # UK Courts search engine
@@ -127,18 +119,13 @@ uk_courts ={'United Kingdom Supreme Court': 'uksc',
 uk_courts_list = list(uk_courts.keys())
 
 def uk_court_choice(x):
+
     individual_choice = []
-    if len(x) < 5:
-        pass #If want no court to be covered absent choice
-        #for i in uk_courts.keys():
-            #individual_choice.append(uk_courts[i])
-    else:
-        y = x.split(', ')
-        for j in y:
-            individual_choice.append(uk_courts[j])
+
+    for j in x:
+        individual_choice.append(uk_courts[j])
     
     return individual_choice
-
 
 #Tidy up hyperlink
 def uk_link(x):
@@ -191,7 +178,7 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     #Scrape webpage of search results
     page = requests.get(url_search_results)
     soup = BeautifulSoup(page.content, "lxml")
-    hrefs = soup.find_all('a', href=True)
+    hrefs = soup.find_all('span', {'class': 'judgment-listing__judgment'})
     links = []
 
     #Get total number of pages
@@ -219,9 +206,19 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     counter = 1
     
     for link in hrefs:
-        if ((counter <= judgment_counter_bound) and ('a href="/' in str(link)) and '">' in str(link) and '?' in str(link)):
-            link_direct = 'https://caselaw.nationalarchives.gov.uk' + str(link).split('?')[0][9:] + '/data.xml'
-            links.append(link_direct.replace('.uk/id', '.uk'))
+        if counter <= judgment_counter_bound:
+            
+            raw_link = link.find('a', href=True)['href']
+            
+            if "?" in raw_link:
+                cleaned_link = raw_link.split('?')[0]
+            else:
+                cleaned_link = raw_link
+                
+            link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
+            
+            links.append(link_direct)
+            
             counter = counter + 1
 
     if page_total > 1:  
@@ -229,7 +226,9 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
         for page_ending in range(page_total):
             
             if counter <=judgment_counter_bound:
-                
+
+                pause.seconds(np.random.randint(10, 20))
+
                 url_next_page = url_search_results + f"&page={page_ending + 1}"
                 
                 page_judgment_next_page = requests.get(url_next_page)
@@ -237,20 +236,31 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
         
                 #Check if stll more results
                 if 'No results have been found' not in str(soup_judgment_next_page):
-                    hrefs_next_page = soup_judgment_next_page.find_all('a', href=True)
+                    hrefs_next_page = soup_judgment_next_page.find_all('span', {'class': 'judgment-listing__judgment'})
                     for extra_link in hrefs_next_page:
-                        if ((counter <= judgment_counter_bound) and ('a href="/' in str(extra_link)) and '">' in str(extra_link) and '?' in str(extra_link)):
-                            extra_link_direct = 'https://caselaw.nationalarchives.gov.uk' + str(extra_link).split('?')[0][9:] + '/data.xml'
-                            links.append(extra_link_direct.replace('.uk/id', '.uk'))
+                        if counter <= judgment_counter_bound:
+                            
+                            raw_link = extra_link.find('a', href=True)['href']
+                            
+                            if "?" in raw_link:
+                                cleaned_link = raw_link.split('?')[0]
+                            else:
+                                cleaned_link = raw_link
+                                
+                            link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
+                            
+                            links.append(link_direct)
+                            
                             counter = counter + 1
     
                 else:
                     break
+
+            else:
+                break
                 
-                pause.seconds(np.random.randint(10, 20))
-
+    
     return links
-
 
 # %%
 #Meta labels and judgment combined
@@ -265,9 +275,7 @@ uk_meta_labels_droppable = ['Date',
 
 @st.cache_data(show_spinner = False)
 def uk_meta_judgment_dict(judgment_url_xml):
-    page = requests.get(judgment_url_xml)
-    soup = BeautifulSoup(page.content, "lxml")
-    
+
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
                 'Hyperlink to The National Archives' : '', 
@@ -279,15 +287,23 @@ def uk_meta_judgment_dict(judgment_url_xml):
                 'Header' : '',
                 'judgment': ''
                 }
+
+    #Get metadata
+
     try:
+        page = requests.get(judgment_url_xml)
+        soup = BeautifulSoup(page.content, "lxml")
+    
         judgment_dict['Case name'] = soup.find("frbrname")['value']
         judgment_dict['Medium neutral citation'] = soup.find("uk:cite").getText()
         judgment_dict['Hyperlink to The National Archives'] = uk_link(soup.find("frbruri")['value'])
         judgment_dict['Date'] = soup.find("frbrdate")['date']
         judgment_dict['Court'] = soup.find("uk:court").getText()
         judgment_dict['Header'] = soup.find('header').getText()
+        
         if judgment_dict['Header'][0:1] == '\n':
             judgment_dict['Header'] = judgment_dict['Header'][1: ]
+            
         judgment_dict['Case number'] = soup.find("docketnumber").getText()
     except:
         pass
@@ -297,35 +313,30 @@ def uk_meta_judgment_dict(judgment_url_xml):
             judgment_dict['Judge(s) (non-exhaustiveive)'].append(person["showas"])
         else:
             judgment_dict['Parties'].append(person["showas"])
-    
-    #Get judgment content as a list of headings and paras, but not enumeration/paragraph number
-    #for text in soup.find_all('content'):
-    #    judgment_dict['judgment'].append(text.getText())
 
     #Get judgment
 
     pause.seconds(np.random.randint(5, 10))
 
-    html_link = judgment_url_xml.replace('/data.xml', '')
-    page_html = requests.get(html_link)
-    soup_html = BeautifulSoup(page_html.content, "lxml")
-    
-    judgment_text = soup_html.get_text(separator="\n", strip=True)
-
     try:
-        before_end_of_doc = judgment_text.split('End of document')[0]
-        after_skip_to_end = before_end_of_doc.split('Skip to end')[1]
-        judgment_text = after_skip_to_end
+        html_link = judgment_url_xml.replace('/data.xml', '')
+        page_html = requests.get(html_link)
+        soup_html = BeautifulSoup(page_html.content, "lxml")
         
-    except:
-        pass
-
-    judgment_dict['judgment'] = judgment_text
+        judgment_text = soup_html.get_text(separator="\n", strip=True)
     
-    #try:
-     #   judgment_text = str(soup.find_all('content'))
-    #except:
-      #  judgment_text= soup.get_text(strip=True)
+        try:
+            before_end_of_doc = judgment_text.split('End of document')[0]
+            after_skip_to_end = before_end_of_doc.split('Skip to end')[1]
+            judgment_text = after_skip_to_end
+            
+        except:
+            pass
+    
+        judgment_dict['judgment'] = judgment_text
+
+    except Exception as e:
+        print(f"judgment_dict['Case name']: can't scrape judgment")
         
     return judgment_dict
 

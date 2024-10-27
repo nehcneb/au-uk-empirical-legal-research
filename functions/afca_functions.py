@@ -513,39 +513,40 @@ def afca_old_search(
 #Define function for judgment link containing PDF
 
 def afca_old_pdf_judgment(case_meta):
-
-    url = case_meta['Hyperlink to AFCA Portal']
-    pdf_file = url.split('/')[-1]
-    #case_meta['Case number']
-
-    browser_old.get(url)
     
-    pdf_path = f"{download_dir}/{pdf_file}"
-
-    #Limiting waiting time for downloading PDF to 1 min
-
-    waiting_counter = 0
-    
-    while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
-        pause.seconds(5)
-        waiting_counter += 1
+    judgment_text = ''
 
     try:
+        url = case_meta['Hyperlink to AFCA Portal']
+        pdf_file = url.split('/')[-1]    
+        browser_old.get(url)
         
+        pdf_path = f"{download_dir}/{pdf_file}"
+    
+        #Limiting waiting time for downloading PDF to 1 min
+    
+        waiting_counter = 0
+        
+        while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
+            pause.seconds(5)
+            waiting_counter += 1
+            
         pdfdoc_remote = pypdf.PdfReader(pdf_path)
         
         text_list = []
     
         for page in pdfdoc_remote.pages:
             text_list.append(page.extract_text())
-
+    
         os.remove(pdf_path)
     
-    except:
-        
-        text_list = ['ERROR: Failed to download judgment. Please try this case again.']
+        judgment_text = str(text_list)
+    
+    except Exception as e:
+        print(f"{case_meta['Case name']}: judgment not scrapped")
+        print(e)        
 
-    return str(text_list)
+    return judgment_text
 
 
 
@@ -1672,52 +1673,55 @@ def afca_search(keywordsearch_input, #= '',
 @st.cache_data(show_spinner = False)
 def afca_meta_judgment_dict(judgment_url):
 
-    headers = {'User-Agent': 'whatever'}
-    page = requests.get(judgment_url, headers=headers)
-    soup = BeautifulSoup(page.content, "lxml")
-    
     judgment_dict = {'Case name': '', 'Hyperlink to AFCA Portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
 
-    #Attach 
-
-    case_name = soup.find('li', attrs={'class': 'active'}).text
-    
-    if case_name[0]== ' ':
-        case_name = case_name[1:]
-
-    judgment_dict['Case name'] = case_name  
-    
-    judgment_text = soup.get_text(separator="\n", strip=True)
-
-    judgment_dict['judgment'] = judgment_text  
-
     try:
-        if 'Case number\n' in judgment_text:
-            case_number = judgment_text.split('Case number\n')[1].split('\n')[0]
-        elif 'Case numbers\n' in judgment_text:
-            case_number = judgment_text.split('Case numbers\n')[1].split('\n')[0]
-        elif 'Determination For Case ' in case_name:
-            case_number = case_name.split('Determination For Case ')[1]
-        else:
-            case_number = ''
+        headers = {'User-Agent': 'whatever'}
+        page = requests.get(judgment_url, headers=headers)
+        soup = BeautifulSoup(page.content, "lxml")
             
-        judgment_dict['Case number'] = case_number
+        case_name = soup.find('li', attrs={'class': 'active'}).text
         
-    except:
-        print('Case number not found.')
+        if case_name[0]== ' ':
+            case_name = case_name[1:]
+    
+        judgment_dict['Case name'] = case_name  
+        
+        judgment_text = soup.get_text(separator="\n", strip=True)
+    
+        judgment_dict['judgment'] = judgment_text  
+    
+        try:
+            if 'Case number\n' in judgment_text:
+                case_number = judgment_text.split('Case number\n')[1].split('\n')[0]
+            elif 'Case numbers\n' in judgment_text:
+                case_number = judgment_text.split('Case numbers\n')[1].split('\n')[0]
+            elif 'Determination For Case ' in case_name:
+                case_number = case_name.split('Determination For Case ')[1]
+            else:
+                case_number = ''
+                
+            judgment_dict['Case number'] = case_number
+            
+        except:
+            print('Case number not found.')
+    
+        try:
+            judgment_dict['Financial firm'] = judgment_text.split('Financial firm\n')[1].split('\n')[0]
+        except:
+            print('Case number not found.')
+    
+        try:
+            judgment_dict['Date'] = judgment_text.split(f'{case_number}\n')[3].split('\n')[0]
+        except:
+            print('Date not found.')
 
-    try:
-        judgment_dict['Financial firm'] = judgment_text.split('Financial firm\n')[1].split('\n')[0]
-    except:
-        print('Case number not found.')
-
-    try:
-        judgment_dict['Date'] = judgment_text.split(f'{case_number}\n')[3].split('\n')[0]
-    except:
-        print('Date not found.')
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
     
     return judgment_dict
-    
+
 
 
 # %%
@@ -1798,9 +1802,6 @@ def afca_old_run(df_master):
             judgment_text = afca_old_pdf_judgment(case)
 
             judgment_dict['judgment'] = judgment_text
-
-            if 'ERROR: Failed to download judgment' in judgment_dict['judgment']:
-                judgment_dict['Case name'] = judgment_text
 
             judgment_dict['Hyperlink to AFCA Portal'] = link(case['Hyperlink to AFCA Portal'])
     

@@ -61,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -570,17 +570,26 @@ if next_button:
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
-            fca_url_to_check = fca_search_url(df_master)
-            fca_html = requests.get(fca_url_to_check)
-            fca_soup = BeautifulSoup(fca_html.content, "lxml")
-            if 'Display' not in str(fca_soup):
-                st.error(no_results_msg)
-
-            else:
-
-                save_input(df_master)
-
-                st.session_state["page_from"] = 'pages/FCA.py'
-                
-                st.switch_page('pages/GPT.py')
+            try:
+                fca_url_to_check = fca_search_url(df_master)
+                fca_html = requests.get(fca_url_to_check)
+                fca_soup = BeautifulSoup(fca_html.content, "lxml")
+                if 'Display' not in str(fca_soup):
+                    st.error(no_results_msg)
+    
+                else:
+    
+                    save_input(df_master)
+    
+                    st.session_state["page_from"] = 'pages/FCA.py'
+                    
+                    st.switch_page('pages/GPT.py')
+                    
+            except Exception as e:
+                print(search_error_display)
+                print(e)
+                st.error(search_error_display)
+                st.error(e)
+        
+                st.stop()
 

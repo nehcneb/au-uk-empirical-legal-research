@@ -178,15 +178,12 @@ def split_title_mnc(full_title):
 
 # %%
 #Pause between judgment scraping
+scraper_pause_mean = int(10)
 
-scraper_pause_mean = int((15-5)/2)
-
-#print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 
 # %%
-#Lowerbound on length of judgment text to proccess, in tokens
-
+#Lowerbound on length of judgment text to proccess without trying to download directly from official database, in tokens
 judgment_text_lower_bound = 4000 #~3000 words
 
 
@@ -354,6 +351,21 @@ def reverse_link(x):
     return value
 
 
+# %%
+#Display error for scraping
+search_error_display = 'The database from which this app sources cases is not responding. Please try again in a few hours.'
+
+
+# %%
+#Note error for scraping
+search_error_note = 'The database from which this app sources cases did not respond. This case was not sent to GPT.'
+
+
+# %%
+#Note truncation
+truncation_note = 'Given GPT was unable to process the full file length, a truncated version was given to GPT.'
+
+
 # %% [markdown]
 # # Streamlit
 
@@ -461,15 +473,18 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
     #Enable the previous argument if want to allow saving of last produced results
     #Default df_individual is empty to ensure no buttons for downloading data is shown
     
+    #Create a copy of df_master to avoid exposing secrets
+    df_master_to_show = df_master.copy(deep = True)
+
     #For downloading entries
     if saving:
 
-        if 'Your GPT API key' in df_master.columns:
-            df_master.pop("Your GPT API key")
+        if 'Your GPT API key' in df_master_to_show.columns:
+            df_master_to_show["Your GPT API key"] = ''
 
-        if 'CourtListener API token' in df_master.columns:
+        if 'CourtListener API token' in df_master_to_show.columns:
             #Essential to avoiding both default and user secrets
-            df_master.pop("CourtListener API token")
+            df_master_to_show["CourtListener API token"] = ''
 
         if previous:
             
@@ -481,9 +496,9 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             
             st.success('Your entries are now available for download.')
         
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+        responses_output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
         
-        xlsx = convert_df_to_excel(df_master)
+        xlsx = convert_df_to_excel(df_master_to_show)
         
         ste.download_button(label='DOWNLOAD your entries as an Excel spreadsheet (XLSX)',
                             data=xlsx,
@@ -491,7 +506,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
                             mime='application/vnd.ms-excel',
                            )
     
-        csv = convert_df_to_csv(df_master)
+        csv = convert_df_to_csv(df_master_to_show)
     
         ste.download_button(
             label="DOWNLOAD your entries as a CSV", 
@@ -500,7 +515,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             mime= "text/csv", 
         )
     
-        json = convert_df_to_json(df_master)
+        json = convert_df_to_json(df_master_to_show)
         
         ste.download_button(
             label="DOWNLOAD your entries as a JSON", 
@@ -518,18 +533,18 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
         if previous:
             st.warning('Looking for your last produced data?')
             
-            previous_str = 'your last produced '
+            previous_str = 'last produced '
             
         else:
             
             st.success("Your data is now available for download. Thank you for using *LawtoData*!")
 
         #Produce output spreadsheets
-        output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
+        output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
 
         excel_xlsx = convert_df_to_excel(df_individual)
         
-        ste.download_button(label=f'DOWNLOAD {previous_str}data as an Excel spreadsheet (XLSX)',
+        ste.download_button(label=f'DOWNLOAD your {previous_str}data as an Excel spreadsheet (XLSX)',
                             data=excel_xlsx,
                             file_name= output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
@@ -538,7 +553,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
         csv_output = convert_df_to_csv(df_individual)
         
         ste.download_button(
-            label=f'DOWNLOAD {previous_str}data as a CSV', 
+            label=f'DOWNLOAD your {previous_str}data as a CSV', 
             data = csv_output,
             file_name= output_name + '.csv', 
             mime= "text/csv", 
@@ -547,13 +562,13 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
         json_output = convert_df_to_json(df_individual)
         
         ste.download_button(
-            label=f'DOWNLOAD {previous_str}data as a JSON', 
+            label=f'DOWNLOAD your {previous_str}data as a JSON', 
             data = json_output,
             file_name= output_name + '.json', 
             mime= "application/json", 
         )
     
-        st.page_link('pages/AI.py', label=f"ANALYSE {previous_str}data with an AI", icon = '🤔')
+        st.page_link('pages/AI.py', label=f"ANALYSE your {previous_str}data with an AI", icon = '🤔')
 
     #For noting a lack of data
     if ((not saving) and (len(df_individual) == 0)):

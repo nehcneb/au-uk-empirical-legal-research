@@ -67,7 +67,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from functions.common_functions import check_questions_answers, default_judgment_counter_bound
+from functions.common_functions import check_questions_answers, default_judgment_counter_bound, truncation_note, search_error_note
 
 # %% [markdown]
 # # gpt-3.5, 4o-mini and 4o
@@ -344,8 +344,6 @@ def GPT_questions_check(questions_json, gpt_model, questions_check_system_instru
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
-    #judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
-
     json_direction = [{"role": "user", "content": 'Label the following questions in JSON form.'}]
 
     #Create answer format
@@ -485,8 +483,6 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
     #'question_json' variable is a json of answers_to_check_json to GPT
     #'jugdment' variable is a judgment_json   
 
-    #judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
-
     json_direction = [{"role": "user", "content": 'Check the following text in JSON form.'}]
 
     #Create answer format
@@ -559,7 +555,7 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
 
 # %%
 #For modern judgments, define system role content for GPT
-role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and metadata in JSON form. 
+role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and the associated metadata in JSON form. 
 Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
 If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'. 
 """
@@ -742,22 +738,24 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     for judgment_index in df_individual.index:
         
         judgment_json = df_individual.to_dict('index')[judgment_index]
+
+        #Check wither error in getting the full text
+        text_error = False
+        for text_key in ['judgment', 'opinions', 'recap_documents']:
+            if text_key in judgment_json.keys():
+                if len(judgment_json[text_key]) == 0:
+                    text_error = True
+                    df_individual.loc[judgment_index, 'Note'] = search_error_note
+                    print(f"Case indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                break
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
         df_individual.loc[judgment_index, f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
 
-        #Indicate whether judgment truncated
-        
-        df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = ''       
-        
-        if judgment_tokens <= tokens_cap(gpt_model):
-            
-            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'No'
-            
-        else:
-            
-            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'Yes'
+        #Indicate whether judgment truncated        
+        if judgment_tokens > tokens_cap(gpt_model):
+            df_individual.loc[judgment_index, 'Note'] = truncation_note
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -769,7 +767,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
-        if int(GPT_activation) > 0:
+        if ((int(GPT_activation) > 0) and (text_error == False)):
             GPT_output_list = GPT_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
@@ -790,11 +788,11 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
-                answer = f'Placeholder answer for {str(int(judgment_index) + 2)} {str(q_index)}'
-                answers_dict.update({q_index: answer})
-            
-            #Own calculation of GPT costs for Placeholder answer fors
+                answer = ''
+                answers_dict.update({questions_json[q_index]: answer})
 
+            #st.write(answers_dict)
+            
             #Calculate capped judgment tokens
 
             judgment_capped_tokens = num_tokens_from_string(judgment_prompt_json(judgment_json, gpt_model), "cl100k_base")
@@ -807,7 +805,7 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
             other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Respond in the following JSON form: '
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. The paragraph or page numbers in the judgment, or sections of the metadata from which you obtained your answer. ", "cl100k_base")
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer. (The paragraphs, pages or sections from which you obtained your answer)", "cl100k_base")
 
             #Calculate number of tokens of answers
             answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
@@ -1037,34 +1035,35 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
     for judgment_index in df_individual.index:
         
         judgment_json = df_individual.to_dict('index')[judgment_index]
+
+        #Check wither error in getting the full text
+        text_error = False
+        for text_key in ['judgment', 'opinions', 'recap_documents']:
+            if text_key in judgment_json.keys():
+                if len(judgment_json[text_key]) == 0:
+                    text_error = True
+                    df_individual.loc[judgment_index, 'Note'] = search_error_note
+                    print(f"Case indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                break
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
         df_individual.loc[judgment_index, f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_tokens       
 
         #Indicate whether judgment truncated
-        
-        df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = ''       
-        
-        if judgment_tokens <= tokens_cap(gpt_model):
-            
-            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'No'
-            
-        else:
-            
-            df_individual.loc[judgment_index, "File truncated (if given to GPT)?"] = 'Yes'
+                
+        if judgment_tokens > tokens_cap(gpt_model):
+            df_individual.loc[judgment_index, 'Note'] = truncation_note
 
         #Create columns for respondent's GPT cost
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
-        #df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = ''
                 
         #Calculate GPT start time
 
         GPT_start_time = datetime.now()
 
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
-
-        if int(GPT_activation) > 0:
+        if ((int(GPT_activation) > 0) and (text_error == False)):
 
             get_id_oneline = gpt_batch_input_id_line(questions_json, judgment_json, gpt_model, system_instruction)
             
@@ -1072,17 +1071,11 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
 
             batch_input_list.append(get_id_oneline['oneline'])
 
-            if 'judgment' in df_individual.columns:
-                
-                df_individual.loc[judgment_index, 'judgment'] = ''
-
-            if 'opinions' in df_individual.columns:
-                
-                df_individual.loc[judgment_index, 'opinions'] = ''
-
-            if 'recap_documents' in df_individual.columns:
-                
-                df_individual.loc[judgment_index, 'recap_documents'] = ''
+            #Remove full text
+            for text_key in ['judgment', 'opinions', 'recap_documents']:
+                if text_key in df_individual.columns:
+                    df_individual.loc[judgment_index, text_key] = ''
+                    break
             
             df_individual.loc[judgment_index, 'GPT submission time'] = str(GPT_start_time)
 

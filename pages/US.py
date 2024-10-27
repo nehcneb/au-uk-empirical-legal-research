@@ -59,28 +59,17 @@ import tiktoken
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-test = pd.DataFrame([])
-
-# %%
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import today_in_nums, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # US search engine
 
 # %%
-from functions.us_functions import us_search_tool, us_search_preview, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+from functions.us_functions import us_search_tool, us_search_preview, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions
 
 
 # %%
@@ -291,7 +280,6 @@ def us_create_df():
            'Your GPT API key': gpt_api_key, 
                'Collection': collection, 
            'Filtered by court': filtered_by_court, 
-          'Filtered by court': filtered_by_court, 
             'Federal Appellate Courts': fed_app_courts, 
            'Federal District Courts': fed_dist_courts, 
            'Federal Historical Courts': fed_hist_courts, 
@@ -500,32 +488,32 @@ if collection_entry ==  list(us_collections.keys())[0]:
                 
         fed_app_courts_entry = st.multiselect(label = 'Federal Appellate Courts', 
                                               options = list(us_fed_app_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal Appellate Courts'])
+                                              default = st.session_state['df_master'].loc[0, 'Federal Appellate Courts']
                                              )
                 
         fed_dist_courts_entry = st.multiselect(label = 'Federal District Courts', 
                                               options = list(us_fed_dist_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal District Courts'])
+                                              default = st.session_state['df_master'].loc[0, 'Federal District Courts']
                                              )
                     
         fed_hist_courts_entry = st.multiselect(label = 'Federal Historical Courts', 
                                               options = list(us_fed_hist_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal Historical Courts'])
+                                              default = st.session_state['df_master'].loc[0, 'Federal Historical Courts']
                                              )
                     
         bankr_courts_entry = st.multiselect(label = 'Bankruptcy Courts', 
                                               options = list(us_bankr_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "Bankruptcy Courts"])
+                                              default = st.session_state['df_master'].loc[0, "Bankruptcy Courts"]
                                              )
                 
         state_courts_entry = st.multiselect(label = 'State and Territory Courts', 
                                               options = list(us_state_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "State and Territory Courts"])
+                                              default = st.session_state['df_master'].loc[0, "State and Territory Courts"]
                                              )
                 
         more_courts_entry = st.multiselect(label = 'More Courts', 
                                               options = list(us_more_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "More Courts"])
+                                              default = st.session_state['df_master'].loc[0, "More Courts"]
                                              )
             
     else: #if Filtered_by_court_toggle == False
@@ -554,22 +542,22 @@ else: #If pacer records chosen
                 
         fed_app_courts_entry = st.multiselect(label = 'Federal Appellate Courts', 
                                               options = list(us_pacer_fed_app_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal Appellate Courts'])
+                                              default = st.session_state['df_master'].loc[0, 'Federal Appellate Courts']
                                              )
                 
         fed_dist_courts_entry = st.multiselect(label = 'Federal District Courts', 
                                               options = list(us_pacer_fed_dist_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, 'Federal District Courts'])
+                                              default = st.session_state['df_master'].loc[0, 'Federal District Courts']
                                              )
                         
         bankr_courts_entry = st.multiselect(label = 'Bankruptcy Courts', 
                                               options = list(us_pacer_bankr_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "Bankruptcy Courts"])
+                                              default = st.session_state['df_master'].loc[0, "Bankruptcy Courts"]
                                              )
                 
         more_courts_entry = st.multiselect(label = 'More Courts', 
                                               options = list(us_pacer_more_courts.keys()), 
-                                              default = us_court_choice_to_list(st.session_state['df_master'].loc[0, "More Courts"])
+                                              default = st.session_state['df_master'].loc[0, "More Courts"]
                                              )
             
     else: #if Filtered_by_court_toggle == False
@@ -839,20 +827,28 @@ if next_button:
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
-            us_search_preview_dict = us_search_preview(df_master)
-            
-            if us_search_preview_dict['results_count'] == 0:
-                
-                st.error(no_results_msg)
+            try:
 
-                #US-specific
-                st.error('Alternatively, please enter your own CourtListener API token and try again.')
-            
-            else:
+                us_search_preview_dict = us_search_preview(df_master)
                 
-                save_input(df_master)
+                if us_search_preview_dict['results_count'] == 0:
+                    
+                    st.error(no_results_msg)
+    
+                    #US-specific
+                    st.error('Alternatively, please enter your own CourtListener API token and try again.')
+                
+                else:
+                    
+                    save_input(df_master)
+    
+                    st.session_state["page_from"] = 'pages/US.py'
+                    
+                    st.switch_page('pages/GPT.py')
 
-                st.session_state["page_from"] = 'pages/US.py'
-                
-                st.switch_page('pages/GPT.py')
+            except Exception as e:
+                print(search_error_display)
+                print(e)
+                st.error(search_error_display)
+                st.error(e)
 

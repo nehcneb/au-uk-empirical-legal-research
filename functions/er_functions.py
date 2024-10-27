@@ -63,16 +63,10 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
-
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, no_results_msg, search_error_note
 
 print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # English Reports search engine
@@ -123,8 +117,8 @@ def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
     case_link_pairs = []
 
     #number of search results
-    docs_found_string = str(soup.find_all('span', {'class' : 'ndocs'})).split('Documents found:')[1].split('<')[0].replace(' ', '')
-    docs_found = int(docs_found_string)
+    docs_found_string = str(soup.find_all('span', {'class' : 'ndocs'})).split('Documents found:')[1].split('<')[0].replace(' ', '').replace(',', '')
+    docs_found = int(float(docs_found_string))
     
     #Start counter
     counter = 1
@@ -136,7 +130,7 @@ def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
             link_direct = link.get('href')
             sub_link = link_direct.replace('.html', '.pdf').split('cases')[1].split('.pdf')[0]
             pdf_link = 'http://www.commonlii.org/uk/cases' + sub_link + '.pdf'
-            dict_object = { 'case':case, 'link_direct': pdf_link}
+            dict_object = {'case':case, 'link_direct': pdf_link}
             case_link_pairs.append(dict_object)
             counter = counter + 1
         
@@ -154,11 +148,11 @@ def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bo
                     extra_link_direct = extra_link.get('href')
                     sub_extra_link = extra_link_direct.replace('.html', '.pdf').split('cases')[1].split('.pdf')[0]
                     pdf_extra_link = 'http://www.commonlii.org/uk/cases' + sub_extra_link + '.pdf'
-                    dict_object = { 'case':case, 'link_direct': pdf_extra_link}
+                    dict_object = {'case':case, 'link_direct': pdf_extra_link}
                     case_link_pairs.append(dict_object)
                     counter = counter + 1
 
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
         else:
             break
@@ -194,7 +188,7 @@ def er_judgment_text(case_link_pair):
         text_list.append(page.extract_text())
     
     return str(text_list)
-        
+    
 
 
 # %%
@@ -211,36 +205,34 @@ def er_meta_judgment_dict(case_link_pair):
                      'judgment': ''
                     }
 
-    case_name = case_link_pair['case']
-    year = case_link_pair['link_direct'].split('EngR/')[-1][0:4]
-    case_num = case_link_pair['link_direct'].split('/')[-1].replace('.pdf', '')
-    mnc = '[' + year + ']' + ' EngR ' + case_num
-
-    er_cite = ''
-    nr_cite = ''
-        
     try:
-        case_name = case_link_pair['case'].split('[')[0][:-1]
-        nr_cite = case_link_pair['case'].split(';')[1][1:]
-        er_cite = case_link_pair['case'].split(';')[2][1:]
-    except:
-        pass
-                
-    judgment_dict['Case name'] = case_name
-    judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['English Reports'] = er_cite
-    judgment_dict['Nominate Reports'] = nr_cite
-    judgment_dict['Year'] = year
-    judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
-    judgment_dict['judgment'] = er_judgment_text(case_link_pair)
-
-#    pause.seconds(np.random.randint(5, 15))
+        case_name = case_link_pair['case']
+        year = case_link_pair['link_direct'].split('EngR/')[-1][0:4]
+        case_num = case_link_pair['link_direct'].split('/')[-1].replace('.pdf', '')
+        mnc = '[' + year + ']' + ' EngR ' + case_num
     
-    #try:
-     #   er_judgment_text = str(soup.find_all('content'))
-    #except:
-      #  er_judgment_text= soup.get_text(strip=True)
-        
+        er_cite = ''
+        nr_cite = ''
+            
+        try:
+            case_name = case_link_pair['case'].split('[')[0][:-1]
+            nr_cite = case_link_pair['case'].split(';')[1][1:]
+            er_cite = case_link_pair['case'].split(';')[2][1:]
+        except:
+            pass
+                    
+        judgment_dict['Case name'] = case_name
+        judgment_dict['Medium neutral citation'] = mnc
+        judgment_dict['English Reports'] = er_cite
+        judgment_dict['Nominate Reports'] = nr_cite
+        judgment_dict['Year'] = year
+        judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
+        judgment_dict['judgment'] = er_judgment_text(case_link_pair)
+
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
+                
     return judgment_dict
 
 
@@ -275,12 +267,8 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
 
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
+from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, GPT_answers_check, unanswered_questions, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%
@@ -322,7 +310,7 @@ def er_run(df_master):
 
         judgment_dict = er_meta_judgment_dict(case_link_pair)
         judgments_file.append(judgment_dict)
-        pause.seconds(np.random.randint(5, 15))
+        pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -413,48 +401,46 @@ def er_judgment_tokens_b64(case_link_pair):
 #Meta labels and judgment combined
 
 def er_meta_judgment_dict_b64(case_link_pair):
-    
-    judgment_dict = {'Case name': '',
-                     'Medium neutral citation' : '', 
-                     'English Reports': '', 
-                     'Nominate Reports': '', 
-                     'Hyperlink to CommonLII': '', 
-                     'Year' : '', 
-                     'judgment': '', 
-                     'tokens_raw': 0
-                    }
 
-    case_name = case_link_pair['case']
-    year = case_link_pair['link_direct'].split('EngR/')[-1][0:4]
-    case_num = case_link_pair['link_direct'].split('/')[-1].replace('.pdf', '')
-    mnc = '[' + year + ']' + ' EngR ' + case_num
-
-    er_cite = ''
-    nr_cite = ''
-        
     try:
-        case_name = case_link_pair['case'].split('[')[0][:-1]
-        nr_cite = case_link_pair['case'].split(';')[1][1:]
-        er_cite = case_link_pair['case'].split(';')[2][1:]
-    except:
-        pass
-                
-    judgment_dict['Case name'] = case_name
-    judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['English Reports'] = er_cite
-    judgment_dict['Nominate Reports'] = nr_cite
-    judgment_dict['Year'] = year
-    judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
-    judgment_dict['judgment'] = er_judgment_tokens_b64(case_link_pair)['judgment']
-    judgment_dict['tokens_raw'] = er_judgment_tokens_b64(case_link_pair)['tokens_raw']
-
-#    pause.seconds(np.random.randint(5, 15))
+        judgment_dict = {'Case name': '',
+                         'Medium neutral citation' : '', 
+                         'English Reports': '', 
+                         'Nominate Reports': '', 
+                         'Hyperlink to CommonLII': '', 
+                         'Year' : '', 
+                         'judgment': '', 
+                         'tokens_raw': 0
+                        }
     
-    #try:
-     #   er_judgment_text = str(soup.find_all('content'))
-    #except:
-      #  er_judgment_text= soup.get_text(strip=True)
-        
+        case_name = case_link_pair['case']
+        year = case_link_pair['link_direct'].split('EngR/')[-1][0:4]
+        case_num = case_link_pair['link_direct'].split('/')[-1].replace('.pdf', '')
+        mnc = '[' + year + ']' + ' EngR ' + case_num
+    
+        er_cite = ''
+        nr_cite = ''
+            
+        try:
+            case_name = case_link_pair['case'].split('[')[0][:-1]
+            nr_cite = case_link_pair['case'].split(';')[1][1:]
+            er_cite = case_link_pair['case'].split(';')[2][1:]
+        except:
+            pass
+                    
+        judgment_dict['Case name'] = case_name
+        judgment_dict['Medium neutral citation'] = mnc
+        judgment_dict['English Reports'] = er_cite
+        judgment_dict['Nominate Reports'] = nr_cite
+        judgment_dict['Year'] = year
+        judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
+        judgment_dict['judgment'] = er_judgment_tokens_b64(case_link_pair)['judgment']
+        judgment_dict['tokens_raw'] = er_judgment_tokens_b64(case_link_pair)['tokens_raw']
+
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
+    
     return judgment_dict
     
 
@@ -480,8 +466,6 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
                       "content": image_content_value
                      }
                   ]
-
-    #Create metadata content
 
     metadata_content = [{"role": "user", "content": ''}]
 
@@ -661,23 +645,17 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
     for judgment_index in df_individual.index:
         
         judgment_json = df_individual.to_dict('index')[judgment_index]
-        
+
+        #Check wither error in getting the full text
+        text_error = False
+        if 'judgment' in judgment_json.keys():
+            if len(judgment_json['judgment']) == 0:
+                text_error = True
+                df_individual.loc[judgment_index, 'Note'] = search_error_note
+                print(f"Case indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
-        #judgment_json['tokens_raw'] = num_tokens_from_string(str(judgment_json), "cl100k_base")
-
         df_individual.loc[judgment_index, f"Tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_json['tokens_raw']       
-
-        #Indicate whether judgment truncated
-        
-        df_individual.loc[judgment_index, "judgment truncated (if given to GPT)?"] = ''       
-        
-        if judgment_json['tokens_raw'] <= tokens_cap(gpt_model):
-            
-            df_individual.loc[judgment_index, "judgment truncated (if given to GPT)?"] = 'No'
-            
-        else:
-            
-            df_individual.loc[judgment_index, "judgment truncated (if given to GPT)?"] = 'Yes'
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -689,7 +667,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
 
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
-        if int(GPT_activation) > 0:
+        if ((int(GPT_activation) > 0) and (text_error == False)):
             GPT_judgment_json = er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_judgment_json[0]
 
@@ -707,11 +685,9 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
 
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
-                answer = 'Placeholder answer for ' + ' judgment ' + str(int(judgment_index) + 2) + ' ' + str(q_index)
-                answers_dict.update({q_index: answer})
+                answer = ''
+                answers_dict.update({questions_json[q_index]: answer})
             
-            #Own calculation of GPT costs for Placeholder answer fors
-
             #Calculate capped judgment tokens
 
             judgment_capped_tokens = min(judgment_json['tokens_raw'], tokens_cap(gpt_model))
@@ -753,11 +729,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         
         for answer_index in answers_dict.keys():
 
-            #Check any question override
-            if 'Say "n/a" only' in str(answer_index):
-                answer_header = f'GPT question {q_counter}: ' + 'Not answered due to potential privacy violation'
-            else:
-                answer_header = f'GPT question {q_counter}: ' + answer_index
+            answer_header = f'GPT question {q_counter}: ' + answer_index
 
             #Check any errors
             answer_string = str(answers_dict[answer_index]).lower()
@@ -776,8 +748,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
                 df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
 
             q_counter += 1
-        
-        
+                
         #Calculate GPT costs
 
         #If check for questions
@@ -823,7 +794,7 @@ def er_run_b64(df_master):
 
         judgment_dict = er_meta_judgment_dict_b64(case_link_pair)
         judgments_file.append(judgment_dict)
-        pause.seconds(np.random.randint(5, 15))
+        pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

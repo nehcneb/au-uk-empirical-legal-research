@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import today_in_nums, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -123,8 +123,8 @@ def scta_search_results_to_case_link_pairs(url_search_results, judgment_counter_
     case_link_pairs = []
 
     #number of search results
-    docs_found_string = str(soup.find('title')).split('AustLII:')[1].split('documents')[0].replace(' ', '')
-    docs_found = int(docs_found_string)
+    docs_found_string = str(soup.find('title')).split('AustLII:')[1].split('documents')[0].replace(' ', '').replace(',', '')
+    docs_found = int(float(docs_found_string))
 
     #Start counter
     counter = 1
@@ -200,34 +200,38 @@ def scta_meta_judgment_dict(case_link_pair):
                      'Date' : '', 
                      'judgment': ''
                     }
-
-    case_name = case_link_pair['case']
-    date = case_link_pair['case'].split('(')[-1].replace(')', '')
-    year = case_link_pair['case'].split('[')[1][0:4]
-    case_number_raw = case_link_pair['case'].split('SCTA ')[1].split(' (')[0]
-    
-    if ";" in case_number_raw:
-        case_number = case_number_raw.split(';')[0]
-    else:
-        case_number = case_number_raw
-    
-    mnc = '[' + year +']' + ' SCTA ' + case_number
-    nr_cite = ''
-        
     try:
-        case_name = case_link_pair['case'].split('[')[0][:-1]
-        nr_cite = case_link_pair['case'].split('; ')[1].replace(' (' + date + ')', '')
-    except:
-        pass
-                
-    judgment_dict['Case name'] = case_name
-    judgment_dict['Medium neutral citation'] = mnc
-    judgment_dict['Other reports'] = nr_cite
-    judgment_dict['Date'] = date
-    judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
-    judgment_dict['judgment'] = scta_judgment_text(case_link_pair)
-
+    
+        case_name = case_link_pair['case']
+        date = case_link_pair['case'].split('(')[-1].replace(')', '')
+        year = case_link_pair['case'].split('[')[1][0:4]
+        case_number_raw = case_link_pair['case'].split('SCTA ')[1].split(' (')[0]
         
+        if ";" in case_number_raw:
+            case_number = case_number_raw.split(';')[0]
+        else:
+            case_number = case_number_raw
+        
+        mnc = '[' + year +']' + ' SCTA ' + case_number
+        nr_cite = ''
+            
+        try:
+            case_name = case_link_pair['case'].split('[')[0][:-1]
+            nr_cite = case_link_pair['case'].split('; ')[1].replace(' (' + date + ')', '')
+        except:
+            pass
+                    
+        judgment_dict['Case name'] = case_name
+        judgment_dict['Medium neutral citation'] = mnc
+        judgment_dict['Other reports'] = nr_cite
+        judgment_dict['Date'] = date
+        judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
+        judgment_dict['judgment'] = scta_judgment_text(case_link_pair)
+
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
+    
     return judgment_dict
 
 

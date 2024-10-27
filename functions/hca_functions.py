@@ -64,14 +64,6 @@ from functions.common_functions import own_account_allowed, convert_df_to_json, 
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # High Court of Australia search engine
@@ -306,120 +298,118 @@ def hca_meta_judgment_dict(judgment_url):
                 'judgment' : ''
                 }
     
-    #Attach hyperlink
-
-    judgment_dict['Hyperlink to High Court Judgments Database'] = link(judgment_url)
-    
-    page = requests.get(judgment_url)
-    soup = BeautifulSoup(page.content, "lxml")
-
-    #Case name
-    judgment_dict['Case name'] = soup.find('title').text
-
-    #Medium neutral citation
-    year = judgment_url.split('showCase/')[1][0:4]
-    num = judgment_url.split('HCA/')[1]
-    
-    judgment_dict['Medium neutral citation'] = f'[{year}] HCA {num}'
-
-    #Reported, decision date, before
-
-    h2_tags = soup.find_all('h2')
-
-    if len(h2_tags) > 0:
-        
-        for h2 in soup.find_all('h2'):
-            if 'clr' in h2.text.lower():
-                
-                judgment_dict['Reported'] = h2.text
-    
-            elif is_date(h2.text, fuzzy=False):
-    
-                judgment_dict['Date'] = h2.text
-    
-            elif 'before' in h2.text.lower():
-                judgment_dict['Before'] = h2.text.replace('Before', '').replace('before', '').replace('Catchwords', '').replace('catchwords', '').replace('\n', '').replace('\t', '').replace('  ', '')
-    
-            else:
-                continue
-    
-    #Case number
-
-    case_number_list = soup.find_all(string=re.compile('Case Number'))
-
-    if len(case_number_list) > 0:
-        
-        judgment_dict['Case number'] = case_number_list[0].split('Case Number')[1].replace(': ', '')
-
-    #Checking
-
-    if len(str(judgment_dict['Reported'])) < 5:
-
-        try:
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
-    
-            judgment_dict['Reported'] = hca_df.loc[int(index), 'reported']
-
-        except:
-            print(f"Can't get reported for {judgment_dict['Medium neutral citation']}")
-
-    if is_date(str(judgment_dict['Date']), fuzzy=False) == False:
-
-        try:
-            
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
-    
-            judgment_dict['Date'] = hca_df.loc[index, 'date']
-
-        except:
-            print(f"Can't get date for {judgment_dict['Medium neutral citation']}")
-
-    if len(str(judgment_dict['Before'])) < 3:
-
-        try:
-    
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
-    
-            judgment_dict['Before'] = hca_df.loc[int(index), 'before']
-
-    
-        except:
-            print(f"Can't get before for {judgment_dict['Medium neutral citation']}")
-
-    if len(str(judgment_dict['Case number'])) < 3:
-
-        try:
-
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
-    
-            judgment_dict['Case number'] = hca_df.loc[int(index), 'case_number']
-
-    
-        except:
-            print(f"Can't get case number for {judgment_dict['Medium neutral citation']}")
-    
-    #Catchwords
-
-    catchwords_list = soup.find_all('div', class_='well')
-
-    if len(catchwords_list) > 0:
-        
-        judgment_dict['Catchwords'] = catchwords_list[0].text
-
-    #Judgment text
     try:
-
-        judgment_dict['judgment'] = hca_pdf_judgment(judgment_url)
+        #Attach hyperlink
+    
+        judgment_dict['Hyperlink to High Court Judgments Database'] = link(judgment_url)
         
-    except Exception as e:
-        print(e)
-        judgment_dict['judgment'] = 'Error. Judgment not available or not downloaded.'
-        judgment_dict['Case name'] = judgment_dict['Case name'] + '. Error. Judgment not available or not downloaded.'
+        page = requests.get(judgment_url)
+        soup = BeautifulSoup(page.content, "lxml")
+    
+        #Case name
+        judgment_dict['Case name'] = soup.find('title').text
+    
+        #Medium neutral citation
+        year = judgment_url.split('showCase/')[1][0:4]
+        num = judgment_url.split('HCA/')[1]
+        
+        judgment_dict['Medium neutral citation'] = f'[{year}] HCA {num}'
+    
+        #Reported, decision date, before
+    
+        h2_tags = soup.find_all('h2')
+    
+        if len(h2_tags) > 0:
+            
+            for h2 in soup.find_all('h2'):
+                if 'clr' in h2.text.lower():
+                    
+                    judgment_dict['Reported'] = h2.text
+        
+                elif is_date(h2.text, fuzzy=False):
+        
+                    judgment_dict['Date'] = h2.text
+        
+                elif 'before' in h2.text.lower():
+                    judgment_dict['Before'] = h2.text.replace('Before', '').replace('before', '').replace('Catchwords', '').replace('catchwords', '').replace('\n', '').replace('\t', '').replace('  ', '')
+        
+                else:
+                    continue
+        
+        #Case number
+    
+        case_number_list = soup.find_all(string=re.compile('Case Number'))
+    
+        if len(case_number_list) > 0:
+            
+            judgment_dict['Case number'] = case_number_list[0].split('Case Number')[1].replace(': ', '')
+    
+        #Checking
+    
+        if len(str(judgment_dict['Reported'])) < 5:
+    
+            try:
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Reported'] = hca_df.loc[int(index), 'reported']
+    
+            except:
+                print(f"Can't get reported for {judgment_dict['Medium neutral citation']}")
+    
+        if is_date(str(judgment_dict['Date']), fuzzy=False) == False:
+    
+            try:
+                
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Date'] = hca_df.loc[index, 'date']
+    
+            except:
+                print(f"Can't get date for {judgment_dict['Medium neutral citation']}")
+    
+        if len(str(judgment_dict['Before'])) < 3:
+    
+            try:
+        
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Before'] = hca_df.loc[int(index), 'before']
+    
+        
+            except:
+                print(f"Can't get before for {judgment_dict['Medium neutral citation']}")
+    
+        if len(str(judgment_dict['Case number'])) < 3:
+    
+            try:
+    
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Case number'] = hca_df.loc[int(index), 'case_number']
+    
+        
+            except:
+                print(f"Can't get case number for {judgment_dict['Medium neutral citation']}")
+        
+        #Catchwords
+    
+        catchwords_list = soup.find_all('div', class_='well')
+    
+        if len(catchwords_list) > 0:
+            
+            judgment_dict['Catchwords'] = catchwords_list[0].text
+    
+        #Judgment text
+        judgment_dict['judgment'] = hca_pdf_judgment(judgment_url)
 
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
+        
     return judgment_dict
     
 
@@ -441,149 +431,152 @@ def hca_meta_judgment_dict_alt(judgment_url):
                 'Order': '',
                 'judgment' : ''
                 }
+
+    try:
+        #Attach hyperlink
     
-    #Attach hyperlink
-
-    judgment_dict['Hyperlink to High Court Judgments Database'] = link(judgment_url)
-    
-    page = requests.get(judgment_url)
-    soup = BeautifulSoup(page.content, "lxml")
-
-    #Case name
-    judgment_dict['Case name'] = soup.find('title').text
-
-    #Judgment text
-
-    judgment_list = soup.find_all("div", {"class": "opinion"})
-    
-    judgment_pdfs_list = soup.find_all('a', {'class': 'btn btn-success'})
-    
-    if len(judgment_list) > 0:
-
-        judgment_dict['judgment'] = judgment_list[0].text
-
-    elif len(judgment_pdfs_list) > 0:
-        raw_link = judgment_pdfs_list[0]['href']
-        pdf_link = 'https://eresources.hcourt.gov.au' + raw_link
-        judgment_dict['judgment'] = hca_pdf_judgment(pdf_link)
-
-    else:
-        judgment_dict['judgment'] = 'Error. Judgment not available or not downloaded.'
+        judgment_dict['Hyperlink to High Court Judgments Database'] = link(judgment_url)
         
-        judgment_dict['Case name'] = judgment_dict['Case name'] + '. Error. Judgment not available or not downloaded.'
-
-    #Catchwords
-
-    catchwords_list = soup.find_all("div", {"class": "Catchphrases"})
-
-    if len(catchwords_list) > 0:
-        judgment_dict['Catchwords'] = catchwords_list[0].text
+        page = requests.get(judgment_url)
+        soup = BeautifulSoup(page.content, "lxml")
     
-    #Medium neutral citation meta tag
-    mnc_list = soup.find_all("div", {"class": "MNC"})
-
-    if len(mnc_list):
-
-        judgment_dict['Medium neutral citation'] = mnc_list[0].text
-
-    elif len(judgment_pdfs_list) > 0:
-
-        mnc_raw = judgment_pdfs_list[0]['href'].replace('/downloadPdf/', '').replace('/', '')
-
-        year = mnc_raw.lower().split('hca')[0]
-
-        num = mnc_raw.lower().split('hca')[1]
-
-        judgment_dict['Medium neutral citation'] = f"[{year}] HCA {num}"
-
-    #Before
-    judges_list = soup.find_all("div", {"class": "judges-title"})
-
-    if len(judges_list) > 0:
-
-        judgment_dict['Before'] = judges_list[0].text
-
-
-    #Order
-    order_list = soup.find_all("div", {"class": "order-text"})
-
-    if len(order_list) > 0:
-
-        order = order_list[0].text#.replace('\n            ', '')
-
-        judgment_dict['Order'] = order
-
-    #Reported, decision date, before
-
-    h2_tags = soup.find_all('h2')
-
-    if len(h2_tags) > 0:
+        #Case name
+        judgment_dict['Case name'] = soup.find('title').text
+    
+        #Judgment text
+    
+        judgment_list = soup.find_all("div", {"class": "opinion"})
         
-        for h2 in soup.find_all('h2'):
-            if 'clr' in h2.text.lower():
+        judgment_pdfs_list = soup.find_all('a', {'class': 'btn btn-success'})
+        
+        if len(judgment_list) > 0:
+    
+            judgment_dict['judgment'] = judgment_list[0].text
+    
+        elif len(judgment_pdfs_list) > 0:
+            raw_link = judgment_pdfs_list[0]['href']
+            pdf_link = 'https://eresources.hcourt.gov.au' + raw_link
+            judgment_dict['judgment'] = hca_pdf_judgment(pdf_link)
+    
+        else:
+            judgment_dict['judgment'] = ''
                 
-                judgment_dict['Reported'] = h2.text
+        #Catchwords
     
-            elif is_date(h2.text, fuzzy=False):
+        catchwords_list = soup.find_all("div", {"class": "Catchphrases"})
     
-                judgment_dict['Date'] = h2.text
+        if len(catchwords_list) > 0:
+            judgment_dict['Catchwords'] = catchwords_list[0].text
+        
+        #Medium neutral citation meta tag
+        mnc_list = soup.find_all("div", {"class": "MNC"})
     
-            elif 'before' in h2.text.lower():
-                judgment_dict['Before'] = h2.text.replace('Before', '').replace('before', '').replace('Catchwords', '').replace('catchwords', '').replace('\n', '').replace('\t', '').replace('  ', '')
+        if len(mnc_list):
     
-            else:
-                continue
-
-    #Checking
-
-    if len(str(judgment_dict['Reported'])) < 5:
-
-        try:
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
+            judgment_dict['Medium neutral citation'] = mnc_list[0].text
     
-            judgment_dict['Reported'] = hca_df.loc[int(index), 'reported']
-
-        except:
-            print(f"Can't get reported for {judgment_dict['Medium neutral citation']}")
-
-    if is_date(str(judgment_dict['Date']), fuzzy=False) == False:
-
-        try:
+        elif len(judgment_pdfs_list) > 0:
+    
+            mnc_raw = judgment_pdfs_list[0]['href'].replace('/downloadPdf/', '').replace('/', '')
+    
+            year = mnc_raw.lower().split('hca')[0]
+    
+            num = mnc_raw.lower().split('hca')[1]
+    
+            judgment_dict['Medium neutral citation'] = f"[{year}] HCA {num}"
+    
+        #Before
+        judges_list = soup.find_all("div", {"class": "judges-title"})
+    
+        if len(judges_list) > 0:
+    
+            judgment_dict['Before'] = judges_list[0].text
+    
+    
+        #Order
+        order_list = soup.find_all("div", {"class": "order-text"})
+    
+        if len(order_list) > 0:
+    
+            order = order_list[0].text#.replace('\n            ', '')
+    
+            judgment_dict['Order'] = order
+    
+        #Reported, decision date, before
+    
+        h2_tags = soup.find_all('h2')
+    
+        if len(h2_tags) > 0:
             
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
+            for h2 in soup.find_all('h2'):
+                if 'clr' in h2.text.lower():
+                    
+                    judgment_dict['Reported'] = h2.text
+        
+                elif is_date(h2.text, fuzzy=False):
+        
+                    judgment_dict['Date'] = h2.text
+        
+                elif 'before' in h2.text.lower():
+                    judgment_dict['Before'] = h2.text.replace('Before', '').replace('before', '').replace('Catchwords', '').replace('catchwords', '').replace('\n', '').replace('\t', '').replace('  ', '')
+        
+                else:
+                    continue
     
-            judgment_dict['Date'] = hca_df.loc[index, 'date']
-
-        except:
-            print(f"Can't get date for {judgment_dict['Medium neutral citation']}")
-
-    if len(str(judgment_dict['Before'])) < 3:
-
-        try:
+        #Checking
     
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
+        if len(str(judgment_dict['Reported'])) < 5:
     
-            judgment_dict['Before'] = hca_df.loc[int(index), 'before']
-
+            try:
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Reported'] = hca_df.loc[int(index), 'reported']
     
-        except:
-            print(f"Can't get before for {judgment_dict['Medium neutral citation']}")
-
-    if len(str(judgment_dict['Case number'])) < 3:
-
-        try:
-
-            index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
-            index = index_list[0]
+            except:
+                print(f"Can't get reported for {judgment_dict['Medium neutral citation']}")
     
-            judgment_dict['Case number'] = hca_df.loc[int(index), 'case_number']
-
+        if is_date(str(judgment_dict['Date']), fuzzy=False) == False:
     
-        except:
-            print(f"Can't get case number for {judgment_dict['Medium neutral citation']}")
+            try:
+                
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Date'] = hca_df.loc[index, 'date']
+    
+            except:
+                print(f"Can't get date for {judgment_dict['Medium neutral citation']}")
+    
+        if len(str(judgment_dict['Before'])) < 3:
+    
+            try:
+        
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Before'] = hca_df.loc[int(index), 'before']
+    
+        
+            except:
+                print(f"Can't get before for {judgment_dict['Medium neutral citation']}")
+    
+        if len(str(judgment_dict['Case number'])) < 3:
+    
+            try:
+    
+                index_list = hca_df.index[hca_df['mnc'].str.contains(judgment_dict['Medium neutral citation'], case=False, na=False, regex=False)].tolist()
+                index = index_list[0]
+        
+                judgment_dict['Case number'] = hca_df.loc[int(index), 'case_number']
+    
+        
+            except:
+                print(f"Can't get case number for {judgment_dict['Medium neutral citation']}")
+
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
     
     return judgment_dict
 

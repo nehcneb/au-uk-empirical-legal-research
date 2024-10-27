@@ -60,16 +60,8 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input
 #Import variables
-from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # AFCA search engine
@@ -710,41 +702,47 @@ if next_button:
                     
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
+            try:
+                if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+                    search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
+                                                        all_these_words_input = df_master.loc[0, 'All these words'], 
+                                                        this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
+                                                        one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
+                                                        one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
+                                                        one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
+                                                        any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
+                                                        case_number_input = df_master.loc[0, 'Case number'], 
+                                                        date_from_input = df_master.loc[0, 'Date from'], 
+                                                        date_to_input = df_master.loc[0, 'Date to'], 
+                                                        judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                                    )
     
-            if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
-                search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
-                                                    all_these_words_input = df_master.loc[0, 'All these words'], 
-                                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
-                                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
-                                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
-                                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
-                                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
-                                                    case_number_input = df_master.loc[0, 'Case number'], 
-                                                    date_from_input = df_master.loc[0, 'Date from'], 
-                                                    date_to_input = df_master.loc[0, 'Date to'], 
-                                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-                                                )
-
-            else:
-                search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
-                            ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
-                            product_line_input = df_master.loc[0, 'Product line'], 
-                            product_category_input = df_master.loc[0, 'Product category'], 
-                            product_name_input = df_master.loc[0, 'Product name'], 
-                            issue_type_input = df_master.loc[0, 'Issue type'], 
-                            issue_input = df_master.loc[0, 'Issue'], 
-                            date_from_input = df_master.loc[0, 'Date from'], 
-                            date_to_input = df_master.loc[0, 'Date to'])
+                else:
+                    search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
+                                ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
+                                product_line_input = df_master.loc[0, 'Product line'], 
+                                product_category_input = df_master.loc[0, 'Product category'], 
+                                product_name_input = df_master.loc[0, 'Product name'], 
+                                issue_type_input = df_master.loc[0, 'Issue type'], 
+                                issue_input = df_master.loc[0, 'Issue'], 
+                                date_from_input = df_master.loc[0, 'Date from'], 
+                                date_to_input = df_master.loc[0, 'Date to'])
+                
+                if search_results['case_sum'] == 0:
+                    
+                    st.error(no_results_msg)
+    
+                else:
+    
+                    save_input(df_master)
+    
+                    st.session_state["page_from"] = 'pages/AFCA.py'
+                    
+                    st.switch_page('pages/GPT.py')
             
-            if search_results['case_sum'] == 0:
-                
-                st.error(no_results_msg)
-
-            else:
-
-                save_input(df_master)
-
-                st.session_state["page_from"] = 'pages/AFCA.py'
-                
-                st.switch_page('pages/GPT.py')
+            except Exception as e:
+                print(search_error_display)
+                print(e)
+                st.error(search_error_display)
+                st.error(e)
 

@@ -824,49 +824,54 @@ ca_meta_dict = {
 # %%
 @st.cache_data(show_spinner = False)
 def ca_meta_judgment_dict(judgment_url):
-
-    headers = {'User-Agent': 'whatever'}
-    page = requests.get(judgment_url, headers=headers)
-    soup = BeautifulSoup(page.content, "lxml")
-    meta_tags = soup.find_all("meta")
     
-    judgment_dict = {}
+    judgment_dict = {'Hyperlink to CanLII': '', 'File number': '', 'Other citations': '', 'Most recent unfavourable mention': '', 'judgment': ''}
 
-    #Attach metadata
-    for meta in ca_meta_dict.keys():
-        try:
-            meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
-        except:
-            meta_content = ''
-        judgment_dict.update({meta: meta_content})
+    try:
+        judgment_dict['Hyperlink to CanLII'] = link(judgment_dict['Hyperlink to CanLII'])
 
-    judgment_dict['Hyperlink to CanLII'] = link(judgment_dict['Hyperlink to CanLII'])
-
-    #Date, case number, citations
+        headers = {'User-Agent': 'whatever'}
+        page = requests.get(judgment_url, headers=headers)
+        soup = BeautifulSoup(page.content, "lxml")
+        meta_tags = soup.find_all("meta")
+        
+        #Attach metadata
+        for meta in ca_meta_dict.keys():
+            try:
+                meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
+            except:
+                meta_content = ''
+            judgment_dict.update({meta: meta_content})
     
-    extra_metas = soup.find_all('div', class_ = "row py-1")
+        #Date, case number, citations
+        
+        extra_metas = soup.find_all('div', class_ = "row py-1")
+        
+        for meta in extra_metas:
+            #if 'date:' in meta.text.lower():
+                #judgment_dict.update({'Date': meta.text})
+        
+            if 'file number:' in meta.text.lower():
+                judgment_dict.update({'File number': meta.text.replace('\n', '').replace('File number:', '').replace('File numbers:', '')})
+        
+            #if 'citation:' in meta.text.lower():
+                #judgment_dict.update({'Citation': meta.text})
+        
+            if 'other citation' in meta.text.lower():
+                judgment_dict.update({'Other citations': meta.text.replace('\n', '').replace('Other citation:', '').replace('Other citations:', '')})
     
-    for meta in extra_metas:
-        #if 'date:' in meta.text.lower():
-            #judgment_dict.update({'Date': meta.text})
+            if 'Most recent unfavourable mention' in meta.text.lower():
+                judgment_dict.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
     
-        if 'file number:' in meta.text.lower():
-            judgment_dict.update({'File number': meta.text.replace('\n', '').replace('File number:', '').replace('File numbers:', '')})
+        #Judgment text
     
-        #if 'citation:' in meta.text.lower():
-            #judgment_dict.update({'Citation': meta.text})
+        judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip=True)
     
-        if 'other citation' in meta.text.lower():
-            judgment_dict.update({'Other citations': meta.text.replace('\n', '').replace('Other citation:', '').replace('Other citations:', '')})
+        judgment_dict.update({'judgment': judgment_text})
 
-        if 'Most recent unfavourable mention' in meta.text.lower():
-            judgment_dict.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
-
-    #Judgment text
-
-    judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip=True)
-
-    judgment_dict.update({'judgment': judgment_text})
+    except Exception as e:
+        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(e)
     
     return judgment_dict
 
@@ -984,15 +989,7 @@ def ca_run(df_master):
 #    df_individual = pd.DataFrame(judgments_file)
     
     df_individual = pd.read_json(json_individual)
-    
-    #Rename column titles
-    
-#    try:
-#        df_individual['Hyperlink (double click)'] = df_individual['Hyperlink'].apply(link)
-#        df_individual.pop('Hyperlink')
-#    except:
-#        pass
-                    
+
     #Instruct GPT
     
     #GPT model

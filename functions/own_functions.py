@@ -68,14 +68,8 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, truncation_note
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between file scraping is {scraper_pause_mean} second.\n")
 
 
 # %%
@@ -170,52 +164,51 @@ def GPT_label_dict(x_list):
 
 @st.cache_data(show_spinner = False)
 def doc_to_text(uploaded_doc, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': '', 
-#                  'Page 2': '' #Test page
-                  }
-    
-    #Get file name
-    file_triple['File name']=uploaded_doc.name
-    
-    #Get file data
-    bytes_data = uploaded_doc.getvalue()
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': ''}
 
-    #Get file extension
-    extension = file_triple['File name'].split('.')[-1].lower()
-
-    #Create list of pages
-    text_list = []
-
-    #Word format
-    if extension == 'docx':
-        doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
-        text_list.append(doc_string)
-
-        file_triple['Page length'] = 1
+    try:
+        #Get file name
+        file_triple['File name']=uploaded_doc.name
         
-    else:
-        #text formats
-        if extension in ['txt', 'cs', 'xml', 'html', 'json']:
-            doc = fitz.open(stream=bytes_data, filetype="txt")
-
-        #Other formats
+        #Get file data
+        bytes_data = uploaded_doc.getvalue()
+    
+        #Get file extension
+        extension = file_triple['File name'].split('.')[-1].lower()
+    
+        #Create list of pages
+        text_list = []
+    
+        #Word format
+        if extension == 'docx':
+            doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
+            text_list.append(doc_string)
+    
+            file_triple['Page length'] = 1
+            
         else:
-            doc = fitz.open(stream=bytes_data)
-
-        max_doc_number=min(len(doc), page_bound)
-        
-        for page_index in list(range(0, max_doc_number)):
-            page = doc.load_page(page_index)
-            text_page = page.get_text() 
-            text_list.append(text_page)
-
-        #Length of pages
-        file_triple['Page length'] = len(doc)
-
-    file_triple['Extracted text'] = str(text_list)
-
-    #Test page
-#    file_triple['Page 2'] = doc.load_page(1).get_text()
+            #text formats
+            if extension in ['txt', 'cs', 'xml', 'html', 'json']:
+                doc = fitz.open(stream=bytes_data, filetype="txt")
+    
+            #Other formats
+            else:
+                doc = fitz.open(stream=bytes_data)
+    
+            max_doc_number=min(len(doc), page_bound)
+            
+            for page_index in list(range(0, max_doc_number)):
+                page = doc.load_page(page_index)
+                text_page = page.get_text() 
+                text_list.append(text_page)
+    
+            #Length of pages
+            file_triple['Page length'] = len(doc)
+    
+        file_triple['Extracted text'] = str(text_list)
+    except Exception as e:
+        print(f"{file_triple['File name']}: failed to get text")
+        print(e)
     
     return file_triple
 
@@ -225,51 +218,51 @@ def doc_to_text(uploaded_doc, language, page_bound):
 
 @st.cache_data(show_spinner = False)
 def image_to_text(uploaded_image, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': '', 
-#                  'Page 2': '' #Test page
-                  }
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'Extracted text': ''}
 
-    #Get file name
-    file_triple['File name']=uploaded_image.name
-
-    #Get file data
-    bytes_data = uploaded_image.read()
-
-    #Get file extension
-    extension = file_triple['File name'].split('.')[-1].lower()
-
-    #Obtain images from uploaded file
-    if extension == 'pdf':
-        try:
-            images = pdf2image.convert_from_bytes(bytes_data, timeout=30)
-        except PDFPopplerTimeoutError as pdf2image_timeout_error:
-            print(f"pdf2image error: {pdf2image_timeout_error}.")
-
-    else:
-        images = []
-        image_raw = Image.open(BytesIO(bytes_data))
-        images.append(image_raw)
-        
-    #Extract text from images
-    text_list = []
+    try:
+        #Get file name
+        file_triple['File name']=uploaded_image.name
     
-    max_images_number=min(len(images), page_bound)
-
-    for image in images[ : max_images_number]:
-        try:
-            text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=30)
-            text_list.append(text_page)
+        #Get file data
+        bytes_data = uploaded_image.read()
+    
+        #Get file extension
+        extension = file_triple['File name'].split('.')[-1].lower()
+    
+        #Obtain images from uploaded file
+        if extension == 'pdf':
+            try:
+                images = pdf2image.convert_from_bytes(bytes_data, timeout=30)
+            except PDFPopplerTimeoutError as pdf2image_timeout_error:
+                print(f"pdf2image error: {pdf2image_timeout_error}.")
+    
+        else:
+            images = []
+            image_raw = Image.open(BytesIO(bytes_data))
+            images.append(image_raw)
             
-        except RuntimeError as pytesseract_timeout_error:
-            print(f"pytesseract error: {pytesseract_timeout_error}.")
-
-    file_triple['Extracted text'] = str(text_list)
-
-    #Length of pages
-    file_triple['Page length'] = len(images)
-
-    #Test page
-#    file_triple['Page 2'] = pytesseract.image_to_string(images[1], lang=languages_dict[language], timeout=30)
+        #Extract text from images
+        text_list = []
+        
+        max_images_number=min(len(images), page_bound)
+    
+        for image in images[ : max_images_number]:
+            try:
+                text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=30)
+                text_list.append(text_page)
+                
+            except RuntimeError as pytesseract_timeout_error:
+                print(f"pytesseract error: {pytesseract_timeout_error}.")
+    
+        file_triple['Extracted text'] = str(text_list)
+    
+        #Length of pages
+        file_triple['Page length'] = len(images)
+    
+    except Exception as e:
+        print(f"{file_triple['File name']}: failed to get text")
+        print(e)
         
     return file_triple
 
@@ -287,17 +280,6 @@ from functions.gpt_functions import question_characters_bound
 # %%
 print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
 print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
-
-# %%
-#Initialize default GPT settings
-
-#if 'gpt_model' not in st.session_state:
-    #st.session_state['gpt_model'] = "gpt-4o-mini"
-    
-#Initialize API key
-#if 'gpt_api_key' not in st.session_state:
-
-    #st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
 
 # %%
@@ -435,22 +417,22 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
     for file_index in df_individual.index:
         
         file_triple = df_individual.to_dict('index')[file_index]
+
+        #Check wither error in getting the full text
+        text_error = False
+        if 'Extracted text' in file_triple.keys():
+            if len(file_triple['Extracted text']) == 0:
+                text_error = True
+                df_individual.loc[file_index, 'Note'] = search_error_note
+                print(f"File indexed {file_index} not sent to GPT given full text was not scrapped.")
         
         #Calculate and append number of tokens of file, regardless of whether given to GPT
         file_tokens = num_tokens_from_string(str(file_triple), "cl100k_base")
         df_individual.loc[file_index, f"Length of first {st.session_state['df_master'].loc[0,'Maximum number of pages per file']} pages in tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = file_tokens       
 
         #Indicate whether file truncated
-        
-        df_individual.loc[file_index, "File truncated (if given to GPT)?"] = ''       
-        
-        if file_tokens <= tokens_cap(gpt_model):
-            
-            df_individual.loc[file_index, "File truncated (if given to GPT)?"] = 'No'
-            
-        else:
-            
-            df_individual.loc[file_index, "File truncated (if given to GPT)?"] = 'Yes'
+        if file_tokens > tokens_cap(gpt_model):
+            df_individual.loc[file_index, 'Note'] = truncation_note
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[file_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -462,7 +444,7 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
-        if int(GPT_activation) > 0:
+        if ((int(GPT_activation) > 0) and (text_error == False)):
             GPT_file_triple = GPT_json_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
@@ -480,10 +462,10 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
 
             for q_index in question_keys:
                 #Increases file index by 2 to ensure consistency with Excel spreadsheet
-                answer = 'Placeholder answer for ' + ' file ' + str(int(file_index) + 2) + ' ' + str(q_index)
-                answers_dict.update({q_index: answer})
+                answer = ''
+                answers_dict.update({questions_json[q_index]: answer})
             
-            #Own calculation of GPT costs for Placeholder answer fors
+            #Own calculation of GPT costs for mock answers
 
             #Calculate capped file tokens
 
@@ -607,10 +589,8 @@ def run_own(df_master, uploaded_docs, uploaded_images):
     #Engage GPT
     df_updated = engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    try:
+    if 'Extracted text' in df_updated.columns:
         df_updated.pop('Extracted text')
-    except:
-        print("No 'Extracted text' columnn.")
     
     return df_updated
     
@@ -628,76 +608,70 @@ from functions.gpt_functions import get_image_dims, calculate_image_token_cost
 @st.cache_data(show_spinner = False)
 def image_to_b64_own(uploaded_image, language, page_bound):
     file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : [],
-                   'Page length': '', 'tokens_raw': 0, 
-#                 'Image ID': '', 'Page length': '', 'Page 2': '' #Test page
+                   'Page length': '', 'tokens_raw': 0
                   }
 
-    file_triple['File name']=uploaded_image.name
-
-    #Get file extension
-    extension = file_triple['File name'].split('.')[-1].lower()
-
-    bytes_data = uploaded_image.read()
-
-    if extension == 'pdf':
-        
-        images = pdf2image.convert_from_bytes(bytes_data, timeout=30, fmt="jpeg")
-
-        file_triple['Page length'] = len(images)
-
-        #Get page bound
-        max_images_number=min(len(images), page_bound)
-
-        for image in images[ : max_images_number]:
-
-            output = BytesIO()
-            image.save(output, format='JPEG')
-            im_data = output.getvalue()
-            
-            image_data = base64.b64encode(im_data)
-            if not isinstance(image_data, str):
-                # Python 3, decode from bytes to string
-                image_data = image_data.decode()
-            data_url = 'data:image/jpg;base64,' + image_data
-
-            #b64 = base64.b64encode(image_raw).decode('utf-8')
-
-            b64_to_attach = data_url
-            #b64_to_attach = f"data:image/png;base64,{b64}"
-
-        file_triple['b64_list'].append(b64_to_attach)
-            
-        #except PDFPopplerTimeoutError as pdf2image_timeout_error:
-            #print(f"pdf2image error: {pdf2image_timeout_error}.")
-
-    else:
-
-        file_triple['Page length'] = 1
+    try:
+        file_triple['File name']=uploaded_image.name
     
-        b64 = base64.b64encode(bytes_data).decode('utf-8')
+        #Get file extension
+        extension = file_triple['File name'].split('.')[-1].lower()
     
-        b64_to_attach = f"data:image/{extension};base64,{b64}"
-        
-        #file_triple['b64_list'] = [b64_to_attach]
-        file_triple['b64_list'].append(b64_to_attach)
-        
-
-        #Get tokens
+        bytes_data = uploaded_image.read()
     
-        #file_triple['tokens_raw'] = calculate_image_token_cost(b64_to_attach, detail="auto")
-        
-    for image_b64 in file_triple['b64_list']:
-
-        #Get dimensions
-        try:
-
-            file_triple['Dimensions (width, height)'].append(get_image_dims(b64_to_attach))
-        except Exception as e:
-            print(f"Cannot obtain dimensions for {file_triple['File name']}, p {file_triple['b64_list'].index(image_b64)}.")
-            print(e)
-        
-        file_triple['tokens_raw'] = file_triple['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
+        if extension == 'pdf':
             
+            images = pdf2image.convert_from_bytes(bytes_data, timeout=30, fmt="jpeg")
+    
+            file_triple['Page length'] = len(images)
+    
+            #Get page bound
+            max_images_number=min(len(images), page_bound)
+    
+            for image in images[ : max_images_number]:
+    
+                output = BytesIO()
+                image.save(output, format='JPEG')
+                im_data = output.getvalue()
+                
+                image_data = base64.b64encode(im_data)
+                if not isinstance(image_data, str):
+                    # Python 3, decode from bytes to string
+                    image_data = image_data.decode()
+                data_url = 'data:image/jpg;base64,' + image_data
+    
+                #b64 = base64.b64encode(image_raw).decode('utf-8')
+    
+                b64_to_attach = data_url
+                #b64_to_attach = f"data:image/png;base64,{b64}"
+    
+            file_triple['b64_list'].append(b64_to_attach)
+
+        else:
+    
+            file_triple['Page length'] = 1
+        
+            b64 = base64.b64encode(bytes_data).decode('utf-8')
+        
+            b64_to_attach = f"data:image/{extension};base64,{b64}"
+            
+            file_triple['b64_list'].append(b64_to_attach)
+            
+        for image_b64 in file_triple['b64_list']:
+    
+            #Get dimensions
+            try:
+    
+                file_triple['Dimensions (width, height)'].append(get_image_dims(b64_to_attach))
+            except Exception as e:
+                print(f"Cannot obtain dimensions for {file_triple['File name']}, p {file_triple['b64_list'].index(image_b64)}.")
+                print(e)
+            
+            file_triple['tokens_raw'] = file_triple['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
+    except Exception as e:
+        print(f"{file_triple['File name']}: failed to get text")
+        print(e)
+        
     return file_triple
 
 
@@ -813,22 +787,17 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
     for file_index in df_individual.index:
         
         file_triple = df_individual.to_dict('index')[file_index]
+
+        #Check wither error in getting the full text
+        text_error = False
+        if 'Extracted text' in file_triple.keys():
+            if len(file_triple['Extracted text']) == 0:
+                text_error = True
+                df_individual.loc[file_index, 'Note'] = search_error_note
+                print(f"File indexed {file_index} not sent to GPT given full text was not scrapped.")
         
         #Calculate and append number of tokens of file, regardless of whether given to GPT
-        #file_triple['tokens_raw'] = num_tokens_from_string(str(file_triple), "cl100k_base")
-        df_individual.loc[file_index, f"Tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = file_triple['tokens_raw']       
-
-        #Indicate whether file truncated
-        
-        df_individual.loc[file_index, "File truncated (if given to GPT)?"] = ''       
-        
-        if file_triple['tokens_raw'] <= tokens_cap(gpt_model):
-            
-            df_individual.loc[file_index, "File truncated (if given to GPT)?"] = 'No'
-            
-        else:
-            
-            df_individual.loc[file_index, "File truncated (if given to GPT)?"] = 'Yes'
+        df_individual.loc[file_index, f"Tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = file_triple['tokens_raw']
 
         #Create columns for respondent's GPT cost, time
         df_individual.loc[file_index, 'GPT cost estimate (USD excl GST)'] = ''
@@ -840,7 +809,7 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
 
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
-        if int(GPT_activation) > 0:
+        if ((int(GPT_activation) > 0) and (text_error == False)):
             GPT_file_triple = GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
@@ -858,11 +827,9 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
 
             for q_index in question_keys:
                 #Increases file index by 2 to ensure consistency with Excel spreadsheet
-                answer = 'Placeholder answer for ' + ' file ' + str(int(file_index) + 2) + ' ' + str(q_index)
-                answers_dict.update({q_index: answer})
+                answer = ''
+                answers_dict.update({questions_json[q_index]: answer})
             
-            #Own calculation of GPT costs for Placeholder answer fors
-
             #Calculate capped file tokens
 
             file_capped_tokens = min(file_triple['tokens_raw'], tokens_cap(gpt_model))
