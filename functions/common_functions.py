@@ -363,7 +363,7 @@ search_error_note = 'The database from which this app sources cases did not resp
 
 # %%
 #Note truncation
-truncation_note = 'Given GPT was unable to process the full file length, a truncated version was given to GPT.'
+truncation_note = "The full file is too long for GPT. It was (or will be) truncated if sent to GPT."
 
 
 # %% [markdown]

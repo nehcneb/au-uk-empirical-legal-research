@@ -379,10 +379,6 @@ st.header("Next steps")
 
 estimated_waiting_secs = int(float(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))*30
 
-if st.session_state.jurisdiction_page == 'pages/ER.py':
-    
-    estimated_waiting_secs = estimated_waiting_secs*2
-
 #Instructions
 st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will **immediately** process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is {estimated_waiting_secs/60} minute(s).
 """)
@@ -570,7 +566,10 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                 if is_api_key_valid(gpt_api_key_entry) == False:
                     st.error('Your API key is not valid.')
                     st.stop()
-                    
+
+            #Increase waiting time
+            estimated_waiting_secs = estimated_waiting_secs*10
+            
             spinner_text += f'The estimated waiting time is {estimated_waiting_secs/60} minute(s).'
     
             with st.spinner(spinner_text):
