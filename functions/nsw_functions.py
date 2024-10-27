@@ -39,6 +39,8 @@ import os
 import pypdf
 import io
 from io import BytesIO
+import ast
+
 
 #Streamlit
 import streamlit as st
