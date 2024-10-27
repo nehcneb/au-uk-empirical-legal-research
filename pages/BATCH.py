@@ -220,17 +220,7 @@ if retrive_button:
             
             #Button for downloading results
             output_name = str(all_df_masters.loc[batch_index, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-            csv_output = convert_df_to_csv(df_individual)
-            
-            ste.download_button(
-                label="Download your data as a CSV (for use in Excel etc)", 
-                data = csv_output,
-                file_name= output_name + '.csv', 
-                mime= "text/csv", 
-        #            key='download-csv'
-            )
-        
+                
             excel_xlsx = convert_df_to_excel(df_individual)
             
             ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
@@ -238,7 +228,16 @@ if retrive_button:
                                 file_name= output_name + '.xlsx', 
                                 mime='application/vnd.ms-excel',
                                )
-        
+
+            csv_output = convert_df_to_csv(df_individual)
+            
+            ste.download_button(
+                label="Download your data as a CSV (for use in Excel etc)", 
+                data = csv_output,
+                file_name= output_name + '.csv', 
+                mime= "text/csv", 
+            )
+            
             json_output = convert_df_to_json(df_individual)
             
             ste.download_button(

@@ -85,7 +85,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, reverse_link
 #Import variables
-from functions.common_functions import today_in_nums
+from functions.common_functions import today_in_nums, default_judgment_counter_bound
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
