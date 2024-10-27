@@ -578,7 +578,7 @@ if st.session_state.need_resetting == 1:
 if len(st.session_state.df_individual) >0:
 
     download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
-    
+
 
 # %% [markdown]
 # # Save and run
@@ -647,8 +647,10 @@ if run_button:
 
                 st.error('Sorry, an error has occurred. Please try again.')
 
-                st.exception(e)
-                
+                st.error(e)
+
+                print(e)
+
 
 # %%
 if ((st.session_state.own_account == True) and (uploaded_images)):
@@ -733,7 +735,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
         
                     st.error('Sorry, an error has occurred. Please try again.')
     
-                    st.exception(e)
+                    st.error(e)
 
 
 # %%
@@ -776,7 +778,7 @@ if return_button:
     st.session_state["page_from"] = 'pages/OWN.py'
 
     st.switch_page("Home.py")
-    
+
 
 # %%
 if reset_button:

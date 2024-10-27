@@ -525,8 +525,11 @@ if run_button:
     
                 st.error(search_error_display)
                 
-                st.exception(e)
+                st.error(e)
+
+                print(e)
                 
+
 
 # %%
 if return_button:
@@ -612,7 +615,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     
                     st.error(search_error_display)
                     
-                    st.exception(e)
+                    st.error(e)
 
 
 # %% [markdown]

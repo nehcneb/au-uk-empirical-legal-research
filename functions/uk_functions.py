@@ -127,7 +127,7 @@ def uk_court_choice(chosen_list):
         chosen_list = ast.literal_eval(chosen_list)
 
     for i in chosen_list:
-        chosen_indice.append(uk_courts_list.index(i))
+        chosen_indice.append(uk_courts[i])
     
     return chosen_indice
 
