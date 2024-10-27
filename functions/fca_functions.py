@@ -722,7 +722,7 @@ def fca_run(df_master):
             
             judgments_file.append(case_info)
 
-            print(f"{case_info['Case name']}: got judgment from the Federal Court directly")
+            print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
             
             pause.seconds(np.random.randint(5, 15))
 
@@ -753,13 +753,13 @@ def fca_run(df_master):
                 
                 case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
 
-                print(f"{case_info['Case name']}: got judgment from OALC")
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
 
             else: #Get judgment from FCA if can't get from oalc
                 judgment_dict_direct = fca_meta_judgment_dict(case_info)
                 case_info.update({'judgment': str(judgment_dict_direct)})
                 
-                print(f"{case_info['Case name']}: got judgment from the Federal Court directly")
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
 
                 pause.seconds(np.random.randint(5, 15))
 
@@ -860,7 +860,7 @@ def fca_batch(df_master):
             
             judgments_file.append(case_info)
 
-            print(f"{case_info['Case name']}: got judgment from the Federal Court directly")
+            print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
 
             pause.seconds(np.random.randint(5, 15))
 
@@ -891,13 +891,13 @@ def fca_batch(df_master):
                 
                 case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
 
-                print(f"{case_info['Case name']}: got judgment from OALC")
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
             
             else: #Get judgment from FCA if can't get from oalc
                 judgment_dict_direct = fca_meta_judgment_dict(case_info)
                 case_info.update({'judgment': str(judgment_dict_direct)})
                 
-                print(f"{case_info['Case name']}: got judgment from the Federal Court directly")
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
 
                 pause.seconds(np.random.randint(5, 15))
 

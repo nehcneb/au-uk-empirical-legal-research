@@ -1431,6 +1431,8 @@ def hca_run(df_master):
             if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
                 decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
+
+                print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from OALC")
                 
             else: #Get judgment from HCA if can't get from oalc
                 
@@ -1443,6 +1445,8 @@ def hca_run(df_master):
                     for key in judgment_dict_direct.keys():
                         if key not in decision.keys():
                             decision.update({key: judgment_dict_direct[key]})
+
+                    print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from the High Court directly")
                     
                     pause.seconds(np.random.randint(5, 15))
 
@@ -1607,6 +1611,8 @@ def hca_batch(df_master):
                 
                 decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
                 
+                print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from OALC")
+
             else: #Get judgment from HCA if can't get from oalc
                 
                 direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], decision['Medium neutral citation'])
@@ -1618,7 +1624,9 @@ def hca_batch(df_master):
                     for key in judgment_dict_direct.keys():
                         if key not in decision.keys():
                             decision.update({key: judgment_dict_direct[key]})
-                    
+
+                    print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from the High Court directly")
+
                     pause.seconds(np.random.randint(5, 15))
 
     #Make judgment_link clickable

@@ -726,6 +726,8 @@ def nsw_run(df_master):
                             case.fetch()
                             case_w_meta_jugdment = case.values.copy()
                             decision.update({'judgment': str(case_w_meta_jugdment)})
+
+                            print(f"{decision['title']} got judgment from NSW Caselaw directly.")
                             
                         except:
                             decision.update({'judgment': ''})
@@ -935,6 +937,8 @@ def nsw_batch(df_master):
                             case.fetch()
                             case_w_meta_jugdment = case.values.copy()
                             decision.update({'judgment': str(case_w_meta_jugdment)})
+
+                            print(f"{decision['title']} got judgment from NSW Caselaw directly.")
                             
                         except:
                             decision.update({'judgment': ''})
