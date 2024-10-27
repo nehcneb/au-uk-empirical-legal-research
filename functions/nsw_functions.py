@@ -146,7 +146,7 @@ def nsw_court_choice(chosen_list):
         chosen_list = ast.literal_eval(chosen_list)
 
     for i in chosen_list:
-        chosen_indice.append(nsw_tribunals_positioning.index(i))       
+        chosen_indice.append(nsw_courts_positioning.index(i))       
         
     return chosen_indice
 
