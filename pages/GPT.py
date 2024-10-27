@@ -663,7 +663,16 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
         
                         #Create spreadsheet of responses
                         df_master = st.session_state.df_master
+
+                        jurisdiction_page = st.session_state.jurisdiction_page
         
+                        df_master['jurisdiction_page'] = jurisdiction_page
+                        
+                        df_master['status'] = 'to_process'
+        
+                        df_master['submission_time'] = str(datetime.now())
+
+                        #Check questions for potential privacy violation
                         #Activate user's own key or mine
                         if st.session_state.own_account == True:
                             
@@ -673,18 +682,17 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
                             API_key = st.secrets["openai"]["gpt_api_key"]
                         
                         openai.api_key = API_key
-        
-                        #Produce results
+
+                        if df_master.loc[0, 'Use flagship version of GPT'] == True:
+                            gpt_model = "gpt-4o-2024-08-06"
+                        else:        
+                            gpt_model = "gpt-4o-mini"
+
+                        questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
+
+                        #Use checked questions
+                        df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
                         
-                        jurisdiction_page = st.session_state.jurisdiction_page
-        
-                        df_master['jurisdiction_page'] = jurisdiction_page
-                        
-                        df_master['status'] = 'to_process'
-        
-                        df_master['submission_time'] = str(datetime.now())
-        
-                        #Upload to aws
                         #Initiate aws s3
                         s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
                         
@@ -720,5 +728,6 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
                         st.error(search_error_display)
                         
                         st.error(e)
+
 
 

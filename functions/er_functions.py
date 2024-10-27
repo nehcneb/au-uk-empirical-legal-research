@@ -605,42 +605,28 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
     #client = OpenAI()
 
     #Check questions for privacy violation
-
     if check_questions_answers() > 0:
     
-        try:
+        questions_checked_dict = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
 
-            unchecked_questions_json = questions_json.copy()
-            
-            labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
+        questions_json = questions_checked_dict['questions_json']
     
-            labels_output_tokens = labels_output[1]
+        questions_check_output_tokens = questions_checked_dict['questions_check_output_tokens']
     
-            labels_prompt_tokens = labels_output[2]
-        
-            questions_json = checked_questions_json(questions_json, labels_output)
-
-            print('Questions checked.')
-
-            unanswered_questions(unchecked_questions_json, questions_json)
-    
-        except Exception as e:
-            
-            print('Questions check failed.')
-            
-            print(e)
-    
-            labels_output_tokens = 0
-            
-            labels_prompt_tokens = 0
+        questions_check_input_tokens = questions_checked_dict['questions_check_input_tokens']
 
     else:
 
         print('Questions not checked.')
         
-        labels_output_tokens = 0
+        questions_check_output_tokens = 0
         
-        labels_prompt_tokens = 0
+        questions_check_input_tokens = 0
+
+    #Process questions
+
+    #GPT use counter
+    gpt_use_counter = 0
     
     for judgment_index in df_individual.index:
         
@@ -668,16 +654,38 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_judgment_json = er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
-            answers_dict = GPT_judgment_json[0]
+            GPT_output_list = er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            answers_dict = GPT_output_list[0]
 
+            if check_questions_answers() > 0:
+            
+                GPT_answers_check_output_list = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
+
+                #Get potentially redacted answers and costs
+                answers_dict = GPT_answers_check_output_list[0]
+                redacted_answers_output_tokens = GPT_answers_check_output_list[1]
+                redacted_answers_prompt_tokens = GPT_answers_check_output_list[2]
+
+            else:
+                print('Answers not checked.')
+                redacted_answers_output_tokens = 0
+                redacted_answers_prompt_tokens = 0
+
+            #Calculate GPT cost of answering questions
+            answers_output_tokens = GPT_output_list[1] + redacted_answers_output_tokens
+            answers_input_tokens  = GPT_output_list[2] + redacted_answers_output_tokens
+                    
             #Calculate and append GPT finish time and time difference to individual df
             GPT_finish_time = datetime.now()
             
             GPT_time_difference = GPT_finish_time - GPT_start_time
     
-            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()
-        
+            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()    
+
+            #Display GPT use counter
+            gpt_use_counter += 1
+            print(f"GPT proccessed {gpt_use_counter}/{len(df_individual)} cases.")
+                    
         else:
             answers_dict = {}    
             
@@ -722,7 +730,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
 
             input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
             
-            GPT_judgment_json = [answers_dict, answers_tokens, input_tokens]
+            GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
         q_counter = 1
@@ -752,10 +760,10 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         #Calculate GPT costs
 
         #If check for questions
-        GPT_cost = (GPT_judgment_json[1] + labels_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (GPT_judgment_json[2] + labels_prompt_tokens/len(df_individual))*gpt_input_cost(gpt_model)
+        GPT_cost = (answers_output_tokens + questions_check_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (answers_input_tokens + questions_check_input_tokens/len(df_individual))*gpt_input_cost(gpt_model)
 
         #If no check for questions
-        #GPT_cost = GPT_judgment_json[1]*gpt_output_cost(gpt_model) + GPT_judgment_json[2]*gpt_input_cost(gpt_model)
+        #GPT_cost = answers_output_tokens*gpt_output_cost(gpt_model) + answers_input_tokens*gpt_input_cost(gpt_model)
 
         #Calculate and append GPT cost to individual df
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost

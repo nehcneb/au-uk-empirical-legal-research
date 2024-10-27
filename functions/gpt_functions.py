@@ -97,6 +97,16 @@ def split_by_line(x):
 
 
 # %%
+#Create function to converting a dict into a line-separated string
+def dict_to_string(questions_dict):
+    questions_list = [*questions_dict.values()]
+    questions_str = '\n'.join(questions_list)
+
+    return questions_str
+    
+
+
+# %%
 #Create function to split a list into a dictionary for list items longer than 10 characters
 #Apply split_by_line() before the following function
 def GPT_label_dict(x_list):
@@ -338,11 +348,13 @@ For example, the question "What's the defendant's age?" should be labelled "0".
 
 # %%
 #Check questions for potential privacy infringement
+#For instant mode
 
 @st.cache_data(show_spinner = False)
-def GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction):
+def GPT_questions_label(questions_json, gpt_model, questions_check_system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
+    #Returns a json of checked questions
 
     json_direction = [{"role": "user", "content": 'Label the following questions in JSON form.'}]
 
@@ -433,16 +445,7 @@ def unanswered_questions(unchecked_questions_json, checked_questions_json):
     
         #Display unanswered questions
         st.warning(witheld_text)
-            
-        #bar = st.progress(0, text = f":red[{progress_text}]")
-    
-        #for percent_complete in range(100):
-            #pause.seconds(0.1)
-            #bar.progress(percent_complete + 1, text = f":red[{progress_text}]")
-        
-        #pause.seconds(1)
-        #bar.empty()
-    
+
 
 
 # %%
@@ -464,6 +467,63 @@ def checked_questions_json(questions_json, gpt_labels_output):
 # %%
 #Check questions for potential privacy infringement
 
+@st.cache_data(show_spinner = False)
+def GPT_questions_check(questions_json_or_string, gpt_model, questions_check_system_instruction):
+    #'questions_str' variable is a string of questions to GPT
+    #Returns both a string and a json of checked questions, together with costs, and displays any witheld questions
+    
+    #Create dict of questions for GPT
+
+    if isinstance(questions_json_or_string, str):
+    
+        questions_list = split_by_line(questions_json_or_string[0: question_characters_bound])
+        questions_json = GPT_label_dict(questions_list)
+
+    else:
+        questions_json = questions_json_or_string
+
+    #Check questions for privacy violation
+    
+    try:
+
+        unchecked_questions_json = questions_json.copy()
+        
+        labels_output = GPT_questions_label(questions_json, gpt_model, questions_check_system_instruction)
+
+        questions_check_output_tokens = labels_output[1]
+
+        questions_check_input_tokens = labels_output[2]
+    
+        questions_json = checked_questions_json(questions_json, labels_output)
+
+        unanswered_questions(unchecked_questions_json, questions_json)
+
+        print('Questions checked.')
+
+    except Exception as e:
+
+        print('Questions check failed.')
+        print(e)
+
+
+        #create placeholder input and output tokens
+        questions_check_output_tokens = 0
+        questions_check_input_tokens = 0
+        
+    
+    #Returns a stirng of questions
+    questions_string = dict_to_string(questions_json)
+
+    return {'questions_json': questions_json, 
+            'questions_string': questions_string, 
+            'questions_check_output_tokens': questions_check_output_tokens, 
+            'questions_check_input_tokens': questions_check_input_tokens
+           }
+    
+
+# %%
+#Check questions for potential privacy infringement
+
 answers_check_system_instruction = """
 You are a compliance officer helping an academic researcher to redact information about birth and address. 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
@@ -474,15 +534,14 @@ For example, if the text given to you is "John Smith, born 1 January 1950, died 
 """
 
 
-
 # %%
 #Check answers_to_check_json for potential privacy infringement
 
 @st.cache_data(show_spinner = False)
 def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_instruction):
-    #'question_json' variable is a json of answers_to_check_json to GPT
-    #'jugdment' variable is a judgment_json   
 
+    #Check answers
+    
     json_direction = [{"role": "user", "content": 'Check the following text in JSON form.'}]
 
     #Create answer format
@@ -500,7 +559,6 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
         
         for q_index in q_keys:
             
-            #redacted_answers_json.update({q_index: 'Your answer for the question with index ' + q_index})
             redacted_answers_json.update({q_index: 'Your response.'})
 
     #Create answers_to_check_json, which include the answer format
@@ -510,10 +568,7 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
     #Create messages in one prompt for GPT
     
     intro_for_GPT = [{"role": "system", "content": answers_check_system_instruction}]
-    #messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_to_check
     messages_for_GPT = intro_for_GPT + json_direction + question_to_check
-    
-#   return messages_for_GPT
 
     #os.environ["OPENAI_API_KEY"] = API_key
 
@@ -535,21 +590,29 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
         #To obtain a json directly, use below
-        answers_dict = json.loads(completion.choices[0].message.content)
+        redacted_answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
-        output_tokens = completion.usage.completion_tokens
+        redacted_answers_output_tokens = completion.usage.completion_tokens
         
-        prompt_tokens = completion.usage.prompt_tokens
-        
-        return [answers_dict, output_tokens, prompt_tokens]
+        redacted_answers_prompt_tokens = completion.usage.prompt_tokens
+
+        print('Answers checked.')
 
     except Exception as error:
         
+        print('Answers check failed.')
+
+        #Create placeholder GPT answers check output
+        redacted_answers_dict = {}
         for q_index in q_keys:
-            redacted_answers_json[q_index] = error
+            redacted_answers_dict.update({q_index: error})
+
+        redacted_answers_output_tokens = 0
+
+        redacted_answers_prompt_tokens = 0
         
-        return [redacted_answers_json, 0, 0]
+    return [redacted_answers_dict, redacted_answers_output_tokens, redacted_answers_prompt_tokens]
 
 
 
@@ -623,38 +686,7 @@ def GPT_json(questions_json, judgment_json, gpt_model, system_instruction):
         
         prompt_tokens = completion.usage.prompt_tokens
         
-        #return [answers_dict, output_tokens, prompt_tokens]
-
-        #Check answers
-
-        if check_questions_answers() > 0:
-            
-            try:
-                redacted_output = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
-        
-                redacted_answers_dict = redacted_output[0]
-        
-                redacted_answers_output_tokens = redacted_output[1]
-        
-                redacted_answers_prompt_tokens = redacted_output[2]
-        
-                return [redacted_answers_dict, output_tokens + redacted_answers_output_tokens, prompt_tokens + redacted_answers_prompt_tokens]
-
-                print('Answers checked.')
-                
-            except Exception as e:
-    
-                print('Answers check failed.')
-    
-                print(e)
-    
-                return [answers_dict, output_tokens, prompt_tokens]
-
-        else:
-
-            print('Answers not checked.')
-            
-            return [answers_dict, output_tokens, prompt_tokens]
+        return [answers_dict, output_tokens, prompt_tokens]
 
     except Exception as error:
         
@@ -696,40 +728,22 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
 
     if check_questions_answers() > 0:
     
-        try:
+        questions_checked_dict = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
 
-            unchecked_questions_json = questions_json.copy()
-            
-            labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
+        questions_json = questions_checked_dict['questions_json']
     
-            labels_output_tokens = labels_output[1]
+        questions_check_output_tokens = questions_checked_dict['questions_check_output_tokens']
     
-            labels_prompt_tokens = labels_output[2]
-        
-            questions_json = checked_questions_json(questions_json, labels_output)
-
-            print('Questions checked.')
-
-            unanswered_questions(unchecked_questions_json, questions_json)
-    
-        except Exception as e:
-            
-            print('Questions check failed.')
-            
-            print(e)
-    
-            labels_output_tokens = 0
-            
-            labels_prompt_tokens = 0
+        questions_check_input_tokens = questions_checked_dict['questions_check_input_tokens']
 
     else:
 
         print('Questions not checked.')
         
-        labels_output_tokens = 0
+        questions_check_output_tokens = 0
         
-        labels_prompt_tokens = 0
-
+        questions_check_input_tokens = 0
+    
     #Process questions
 
     #GPT use counter
@@ -771,6 +785,25 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             GPT_output_list = GPT_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
+            #Check answers for potential policy violation
+            if check_questions_answers() > 0:
+            
+                GPT_answers_check_output_list = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
+
+                #Get potentially redacted answers and costs
+                answers_dict = GPT_answers_check_output_list[0]
+                redacted_answers_output_tokens = GPT_answers_check_output_list[1]
+                redacted_answers_prompt_tokens = GPT_answers_check_output_list[2]
+
+            else:
+                print('Answers not checked.')
+                redacted_answers_output_tokens = 0
+                redacted_answers_prompt_tokens = 0
+
+            #Calculate GPT cost of answering questions
+            answers_output_tokens = GPT_output_list[1] + redacted_answers_output_tokens
+            answers_input_tokens  = GPT_output_list[2] + redacted_answers_output_tokens
+                    
             #Calculate and append GPT finish time and time difference to individual df
             GPT_finish_time = datetime.now()
             
@@ -778,8 +811,9 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
     
             df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()    
 
+            #Display GPT use counter
             gpt_use_counter += 1
-            print(f"Used GPT {gpt_use_counter} time(s)")
+            print(f"GPT proccessed {gpt_use_counter}/{len(df_individual)} cases.")
 
         else:
             answers_dict = {}
@@ -808,12 +842,10 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer. (The paragraphs, pages or sections from which you obtained your answer)", "cl100k_base")
 
             #Calculate number of tokens of answers
-            answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
 
-            input_tokens = judgment_capped_tokens + questions_tokens + other_tokens
+            answers_input_tokens = judgment_capped_tokens + questions_tokens + other_tokens
             
-            GPT_output_list = [answers_dict, answers_tokens, input_tokens]
-
     	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
 
         #answers_list = [answers_dict]
@@ -850,10 +882,10 @@ def engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, sy
         #Calculate GPT costs
 
         #If no check for questions
-        #GPT_cost = GPT_output_list[1]*gpt_output_cost(gpt_model) + GPT_output_list[2]*gpt_input_cost(gpt_model)
+        #GPT_cost = answers_output_tokens*gpt_output_cost(gpt_model) + answers_input_tokens*gpt_input_cost(gpt_model)
 
         #If check for questions
-        GPT_cost = (GPT_output_list[1] + labels_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (GPT_output_list[2] + labels_prompt_tokens/len(df_individual))*gpt_input_cost(gpt_model)
+        GPT_cost = (answers_output_tokens + questions_check_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (answers_input_tokens + questions_check_input_tokens/len(df_individual))*gpt_input_cost(gpt_model)
 
         #Calculate and append GPT cost to individual df
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
@@ -976,55 +1008,12 @@ def gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, sy
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
-    # The output is a new JSON for the relevant respondent with new columns re:
-        # f"File length in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
-        # 'GPT cost estimate (USD excl GST)'
-        # 'GPT time estimate (seconds)'
-        # GPT questions/answers
 
     #os.environ["OPENAI_API_KEY"] = API_key
 
     #openai.api_key = API_key
     
     #client = OpenAI()
-
-    #Check questions for privacy violation
-
-    if check_questions_answers() > 0:
-    
-        try:
-
-            unchecked_questions_json = questions_json.copy()
-            
-            labels_output = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
-    
-            labels_output_tokens = labels_output[1]
-    
-            labels_prompt_tokens = labels_output[2]
-        
-            questions_json = checked_questions_json(questions_json, labels_output)
-
-            print('Questions checked.')
-
-            unanswered_questions(unchecked_questions_json, questions_json)
-    
-        except Exception as e:
-            
-            print('Questions check failed.')
-            
-            print(e)
-    
-            labels_output_tokens = 0
-            
-            labels_prompt_tokens = 0
-
-    else:
-
-        print('Questions not checked.')
-        
-        labels_output_tokens = 0
-        
-        labels_prompt_tokens = 0
 
     #Create list for conversion to jsonl
 
