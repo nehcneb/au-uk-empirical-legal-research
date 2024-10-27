@@ -839,7 +839,7 @@ def us_court_choice_to_list(str_or_list):
         str_or_list = ast.literal_eval(str_or_list)
 
     return str_or_list
-        
+    
 
 
 # %%

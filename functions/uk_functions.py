@@ -126,7 +126,7 @@ def uk_court_choice(chosen_list):
         chosen_list = ast.literal_eval(chosen_list)
 
     for i in chosen_list:
-        chosen_indice.append(nsw_tribunals_positioning.index(i))
+        chosen_indice.append(uk_courts_list.index(i))
     
     return chosen_indice
 
@@ -455,7 +455,8 @@ def uk_run(df_master):
     df_individual = pd.read_json(json_individual)
 
     #For UK, convert date to string so as to avoid Excel producing random numbers for dates
-    df_individual['Date'] = df_individual['Date'].astype(str)
+    if 'Date' in df_individual.columns:
+        df_individual['Date'] = df_individual['Date'].astype(str)
     
     #GPT model
 
@@ -473,7 +474,8 @@ def uk_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
 
-    df_updated.pop('judgment')
+    if 'judgment' in df_updated.columns:
+        df_updated.pop('judgment')
 
     #Drop metadata if not wanted
 
