@@ -59,18 +59,10 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment, display_df
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # Federal Courts search engine
@@ -416,19 +408,6 @@ before_date_entry = st.date_input(label = 'Decision date is before', value = au_
 
 st.caption('This app will not collect catchwords or other metadata from judgments published before 1995 (given their [PDF](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) format).')
 
-st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
-
-with stylable_container(
-    "purple",
-    css_styles="""
-    button {
-        background-color: purple;
-        color: white;
-    }""",
-):
-    preview_button = st.button(label = 'PREVIEW on the Federal Court Digital Law Library (in a popped up window)')
-
 #st.subheader("Judgment metadata collection")
 
 #st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
@@ -439,6 +418,69 @@ with stylable_container(
 #meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 meta_data_entry = True
 
+st.info("""You can preview the results returned by your search terms.""")
+
+with stylable_container(
+    "purple",
+    css_styles="""
+    button {
+        background-color: purple;
+        color: white;
+    }""",
+):
+    preview_button = st.button(label = 'PREVIEW')
+
+
+
+# %% [markdown]
+# ## Preview
+
+# %%
+if preview_button:
+    
+    df_master = fca_create_df()
+    
+    results_url_num = fca_search_url(df_master)
+        
+    results_count = results_url_num['results_count']
+
+    results_url = results_url_num['results_url']
+
+    if results_count > 0:
+
+        pause.seconds(scraper_pause_mean)
+    
+        #Get relevant cases
+        
+        judgments_file = []
+        
+        judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+        
+        case_infos = fca_search_results_to_judgment_links(results_url, judgments_counter_bound) 
+        
+        for case in case_infos:
+        
+            #add search results to json
+            judgments_file.append(case)
+
+        df_preview = pd.DataFrame(judgments_file)
+
+        #Get display settings
+        display_df_dict = display_df(df_preview)
+
+        df_preview = display_df_dict['df']
+
+        link_heading_config = display_df_dict['link_heading_config']
+
+        #Display search results
+        st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                    
+        st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+
+        st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+
+    else:
+        st.error(no_results_msg)
 
 # %% [markdown]
 # ## Buttons
@@ -468,15 +510,6 @@ keep_button = st.button('SAVE')
 
 # %% [markdown]
 # # Save and run
-
-# %%
-if preview_button:
-    
-    df_master = fca_create_df()
-    
-    judgments_url = fca_search_url(df_master)
-    
-    open_page(judgments_url)
 
 # %%
 if keep_button:
@@ -571,12 +604,15 @@ if next_button:
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             try:
-                fca_url_to_check = fca_search_url(df_master)
-                fca_html = requests.get(fca_url_to_check)
-                fca_soup = BeautifulSoup(fca_html.content, "lxml")
-                if 'Display' not in str(fca_soup):
+                
+                results_url_num = fca_search_url(df_master)
+                    
+                results_count = results_url_num['results_count']
+
+                if results_count == 0:
+                    
                     st.error(no_results_msg)
-    
+
                 else:
     
                     save_input(df_master)

@@ -73,7 +73,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # %% [markdown]
 # ## Definitions
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ### Menus and courts
 
 # %%
@@ -1514,7 +1514,76 @@ class us_search_tool:
                     if ((key not in self.renamed_keys) and (key not in self.results_w_docs[result_index].keys())):
                         self.results_w_docs[result_index][key] = result[key]
                         self.metadata_droppable.append(key)
-                        
+
+
+# %%
+@st.cache_data(show_spinner = False)
+def us_search_function(token, 
+              judgment_counter_bound, 
+                doc_type,
+                fed_app_courts,
+                fed_dist_courts,
+                fed_hist_courts,
+                bankr_courts,
+                state_courts,
+                more_courts,
+                q,
+                order_by,
+                precedential_status,
+                case_name,
+                judge,
+                filed_after,
+                filed_before,
+                cited_gt,
+                cited_lt,
+                citation,
+                neutral_cite,
+                docket_number,
+                description,
+                document_number,
+                attachment_number,
+                assigned_to,
+                referred_to,
+                nature_of_suit,
+                party_name,
+                atty_name,
+                available_only
+                ):
+
+    #Conduct search
+
+    us_search = us_search_tool(token = token)
+    
+    us_search.search(doc_type = doc_type,
+             fed_app_courts = fed_app_courts,
+             fed_dist_courts = fed_dist_courts,
+             fed_hist_courts = fed_hist_courts,
+             bankr_courts = bankr_courts,
+             state_courts = state_courts,
+             more_courts = more_courts,
+             q = q,
+             order_by = order_by,
+             precedential_status = precedential_status,
+             case_name = case_name,
+             judge = judge,
+             filed_after = filed_after,
+             filed_before = filed_before,
+             cited_gt = cited_gt,
+             cited_lt = cited_lt,
+             citation = citation,
+             neutral_cite = neutral_cite,
+             docket_number = docket_number,
+             description = description,
+             document_number = document_number,
+             attachment_number = attachment_number,
+             assigned_to = assigned_to,
+             referred_to = referred_to,
+             nature_of_suit = nature_of_suit,
+             party_name = party_name,
+             atty_name = atty_name,
+             available_only = available_only
+                )
+    return us_search
 
 
 # %%
@@ -1528,14 +1597,12 @@ def us_search_preview(df_master):
     #Use own token if user hasn't entered a valid one
     if len(str(df_master.loc[0, 'CourtListener API token'])) < 20:
         court_listener_token = st.secrets["courtlistener"]["token"]
-
-    #st.write(court_listener_token)
-    
-    us_search = us_search_tool(token = court_listener_token)
-    
+            
     #Conduct search
     
-    us_search.search(
+    us_search = us_search_function(
+                token = court_listener_token, 
+                judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']), 
                 doc_type = df_master.loc[0, 'Collection'], 
                 fed_app_courts = df_master.loc[0, 'Federal Appellate Courts'], 
                 fed_dist_courts = df_master.loc[0, 'Federal District Courts'], 
@@ -1566,11 +1633,11 @@ def us_search_preview(df_master):
                 available_only = df_master.loc[0, 'Only show results with PDFs'],
                 )
     
-    url = us_search.results_url_to_show
+    results_url = us_search.results_url
     results_count = us_search.results_count
     results_to_show = us_search.results_to_show
 
-    return {'url': url, 'results_count': results_count, 'results_to_show': us_search.results_to_show}
+    return {'results_url': results_url, 'results_count': results_count, 'results_to_show': us_search.results_to_show}
 
 
 # %% [markdown]
@@ -1632,13 +1699,9 @@ def us_run(df_master):
     if len(str(df_master.loc[0, 'CourtListener API token'])) < 20:
         court_listener_token = st.secrets["courtlistener"]["token"]
         
-    #st.write(f"court_listener_token is {court_listener_token}")
-
-    us_search = us_search_tool(token = court_listener_token, judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']))
-    
-    #Conduct search
-    
-    us_search.search(
+    us_search = us_search_function(
+                token = court_listener_token, 
+                judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']), 
                 doc_type = df_master.loc[0, 'Collection'], 
                 fed_app_courts = df_master.loc[0, 'Federal Appellate Courts'], 
                 fed_dist_courts = df_master.loc[0, 'Federal District Courts'], 
@@ -1750,13 +1813,9 @@ def us_batch(df_master):
 
     court_listener_token = df_master.loc[0, 'CourtListener API token']
         
-    #st.write(f"court_listener_token is {court_listener_token}")
-    
-    us_search = us_search_tool(token = court_listener_token, judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']))
-    
-    #Conduct search
-    
-    us_search.search(
+    us_search = us_search_function(
+                token = court_listener_token, 
+                judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']), 
                 doc_type = df_master.loc[0, 'Collection'], 
                 fed_app_courts = df_master.loc[0, 'Federal Appellate Courts'], 
                 fed_dist_courts = df_master.loc[0, 'Federal District Courts'], 

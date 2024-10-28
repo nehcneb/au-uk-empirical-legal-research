@@ -577,6 +577,50 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
 
 
 
+# %%
+#Obtain columns with hyperlinks
+
+def link_headings_picker(df):
+    link_headings = []
+    for heading in df.columns:
+        if (('hyperlink' in str(heading).lower()) or (str(heading).lower() == 'uri') or (str(heading).lower() == 'url')):
+            link_headings.append(heading)
+    return link_headings #A list of headings with hyperlinks
+
+def clean_link_columns(df):
+        
+    link_headers_list = link_headings_picker(df)
+
+    for link_header in link_headers_list:
+        if 'hyperlink' in str(link_header).lower():
+            df[link_header] = df[link_header].apply(reverse_link)
+        
+    return df
+    
+
+
+# %%
+#Function for preparing df for display with clickable links
+
+def display_df(df):
+
+    #Obtain clolumns with hyperlinks
+    
+    link_heading_config = {} 
+    
+    link_headings_list = link_headings_picker(df)
+            
+    for link_heading in link_headings_list:
+        
+        link_heading_config[link_heading] = st.column_config.LinkColumn(display_text = 'Click')
+
+    #Reverse columns with clickable links to raw uri
+    df = clean_link_columns(df)
+
+    return {'df': df, 'link_heading_config': link_heading_config}
+    
+
+
 # %% [markdown]
 # # AWS
 

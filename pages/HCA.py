@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, display_df
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -430,59 +430,13 @@ if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
 else:
     full_text_entry = ''
 
-st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
-
-with stylable_container(
-    "purple",
-    css_styles="""
-    button {
-        background-color: purple;
-        color: white;
-    }""",
-):
-
-    preview_button = st.button(label = 'PREVIEW on the High Court Judgments Database (in a pop-up window)')
-
-#if st.session_state.number_of_results != '0':
-
-    #hca_results_num_button = st.button('DISPLAY the number of results')
-    
-    #if hca_results_num_button:
-
-results_num_button = st.button(label = 'SHOW the number of judgments found', disabled = ('number_of_results' not in st.session_state), help = 'Press PREVIEW first.')
-
-if results_num_button:
-
-    if len(st.session_state.df_master) > 0:
-
-        if int(st.session_state.number_of_results) == 0:
-
-            st.error(f'There are {st.session_state.number_of_results} results. Please change your search terms.')
-
-        elif int(st.session_state.number_of_results) == 1:
-    
-            st.success(f'There is {st.session_state.number_of_results} result.')
-    
-        else:
-        
-            st.success(f'There are {st.session_state.number_of_results} results.')
-
-    else:
-
-        st.warning('Please enter some search terms and press the PREVIEW button first.')
-        
-    #hca_results_num()
-
-#The following filters are not based on HCA's filter at https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=
-
 st.subheader("Filter your search results")
 
 filter_toggle = st.toggle(label = "Filter/unfilter", value = st.session_state.court_filter_status)
 
 if filter_toggle:
     
-    st.warning("Filtering your search results may *significantly* prolong the processing time. The PREVIEW and SHOW buttons will *not* reflect your search filters.")
+    st.warning("Filtering your search results may *significantly* prolong the processing time.")
 
     st.session_state['court_filter_status'] = True
     
@@ -547,6 +501,68 @@ else: #if filter_toggle == False
 #meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 meta_data_entry = True
 
+st.info("""You can preview the results returned by your search terms.""")
+
+with stylable_container(
+    "purple",
+    css_styles="""
+    button {
+        background-color: purple;
+        color: white;
+    }""",
+):
+    preview_button = st.button(label = 'PREVIEW')
+
+
+
+
+# %% [markdown]
+# ## Preview
+
+# %%
+if preview_button:
+
+    df_master = hca_create_df()
+
+    judgments_url_num = hca_search_url(df_master)
+    
+    results_url = judgments_url_num['url']
+
+    results_count = int(float(judgments_url_num['results_num']))
+
+    if results_count > 0:
+
+        case_infos = hca_search_results_to_judgment_links_filtered_df(results_url, 
+                                         int(df_master.loc[0, 'Maximum number of judgments']),
+                                        df_master.loc[0, 'Collection'], 
+                                        df_master.loc[0, 'Parties include'], 
+                                        df_master.loc[0, 'Parties do not include'], 
+                                        df_master.loc[0, 'Decision date is after'],
+                                          df_master.loc[0, 'Decision date is before'], 
+                                        #df_master.loc[0, 'Case numbers include'], 
+                                        #df_master.loc[0, 'Case numbers do not include'], 
+                                        df_master.loc[0, 'Judges include'], 
+                                        df_master.loc[0, 'Judges do not include'])
+        
+        df_preview = pd.DataFrame(case_infos)
+
+        #Get display settings
+        display_df_dict = display_df(df_preview)
+
+        df_preview = display_df_dict['df']
+
+        link_heading_config = display_df_dict['link_heading_config']
+
+        #Display search results
+        st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                    
+        st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+
+        #The HCA's search page does not reflect filters
+        #st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+
+    else:
+        st.error(no_results_msg)
 
 # %% [markdown]
 # ## Buttons
@@ -576,26 +592,6 @@ keep_button = st.button('SAVE')
 
 # %% [markdown]
 # # Save and run
-
-# %%
-if preview_button:
-
-    df_master = hca_create_df()
-
-    st.session_state['df_master'] = df_master
-
-    judgments_url_num = hca_search_url(df_master)
-    
-    judgments_url = judgments_url_num['url']
-
-    judgments_num = judgments_url_num['results_num']
-
-    st.session_state['number_of_results'] = judgments_num
-
-    open_page(judgments_url)
-    
-    #st.rerun
-
 
 # %%
 if keep_button:
@@ -682,8 +678,9 @@ if next_button:
 
             try:
                 judgments_url_num = hca_search_url(df_master)
-                judgments_num = judgments_url_num['results_num']
-                if int(judgments_num) == 0:
+                results_count = int(float(judgments_url_num['results_num']))
+                
+                if results_count == 0:
                     st.error(no_results_msg)
     
                 else:

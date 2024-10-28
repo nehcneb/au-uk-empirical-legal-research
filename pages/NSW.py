@@ -63,20 +63,19 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, au_date, save_input, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, au_date, save_input, download_buttons, display_df
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display, no_results_msg
 
 # %% [markdown]
 # # CaseLaw NSW functions and parameters
 
 # %%
-from functions.nsw_functions import nsw_courts, nsw_default_courts, nsw_tribunals, nsw_search_url
+from functions.nsw_functions import nsw_courts, nsw_default_courts, nsw_tribunals, nsw_search_preview, nsw_link
 
 
 # %%
 #function to create dataframe
-
 def nsw_create_df():
 
     #submission time
@@ -395,19 +394,6 @@ legislationCited_entry = st.text_input(label = "Legislation cited", value = st.s
 
 casesCited_entry = st.text_input(label = "Cases cited", value = st.session_state['df_master'].loc[0, 'Cases cited'] )
 
-st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
-
-with stylable_container(
-    "purple",
-    css_styles="""
-    button {
-        background-color: purple;
-        color: white;
-    }""",
-):
-    preview_button = st.button(label = 'PREVIEW on NSW Caselaw (in a popped up window)')
-
 #    headnotes_entry = st.multiselect("Please select", headnotes_choices)
 
 #st.subheader("Judgment metadata collection")
@@ -419,6 +405,75 @@ with stylable_container(
 
 #meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 meta_data_entry = True
+
+st.info("""You can preview the results returned by your search terms.""")
+
+with stylable_container(
+    "purple",
+    css_styles="""
+    button {
+        background-color: purple;
+        color: white;
+    }""",
+):
+    preview_button = st.button(label = 'PREVIEW')
+
+
+
+# %% [markdown]
+# ## Preview
+
+# %%
+if preview_button:
+    
+    all_search_terms = str(catchwords_entry) + str(body_entry) + str(title_entry) + str(before_entry) + str(party_entry) + str(mnc_entry) + str(startDate_entry) + str(endDate_entry) + str(fileNumber_entry) + str(legislationCited_entry) + str(casesCited_entry)
+    
+    if all_search_terms.replace('None', '') == "":
+
+        st.warning('You must enter some search terms.')
+
+    elif (len(courts_entry) == 0) and (len(tribunals_entry) == 0):
+        st.warning('Please select at least one court or tribunal to cover.')
+    
+    else:
+
+        df_master = nsw_create_df()
+
+        search_results_w_count = nsw_search_preview(df_master)
+        
+        results_count = search_results_w_count['results_count']
+
+        results_to_show = search_results_w_count['results_to_show']
+
+        results_url = search_results_w_count['results_url']
+            
+        if results_count > 0:
+
+            df_preview = pd.DataFrame(results_to_show)
+
+            #Clean df for display
+            df_preview['uri'] = df_preview['uri'].apply(nsw_link)
+
+            rename_columns_dict = {'title': 'Title', 'uri': 'Hyperlink to NSW Caselaw', 'before': 'Before', 'decisionDate': 'Decision date', 'catchwords': 'Catchwords'}
+
+            df_preview.rename(columns=rename_columns_dict, inplace=True)
+
+            #Get display settings
+            display_df_dict = display_df(df_preview)
+
+            df_preview = display_df_dict['df']
+
+            link_heading_config = display_df_dict['link_heading_config']
+
+            #Display search results
+            st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                        
+            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+
+            st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+
+        else:
+            st.error(no_results_msg)
 
 
 # %% [markdown]
@@ -449,16 +504,6 @@ keep_button = st.button('SAVE')
 
 # %% [markdown]
 # # Save and run
-
-# %%
-if preview_button:
-    
-    df_master = nsw_create_df()
-
-    judgments_url = nsw_search_url(df_master)
-
-    open_page(judgments_url)
-
 
 # %%
 if keep_button:
@@ -521,10 +566,10 @@ if next_button:
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
             try:
-                nsw_url_to_check = nsw_search_url(df_master)
-                nsw_html = requests.get(nsw_url_to_check)
-                nsw_soup = BeautifulSoup(nsw_html.content, "lxml")
-                if 'totalElements' not in str(nsw_soup):
+                search_results_w_count = nsw_search_preview(df_master)
+                results_count = search_results_w_count['results_count']
+                
+                if results_count == 0:
                     
                     st.error(no_results_msg)
     

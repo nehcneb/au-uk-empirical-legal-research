@@ -98,6 +98,8 @@ fca_courts_list = list(fca_courts.keys())
 
 # %%
 #Function turning search terms to search results url
+
+@st.cache_data(show_spinner = False)
 def fca_search(court = '', 
                case_name_mnc= '', 
                judge ='', 
@@ -143,7 +145,24 @@ def fca_search(court = '',
     response.raise_for_status()
     # Process the response (e.g., extract relevant information)
     # Your code here...
-    return response.url
+
+    #Get search url
+    results_url = response.url
+
+    #Get the number of search results
+    results_count = int(0)
+
+    try:
+        soup = BeautifulSoup(response.content, "lxml")
+        results_num_raw = soup.find('p', {'class': 'txarial'})
+        results_num_raw_text = results_num_raw.get_text(strip = True)
+        results_count = results_num_raw_text.split('\r\n')[0].split(' ')[-1]
+        results_count = int(float(results_count))
+
+    except:
+        print("Can't get the number of search results")
+    
+    return {'results_url': results_url, 'results_count': results_count}
 
 
 # %%
@@ -515,14 +534,13 @@ def fca_pdf_name(name_mnc_list, mnc):
 
 
 # %%
+@st.cache_data(show_spinner = False)
 def fca_search_url(df_master):
     df_master = df_master.fillna('')
-    
-    #Combining catchwords into new column
-    
+        
     #Conduct search
     
-    url = fca_search(court = df_master.loc[0, 'Courts'], 
+    results_url_num = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -540,7 +558,11 @@ def fca_search_url(df_master):
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
                     )
-    return url
+
+    results_url = results_url_num['results_url']
+    results_count = results_url_num['results_count']
+    return {'results_url': results_url, 'results_count': results_count}
+    
 
 
 # %% [markdown]
@@ -611,7 +633,7 @@ def fca_run_direct(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )
+                    )['results_url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
@@ -700,7 +722,7 @@ def fca_run(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )
+                    )['results_url']
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
@@ -838,7 +860,7 @@ def fca_batch(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )
+                    )['results_url']
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 

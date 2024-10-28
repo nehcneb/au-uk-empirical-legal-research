@@ -138,14 +138,14 @@ def get_judgment_from_oalc(mnc_list):
     #Figure out jurisdiction
     subset = 'default'
     #ENABLE after splitting corpus into jurisdiction subsets
-    #if 'nsc' in mnc_list[0].lower():
-        #subset = 'nsw_caselaw'
+    if 'nsw' in mnc_list[0].lower():
+        subset = 'nsw_caselaw'
     
-    #if 'fca' in mnc_list[0].lower():
-        #subset = 'federal_court_of_australia'
+    if 'fca' in mnc_list[0].lower():
+        subset = 'federal_court_of_australia'
     
-    #if 'hca' in mnc_list[0].lower():
-        #subset = 'high_court_of_australia'
+    if 'hca' in mnc_list[0].lower():
+        subset = 'high_court_of_australia'
     
     #Create list of mncs for use in the where argument of oalc_filter
     where_list = []
@@ -175,13 +175,17 @@ def get_judgment_from_oalc(mnc_list):
     for mnc in mnc_list:
         mnc_judgment_dict.update({mnc: ''})
 
-    for case in data["rows"]:
-        citation = case['row']['citation']
-        mnc = split_title_mnc(citation)[1]
-        if mnc in mnc_judgment_dict.keys():
-            judgment = case['row']['text']
-            mnc_judgment_dict[mnc] = judgment
+    try:
+        for case in data["rows"]:
+            citation = case['row']['citation']
+            mnc = split_title_mnc(citation)[1]
+            if mnc in mnc_judgment_dict.keys():
+                judgment = case['row']['text']
+                mnc_judgment_dict[mnc] = judgment
 
+    except Exception as e:
+        print(e)
+    
     #Remove any blank or very short judgments
     mncs_to_pop = []
     
@@ -194,7 +198,6 @@ def get_judgment_from_oalc(mnc_list):
     
     return mnc_judgment_dict
     
-
 
 # %%
 #Based on  https://huggingface.co/docs/dataset-viewer/en/search

@@ -237,7 +237,43 @@ def nsw_short_judgment(uri):
 
 
 # %%
-def nsw_search_url(df_master):
+@st.cache_data(show_spinner = False)
+def nsw_search(courts = [],
+    tribunals = [],
+    body = '',
+    title = '',
+    before = '',
+    catchwords = '',
+    party = '',
+    mnc = '',
+    startDate = '',
+    endDate = '',
+    fileNumber = '',
+    legislationCited = '',
+    casesCited = '',
+    pause = int(0)
+    ):
+    query = Search(courts = courts,
+                    tribunals = tribunals, 
+                    body = body, 
+                    title = title, 
+                    before = before, 
+                    catchwords = catchwords, 
+                    party = party, 
+                    mnc = mnc, 
+                    startDate = startDate, 
+                    endDate = endDate,
+                    fileNumber = fileNumber, 
+                    legislationCited  = legislationCited, 
+                    casesCited = casesCited,
+                    pause = pause
+                    )
+    return query
+
+
+# %%
+@st.cache_data(show_spinner = False)
+def nsw_search_preview(df_master):
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
@@ -245,10 +281,7 @@ def nsw_search_url(df_master):
     df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
     df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
 
-    #df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
-    #df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Combining catchwords into new column
+    #Combining search terms into new column
     
     search_dict = {'body': df_master.loc[0, 'Free text']}
     search_dict.update({'title': df_master.loc[0, 'Case name']})
@@ -261,10 +294,11 @@ def nsw_search_url(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
+    
     df_master.loc[0, 'SearchCriteria']=[search_dict]
 
     #Conduct search
-    query = Search(courts=df_master.loc[0, 'Courts'], 
+    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
                    title = df_master.loc[0, "SearchCriteria"]['title'], 
@@ -276,7 +310,99 @@ def nsw_search_url(df_master):
                    endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
+                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
+                   pause = 0
+                  )
+
+    #Create results to show
+    judgments_file = []
+    
+    #Counter to limit search results to append
+    counter = 0
+
+    #Go through search results
+    
+    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    
+    #Create list of relevant cases
+    for decision in query.results():
+        
+        if counter < judgments_counter_bound:
+
+            #Append to judgments_file to create df_individual
+            decision_w_meta = decision.values.copy()
+
+            #add search results to json
+            judgments_file.append(decision_w_meta)
+
+            counter +=1            
+            
+        else:
+            break
+                
+    results_to_show = judgments_file
+
+    #Get url to NSW Caselaw search page
+    results_url = query.url
+    
+    #Create total number of results
+    results_count = int(0)
+
+    if len(results_to_show) > 0:
+        
+        pause.seconds(scraper_pause_mean)
+        
+        page_html = requests.get(query.url)
+        soup_html = BeautifulSoup(page_html.content, "lxml")
+        results_count_raw = soup_html.find('div', {'id': 'paginationcontainer'})
+        results_count_text = results_count_raw.get_text(strip = True)
+        results_count = int(float(results_count_text.split(' ')[-2]))
+
+    return {'results_to_show': results_to_show, 'results_url': results_url, 'results_count': results_count}
+
+
+
+# %%
+#NOT IN USE
+
+def nsw_search_url(df_master):
+    df_master = df_master.fillna('')
+    
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+
+    #Combining search terms into new column
+    
+    search_dict = {'body': df_master.loc[0, 'Free text']}
+    search_dict.update({'title': df_master.loc[0, 'Case name']})
+    search_dict.update({'before': df_master.loc[0, 'Before']})
+    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
+    search_dict.update({'party': df_master.loc[0, 'Party names']})
+    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
+    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
+    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
+    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
+    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
+    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
+    
+    df_master.loc[0, 'SearchCriteria']=[search_dict]
+
+    #Conduct search
+    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
+                   tribunals=df_master.loc[0, 'Tribunals'], 
+                   body = df_master.loc[0, "SearchCriteria"]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
                    pause = 0
                   )    
     return query.url
@@ -474,7 +600,7 @@ def nsw_run_direct(df_master):
 
     #Conduct search
     
-    query = Search(courts=df_master.loc[0, 'Courts'], 
+    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
                    title = df_master.loc[0, "SearchCriteria"]['title'], 
@@ -486,7 +612,7 @@ def nsw_run_direct(df_master):
                    endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
+                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
                    pause = 0
                   )
 
@@ -615,7 +741,7 @@ def nsw_run(df_master):
 
     #Conduct search
     
-    query = Search(courts=df_master.loc[0, 'Courts'], 
+    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
                    title = df_master.loc[0, "SearchCriteria"]['title'], 
@@ -627,7 +753,7 @@ def nsw_run(df_master):
                    endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
+                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
                    pause = 0
                   )
 
@@ -826,7 +952,7 @@ def nsw_batch(df_master):
 
     #Conduct search
     
-    query = Search(courts=df_master.loc[0, 'Courts'], 
+    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
                    body = df_master.loc[0, "SearchCriteria"]['body'], 
                    title = df_master.loc[0, "SearchCriteria"]['title'], 
@@ -838,7 +964,7 @@ def nsw_batch(df_master):
                    endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
                    fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
                    legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['legislationCited'],
+                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
                    pause = 0
                   )
 

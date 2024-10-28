@@ -83,14 +83,10 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, reverse_link
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, reverse_link, link_headings_picker, clean_link_columns, display_df
 #Import variables
 from functions.common_functions import today_in_nums, default_judgment_counter_bound
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
 
 
 # %% [markdown]
@@ -670,28 +666,6 @@ def langchain_merge_df_produced():
 # ## Function definitions
 
 # %%
-#Obtain columns with hyperlinks
-
-def link_headings_picker(df):
-    link_headings = []
-    for heading in df.columns:
-        if 'Hyperlink' in str(heading):
-            link_headings.append(heading)
-    return link_headings #A list of headings with hyperlinks
-
-
-def clean_link_columns(df):
-        
-    link_headers_list = link_headings_picker(df)
-
-    for link_header in link_headers_list:
-        df[link_header] = df[link_header].apply(reverse_link)
-        
-    return df
-    
-
-
-# %%
 #Excel to df with hyperlinks
 
 def excel_to_df_w_links(uploaded_file):
@@ -1239,29 +1213,13 @@ conversion_msg_to_show = ''
 #Last resort error, unlikely displayed
 everything_error_to_show = 'Failed to make spreadsheet editable. '
 
-#Obtain clolumns with hyperlinks
+#Clean df for display and obtain config for this purpose
 
-link_heading_config = {} 
+display_df_dict = display_df(st.session_state.df_to_analyse)
 
-link_headings_list = link_headings_picker(st.session_state.df_to_analyse)
+st.session_state.df_to_analyse = display_df_dict['df']
 
-#try:
-        
-for link_heading in link_headings_list:
-    
-    link_heading_config[link_heading] = st.column_config.LinkColumn(display_text = 'Click')
-
-st.session_state.df_to_analyse = clean_link_columns(st.session_state.df_to_analyse)
-
-    #except Exception as e:
-
-        #links_error = 'Hyperlinks have not been made clickable. '
-
-        #conversion_msg_to_show += links_error
-        
-        #print(links_error)
-        
-        #print(e)
+link_heading_config = display_df_dict['link_heading_config']
 
 #Convert columns which are list type to string type
 try:

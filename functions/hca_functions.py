@@ -78,6 +78,8 @@ hca_collections = ['Judgments 2000-present', 'Judgments 1948-1999', '1 CLR - 100
 
 # %%
 #Function turning search terms to search results url AND number of search results
+
+@st.cache_data(show_spinner = False)
 def hca_search(collection = '', 
                quick_search = '', 
                #citation = '', 
@@ -902,6 +904,7 @@ hca_df = hca_load_data(hca_data_url)
 # %%
 #Function to excluding unwanted jugdments
 
+@st.cache_data(show_spinner = False)
 def hca_judgment_to_exclude(case_info = {},
                         collection = '', 
                         own_parties_include = '', 
@@ -1148,6 +1151,7 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
 # %%
 #Function to get link to search results and number of results
 
+@st.cache_resource(show_spinner = False)
 def hca_search_url(df_master):
     df_master = df_master.fillna('')
     

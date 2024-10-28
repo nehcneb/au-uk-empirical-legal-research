@@ -519,7 +519,7 @@ def GPT_questions_check(questions_json_or_string, gpt_model, questions_check_sys
             'questions_check_output_tokens': questions_check_output_tokens, 
             'questions_check_input_tokens': questions_check_input_tokens
            }
-    
+
 
 # %%
 #Check questions for potential privacy infringement
@@ -1178,7 +1178,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
         
-        from functions.nsw_functions import nsw_run, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt, nsw_search_url
+        from functions.nsw_functions import nsw_search, nsw_run, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt
     
         run = copy.copy(nsw_run)
     
@@ -1195,7 +1195,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_run, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        from functions.us_functions import us_run, us_search_function, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
         
         run = copy.copy(us_run)
 
@@ -1282,7 +1282,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
 
-        from functions.nsw_functions import nsw_batch, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
+        from functions.nsw_functions import nsw_search, nsw_batch, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
     
         batch =  copy.copy(nsw_batch)
     
@@ -1298,7 +1298,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_batch, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        from functions.us_functions import us_batch, us_search_function, us_court_choice_clean, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
             
         batch = copy.copy(us_batch)
 

@@ -58,9 +58,10 @@ import tiktoken
 #Excel
 from pyxlsb import open_workbook as open_xlsb
 
+
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, display_df
 #Import variables
 from functions.common_functions import today_in_nums, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -69,7 +70,7 @@ from functions.common_functions import today_in_nums, scraper_pause_mean, judgme
 # # US search engine
 
 # %%
-from functions.us_functions import us_search_tool, us_search_preview, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions
+from functions.us_functions import us_search_tool, us_search_function, us_search_preview, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions
 
 
 # %%
@@ -622,6 +623,15 @@ token_entry = st.text_input(label = 'Optional', value = st.session_state['df_mas
 
 st.write('By default, this app will process up to 500 queries per day. If that limit is exceeded, you can still use this app with your own CourtListen API token (click [here](https://www.courtlistener.com/sign-in/) to sign up for one).')
 
+st.subheader("Case metadata collection")
+
+st.markdown("""Would you like to obtain case metadata? Such data include the name of the judge, the filing date and so on. 
+
+Case name and citation are always included with your results.
+""")
+
+meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+
 st.info("""You can preview the results returned by your search terms.""")
 
 with stylable_container(
@@ -658,23 +668,31 @@ if preview_button:
 
         df_master = us_create_df()
 
-        results_count = us_search_preview(df_master)['results_count']
+        search_results_w_count = us_search_preview(df_master)
+        
+        results_count = search_results_w_count['results_count']
 
-        search_results = us_search_preview(df_master)['results_to_show']
-            
+        results_to_show = search_results_w_count['results_to_show']
+
+        results_url = search_results_w_count['results_url']
+
         if results_count > 0:
 
-            df_preview = pd.DataFrame(search_results)
+            df_preview = pd.DataFrame(results_to_show)
 
-            df_preview['Hyperlink to CourtListener'] = df_preview['Hyperlink to CourtListener'].apply(reverse_link)
-            
-            link_heading_config = {} 
-      
-            link_heading_config['Hyperlink to CourtListener'] = st.column_config.LinkColumn(display_text = 'Click')
-    
+            #Get display settings
+            display_df_dict = display_df(df_preview)
+
+            df_preview = display_df_dict['df']
+
+            link_heading_config = display_df_dict['link_heading_config']
+
+            #Display search results
             st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
                         
             st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+
+            st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
     
         else:
             st.error(no_results_msg)
@@ -682,19 +700,6 @@ if preview_button:
             #US-specific
             st.error('Alternatively, please enter your own CourtListener API token and try again.')
 
-
-# %% [markdown]
-# ## Metadata choice
-
-# %%
-st.subheader("Case metadata collection")
-
-st.markdown("""Would you like to obtain case metadata? Such data include the name of the judge, the filing date and so on. 
-
-Case name and citation are always included with your results.
-""")
-
-meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
 # %% [markdown]
 # ## Buttons
@@ -829,9 +834,11 @@ if next_button:
 
             try:
 
-                us_search_preview_dict = us_search_preview(df_master)
+                search_results_w_count = us_search_preview(df_master)
                 
-                if us_search_preview_dict['results_count'] == 0:
+                results_count = search_results_w_count['results_count']
+                
+                if results_count == 0:
                     
                     st.error(no_results_msg)
     
