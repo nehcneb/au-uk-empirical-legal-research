@@ -73,7 +73,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # %% [markdown]
 # ## Definitions
 
-# %% [markdown] jp-MarkdownHeadingCollapsed=true
+# %% [markdown]
 # ### Menus and courts
 
 # %%
@@ -82,11 +82,19 @@ us_collections = {'Opinions of Federal, State and Territory Courts': 'o',
 }
 
 # %%
-us_order_by = {'Relevance': "score desc", #not working on their api
+us_order_by = {'Relevance': "score desc",
 'Newest Cases First': "dateFiled desc",
 'Oldest Cases First': "dateFiled asc",
 'Most Cited First': "citeCount desc",
 'Least Cited First': "citeCount asc"
+}
+
+# %%
+us_pacer_order_by = {'Relevance': "score desc",
+'Newest Cases First': "dateFiled desc",
+'Oldest Cases First': "dateFiled asc",
+'Newest Documents First': "entry_date_filed desc",
+'Oldest Documents First': "entry_date_filed asc"
 }
 
 # %%
@@ -1056,7 +1064,6 @@ class us_search_tool:
             ('type', self.doc_type),
             ('q', q), 
             ('type', self.doc_type),
-            ('order_by', us_order_by[order_by])
         ]
 
         if filed_after:
@@ -1075,6 +1082,8 @@ class us_search_tool:
         
         #Params for opinions only
         if self.doc_type == 'o':
+
+            params_raw.append(('order_by', us_order_by[order_by]))
 
             if isinstance(precedential_status, str):
                 precedential_status = ast.literal_eval(precedential_status)
@@ -1166,6 +1175,8 @@ class us_search_tool:
 
         #Params for PACER docs only
         if self.doc_type == 'r':
+
+            params_raw.append(('order_by', us_pacer_order_by[order_by]))
 
             if description:
                 params_raw.append(('description', description))
