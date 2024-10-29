@@ -1563,7 +1563,7 @@ def us_search_function(token,
 
     #Conduct search
 
-    us_search = us_search_tool(token = token)
+    us_search = us_search_tool(token = token, judgment_counter_bound = judgment_counter_bound)
     
     us_search.search(doc_type = doc_type,
              fed_app_courts = fed_app_courts,
