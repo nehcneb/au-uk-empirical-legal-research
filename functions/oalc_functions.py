@@ -169,6 +169,8 @@ def get_judgment_from_oalc(mnc_list):
                  #orderby = '"date" DESC NULLS LAST', 
                  length = len(mnc_list))
 
+    #print(data)
+    
     #Create dict of mncs and judgments
 
     mnc_judgment_dict = {}
@@ -197,7 +199,7 @@ def get_judgment_from_oalc(mnc_list):
         mnc_judgment_dict.pop(mnc)
     
     return mnc_judgment_dict
-    
+
 
 # %%
 #Based on  https://huggingface.co/docs/dataset-viewer/en/search
@@ -230,3 +232,7 @@ def oalc_search(dataset, split, config = 'default', query = None, orderby = None
     
     return response.json()
 
+
+# %%
+
+# %%

@@ -115,11 +115,12 @@ def hca_search(collection = '',
     #Get url_search_results
     url_search_results = response.url
 
-    #Get number of search results
+    #Get number of search results and soup
     soup = BeautifulSoup(response.content, "lxml")
     number_of_results = soup.find("span", id="itemTotal").text
-        
-    return {'url': url_search_results, 'results_num': number_of_results}
+    results_count = int(float(number_of_results.replace(',', '')))
+                        
+    return {'results_url': url_search_results, 'results_count': results_count, 'soup': soup}
     
 
 
@@ -1042,7 +1043,8 @@ def hca_judgment_to_exclude(case_info = {},
 #Function to get judgment links with filters
 
 @st.cache_data(show_spinner = False)
-def hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+def hca_search_results_to_judgment_links_filtered_df(_soup, 
+                                                     url_search_results, 
                                      judgment_counter_bound,
                                       collection, 
                                     #hca_df, 
@@ -1057,9 +1059,7 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
                                     own_judges_include, 
                                     own_judges_exclude
                                                 ):
-    
-    page = requests.get(url_search_results)
-    soup = BeautifulSoup(page.content, "lxml")
+    #Soup, url_search_results are from hca_search
         
     #Start counter
     
@@ -1067,7 +1067,7 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
     
     #Get number of pages
     #There are up to 20 pages per page
-    number_of_pages = soup.find("span", id="lastItem").text
+    number_of_pages = _soup.find("span", id="lastItem").text
 
     #Start links list
     #links = []
@@ -1079,12 +1079,16 @@ def hca_search_results_to_judgment_links_filtered_df(url_search_results,
         if counter <= judgment_counter_bound:
                         
             page = page_raw + 1
-            
-            url_search_results_page = url_search_results + f'&page={page}'
-    
-            page_page = requests.get(url_search_results_page)
-    
-            soup_page = BeautifulSoup(page_page.content, "lxml")
+
+            #First page already scraped
+            if page == 1:
+                soup_page = _soup
+            else:
+                url_search_results_page = url_search_results + f'&page={page}'
+        
+                page_page = requests.get(url_search_results_page)
+        
+                soup_page = BeautifulSoup(page_page.content, "lxml")
     
             #Get raw links and names of cases
             
@@ -1159,12 +1163,12 @@ def hca_search_url(df_master):
     
     #Conduct search
     
-    url_num_dict = hca_search(collection = df_master.loc[0, 'Collection'], 
+    results_url_count = hca_search(collection = df_master.loc[0, 'Collection'], 
                         quick_search = df_master.loc[0, 'Quick search'], 
                         full_text = df_master.loc[0, 'Full text search']
                         )
-    url = url_num_dict['url']
-    results_num = url_num_dict['results_num']
+    results_url = results_url_count['results_url']
+    results_count = results_url_count['results_count']
     
     #If mnc entered
 
@@ -1176,9 +1180,11 @@ def hca_search_url(df_master):
             
             url = direct_link
 
-            results_num = '1'
+            results_count = '1'
     
-    return {'url': url, 'results_num': results_num}
+    search_results_soup = results_url_count['soup']
+    
+    return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
     
 
 
@@ -1235,15 +1241,20 @@ def hca_run_direct(df_master):
     
     #Conduct search
     
-    url_search_results = hca_search(collection = df_master.loc[0, 'Collection'], 
+    soup_url = hca_search(collection = df_master.loc[0, 'Collection'], 
                         quick_search = df_master.loc[0, 'Quick search'], 
                         full_text = df_master.loc[0, 'Full text search']
-                        )['url']
+                        )
+
+    soup = soup_url['soup']
+
+    search_results_url = soup_url['results_url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
     
     #Use the following if want to filter results.
-    case_infos = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+    case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
+                                                                  search_results_url, 
                                      judgments_counter_bound,
                                     #hca_df, 
                                     df_master.loc[0, 'Collection'], 
@@ -1354,15 +1365,20 @@ def hca_run(df_master):
     
     #Conduct search
     
-    url_search_results = hca_search(collection = df_master.loc[0, 'Collection'], 
+    soup_url = hca_search(collection = df_master.loc[0, 'Collection'], 
                         quick_search = df_master.loc[0, 'Quick search'], 
                         full_text = df_master.loc[0, 'Full text search']
-                        )['url']
+                        )
+
+    soup = soup_url['soup']
+
+    search_results_url = soup_url['results_url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
     
     #Use the following if want to filter results.
-    case_infos = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+    case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
+                                                                  search_results_url, 
                                      judgments_counter_bound,
                                     #hca_df, 
                                     df_master.loc[0, 'Collection'], 
@@ -1530,15 +1546,20 @@ def hca_batch(df_master):
     
     #Conduct search
     
-    url_search_results = hca_search(collection = df_master.loc[0, 'Collection'], 
+    soup_url = hca_search(collection = df_master.loc[0, 'Collection'], 
                         quick_search = df_master.loc[0, 'Quick search'], 
                         full_text = df_master.loc[0, 'Full text search']
-                        )['url']
+                        )
+
+    soup = soup_url['soup']
+
+    search_results_url = soup_url['results_url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
     
     #Use the following if want to filter results.
-    case_infos = hca_search_results_to_judgment_links_filtered_df(url_search_results, 
+    case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
+                                                                  search_results_url, 
                                      judgments_counter_bound,
                                     #hca_df, 
                                     df_master.loc[0, 'Collection'], 

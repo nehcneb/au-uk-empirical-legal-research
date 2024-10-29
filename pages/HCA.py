@@ -524,15 +524,18 @@ if preview_button:
 
     df_master = hca_create_df()
 
-    judgments_url_num = hca_search_url(df_master)
+    results_url_count = hca_search_url(df_master)
     
-    results_url = judgments_url_num['url']
+    results_url = results_url_count['results_url']
 
-    results_count = int(float(judgments_url_num['results_num']))
+    results_count = int(float(results_url_count['results_count']))
+
+    soup = results_url_count['soup']
+
 
     if results_count > 0:
 
-        case_infos = hca_search_results_to_judgment_links_filtered_df(results_url, 
+        case_infos = hca_search_results_to_judgment_links_filtered_df(soup, results_url, 
                                          int(df_master.loc[0, 'Maximum number of judgments']),
                                         df_master.loc[0, 'Collection'], 
                                         df_master.loc[0, 'Parties include'], 
@@ -677,8 +680,8 @@ if next_button:
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             try:
-                judgments_url_num = hca_search_url(df_master)
-                results_count = int(float(judgments_url_num['results_num']))
+                results_url_count = hca_search_url(df_master)
+                results_count = int(float(results_url_count['results_count']))
                 
                 if results_count == 0:
                     st.error(no_results_msg)

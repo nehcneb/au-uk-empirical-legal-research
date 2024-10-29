@@ -57,7 +57,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, save_input, search_error_display
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, save_input, search_error_display, display_df
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -370,18 +370,6 @@ judge_entry = st.text_input(label = 'Judge name', value = st.session_state.df_ma
 
 party_entry = st.text_input(label = 'Party name', value = st.session_state.df_master.loc[0, 'Party'])
 
-st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
-with stylable_container(
-    "purple",
-    css_styles="""
-    button {
-        background-color: purple;
-        color: white;
-    }""",
-):
-    preview_button = st.button(label = 'PREVIEW on The National Archives (in a popped up window)')
-
 st.subheader("Judgment metadata collection")
 
 st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the names of the parties and so on. 
@@ -391,6 +379,75 @@ Case name and medium neutral citation are always included with your results.
 
 meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
+st.info("""You can preview the results returned by your search terms.""")
+
+with stylable_container(
+    "purple",
+    css_styles="""
+    button {
+        background-color: purple;
+        color: white;
+    }""",
+):
+    preview_button = st.button(label = 'PREVIEW')
+
+
+
+# %% [markdown]
+# ## Preview
+
+# %% jp-MarkdownHeadingCollapsed=true
+if preview_button:
+
+    df_master = uk_create_df()
+
+    results_url_num = uk_search_url(df_master)
+        
+    results_count = results_url_num['results_count']
+
+    results_url = results_url_num['results_url']
+
+    search_results_soup = results_url_num['soup']
+
+    if results_count > 0:
+    
+        #Get relevant cases
+        
+        judgments_file = []
+        
+        judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+        
+        case_infos = uk_search_results_to_judgment_links(search_results_soup, judgments_counter_bound) 
+        
+        for case in case_infos:
+        
+            #add search results to json
+            judgments_file.append(case)
+
+        #Clean df
+        
+        df_preview = pd.DataFrame(judgments_file)
+
+        #Clean df
+        df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
+        
+        #Get display settings
+        display_df_dict = display_df(df_preview)
+
+        df_preview = display_df_dict['df']
+
+        link_heading_config = display_df_dict['link_heading_config']
+
+        #Display search results
+        st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                    
+        st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+
+        st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+
+    else:
+        st.error(no_results_msg)
+        
 
 # %% [markdown]
 # ## Buttons
@@ -420,16 +477,6 @@ keep_button = st.button('SAVE')
 
 # %% [markdown]
 # # Save and run
-
-# %%
-if preview_button:
-
-    df_master = uk_create_df()
-
-    judgments_url = uk_search_url(df_master)
-
-    open_page(judgments_url)
-
 
 # %%
 if keep_button:
@@ -522,10 +569,11 @@ if next_button:
             
             try:
 
-                uk_url_to_check = uk_search_url(df_master)
-                uk_html = requests.get(uk_url_to_check)
-                uk_soup = BeautifulSoup(uk_html.content, "lxml")
-                if 'No matching results' in str(uk_soup):
+                results_url_num = uk_search_url(df_master)
+        
+                results_count = results_url_num['results_count']
+    
+                if results_count == 0:
                     st.error(no_results_msg)
     
                 else:

@@ -141,6 +141,8 @@ def uk_link(x):
 
 # %%
 #Function turning search terms to search results url
+
+@st.cache_data(show_spinner = False)
 def uk_search(query= '', 
               from_day= '',
               from_month='', 
@@ -167,26 +169,39 @@ def uk_search(query= '',
     response = requests.get(base_url, params=params)
     response.raise_for_status()
 
-    #proper_url = str(response.url).replace('%25', '%')
+    #Get results count
+
+    results_count = 0
+
+    try:
+        soup = BeautifulSoup(response.content, "lxml")
+        results_count_raw = soup.find('p', {'class': "results__results-intro"})
+        results_count_cleaned = results_count_raw.get_text(strip = True)
+        results_count = int(float(results_count_cleaned.split(' ')[0].replace(',', '')))
+    except:
+        print('No results found.')
+
+
+    #Get soup
+    soup = BeautifulSoup(response.content, "lxml")
+
     
-    #return proper_url
-    return response.url
+    return {'results_url': response.url, 'results_count': results_count, 'soup': soup}
     
 
 
 # %%
-#Define function turning search results url to links to judgments
+#Define function turning search results url to case_infos to judgments
 
 @st.cache_data(show_spinner = False)
-def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
-    #Scrape webpage of search results
-    page = requests.get(url_search_results)
-    soup = BeautifulSoup(page.content, "lxml")
-    hrefs = soup.find_all('span', {'class': 'judgment-listing__judgment'})
-    links = []
+def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
+    #Reponse is from scraping per uk_search
+    
+    hrefs = _soup.find_all('span', {'class': 'judgment-listing__judgment'})
+    case_infos = []
 
     #Get total number of pages
-    page_nums_raw = soup.find_all('li', attrs={'class': 'pagination__list-item'})
+    page_nums_raw = _soup.find_all('li', attrs={'class': 'pagination__list-item'})
     page_nums = []
     
     for page_num in page_nums_raw:
@@ -211,17 +226,52 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     
     for link in hrefs:
         if counter <= judgment_counter_bound:
-            
-            raw_link = link.find('a', href=True)['href']
-            
-            if "?" in raw_link:
-                cleaned_link = raw_link.split('?')[0]
-            else:
-                cleaned_link = raw_link
+
+            case_info = {
+            'Case name': '',
+             'Medium neutral citation': '',
+            'Hyperlink to The National Archives' : '', 
+            'Date' : '',
+            'Court' : ''
+            }
+            try:
+                raw_link = link.find('a', href=True)['href']
                 
-            link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
+                if "?" in raw_link:
+                    cleaned_link = raw_link.split('?')[0]
+                else:
+                    cleaned_link = raw_link
+                
+                link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
+                case_info['Hyperlink to The National Archives'] = link_direct
+
+                
+                title_raw = link.find('span', {'class': "judgment-listing__title"})
+                title = title_raw.get_text(strip = True)
+                
+                case_info['Case name'] = title
+
+                
+                court_raw = link.find('span', {'class': "judgment-listing__court"})
+                court = court_raw.get_text(strip = True)
+
+                case_info['Court'] = court
+
+                mnc_raw = link.find('span', {'class': "judgment-listing__neutralcitation"})
+                mnc = mnc_raw.get_text(strip = True)
+
+                case_info['Medium neutral citation'] = mnc
+
+                date_raw = link.find('time', {'class': "judgment-listing__date"})
+                date = date_raw.get_text(strip = True)
+
+                case_info['Date'] = date
+
+            except Exception as e:
+                print(f"{case_info['Case name']}: Can't get metadata")
+                print(e)
             
-            links.append(link_direct)
+            case_infos.append(case_info)
             
             counter = counter + 1
 
@@ -243,17 +293,53 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
                     hrefs_next_page = soup_judgment_next_page.find_all('span', {'class': 'judgment-listing__judgment'})
                     for extra_link in hrefs_next_page:
                         if counter <= judgment_counter_bound:
+
+                            case_info = {
+                            'Case name': '',
+                             'Medium neutral citation': '',
+                            'Hyperlink to The National Archives' : '', 
+                            'Date' : '',
+                            'Court' : ''
+                            }
                             
-                            raw_link = extra_link.find('a', href=True)['href']
-                            
-                            if "?" in raw_link:
-                                cleaned_link = raw_link.split('?')[0]
-                            else:
-                                cleaned_link = raw_link
+                            try:
+                                raw_link = extra_link.find('a', href=True)['href']
                                 
-                            link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
-                            
-                            links.append(link_direct)
+                                if "?" in raw_link:
+                                    cleaned_link = raw_link.split('?')[0]
+                                else:
+                                    cleaned_link = raw_link
+                                
+                                link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
+                                case_info['Hyperlink to The National Archives'] = link_direct
+                
+                                
+                                title_raw = link.find('span', {'class': "judgment-listing__title"})
+                                title = title_raw.get_text(strip = True)
+                                
+                                case_info['Case name'] = title
+                
+                                
+                                court_raw = link.find('span', {'class': "judgment-listing__court"})
+                                court = court_raw.get_text(strip = True)
+                
+                                case_info['Court'] = court
+                
+                                mnc_raw = link.find('span', {'class': "judgment-listing__neutralcitation"})
+                                mnc = mnc_raw.get_text(strip = True)
+                
+                                case_info['Medium neutral citation'] = mnc
+                
+                                date_raw = link.find('time', {'class': "judgment-listing__date"})
+                                date = date_raw.get_text(strip = True)
+                
+                                case_info['Date'] = date
+                
+                            except Exception as e:
+                                print(f"{case_info['Case name']}: Can't get metadata")
+                                print(e)
+
+                            case_infos.append(case_info)
                             
                             counter = counter + 1
     
@@ -264,7 +350,7 @@ def uk_search_results_to_judgment_links(url_search_results, judgment_counter_bou
                 break
                 
     
-    return links
+    return case_infos
 
 # %%
 #Meta labels and judgment combined
@@ -356,7 +442,7 @@ def uk_search_url(df_master):
     
     #Conduct search
     
-    url = uk_search(query= df_master.loc[0, 'Free text'], 
+    results_url_count = uk_search(query= df_master.loc[0, 'Free text'], 
                                    from_day= df_master.loc[0, 'From day'],
                                    from_month=df_master.loc[0, 'From month'], 
                                    from_year=df_master.loc[0, 'From year'], 
@@ -367,7 +453,15 @@ def uk_search_url(df_master):
                                    party = df_master.loc[0, 'Party'], 
                                    judge = df_master.loc[0, 'Judge']
                                   )
-    return url
+
+    results_url = results_url_count['results_url']
+
+    results_count = results_url_count['results_count']
+
+    search_results_soup = results_url_count['soup']
+    
+    return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
+
 
 
 # %% [markdown]
@@ -421,7 +515,7 @@ def uk_run(df_master):
     
     #Conduct search
     
-    url_search_results = uk_search(query= df_master.loc[0, 'Free text'], 
+    search_results_soup = uk_search(query= df_master.loc[0, 'Free text'], 
                                    from_day= df_master.loc[0, 'From day'],
                                    from_month=df_master.loc[0, 'From month'], 
                                    from_year=df_master.loc[0, 'From year'], 
@@ -431,22 +525,15 @@ def uk_run(df_master):
                                    court= df_master.loc[0, 'Courts'], 
                                    party = df_master.loc[0, 'Party'], 
                                    judge = df_master.loc[0, 'Judge']
-                                  )
+                                  )['soup']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = uk_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    case_infos = uk_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
 
-    for link in judgments_links:
+    for case_info in case_infos:
 
-        judgment_dict = uk_meta_judgment_dict(link)
-
-#        meta_data = meta_dict(link)  
-#        doc_link = link_to_doc(link)
-#        judgment_dict = doc_link_to_dict(doc_link)
-#        judgment_dict = link_to_dict(link)
-#        judgments_all_info = { **meta_data, **judgment_dict}
-#        judgments_file.append(judgments_all_info)
+        judgment_dict = uk_meta_judgment_dict(case_info['Hyperlink to The National Archives'])
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(10, 20))
     

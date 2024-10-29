@@ -161,19 +161,21 @@ def fca_search(court = '',
 
     except:
         print("Can't get the number of search results")
-    
-    return {'results_url': results_url, 'results_count': results_count}
+
+    #Get soup
+    soup = BeautifulSoup(response.content, "lxml")
+
+    return {'soup': soup, 'results_url': results_url, 'results_count': results_count}
 
 
 # %%
 #Define function turning search results url to case_infos to judgments
 
 @st.cache_data(show_spinner = False)
-def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
-    #Scrape webpage of search results
-    page = requests.get(url_search_results)
-    soup = BeautifulSoup(page.content, "lxml")
-
+def fca_search_results_to_judgment_links(_soup, judgment_counter_bound):
+    
+    #_soup is from scraping per fca_search
+    
     #Start counter
 
     counter = 0
@@ -182,7 +184,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
     
     case_infos = []
 
-    results_list = soup.find_all('div', attrs={'class' : 'result'})
+    results_list = _soup.find_all('div', attrs={'class' : 'result'})
     
     for result in results_list:
         if counter < judgment_counter_bound:
@@ -270,7 +272,7 @@ def fca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
             page_judgment_next_page = requests.get(url_next_page)
             soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
             
-            results_list = soup.find_all('div', attrs={'class' : 'result'})
+            results_list = _soup.find_all('div', attrs={'class' : 'result'})
 
             #Check if stll more results
             if len(results_list) == 0:
@@ -462,6 +464,7 @@ def fca_meta_judgment_dict(case_info):
 
 # %%
 #Preliminary function for changing names for any PDF judgments
+#NOT IN USE
 
 @st.cache_data(show_spinner = False)
 def fca_pdf_name_mnc_list(url_search_results, judgment_counter_bound):
@@ -561,7 +564,9 @@ def fca_search_url(df_master):
 
     results_url = results_url_num['results_url']
     results_count = results_url_num['results_count']
-    return {'results_url': results_url, 'results_count': results_count}
+    search_results_soup = results_url_num['soup']
+    
+    return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
     
 
 
@@ -616,7 +621,7 @@ def fca_run_direct(df_master):
     
     #Conduct search
     
-    url_search_results = fca_search(court = df_master.loc[0, 'Courts'], 
+    search_results_soup = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -633,12 +638,12 @@ def fca_run_direct(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )['results_url']
+                    )['soup']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
 
     for case_info in case_infos:
         judgment_dict = fca_meta_judgment_dict(case_info)
@@ -705,7 +710,7 @@ def fca_run(df_master):
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Conduct search    
-    url_search_results = fca_search(court = df_master.loc[0, 'Courts'], 
+    search_results_soup = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -722,12 +727,12 @@ def fca_run(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )['results_url']
+                    )['soup']
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
 
     #Create judgments file
     judgments_file = []
@@ -843,7 +848,7 @@ def fca_batch(df_master):
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Conduct search    
-    url_search_results = fca_search(court = df_master.loc[0, 'Courts'], 
+    search_results_soup = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -860,12 +865,12 @@ def fca_batch(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )['results_url']
+                    )['soup']
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
 
     #Create judgments file
     judgments_file = []

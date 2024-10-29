@@ -446,9 +446,9 @@ if preview_button:
 
     results_url = results_url_num['results_url']
 
-    if results_count > 0:
+    search_results_soup = results_url_num['soup']
 
-        pause.seconds(scraper_pause_mean)
+    if results_count > 0:
     
         #Get relevant cases
         
@@ -456,7 +456,7 @@ if preview_button:
         
         judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
         
-        case_infos = fca_search_results_to_judgment_links(results_url, judgments_counter_bound) 
+        case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound) 
         
         for case in case_infos:
         
