@@ -1268,9 +1268,9 @@ class us_search_tool:
             results_raw = page_json['results']
 
         except Exception as e:
-            st.error('No results found.')
-            #st.error(e)
-            st.error(f"self.page_json is {page_json}")
+            print('No results found.')
+            print(e)
+            #st.error(f"self.page_json is {page_json}")
 
         result_counter = 1
 
