@@ -40,6 +40,7 @@ import urllib.request
 #import pypdf
 import io
 from io import BytesIO
+import traceback
 
 #Streamlit
 import streamlit as st
@@ -78,7 +79,7 @@ print(f"The lower bound on lenth of judgment text to process is {judgment_text_l
 # # English Reports search engine
 
 # %%
-from functions.er_functions import er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json, er_search_url
+from functions.er_functions import er_methods_list, er_method_types, er_search, er_search_url, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
 
 
 
@@ -337,7 +338,7 @@ if preview_button:
     
     df_master = er_create_df()
 
-    judgments_url = er_search_url(df_master)
+    judgments_url = er_search_url(df_master)['results_url']
 
     open_page(judgments_url)
 
@@ -424,9 +425,8 @@ if next_button:
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             try:
-                er_url_to_check = er_search_url(df_master)
-                er_html = requests.get(er_url_to_check, headers={'User-Agent': 'whatever'})
-                er_soup = BeautifulSoup(er_html.content, "lxml")
+                er_soup = er_search_url(df_master)['soup']
+                
                 if 'Documents found:   0' in str(er_soup):
                     st.error(no_results_msg)
                     
@@ -441,5 +441,7 @@ if next_button:
             except Exception as e:
                 print(search_error_display)
                 print(e)
+                print(traceback.format_exc())
                 st.error(search_error_display)
                 st.error(e)
+                st.error(traceback.format_exc())

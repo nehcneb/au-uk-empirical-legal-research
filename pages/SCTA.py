@@ -401,7 +401,7 @@ if preview_button:
     
     df_master = scta_create_df()
 
-    judgments_url = scta_search_url(df_master)
+    judgments_url = scta_search_url(df_master)['results_url']
 
     open_page(judgments_url)
 
@@ -490,9 +490,8 @@ if next_button:
 
             try:
 
-                scta_url_to_check = scta_search_url(df_master)
-                scta_html = requests.get(scta_url_to_check, headers={'User-Agent': 'whatever'})
-                scta_soup = BeautifulSoup(scta_html.content, "lxml")
+                scta_soup = scta_search_url(df_master)['soup']
+                
                 if '>0  documents' in str(scta_soup):
                     st.error(no_results_msg)
                 

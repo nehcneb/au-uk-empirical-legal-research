@@ -82,6 +82,7 @@ kr_method_types = ['auto', 'title', 'boolean', 'any', 'all']
 # %%
 #Function turning search terms to search results url
 
+@st.cache_data(show_spinner = False)
 def kr_search(query= '', 
               method = ''
              ):
@@ -98,25 +99,26 @@ def kr_search(query= '',
               'query' : query_text
              }
 
-    response = requests.get(base_url, params=params)
+    headers = {'User-Agent': 'whatever'}
+    response = requests.get(base_url, params=params, headers=headers)
+
+    soup = BeautifulSoup(response.content, "lxml")
     
-    return response.url
+    return {'results_url': response.url, 'soup': soup}
 
 
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
 @st.cache_data(show_spinner = False)
-def kr_search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
-    #Scrape webpage of search results
-    headers = {'User-Agent': 'whatever'}
-    page = requests.get(url_search_results, headers=headers)
-    soup = BeautifulSoup(page.content, "lxml")
-    hrefs = soup.find_all('a', href=True)
+def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
+    #_soup, url_search_results are from kr_search
+
+    hrefs = _soup.find_all('a', href=True)
     case_link_pairs = []
 
     #number of search results
-    docs_found_string = str(soup.find('title')).split('AustLII:')[1].split('documents')[0].replace(' ', '').replace(',', '')
+    docs_found_string = str(_soup.find('title')).split('AustLII:')[1].split('documents')[0].replace(' ', '').replace(',', '')
     docs_found = int(float(docs_found_string))
 
     #Start counter
@@ -190,6 +192,7 @@ def kr_judgment_text(case_link_pair):
 # %%
 #Meta labels and judgment combined
 
+@st.cache_data(show_spinner = False)
 def kr_meta_judgment_dict(case_link_pair):
     try:
         judgment_dict = {'Case name': '',
@@ -234,16 +237,18 @@ def kr_meta_judgment_dict(case_link_pair):
 
 
 # %%
+@st.cache_data(show_spinner = False)
 def kr_search_url(df_master):
 
     df_master = df_master.fillna('')
     
     #Conduct search
     
-    url = kr_search(query= df_master.loc[0, 'Enter search query'],
+    url_soup = kr_search(query= df_master.loc[0, 'Enter search query'],
                     method= df_master.loc[0, 'Find (method)']
                    )
-    return url
+
+    return {'results_url': url_soup['results_url'], 'soup': url_soup['soup']}
     
 
 
@@ -299,13 +304,17 @@ def kr_run(df_master):
     
     #Conduct search
 
-    url_search_results = kr_search(query= df_master.loc[0, 'Enter search query'], 
+    url_soup = kr_search(query= df_master.loc[0, 'Enter search query'], 
                                    method = df_master.loc[0, 'Find (method)']
                                   )
-        
+    
+    url_search_results = url_soup['results_url']
+
+    soup = url_soup['soup']
+    
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = kr_search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
+    case_link_pairs = kr_search_results_to_case_link_pairs(soup, url_search_results, judgments_counter_bound)
 
     for case_link_pair in case_link_pairs:
 

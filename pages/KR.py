@@ -326,7 +326,7 @@ if preview_button:
     
     df_master = kr_create_df()
 
-    judgments_url = kr_search_url(df_master)
+    judgments_url = kr_search_url(df_master)['results_url']
 
     open_page(judgments_url)
 
@@ -415,9 +415,8 @@ if next_button:
             
             try:
     
-                kr_url_to_check = kr_search_url(df_master)
-                kr_html = requests.get(kr_url_to_check, headers={'User-Agent': 'whatever'})
-                kr_soup = BeautifulSoup(kr_html.content, "lxml")
+                kr_soup = kr_search_url(df_master)['soup']
+
                 if '>0  documents' in str(kr_soup):
                     st.error(no_results_msg)
                 

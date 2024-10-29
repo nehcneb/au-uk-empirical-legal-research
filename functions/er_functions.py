@@ -83,7 +83,7 @@ er_method_types = ['auto', 'boolean', 'any', 'all', 'phrase', 'title']
 
 # %%
 #Function turning search terms to search results url
-
+@st.cache_data(show_spinner = False)
 def er_search(query= '', 
               method = ''
              ):
@@ -100,24 +100,26 @@ def er_search(query= '',
               'query' : query_text
              }
 
-    response = requests.get(base_url, params=params)
+    headers = {'User-Agent': 'whatever'}
+    response = requests.get(base_url, params=params, headers=headers)
+
+    soup = BeautifulSoup(response.content, "lxml")
     
-    return response.url
+    return {'results_url': response.url, 'soup': soup}
 
 
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
 @st.cache_data(show_spinner = False)
-def er_search_results_to_case_link_pairs(url_search_results, judgment_counter_bound):
-    #Scrape webpage of search results
-    page = requests.get(url_search_results)
-    soup = BeautifulSoup(page.content, "lxml")
-    hrefs = soup.find_all('a', href=True)
+def er_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
+    #_soup, url_search_results are from er_search
+
+    hrefs = _soup.find_all('a', href=True)
     case_link_pairs = []
 
     #number of search results
-    docs_found_string = str(soup.find_all('span', {'class' : 'ndocs'})).split('Documents found:')[1].split('<')[0].replace(' ', '').replace(',', '')
+    docs_found_string = str(_soup.find_all('span', {'class' : 'ndocs'})).split('Documents found:')[1].split('<')[0].replace(' ', '').replace(',', '')
     docs_found = int(float(docs_found_string))
     
     #Start counter
@@ -193,7 +195,7 @@ def er_judgment_text(case_link_pair):
 
 # %%
 #Meta labels and judgment combined
-
+@st.cache_data(show_spinner = False)
 def er_meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
@@ -237,16 +239,19 @@ def er_meta_judgment_dict(case_link_pair):
 
 
 # %%
+@st.cache_data(show_spinner = False)
 def er_search_url(df_master):
 
     df_master = df_master.fillna('')
     
     #Conduct search
     
-    url = er_search(query= df_master.loc[0, 'Enter search query'],
+    url_soup = er_search(query= df_master.loc[0, 'Enter search query'],
                     method= df_master.loc[0, 'Find (method)']
                    )
-    return url
+
+    return {'results_url': url_soup['results_url'], 'soup': url_soup['soup']}
+
 
 
 # %% [markdown]
@@ -298,13 +303,16 @@ def er_run(df_master):
     
     #Conduct search
 
-    url_search_results = er_search(query= df_master.loc[0, 'Enter search query'], 
+    results_url_soup = er_search(query= df_master.loc[0, 'Enter search query'], 
                                    method = df_master.loc[0, 'Find (method)']
-                                  )
-        
+                                  )     
+    url_search_results = results_url_soup['results_url']
+
+    soup = results_url_soup['soup']
+
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = er_search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
+    case_link_pairs = er_search_results_to_case_link_pairs(soup, url_search_results, judgments_counter_bound)
 
     for case_link_pair in case_link_pairs:
 
@@ -790,13 +798,16 @@ def er_run_b64(df_master):
     
     #Conduct search
 
-    url_search_results = er_search(query= df_master.loc[0, 'Enter search query'], 
+    results_url_soup = er_search(query= df_master.loc[0, 'Enter search query'], 
                                    method = df_master.loc[0, 'Find (method)']
-                                  )
-        
+                                  )     
+    url_search_results = results_url_soup['results_url']
+
+    soup = results_url_soup['soup']
+
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = er_search_results_to_case_link_pairs(url_search_results, judgments_counter_bound)
+    case_link_pairs = er_search_results_to_case_link_pairs(soup, url_search_results, judgments_counter_bound)
 
     for case_link_pair in case_link_pairs:
 
