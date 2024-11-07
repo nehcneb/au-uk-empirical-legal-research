@@ -370,7 +370,7 @@ def GPT_json_own(questions_json, df_example, file_triple, gpt_model, system_inst
 
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Respond in the following JSON form: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     language_content = f"The file is written in {file_triple['Language choice']}."
@@ -403,11 +403,18 @@ def GPT_json_own(questions_json, df_example, file_triple, gpt_model, system_inst
         #Format of the answer depends on whether an example was uploaded
         if len(df_example.replace('"', '')) > 0:
             
-            answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-            
-            #st.dataframe(answers_df)
-            
-            answers_dict = answers_df.to_dict(orient = 'list')
+            try:
+                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
+
+                answers_dict = answers_df.to_dict(orient = 'list')
+                
+            except Exception as e:
+                                
+                answers_dict = json.loads(completion.choices[0].message.content)
+
+                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
+
+                print(e)
 
         else:
             answers_dict = json.loads(completion.choices[0].message.content)
@@ -421,8 +428,11 @@ def GPT_json_own(questions_json, df_example, file_triple, gpt_model, system_inst
 
     except Exception as error:
         
+        print('GPT failed to produce answers.')
+        
         for q_index in q_keys:
-            answers_json[q_index] = error
+            
+            answers_json.update({q_index: error})
         
         return [answers_json, 0, 0]
 
@@ -515,7 +525,7 @@ def engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activatio
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Respond in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
@@ -777,7 +787,7 @@ def GPT_b64_json_own(questions_json, df_example, file_triple, gpt_model, system_
 
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Give responses in the following JSON form: ' + json.dumps(answers_json)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Respond in the following JSON form: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     language_content = f"The file is written in {file_triple['Language choice']}."
@@ -809,11 +819,18 @@ def GPT_b64_json_own(questions_json, df_example, file_triple, gpt_model, system_
         #Format of the answer depends on whether an example was uploaded
         if len(df_example.replace('"', '')) > 0:
             
-            answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-            
-            #st.dataframe(answers_df)
-            
-            answers_dict = answers_df.to_dict(orient = 'list')
+            try:
+                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
+
+                answers_dict = answers_df.to_dict(orient = 'list')
+                
+            except Exception as e:
+                                
+                answers_dict = json.loads(completion.choices[0].message.content)
+
+                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
+
+                print(e)
 
         else:
             answers_dict = json.loads(completion.choices[0].message.content)
@@ -827,8 +844,11 @@ def GPT_b64_json_own(questions_json, df_example, file_triple, gpt_model, system_
 
     except Exception as error:
         
+        print('GPT failed to produce answers.')
+        
         for q_index in q_keys:
-            answers_json[q_index] = error
+            
+            answers_json.update({q_index: error})
         
         return [answers_json, 0, 0]
 
@@ -914,7 +934,7 @@ def engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activ
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Give responses in the following JSON form: '
+            other_instructions = system_instruction + 'The file is written in some language' + 'you will be given questions to answer in JSON form.' + ' Respond in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 

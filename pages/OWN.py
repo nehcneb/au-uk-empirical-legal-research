@@ -319,12 +319,14 @@ if "judgment_counter_max" not in st.session_state:
         
         else:
             st.session_state["judgment_counter_max"] = default_judgment_counter_bound
-
+            
 #For example df
-if 'df_example' not in st.session_state:
-        st.session_state["df_example"] = ''
+if 'df_example_to_show' not in st.session_state:
+    st.session_state["df_example_to_show"] = pd.DataFrame([])
 
-
+#Initalize df_example_key for the purpose of removing uploaded spreadsheets programatically
+if "df_example_key" not in st.session_state:
+    st.session_state["df_example_key"] = 0
 
 # %% [markdown]
 # ## Form before AI
@@ -370,7 +372,7 @@ st.caption('During the pilot stage, the languages supported are limited. Please 
 
 
 # %% [markdown]
-# ## Form for AI and account
+# ## Form for AI
 
 # %%
 st.header(":blue[Would you to ask GPT questions about your files?]")
@@ -415,56 +417,73 @@ if gpt_activation_entry:
 else:
     st.session_state['disable_input'] = False
     
-
 #Upload example
-st.markdown("""By default, this app will produce a spreadsheet with rows of judgments and columns of answers to your question(s). If you prefer a different column layout, please upload an example.""")
+st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your question(s). If you have a preferred layout, please feel free to upload an example.""")
 
-uploaded_file = st.file_uploader(label = "Supported formats: CSV, XLSX, JSON.", 
+uploaded_file = st.file_uploader(label = "Optional", 
                                  type=['csv', 'xlsx', 'json'], 
-                                 accept_multiple_files=False
+                                 accept_multiple_files=False, 
+                                  key = st.session_state["df_example_key"]
                                 )
 
 if uploaded_file:
 
     try:
     
-        df_example = uploaded_file_to_df(uploaded_file)
+        df_example_to_show = uploaded_file_to_df(uploaded_file)
         
-        indice = df_example.index.tolist()
+        indice = df_example_to_show.index.tolist()
     
         if len(indice) > 0:
     
             for index in indice [1: ]:
     
-                df_example.drop(index, axis=0, inplace = True)
+                df_example_to_show.drop(index, axis=0, inplace = True)
 
-        columns = df_example.columns.tolist()
+        #Create copy to show before dropping GPT stats headings
+        st.session_state.df_example_to_show = df_example_to_show.copy(deep = True)
+
+        #Drop any GPT stats headings and add example to df_master as a string of a json
+        columns = df_example_to_show.columns.tolist()
 
         for col in columns:
             
             for gpt_col in own_gpt_headings:
                 
-                if ((gpt_col.lower() in col.lower()) and (col in df_example.columns)):
+                if ((gpt_col.lower() in col.lower()) and (col in df_example_to_show.columns)):
                     
-                    df_example.drop(col, axis=1, inplace = True)
+                    df_example_to_show.drop(col, axis=1, inplace = True)
+                            
+        st.session_state.df_master.loc[0, 'Example'] = json.dumps(df_example_to_show.to_json(orient = 'split', compression = 'infer', default_handler=str))
         
-        st.session_state.df_example = df_example.to_json(orient = 'split', compression = 'infer', default_handler=str)
-                    
-        st.session_state.df_master.loc[0, 'Example'] = json.dumps(st.session_state.df_example)
+    except:
         
-        st.success('GPT will *try* to follow this example and give the following as a typical row:')
+        st.error('Sorry, this app is unable to follow this example.')
 
-        st.dataframe(df_example)
+if ((len(st.session_state.df_master.loc[0, 'Example'].replace('"', '')) > 0) and (len(st.session_state.df_example_to_show) > 0)):
+        
+    st.success('For a given file, GPT will be asked to produce something like the following:')
 
-    except Exception as e:
-        st.error('Unfortunately, GPT is unable to follow this example.')
-        print(e)
+    st.dataframe(st.session_state.df_example_to_show)
+
+    #Button for removing example
+    if st.button(label = 'REMOVE the uploaded example', type = 'primary'):
     
-else:
+        st.session_state.df_example_key += 1
     
-    st.session_state['df_example'] = ''
+        st.session_state.df_example_to_show = pd.DataFrame([])
+    
+        st.session_state.df_master.loc[0, 'Example'] = ''
+    
+        st.rerun()
+    
+    #st.session_state.df_master.loc[0, 'Example'] = json.dumps('')
 
-    st.session_state.df_master.loc[0, 'Example'] = json.dumps(st.session_state.df_example)
+
+# %% [markdown]
+# ## Own account
+
+# %%
 
 
 if own_account_allowed() > 0:
@@ -704,7 +723,7 @@ if run_button:
             
             except Exception as e:
 
-                st.error('Sorry, an error has occurred. Please try again.')
+                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
 
                 st.error(e)
 
@@ -792,7 +811,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                 
                 except Exception as e:
         
-                    st.error('Sorry, an error has occurred. Please try again.')
+                    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
     
                     st.error(e)
 

@@ -519,8 +519,13 @@ for df_batch_response in df_batch_id_response_list:
             if 'Example' in all_df_masters.columns:
         
                 df_example = all_df_masters.loc[index, 'Example']
+
+                if isinstance(df_example, float): #If no example given, ie nan
+                    
+                    df_example = ''
                 
             else:
+                
                 df_example = ''
             
             #Get gpt specific answers
@@ -528,22 +533,34 @@ for df_batch_response in df_batch_id_response_list:
             
             try:
 
-                #Format of the answer depends on whether an example was uploaded
+                #Format of the answer depends on whether an example was uploaded                    
                 if len(df_example.replace('"', '')) > 0:
-                    
-                    answers_df = pd.read_json(answers_string, orient = 'split')
-                    
-                    #st.dataframe(answers_df)
-                    
-                    answers_dict = answers_df.to_dict(orient = 'list')
         
+                    try:
+                        answers_df = pd.read_json(answers_string, orient = 'split')
+        
+                        answers_dict = answers_df.to_dict(orient = 'list')
+                        
+                    except Exception as e:
+                                        
+                        answers_dict = json.loads(answers_string)
+        
+                        print(f"{batch_id}: GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
+                        print(e)
+
+                        st.warning(f"{batch_id}: GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
+                        #st.warning(f"{batch_id}: {e}")
+                    
                 else:
                     answers_dict = json.loads(answers_string)
-                    
+
             except Exception as e:
                 
                 answers_dict = {'ERROR': 'Unfortunately GPT did not produce a valid answer. Please change your questions and try again.'}
+                
                 print(f"{batch_id}: GPT did not produce a valid JSON.")
+                print(e)
+                
                 st.error(f"{batch_id}: GPT did not produce a valid JSON.")
 
             input_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['prompt_tokens']
@@ -956,12 +973,12 @@ for index in all_df_masters.index:
     
                 email_sent_counter += 1
                 
-                st.success(f'{status} {batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
-                print(f'{status} {batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+                st.success(f'{batch_id} for {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
+                print(f'{batch_id} for user {name} at {email} successfully emailed. Done {email_sent_counter}/{emails_counter_total}.')
 
         except Exception as e:
-            st.error(f"{status} {batch_id} not emailed to user {name} at {email}.")
-            print(f"{status} {batch_id} not emailed to user {name} at {email}.")
+            st.error(f"{batch_id} not emailed to user {name} at {email}. status == {status}")
+            print(f"{batch_id} not emailed to user {name} at {email}. status == {status}")
 
             st.error(f"{e}")
             print(f"{e}")

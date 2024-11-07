@@ -411,7 +411,8 @@ def GPT_questions_label(questions_json, gpt_model, questions_check_system_instru
     except Exception as error:
         
         for q_index in q_keys:
-            labels_json[q_index] = error
+            
+            labels_json.update({q_index: error})
         
         return [labels_json, 0, 0]
 
@@ -709,13 +710,20 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
         #To obtain a json directly
         #Format of the answer depends on whether an example was uploaded
         if len(df_example.replace('"', '')) > 0:
-            
-            answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-            
-            #st.dataframe(answers_df)
-            
-            answers_dict = answers_df.to_dict(orient = 'list')
 
+            try:
+                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
+
+                answers_dict = answers_df.to_dict(orient = 'list')
+                
+            except Exception as e:
+                                
+                answers_dict = json.loads(completion.choices[0].message.content)
+
+                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
+
+                print(e)
+            
         else:
             answers_dict = json.loads(completion.choices[0].message.content)
 
@@ -734,7 +742,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
         
         for q_index in q_keys:
             
-            answers_json[q_index] = error
+            answers_json.update({q_index: error})
         
         return [answers_json, 0, 0]
 

@@ -368,7 +368,7 @@ truncation_note = "The full file is too long for GPT. It was (or will be) trunca
 
 # %%
 # Programmaticaly produced GPT headings
-own_gpt_headings = ['Hyperlink', 'File length in tokens', 'GPT cost estimate', 'GPT time estimate']
+own_gpt_headings = ['Hyperlink', 'in tokens (up to', 'GPT cost estimate', 'GPT time estimate']
 
 
 # %% [markdown]
