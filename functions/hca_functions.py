@@ -80,7 +80,7 @@ hca_collections = ['Judgments 2000-present', 'Judgments 1948-1999', '1 CLR - 100
 #Function turning search terms to search results url AND number of search results
 
 @st.cache_data(show_spinner = False)
-def hca_search(collection = '', 
+def hca_search(collection = hca_collections[0], 
                quick_search = '', 
                #citation = '', 
                 full_text = ''):
@@ -415,7 +415,6 @@ def hca_meta_judgment_dict(judgment_url):
         
     return judgment_dict
     
-
 
 # %%
 #If judgment link contains 'showbyHandle'
@@ -811,81 +810,6 @@ def hca_mnc_to_link(collection, mnc):
 
 
 # %%
-#Functions for minimum and maximum year
-
-def hca_min_max_year(collection):
-#NOT IN USE
-    
-    if collection == 'Judgments 2000-present':
-
-        min_year = int(2000)
-
-        max_year = datetime.now().year
-
-    if collection == 'Judgments 1948-1999':
-        
-        min_year = int(1948)
-
-        max_year = int(1999)
-    
-    if collection == '1 CLR - 100 CLR (judgments 1903-1958)':
-
-        min_year = int(1903)
-
-        max_year = int(1958)
-
-    return {'min_year': min_year, 'max_year': max_year}
-
-def hca_year_check(year_entry):
-#NOT IN USE
-
-
-    #Default validity
-    validity = False
-    
-    try:
-        
-        if (len(str(int(year_entry))) == 4):     
-            
-            validity = True
-
-    except:
-        print('Year entry invalid.')
-        
-    return validity
-
-def hca_min_year_validity(collection, min_year_entry):
-    #NOT IN USE
-
-    if hca_year_check(min_year_entry) == False:
-        
-        return False
-    
-    elif int(min_year_entry) <= hca_min_max_year(collection)['min_year']:
-        
-        return False
-        
-    else:
-        
-        return True
-
-def hca_max_year_validity(collection, max_year_entry):
-    #NOT IN USE
-
-    if hca_year_check(max_year_entry) == False:
-        
-        return False
-    
-    elif int(max_year_entry) >= hca_min_max_year(collection)['max_year']:
-        
-        return False
-        
-    else:
-        return True
-
-
-
-# %%
 #Load hca_data
 
 @st.cache_resource(show_spinner = False)
@@ -906,16 +830,16 @@ hca_df = hca_load_data(hca_data_url)
 #Function to excluding unwanted jugdments
 
 @st.cache_data(show_spinner = False)
-def hca_judgment_to_exclude(case_info = {},
-                        collection = '', 
-                        own_parties_include = '', 
-                        own_parties_exclude = '', 
-                        after_date = '', 
-                        before_date = '', 
+def hca_judgment_to_exclude(case_info,
+                        collection, 
+                        own_parties_include, 
+                        own_parties_exclude, 
+                        after_date, 
+                        before_date, 
                         #own_case_numbers_include = [], 
                         #own_case_numbers_exclude = [], 
-                        own_judges_include = '', 
-                        own_judges_exclude = ''
+                        own_judges_include, 
+                        own_judges_exclude
                        ):
 
     #Default status is not to exclude
@@ -923,21 +847,56 @@ def hca_judgment_to_exclude(case_info = {},
 
     #Exclude parties
 
-    for party in own_parties_include.replace(';', ',').split(','):
-        
-        if ((len(party) > 0) and (party.lower() not in case_info['Case name'].lower())):
-        
-            exclude_status = True
-        
-            break
+    parties_to_include = str(own_parties_include).replace(';', ',').split(',')
 
-    for party in own_parties_exclude.replace(';', ',').split(','):
+    if 'None' in parties_to_include:
+        parties_to_include.remove('None')
+
+    if '' in parties_to_include:
+        parties_to_include.remove('')
+    
+    #st.write(f"parties_to_include == {parties_to_include}")
+    
+    if len(parties_to_include) > 0:
         
-        if ((len(party) > 0) and (party.lower() in case_info['Case name'].lower())):
+        party_inclusion_counter = 0
         
+        for party in parties_to_include:
+            
+            if ((len(party) > 0) and (party.lower() in case_info['Case name'].lower())):
+    
+                party_inclusion_counter += 1
+
+        #st.write(f"party_inclusion_counter=={party_inclusion_counter}")
+        
+        if party_inclusion_counter == 0:
+        
+            #st.write(f'Excluded based on party')
+            
             exclude_status = True
-        
-            break
+
+    parties_to_exclude = str(own_parties_exclude).replace(';', ',').split(',')
+
+    if 'None' in parties_to_exclude:
+        parties_to_exclude.remove('None')
+
+    if '' in parties_to_exclude:
+        parties_to_exclude.remove('')
+    
+    #st.write(f"parties_to_exclude == {parties_to_exclude}")
+
+    if len(parties_to_exclude) > 0:
+    
+        for party in parties_to_exclude:
+            
+            if ((len(party) > 0) and (party.lower() in case_info['Case name'].lower())):
+
+
+                #st.write(f'Excluded based on party == {party}')
+
+                exclude_status = True
+            
+                break
 
     #Exclude Date
 
@@ -1012,31 +971,65 @@ def hca_judgment_to_exclude(case_info = {},
     #Exclude judges
 
     if type(case_info['Before']) == str:
+
+        judges_to_include = str(own_judges_include).replace(';', ',').split(',')
+
+        if 'None' in judges_to_include:
+            judges_to_include.remove('None')
+
+        if '' in judges_to_include:
+            judges_to_include.remove('')
         
-        #if len(case_info['Before']) > 2:
-    
-        for judge in own_judges_include.replace(';', ',').split(','):
+        #st.write(f"judges_to_include == {judges_to_include}")
 
-            judge = judge.replace('.', '').replace(' J', '').replace(' CJ', '').replace(' ACJ', '').replace(' JJ', '')
-            
-            if ((len(judge) > 2) and (judge.lower() not in case_info['Before'].lower())):
-            
-                exclude_status = True
-            
-                break
+        if len(judges_to_include) > 0:
+        
+            judge_inclusion_counter = 0
+                    
+            for judge in judges_to_include:
     
-        for judge in own_judges_exclude.replace(';', ',').split(','):
+                judge = judge.lower().replace('.', '').replace(' j', '').replace(' cj', '').replace(' acj', '').replace(' jj', '')
+                
+                if ((len(judge) > 2) and (judge.lower() in case_info['Before'].lower())):
+    
+                    judge_inclusion_counter += 1
 
-            judge = judge.replace('.', '').replace(' J', '').replace(' CJ', '').replace(' ACJ', '').replace(' JJ', '')
+            #st.write(f"judge_inclusion_counter=={judge_inclusion_counter}")
             
-            if ((len(judge) > 2) and (judge.lower() in case_info['Before'].lower())):
-            
+            if judge_inclusion_counter == 0:
+    
+                #st.write(f'Excluded based on judge')
+    
                 exclude_status = True
+        
+        judges_to_exclude = str(own_judges_exclude).replace(';', ',').split(',')
+
+        if 'None' in judges_to_exclude:
             
-                break
+            judges_to_exclude.remove('None')
+
+        if '' in judges_to_exclude:
+            judges_to_exclude.remove('')
+        
+        #st.write(f"judges_to_exclude == {judges_to_exclude}")
+
+        if len(judges_to_exclude) > 0:
+        
+            for judge in judges_to_exclude:
+    
+                judge = judge.lower().replace('.', '').replace(' j', '').replace(' cj', '').replace(' acj', '').replace(' jj', '')
+                
+                if ((len(judge) > 2) and (judge.lower() in case_info['Before'].lower())):
+                
+                    exclude_status = True
+    
+                    #st.write(f'Excluded based on judge == {judge}')
+                
+                    break
+
+    #st.write(f"exclude_status == {exclude_status}")
     
     return exclude_status
-
 
 
 # %%
@@ -1116,7 +1109,9 @@ def hca_search_results_to_judgment_links_filtered_df(_soup,
                                      'Before': hca_df.loc[int(index), 'before'],
                                      'Date': hca_df.loc[index, 'date']
                                     }
-    
+
+                        #st.write(case_info)
+                        
                         if hca_judgment_to_exclude(case_info, 
                             collection, 
                             own_parties_include, 
@@ -1128,9 +1123,12 @@ def hca_search_results_to_judgment_links_filtered_df(_soup,
                             own_judges_include, 
                             own_judges_exclude
                            ) == False:
-                        
+                            
                             #links.append(case_info['Hyperlink to High Court Judgments Database'])
                             case_infos.append(case_info)
+
+
+                            #st.write(f'{mnc} included.')
                             
                             counter += 1 
     
@@ -1151,6 +1149,307 @@ def hca_search_results_to_judgment_links_filtered_df(_soup,
     return case_infos
 
 
+# %%
+#Function to getting a list of years for adding to search terms
+def hca_year_range(collection, after_date, before_date):
+
+    years_list = []
+
+    #Get year start and end depending on collection
+    if len(after_date) > 0:
+        year_start = int(after_date.split('-')[-1])
+    else:
+        for year in ['2000', '1948', '1903']:
+            if year in collection:
+                year_start = int(year)
+                break
+            
+    if len(before_date) > 0:
+        year_end = before_date.split('-')[-1]
+    else:
+        if '2000' in collection:
+            year_end = datetime.now().year
+        else:
+            for year in ['1999', '1958']:
+                if year in collection:
+                    year_end = int(year)
+                    break
+
+    if len(after_date) + len(before_date) > 0:
+        try:    
+            years = list(range(int(year_start), int(year_end) + 1))
+            years_list = sorted(years, reverse = True)
+        except:
+            print("after_date or before_date given but can't get year range.")
+
+    return years_list
+    
+
+
+# %%
+#Function to getting a list of judges for adding to search terms
+def hca_judge_list(collection, own_judges_include, own_judges_exclude):
+
+    judges_list = []
+    
+    if '1903' not in collection:
+        
+        if len(str(own_judges_include)) > 0:
+    
+            judges_list_raw = str(own_judges_include).replace(';', ',').split(',')
+
+            if 'None' in judges_list_raw:
+                judges_list_raw.remove('None')
+
+            if '' in judges_list_raw:
+                judges_list_raw.remove('')
+            
+            for judge in judges_list_raw:
+                
+                if isinstance(judge, tuple):
+                    judge = judge[0]
+                
+                if judge.lower() not in ['cj', 'acj', 'j', 'jj']:
+                    
+                    judges_list.append(judge)
+                
+        if len(str(own_judges_exclude)) > 0:
+    
+            judges_list_raw = str(own_judges_exclude).replace(';', ',').split(',')
+
+            if 'None' in judges_list_raw:
+                judges_list_raw.remove('None')
+
+            if '' in judges_list_raw:
+                judges_list_raw.remove('')
+            
+            for judge in judges_list_raw:
+
+                if isinstance(judge, tuple):
+                    
+                    judge = judge[0]
+
+                if judge.lower() not in ['cj', 'acj', 'j', 'jj']:
+                    
+                    if judge in judges_list:
+                        
+                        judges_list.remove(judge)
+    
+    return judges_list
+    
+
+
+# %%
+#Function to getting a list of parties for adding to search terms
+def hca_party_list(collection, own_parties_include, own_parties_exclude):
+
+    parties_list = []
+
+    if '1903' not in collection:
+        
+        if len(str(own_parties_include)) > 0:
+    
+            parties_list_raw = str(own_parties_include).replace(';', ',').split(',')
+
+            if 'None' in parties_list_raw:
+                parties_list_raw.remove('None')
+
+            if '' in parties_list_raw:
+                parties_list_raw.remove('')
+            
+            for party in parties_list_raw:
+                
+                if isinstance(party, tuple):
+                    party = party[0]
+                                    
+                parties_list.append(party)
+                
+        if len(str(own_parties_exclude)) > 0:
+    
+            parties_list_raw = str(own_parties_exclude).replace(';', ',').split(',')
+
+            if 'None' in parties_list_raw:
+                parties_list_raw.remove('None')
+
+            if '' in parties_list_raw:
+                parties_list_raw.remove('')
+            
+            for party in parties_list_raw:
+
+                if isinstance(party, tuple):
+                    party = party[0]
+
+                if party in parties_list:
+                
+                    parties_list.remove(party)
+
+    return parties_list
+    
+
+
+# %%
+#Function to getting a list of years, judges or parties for adding to search terms
+def hca_terms_to_add(years_list, parties_list):
+    
+    terms_to_add = []
+
+    if ((len(years_list) == 0) and (len(parties_list) == 0)):
+        
+        print("Filtering by years and parties not entered.")
+
+    elif ((len(years_list) > 0) and (len(parties_list) == 0)):
+
+        for year in years_list:
+            
+            term = str(year)
+            
+            if term not in terms_to_add:
+                
+                terms_to_add.append(term)
+
+    elif ((len(years_list) > 0) and (len(parties_list) > 0)):
+
+        for year in years_list:
+
+            for party in parties_list:
+
+                term = f"{str(year)} {party}"
+    
+                if term not in terms_to_add:
+                    
+                    terms_to_add.append(term)
+
+    else: #((len(years_list) == 0)and (len(parties_list) > 0)):
+
+            for party in parties_list:
+            
+                term = f"{party}"
+
+                if term not in terms_to_add:
+                    
+                    terms_to_add.append(term)
+
+    return terms_to_add
+    
+
+
+# %%
+#Search function for adding year and judge, if entered, to search terms 
+@st.cache_resource(show_spinner = False)
+def hca_enhanced_search(collection, 
+               quick_search, 
+               #citation = '', 
+                full_text,
+                judgments_counter_bound,
+                own_parties_include, 
+                own_parties_exclude, 
+                #own_min_year, 
+                #own_max_year, 
+                after_date, 
+                 before_date, 
+                #own_case_numbers_include, 
+                #own_case_numbers_exclude, 
+                own_judges_include, 
+                own_judges_exclude
+                ):
+
+    #Initialise return list
+    case_infos = []
+
+    #st.write(f'collection == {collection}. after_date == {after_date}. own_judges_include == {own_judges_include}.')
+    
+    #Get lists of years, judges and parties to loop through if entered  
+    years_list = hca_year_range(collection = collection, after_date = after_date, before_date = before_date)
+    parties_list = hca_party_list(collection = collection, own_parties_include = own_parties_include, own_parties_exclude = own_parties_exclude)
+
+    terms_to_add = hca_terms_to_add(years_list = years_list, parties_list = parties_list)
+
+    #st.write(f'years_list == {years_list}. parties_list == {parties_list}.')
+
+    #st.write(f'terms_to_add == {terms_to_add}.')
+
+    #Determine whether need to loop through lists of years or parties
+    if len(terms_to_add) == 0:
+
+        print(f'Searching based on collection == {collection}, quick_search = {quick_search}, full_text = {full_text}')
+        
+        soup_url = hca_search(collection = collection, 
+                                quick_search = quick_search, 
+                                full_text = full_text
+                                )
+    
+        soup = soup_url['soup']
+    
+        search_results_url = soup_url['results_url']
+                    
+        case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
+                                                                    search_results_url, 
+                                                                    judgments_counter_bound,
+                                                                    collection, 
+                                                                    #hca_df, 
+                                                                    own_parties_include, 
+                                                                    own_parties_exclude, 
+                                                                    #own_min_year, 
+                                                                    #own_max_year, 
+                                                                    after_date, 
+                                                                    before_date, 
+                                                                    #own_case_numbers_include, 
+                                                                    #own_case_numbers_exclude, 
+                                                                    own_judges_include, 
+                                                                    own_judges_exclude
+                                                                    )
+        
+    else: #len(terms_to_add) > 0:
+        
+        for term in terms_to_add:
+
+            if len(case_infos) < judgments_counter_bound:
+            
+                quick_search_w_extra = f'{quick_search} {term}'
+
+                print(f'Searching based on collection == {collection}, quick_search = {quick_search_w_extra}, full_text = {full_text}')
+                
+                #st.write(f"quick_search_w_extra == {quick_search_w_extra}")
+                
+                soup_url = hca_search(collection = collection, 
+                            quick_search = quick_search_w_extra, 
+                            full_text = full_text
+                            )
+    
+                soup = soup_url['soup']
+            
+                search_results_url = soup_url['results_url']
+    
+                #st.write(f"search_results_url == {search_results_url}")
+                
+                case_infos_w_extra = hca_search_results_to_judgment_links_filtered_df(soup, 
+                                                                            search_results_url, 
+                                                                            judgments_counter_bound,
+                                                                            collection, 
+                                                                            #hca_df, 
+                                                                            own_parties_include, 
+                                                                            own_parties_exclude, 
+                                                                            #own_min_year, 
+                                                                            #own_max_year, 
+                                                                            after_date, 
+                                                                            before_date, 
+                                                                            #own_case_numbers_include, 
+                                                                            #own_case_numbers_exclude, 
+                                                                            own_judges_include, 
+                                                                            own_judges_exclude
+                                                                            )
+                    
+                for case_info in case_infos_w_extra:
+                    
+                    if case_info not in case_infos:
+                        
+                        case_infos.append(case_info)
+                
+                pause.seconds(np.random.randint(5, 15))
+
+    return case_infos
+    
+
 
 # %%
 #Function to get link to search results and number of results
@@ -1158,8 +1457,6 @@ def hca_search_results_to_judgment_links_filtered_df(_soup,
 @st.cache_resource(show_spinner = False)
 def hca_search_url(df_master):
     df_master = df_master.fillna('')
-    
-    #Combining catchwords into new column
     
     #Conduct search
     
@@ -1171,7 +1468,6 @@ def hca_search_url(df_master):
     results_count = results_url_count['results_count']
     
     #If mnc entered
-
     if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
         #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
         direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
@@ -1240,32 +1536,23 @@ def hca_run_direct(df_master):
     judgments_file = []
     
     #Conduct search
-    
-    soup_url = hca_search(collection = df_master.loc[0, 'Collection'], 
-                        quick_search = df_master.loc[0, 'Quick search'], 
-                        full_text = df_master.loc[0, 'Full text search']
-                        )
-
-    soup = soup_url['soup']
-
-    search_results_url = soup_url['results_url']
-        
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-    
-    #Use the following if want to filter results.
-    case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
-                                                                  search_results_url, 
-                                     judgments_counter_bound,
-                                    #hca_df, 
-                                    df_master.loc[0, 'Collection'], 
-                                    df_master.loc[0, 'Parties include'], 
-                                    df_master.loc[0, 'Parties do not include'], 
-                                    df_master.loc[0, 'Decision date is after'],
-                                      df_master.loc[0, 'Decision date is before'], 
-                                    #df_master.loc[0, 'Case numbers include'], 
-                                    #df_master.loc[0, 'Case numbers do not include'], 
-                                    df_master.loc[0, 'Judges include'], 
-                                    df_master.loc[0, 'Judges do not include'])
+
+    case_infos = hca_enhanced_search(collection = df_master.loc[0, 'Collection'], 
+                        quick_search = df_master.loc[0, 'Quick search'], 
+                        full_text = df_master.loc[0, 'Full text search'],
+                    judgments_counter_bound = judgments_counter_bound,
+                    own_parties_include = df_master.loc[0, 'Parties include'], 
+                    own_parties_exclude = df_master.loc[0, 'Parties do not include'], 
+                    #own_min_year, 
+                    #own_max_year, 
+                    after_date = df_master.loc[0, 'Decision date is after'], 
+                     before_date = df_master.loc[0, 'Decision date is before'], 
+                    #own_case_numbers_include, 
+                    #own_case_numbers_exclude, 
+                    own_judges_include = df_master.loc[0, 'Judges include'], 
+                    own_judges_exclude = df_master.loc[0, 'Judges do not include']
+                    )
 
     #Get judgments from HCA database
     for case in case_infos:
@@ -1364,32 +1651,23 @@ def hca_run(df_master):
     judgments_file = []
     
     #Conduct search
-    
-    soup_url = hca_search(collection = df_master.loc[0, 'Collection'], 
-                        quick_search = df_master.loc[0, 'Quick search'], 
-                        full_text = df_master.loc[0, 'Full text search']
-                        )
-
-    soup = soup_url['soup']
-
-    search_results_url = soup_url['results_url']
-        
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-    
-    #Use the following if want to filter results.
-    case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
-                                                                  search_results_url, 
-                                     judgments_counter_bound,
-                                    #hca_df, 
-                                    df_master.loc[0, 'Collection'], 
-                                    df_master.loc[0, 'Parties include'], 
-                                    df_master.loc[0, 'Parties do not include'], 
-                                    df_master.loc[0, 'Decision date is after'],
-                                      df_master.loc[0, 'Decision date is before'], 
-                                    #df_master.loc[0, 'Case numbers include'], 
-                                    #df_master.loc[0, 'Case numbers do not include'], 
-                                    df_master.loc[0, 'Judges include'], 
-                                    df_master.loc[0, 'Judges do not include'])
+
+    case_infos = hca_enhanced_search(collection = df_master.loc[0, 'Collection'], 
+                        quick_search = df_master.loc[0, 'Quick search'], 
+                        full_text = df_master.loc[0, 'Full text search'],
+                    judgments_counter_bound = judgments_counter_bound,
+                    own_parties_include = df_master.loc[0, 'Parties include'], 
+                    own_parties_exclude = df_master.loc[0, 'Parties do not include'], 
+                    #own_min_year, 
+                    #own_max_year, 
+                    after_date = df_master.loc[0, 'Decision date is after'], 
+                     before_date = df_master.loc[0, 'Decision date is before'], 
+                    #own_case_numbers_include, 
+                    #own_case_numbers_exclude, 
+                    own_judges_include = df_master.loc[0, 'Judges include'], 
+                    own_judges_exclude = df_master.loc[0, 'Judges do not include']
+                    )
     
     if huggingface == False: #If not running on HuggingFace
         
@@ -1544,37 +1822,28 @@ def hca_batch(df_master):
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
-    #Conduct search
-    
-    soup_url = hca_search(collection = df_master.loc[0, 'Collection'], 
-                        quick_search = df_master.loc[0, 'Quick search'], 
-                        full_text = df_master.loc[0, 'Full text search']
-                        )
-
-    soup = soup_url['soup']
-
-    search_results_url = soup_url['results_url']
-        
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-    
-    #Use the following if want to filter results.
-    case_infos = hca_search_results_to_judgment_links_filtered_df(soup, 
-                                                                  search_results_url, 
-                                     judgments_counter_bound,
-                                    #hca_df, 
-                                    df_master.loc[0, 'Collection'], 
-                                    df_master.loc[0, 'Parties include'], 
-                                    df_master.loc[0, 'Parties do not include'], 
-                                    df_master.loc[0, 'Decision date is after'],
-                                      df_master.loc[0, 'Decision date is before'], 
-                                    #df_master.loc[0, 'Case numbers include'], 
-                                    #df_master.loc[0, 'Case numbers do not include'], 
-                                    df_master.loc[0, 'Judges include'], 
-                                    df_master.loc[0, 'Judges do not include'])
-
     #Create judgments file
     judgments_file = []
-        
+
+    #Conduct search
+    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+
+    case_infos = hca_enhanced_search(collection = df_master.loc[0, 'Collection'], 
+                        quick_search = df_master.loc[0, 'Quick search'], 
+                        full_text = df_master.loc[0, 'Full text search'],
+                    judgments_counter_bound = judgments_counter_bound,
+                    own_parties_include = df_master.loc[0, 'Parties include'], 
+                    own_parties_exclude = df_master.loc[0, 'Parties do not include'], 
+                    #own_min_year, 
+                    #own_max_year, 
+                    after_date = df_master.loc[0, 'Decision date is after'], 
+                     before_date = df_master.loc[0, 'Decision date is before'], 
+                    #own_case_numbers_include, 
+                    #own_case_numbers_exclude, 
+                    own_judges_include = df_master.loc[0, 'Judges include'], 
+                    own_judges_exclude = df_master.loc[0, 'Judges do not include']
+                    )
+    
     if huggingface == False: #If not running on HuggingFace
         
         #Get judgments from HCA database

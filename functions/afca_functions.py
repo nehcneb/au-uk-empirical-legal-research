@@ -214,6 +214,7 @@ def afca_old_element_meta(inner_html):
     title_raw = ''
     firm = ''
     page_length = ''
+    page_length_num = ''
 
     try:
         abstract = soup.find(class_='abstract').text
@@ -260,8 +261,11 @@ def afca_old_element_meta(inner_html):
                     
                 while page_length[-1] == ' ':
                     page_length = page_length [ :-1]
-        
-                page_length = page_length[-1]
+
+                if ' ' in page_length:
+                    page_length_num = page_length.split(' ')[-1]
+                else:
+                    page_length_num = page_length
                 
                 break
     
@@ -271,7 +275,7 @@ def afca_old_element_meta(inner_html):
         
     title = f"{title_raw.title()}Case Number: {case_number}"
 
-    case_meta = {'Case name': title, 'Case number': case_number, 'Hyperlink to AFCA Portal': url, 'Date': decision_date, 'Finanical firm': firm, 'Page length': page_length, 'File size': file_size}
+    case_meta = {'Case name': title, 'Case number': case_number, 'Hyperlink to AFCA Portal': url, 'Date': decision_date, 'Finanical firm': firm, 'Page length': page_length_num, 'File size': file_size}
 
     return case_meta
 

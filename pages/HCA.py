@@ -71,7 +71,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # High Court of Australia search engine
 
 # %%
-from functions.hca_functions import hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_search_url
+from functions.hca_functions import hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_search_url, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
 #hca_search_results_to_judgment_links
 
 
@@ -293,10 +293,6 @@ from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%
@@ -315,7 +311,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
+from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips, date_range_check
 
 
 # %% [markdown]
@@ -378,6 +374,7 @@ if 'disable_input' not in st.session_state:
 
 if (('court_filter_status' not in st.session_state) or ('df_master' not in st.session_state)):
     st.session_state["court_filter_status"] = False
+
 
 # %%
 #If landing page is not home
@@ -445,10 +442,32 @@ if filter_toggle:
     
     own_parties_exclude_entry = st.text_input(label = 'Parties do not include (separate parties by comma or semi-colon)', value = st.session_state.df_master.loc[0, 'Parties do not include'])
     st.caption('If entered, then this app will only process cases that do not include any of the parties entered.')
+
+    #Get year range allowed
+
+    year_start = 1903
+    date_start = date(year_start, 1, 1)
     
-    after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1903, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    for year in ['2000', '1948', '1903']:
+        if year in collection_entry:
+            year_start = int(year)
+            date_start = datetime(year_start, 1, 1)
+            break
     
-    before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before']), format="DD/MM/YYYY", min_value = date(1903, 1, 1),  max_value = datetime.now(),help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    year_end = datetime.now().year
+    date_end = datetime.now()
+    
+    for year in ['1999', '1958']:
+        if year in collection_entry:
+            year_end = int(year)
+            date_end = datetime(year_end, 12, 31)
+            break
+
+
+    
+    after_date_entry = st.date_input(label = 'Decision date is after', value = date_range_check(date_start, date_end, au_date(st.session_state.df_master.loc[0, 'Decision date is after'])), format="DD/MM/YYYY", min_value = date_start, max_value = date_end, help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    
+    before_date_entry = st.date_input(label = 'Decision date is before', value = date_range_check(date_start, date_end, au_date(st.session_state.df_master.loc[0, 'Decision date is before'])), format="DD/MM/YYYY", min_value = date_start,  max_value = date_end,help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
     
@@ -514,58 +533,71 @@ with stylable_container(
     preview_button = st.button(label = 'PREVIEW')
 
 
-
-
 # %% [markdown]
 # ## Preview
 
 # %%
 if preview_button:
 
-    df_master = hca_create_df()
+    with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
 
-    results_url_count = hca_search_url(df_master)
-    
-    results_url = results_url_count['results_url']
-
-    results_count = int(float(results_url_count['results_count']))
-
-    soup = results_url_count['soup']
-
-
-    if results_count > 0:
-
-        case_infos = hca_search_results_to_judgment_links_filtered_df(soup, results_url, 
-                                         int(df_master.loc[0, 'Maximum number of judgments']),
-                                        df_master.loc[0, 'Collection'], 
-                                        df_master.loc[0, 'Parties include'], 
-                                        df_master.loc[0, 'Parties do not include'], 
-                                        df_master.loc[0, 'Decision date is after'],
-                                          df_master.loc[0, 'Decision date is before'], 
-                                        #df_master.loc[0, 'Case numbers include'], 
-                                        #df_master.loc[0, 'Case numbers do not include'], 
-                                        df_master.loc[0, 'Judges include'], 
-                                        df_master.loc[0, 'Judges do not include'])
+        df_master = hca_create_df()
         
-        df_preview = pd.DataFrame(case_infos)
-
-        #Get display settings
-        display_df_dict = display_df(df_preview)
-
-        df_preview = display_df_dict['df']
-
-        link_heading_config = display_df_dict['link_heading_config']
-
-        #Display search results
-        st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                    
-        st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-
-        #The HCA's search page does not reflect filters
-        #st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-
-    else:
-        st.error(no_results_msg)
+        results_url_count = hca_search_url(df_master)
+        
+        results_url = results_url_count['results_url']
+    
+        results_count = int(float(results_url_count['results_count']))
+    
+        results_count_to_display = results_count
+    
+        #Conduct search
+        judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    
+        case_infos = hca_enhanced_search(collection = df_master.loc[0, 'Collection'], 
+                            quick_search = df_master.loc[0, 'Quick search'], 
+                            full_text = df_master.loc[0, 'Full text search'],
+                        judgments_counter_bound = judgments_counter_bound,
+                        own_parties_include = df_master.loc[0, 'Parties include'], 
+                        own_parties_exclude = df_master.loc[0, 'Parties do not include'], 
+                        #own_min_year, 
+                        #own_max_year, 
+                        after_date = df_master.loc[0, 'Decision date is after'], 
+                         before_date = df_master.loc[0, 'Decision date is before'], 
+                        #own_case_numbers_include, 
+                        #own_case_numbers_exclude, 
+                        own_judges_include = df_master.loc[0, 'Judges include'], 
+                        own_judges_exclude = df_master.loc[0, 'Judges do not include']
+                        )
+    
+        results_count = min(len(case_infos), results_count)
+    
+        if results_count > 0:
+            
+            df_preview = pd.DataFrame(case_infos)
+    
+            #Get display settings
+            display_df_dict = display_df(df_preview)
+    
+            df_preview = display_df_dict['df']
+    
+            link_heading_config = display_df_dict['link_heading_config']
+    
+            #Update results count for display
+            if len(case_infos) < judgments_counter_bound:
+                results_count_to_display = len(case_infos)
+            
+            #Display search results
+            st.success(f'Your search terms returned up to {results_count_to_display} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                        
+            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+    
+            #The HCA's search page does not reflect filters
+            #st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+    
+        else:
+            
+            st.error(no_results_msg)
 
 # %% [markdown]
 # ## Buttons
@@ -627,7 +659,6 @@ if keep_button:
     #            key='download-csv'
         )
 
-
         xlsx = convert_df_to_excel(df_master)
         
         ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
@@ -680,10 +711,35 @@ if next_button:
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             try:
-                results_url_count = hca_search_url(df_master)
-                results_count = int(float(results_url_count['results_count']))
                 
-                if results_count == 0:
+                results_url_count = hca_search_url(df_master)
+                                
+                results_count = int(float(results_url_count['results_count']))
+
+                if filter_toggle:
+                    #Conduct actual search if filter is turned on
+                    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                
+                    case_infos = hca_enhanced_search(collection = df_master.loc[0, 'Collection'], 
+                                        quick_search = df_master.loc[0, 'Quick search'], 
+                                        full_text = df_master.loc[0, 'Full text search'],
+                                    judgments_counter_bound = judgments_counter_bound,
+                                    own_parties_include = df_master.loc[0, 'Parties include'], 
+                                    own_parties_exclude = df_master.loc[0, 'Parties do not include'], 
+                                    #own_min_year, 
+                                    #own_max_year, 
+                                    after_date = df_master.loc[0, 'Decision date is after'], 
+                                     before_date = df_master.loc[0, 'Decision date is before'], 
+                                    #own_case_numbers_include, 
+                                    #own_case_numbers_exclude, 
+                                    own_judges_include = df_master.loc[0, 'Judges include'], 
+                                    own_judges_exclude = df_master.loc[0, 'Judges do not include']
+                                    )
+
+                    results_count = min(len(case_infos), results_count)
+                    
+                if  results_count == 0:
+                    
                     st.error(no_results_msg)
     
                 else:

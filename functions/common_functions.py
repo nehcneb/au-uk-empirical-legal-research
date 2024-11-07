@@ -621,6 +621,21 @@ def display_df(df):
     
 
 
+# %%
+#For checking whether date entered is within allowable range
+
+def date_range_check(date_start, date_end, date_entry):
+    #All arguments are datetime objects
+
+    try:
+        if ((date_start <= date_entry) and (date_entry <= date_end)):
+            return date_entry
+        else:
+            return None
+    except:
+        return None
+
+
 # %% [markdown]
 # # AWS
 

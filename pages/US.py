@@ -70,7 +70,7 @@ from functions.common_functions import today_in_nums, scraper_pause_mean, judgme
 # # US search engine
 
 # %%
-from functions.us_functions import us_search_tool, us_search_function, us_search_preview, us_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions
+from functions.us_functions import us_search_tool, us_search_function, us_search_preview, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions
 
 
 # %%
@@ -578,8 +578,6 @@ st.markdown("""For search tips, please visit [CourtListener](https://www.courtli
 
 q_entry = st.text_input(label = 'Search', value = st.session_state['df_master'].loc[0, 'Search'])
 
-order_by_entry = st.selectbox(label = "Search results order ", options = list(us_order_by.keys()), index = list(us_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
-
 case_name_entry = st.text_input(label = 'Case name', value = st.session_state['df_master'].loc[0, 'Case name'])
 
 docket_number_entry = st.text_input(label = 'Docket number', value = st.session_state['df_master'].loc[0, 'Docket number'])
@@ -606,6 +604,8 @@ if collection_entry ==  list(us_collections.keys())[0]:
     
     neutral_cite_entry = st.text_input(label = 'Neutral citation', value = st.session_state['df_master'].loc[0, 'Neutral citation'])
 
+    order_by_entry = st.selectbox(label = "Search results order ", options = list(us_order_by.keys()), index = list(us_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
+
 else: #If PACER records chosen
     description_entry = st.text_input(label = 'Document description', value = st.session_state['df_master'].loc[0, 'Document description'])
     document_number_entry = st.text_input(label = 'Document number', value = st.session_state['df_master'].loc[0, 'Document number'])
@@ -616,6 +616,7 @@ else: #If PACER records chosen
     party_name_entry = st.text_input(label = 'Party name', value = st.session_state['df_master'].loc[0, 'Party name'])
     atty_name_entry = st.text_input(label = 'Attorney name', value = st.session_state['df_master'].loc[0, 'Attorney name'])
     available_only_entry = st.checkbox(label = 'Only show results with PDFs', value = bool(float(st.session_state['df_master'].loc[0, 'Only show results with PDFs'])))
+    order_by_entry = st.selectbox(label = "Search results order ", options = list(us_pacer_order_by.keys()), index = list(us_pacer_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
 
 st.subheader("Your CourtListener API token")
 
