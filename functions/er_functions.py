@@ -342,7 +342,7 @@ def er_run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     df_updated.pop('judgment')
     
@@ -458,7 +458,7 @@ def er_meta_judgment_dict_b64(case_link_pair):
 #For gpt-4o vision
 
 @st.cache_data(show_spinner = False)
-def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction):
+def er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -497,13 +497,42 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
     file_for_GPT = image_content + metadata_content + json_direction
     
     #Create answer format
+    answers_json = {}
+
+    #st.write(f"df_example == {df_example}")
     
+    #st.write(f"len(df_example) == {len(df_example)}")
+
+    if len(df_example.replace('"', '')) > 0:
+
+        #st.write(f"df_example == {df_example}")
+
+        #st.write(type(df_example))
+
+        try:
+            
+            if isinstance(df_example, str):
+                
+                answers_json = json.loads(df_example)
+
+            if isinstance(df_example, dict):
+                
+                answers_json = df_example
+
+        except Exception as e:
+            print(f"Example provided but can't produce json to send to GPT.")
+            print(e)
+    
+    #st.write(f"answers_json == {answers_json}")
+
+    #Check if answers format succesfully created by following any example uploaded
     q_keys = [*questions_json]
     
-    answers_json = {}
-    
-    for q_index in q_keys:
-        answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+    if len(answers_json) == 0:
+        q_counter = 1
+        for q_index in q_keys:
+            answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+            q_counter += 1
 
     #Create questions, which include the answer format
     
@@ -536,8 +565,17 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
-        #To obtain a json directly, use below
-        answers_dict = json.loads(completion.choices[0].message.content)
+        #Format of the answer depends on whether an example was uploaded
+        if len(df_example.replace('"', '')) > 0:
+            
+            answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
+            
+            #st.dataframe(answers_df)
+            
+            answers_dict = answers_df.to_dict(orient = 'list')
+
+        else:
+            answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -596,7 +634,7 @@ def er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction
     # To so check, active line marked as #*
 
 @st.cache_data(show_spinner = False)
-def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def er_engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -662,7 +700,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_output_list = er_GPT_b64_json(questions_json, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
             if check_questions_answers() > 0:
@@ -741,11 +779,7 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
             GPT_output_list = [answers_dict, answers_tokens, input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
-        q_counter = 1
-        
         for answer_index in answers_dict.keys():
-
-            answer_header = f'GPT question {q_counter}: ' + answer_index
 
             #Check any errors
             answer_string = str(answers_dict[answer_index]).lower()
@@ -755,6 +789,9 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
                 answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
 
             #Append answer to spreadsheet
+
+            answer_header = answer_index
+
             try:
             
                 df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
@@ -762,8 +799,6 @@ def er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_mo
             except:
 
                 df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
-
-            q_counter += 1
                 
         #Calculate GPT costs
 
@@ -837,7 +872,7 @@ def er_run_b64(df_master):
             
     #apply GPT_individual to each respondent's judgment spreadsheet
 
-    df_updated = er_engage_GPT_b64_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = er_engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Remove redundant columns
 

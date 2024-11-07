@@ -294,7 +294,8 @@ if 'df_master' not in st.session_state:
     'Enter your questions for GPT' : '', 
     'Use GPT' : False, 
     'Use own account' : False, 
-    'Use flagship version of GPT' : False
+    'Use flagship version of GPT' : False,
+    'Example' : ''
     }
 
     #Jurisdiction specific
@@ -447,7 +448,7 @@ if preview_button:
 
     else:
         st.error(no_results_msg)
-        
+
 
 # %% [markdown]
 # ## Buttons

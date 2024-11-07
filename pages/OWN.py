@@ -64,12 +64,13 @@ import tiktoken
 from pyxlsb import open_workbook as open_xlsb
 
 
+
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons
+from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df
 
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -281,7 +282,8 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use GPT'] = False
     st.session_state['df_master'].loc[0, 'Use own account'] = False
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    
+    st.session_state['df_master'].loc[0, 'Example'] = ''
+
 if 'df_individual' not in st.session_state:
 
     st.session_state['df_individual'] = pd.DataFrame([])
@@ -317,6 +319,11 @@ if "judgment_counter_max" not in st.session_state:
         
         else:
             st.session_state["judgment_counter_max"] = default_judgment_counter_bound
+
+#For example df
+if 'df_example' not in st.session_state:
+        st.session_state["df_example"] = ''
+
 
 
 # %% [markdown]
@@ -390,6 +397,8 @@ if st.toggle('Tips for using GPT'):
 
 gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
+st.caption(f"By default, model gpt-4o-mini will answer your questions. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each file.")
+
 #if gpt_questions_entry:
     
 st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
@@ -406,7 +415,57 @@ if gpt_activation_entry:
 else:
     st.session_state['disable_input'] = False
     
-st.caption(f"By default, model gpt-4o-mini will answer your questions. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each file.")
+
+#Upload example
+st.markdown("""By default, this app will produce a spreadsheet with rows of judgments and columns of answers to your question(s). If you prefer a different column layout, please upload an example.""")
+
+uploaded_file = st.file_uploader(label = "Supported formats: CSV, XLSX, JSON.", 
+                                 type=['csv', 'xlsx', 'json'], 
+                                 accept_multiple_files=False
+                                )
+
+if uploaded_file:
+
+    try:
+    
+        df_example = uploaded_file_to_df(uploaded_file)
+        
+        indice = df_example.index.tolist()
+    
+        if len(indice) > 0:
+    
+            for index in indice [1: ]:
+    
+                df_example.drop(index, axis=0, inplace = True)
+
+        columns = df_example.columns.tolist()
+
+        for col in columns:
+            
+            for gpt_col in own_gpt_headings:
+                
+                if ((gpt_col.lower() in col.lower()) and (col in df_example.columns)):
+                    
+                    df_example.drop(col, axis=1, inplace = True)
+        
+        st.session_state.df_example = df_example.to_json(orient = 'split', compression = 'infer', default_handler=str)
+                    
+        st.session_state.df_master.loc[0, 'Example'] = json.dumps(st.session_state.df_example)
+        
+        st.success('GPT will *try* to follow this example and give the following as a typical row:')
+
+        st.dataframe(df_example)
+
+    except Exception as e:
+        st.error('Unfortunately, GPT is unable to follow this example.')
+        print(e)
+    
+else:
+    
+    st.session_state['df_example'] = ''
+
+    st.session_state.df_master.loc[0, 'Example'] = json.dumps(st.session_state.df_example)
+
 
 if own_account_allowed() > 0:
     

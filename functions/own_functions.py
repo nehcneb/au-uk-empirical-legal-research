@@ -323,7 +323,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #IN USE
 
 @st.cache_data(show_spinner = False)
-def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
+def GPT_json_own(questions_json, df_example, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model)}]
@@ -331,13 +331,42 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
     json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
 
     #Create answer format
+    answers_json = {}
+
+    #st.write(f"df_example == {df_example}")
     
+    #st.write(f"len(df_example) == {len(df_example)}")
+
+    if len(df_example.replace('"', '')) > 0:
+
+        #st.write(f"df_example == {df_example}")
+
+        #st.write(type(df_example))
+
+        try:
+            
+            if isinstance(df_example, str):
+                
+                answers_json = json.loads(df_example)
+
+            if isinstance(df_example, dict):
+                
+                answers_json = df_example
+
+        except Exception as e:
+            print(f"Example provided but can't produce json to send to GPT.")
+            print(e)
+    
+    #st.write(f"answers_json == {answers_json}")
+
+    #Check if answers format succesfully created by following any example uploaded
     q_keys = [*questions_json]
     
-    answers_json = {}
-    
-    for q_index in q_keys:
-        answers_json.update({questions_json[q_index]: f'Your answer to this question. (The paragraphs, pages or sections from which you obtained your answer)'})
+    if len(answers_json) == 0:
+        q_counter = 1
+        for q_index in q_keys:
+            answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+            q_counter += 1
 
     #Create questions, which include the answer format
     
@@ -371,8 +400,17 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
-        #To obtain a json directly, use below
-        answers_dict = json.loads(completion.choices[0].message.content)
+        #Format of the answer depends on whether an example was uploaded
+        if len(df_example.replace('"', '')) > 0:
+            
+            answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
+            
+            #st.dataframe(answers_df)
+            
+            answers_dict = answers_df.to_dict(orient = 'list')
+
+        else:
+            answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -398,7 +436,7 @@ def GPT_json_own(questions_json, file_triple, gpt_model, system_instruction):
     # To so check, active line marked as #*
 
 @st.cache_data(show_spinner = False)
-def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -445,7 +483,7 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_file_triple = GPT_json_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_json_own(questions_json, df_example, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -489,12 +527,7 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
             GPT_file_triple = [answers_dict, answers_tokens, input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
-
-        q_counter = 1
-
         for answer_index in answers_dict.keys():
-
-            answer_header = f'GPT question {q_counter}: ' + answer_index
 
             #Check any errors
             answer_string = str(answers_dict[answer_index]).lower()
@@ -504,6 +537,9 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
                 answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
 
             #Append answer to spreadsheet
+
+            answer_header = answer_index
+
             try:
             
                 df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
@@ -511,8 +547,6 @@ def engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model
             except:
 
                 df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
-
-            q_counter += 1
             
         #Calculate GPT costs
 
@@ -587,7 +621,9 @@ def run_own(df_master, uploaded_docs, uploaded_images):
     questions_json = df_master.loc[0, 'questions_json']
         
     #Engage GPT
-    df_updated = engage_GPT_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_example = st.session_state.df_master.loc[0, 'Example']
+    
+    df_updated = engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction)
 
     if 'Extracted text' in df_updated.columns:
         df_updated.pop('Extracted text')
@@ -680,7 +716,7 @@ def image_to_b64_own(uploaded_image, language, page_bound):
 #For gpt-4o vision
 
 @st.cache_data(show_spinner = False)
-def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction):
+def GPT_b64_json_own(questions_json, df_example, file_triple, gpt_model, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -702,13 +738,42 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
     file_for_GPT = image_content + json_direction
     
     #Create answer format
+    answers_json = {}
+
+    #st.write(f"df_example == {df_example}")
     
+    #st.write(f"len(df_example) == {len(df_example)}")
+
+    if len(df_example.replace('"', '')) > 0:
+
+        #st.write(f"df_example == {df_example}")
+
+        #st.write(type(df_example))
+
+        try:
+            
+            if isinstance(df_example, str):
+                
+                answers_json = json.loads(df_example)
+
+            if isinstance(df_example, dict):
+                
+                answers_json = df_example
+
+        except Exception as e:
+            print(f"Example provided but can't produce json to send to GPT.")
+            print(e)
+    
+    #st.write(f"answers_json == {answers_json}")
+
+    #Check if answers format succesfully created by following any example uploaded
     q_keys = [*questions_json]
     
-    answers_json = {}
-    
-    for q_index in q_keys:
-        answers_json.update({questions_json[q_index]: f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+    if len(answers_json) == 0:
+        q_counter = 1
+        for q_index in q_keys:
+            answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+            q_counter += 1
 
     #Create questions, which include the answer format
     
@@ -741,8 +806,17 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
-        #To obtain a json directly, use below
-        answers_dict = json.loads(completion.choices[0].message.content)
+        #Format of the answer depends on whether an example was uploaded
+        if len(df_example.replace('"', '')) > 0:
+            
+            answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
+            
+            #st.dataframe(answers_df)
+            
+            answers_dict = answers_df.to_dict(orient = 'list')
+
+        else:
+            answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -768,7 +842,7 @@ def GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction)
     # To so check, active line marked as #*
 
 @st.cache_data(show_spinner = False)
-def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -810,7 +884,7 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
         #Depending on activation status, apply GPT_json function to each file, gives answers as a string containing a dictionary
 
         if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_file_triple = GPT_b64_json_own(questions_json, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_file_triple = GPT_b64_json_own(questions_json, df_example, file_triple, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_file_triple[0]
 
             #Calculate and append GPT finish time and time difference to individual df
@@ -852,11 +926,7 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
             GPT_file_triple = [answers_dict, answers_tokens, input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
-        q_counter = 1
-
         for answer_index in answers_dict.keys():
-
-            answer_header = f'GPT question {q_counter}: ' + answer_index
 
             #Check any errors
             answer_string = str(answers_dict[answer_index]).lower()
@@ -866,6 +936,9 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
                 answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
 
             #Append answer to spreadsheet
+
+            answer_header = answer_index
+
             try:
             
                 df_individual.loc[file_index, answer_header] = answers_dict[answer_index]
@@ -873,8 +946,6 @@ def engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_m
             except:
 
                 df_individual.loc[file_index, answer_header] = str(answers_dict[answer_index])
-
-            q_counter += 1
                 
         #Calculate GPT costs
 
@@ -944,7 +1015,9 @@ def run_b64_own(df_master, uploaded_images):
 
     #apply GPT_individual to each respondent's file spreadsheet
 
-    df_updated = engage_GPT_b64_json_own(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_example = st.session_state.df_master.loc[0, 'Example']
+    
+    df_updated = engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction)
 
     #Remove redundant columns
 

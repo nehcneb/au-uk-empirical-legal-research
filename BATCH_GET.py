@@ -160,6 +160,8 @@ for key_body in aws_objects:
 
 all_df_masters = all_df_masters_current.copy(deep = True)
 
+#all_df_masters = all_df_masters.fillna('')
+
 #Alternative download file example
 #NOT IN USE
 #s3 = boto3.client('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
@@ -355,6 +357,7 @@ if max_retrieve_counter == 0:
 
 # %%
 df_batch_id_response_list = []
+df_batch_id_response_list_indice = []
 
 retrieve_counter = 0
 
@@ -410,6 +413,8 @@ for index in all_df_masters.index:
                 #Apppend gpt batch id and responses to list for adding to df_individual later
                 
                 df_batch_id_response_list.append(batch_id_response)
+
+                df_batch_id_response_list_indice.append(index)
     
                 #Update status etc and remove api key on all_df_masters
                 all_df_masters.loc[index, 'status'] = status
@@ -476,9 +481,13 @@ for obj in bucket.objects.all():
 append_counter = 0
 
 for df_batch_response in df_batch_id_response_list:
-
+    
     batch_id = df_batch_response['batch_id']
 
+    #Get index of all_df_masters
+    index_list = all_df_masters.index[all_df_masters['batch_id']==batch_id].tolist()
+    index = index_list[0]
+    
     #Get df_individual from aws
     for key_body in aws_objects:
         if key_body['key'] == f'{batch_id}.csv':
@@ -500,19 +509,39 @@ for df_batch_response in df_batch_id_response_list:
         custom_id = df_batch_response.loc[gpt_index, 'custom_id']
 
         #Link GPT case-specific response to row in df_individual
-        
         judgment_index_list = df_individual.index[df_individual['custom_id']==custom_id].tolist()
 
         if len(judgment_index_list) > 0:
             
             judgment_index = judgment_index_list[0]
 
+            #Get example df
+            if 'Example' in all_df_masters.columns:
+        
+                df_example = all_df_masters.loc[index, 'Example']
+                
+            else:
+                df_example = ''
+            
             #Get gpt specific answers
             answers_string = df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content']
             
             try:
-                answers_dict = json.loads(answers_string)
+
+                #Format of the answer depends on whether an example was uploaded
+                if len(df_example.replace('"', '')) > 0:
+                    
+                    answers_df = pd.read_json(answers_string, orient = 'split')
+                    
+                    #st.dataframe(answers_df)
+                    
+                    answers_dict = answers_df.to_dict(orient = 'list')
+        
+                else:
+                    answers_dict = json.loads(answers_string)
+                    
             except Exception as e:
+                
                 answers_dict = {'ERROR': 'Unfortunately GPT did not produce a valid answer. Please change your questions and try again.'}
                 print(f"{batch_id}: GPT did not produce a valid JSON.")
                 st.error(f"{batch_id}: GPT did not produce a valid JSON.")
@@ -551,9 +580,7 @@ for df_batch_response in df_batch_id_response_list:
             #Add costs column
             df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = input_tokens*gpt_input_cost(gpt_model)/2 + output_tokens*gpt_output_cost(gpt_model)/2
 
-        	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers                  
-            q_counter = 1
-            
+            #for answers_dict in answers_list:        
             for answer_index in answers_dict.keys():
     
                 #Check any errors
@@ -564,8 +591,9 @@ for df_batch_response in df_batch_id_response_list:
                     answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
     
                 #Append answer to spreadsheet
-                answer_header = f'GPT question {q_counter}: ' + answer_index
-
+    
+                answer_header = answer_index
+    
                 try:
                 
                     df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
@@ -573,8 +601,6 @@ for df_batch_response in df_batch_id_response_list:
                 except:
     
                     df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
-    
-                q_counter += 1
         
         #Remove judgment, opinions and PACER records columns
         

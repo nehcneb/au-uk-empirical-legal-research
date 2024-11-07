@@ -61,14 +61,15 @@ from botocore.exceptions import ClientError
 #from google.oauth2 import service_account
 
 #Excel
+import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link
+from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df
 
 #Import variables
-from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, spinner_text, search_error_display
+from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, spinner_text, search_error_display, own_gpt_headings
 
 if own_account_allowed() > 0:
     print(f'By default, users are allowed to use their own account')
@@ -166,6 +167,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use GPT'] = False
     st.session_state['df_master'].loc[0, 'Use own account'] = False
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    st.session_state['df_master'].loc[0, 'Example'] = ''
     
 if 'df_individual' not in st.session_state:
 
@@ -202,6 +204,10 @@ if "judgment_counter_max" not in st.session_state:
         
         else:
             st.session_state["judgment_counter_max"] = default_judgment_counter_bound
+
+#For example df
+if 'df_example' not in st.session_state:
+        st.session_state["df_example"] = ''
 
 
 # %% [markdown]
@@ -241,9 +247,11 @@ gpt_questions_entry = st.text_area(label = f"You may enter at most {question_cha
     
 st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
 
+st.caption(f"By default, model gpt-4o-mini will answer your questions. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each case.")
+
 if check_questions_answers() > 0:
     
-    st.write("Please do not try to obtain personally identifiable information. Your questions and GPT's answers will be checked for potential privacy violation.")
+    st.warning("Please do not try to obtain personally identifiable information. Your questions and GPT's answers will be checked for potential privacy violation.")
 
 #Disable toggles while prompt is not entered or the same as the last processed prompt
 if gpt_activation_entry:
@@ -258,8 +266,57 @@ if gpt_activation_entry:
         
 else:
     st.session_state['disable_input'] = False
+
+#Upload example
+st.markdown("""By default, this app will produce a spreadsheet with rows of judgments and columns of answers to your question(s). If you prefer a different column layout, please upload an example.""")
+
+uploaded_file = st.file_uploader(label = "Supported formats: CSV, XLSX, JSON.", 
+                                 type=['csv', 'xlsx', 'json'], 
+                                 accept_multiple_files=False
+                                )
+
+if uploaded_file:
+
+    try:
     
-st.caption(f"By default, model gpt-4o-mini will answer your questions. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each case.")
+        df_example = uploaded_file_to_df(uploaded_file)
+        
+        indice = df_example.index.tolist()
+    
+        if len(indice) > 0:
+    
+            for index in indice [1: ]:
+    
+                df_example.drop(index, axis=0, inplace = True)
+
+        columns = df_example.columns.tolist()
+
+        for col in columns:
+            
+            for gpt_col in own_gpt_headings:
+                
+                if ((gpt_col.lower() in col.lower()) and (col in df_example.columns)):
+                    
+                    df_example.drop(col, axis=1, inplace = True)
+        
+        st.session_state.df_example = df_example.to_json(orient = 'split', compression = 'infer', default_handler=str)
+                    
+        st.session_state.df_master.loc[0, 'Example'] = json.dumps(st.session_state.df_example)
+        
+        st.success('GPT will *try* to follow this example and give the following as a typical row:')
+
+        st.dataframe(df_example)
+
+    except:
+        st.error('Unfortunately, GPT is unable to follow this example.')
+    
+else:
+    
+    st.session_state['df_example'] = ''
+
+    st.session_state.df_master.loc[0, 'Example'] = json.dumps(st.session_state.df_example)
+
+#st.write(st.session_state.df_example)
 
 if own_account_allowed() > 0:
     
@@ -490,7 +547,9 @@ if run_button:
     
                 #Create spreadsheet of responses
                 df_master = st.session_state.df_master
-    
+
+                #st.write(f"df_master.loc[0, 'Example'] == {df_master.loc[0, 'Example']}")
+                
                 #Activate user's own key or mine
                 if st.session_state.own_account == True:
                     

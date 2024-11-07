@@ -414,7 +414,7 @@ def hca_meta_judgment_dict(judgment_url):
         print(e)
         
     return judgment_dict
-    
+
 
 # %%
 #If judgment link contains 'showbyHandle'
@@ -657,6 +657,8 @@ def hca_mnc_to_link_browse(collection, year, num):
 
 # %%
 #Function for turning citation to judgment_url
+
+@st.cache_data(show_spinner = False)
 def hca_citation_to_link(collection, citation):
 
     #Placeholder error url
@@ -1335,7 +1337,7 @@ def hca_terms_to_add(years_list, parties_list):
 
 # %%
 #Search function for adding year and judge, if entered, to search terms 
-@st.cache_resource(show_spinner = False)
+@st.cache_data(show_spinner = False)
 def hca_enhanced_search(collection, 
                quick_search, 
                #citation = '', 
@@ -1618,7 +1620,7 @@ def hca_run_direct(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     if 'judgment' in df_updated.columns:
         df_updated.pop('judgment')
@@ -1793,7 +1795,7 @@ def hca_run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     if 'judgment' in df_updated.columns:
         df_updated.pop('judgment')
@@ -1968,7 +1970,7 @@ def hca_batch(df_master):
     questions_json = df_master.loc[0, 'questions_json']
 
     #Send batch input to gpt
-    batch_record_df_individual = gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     
     return batch_record_df_individual
 

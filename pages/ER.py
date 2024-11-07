@@ -242,6 +242,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use GPT'] = False
     st.session_state['df_master'].loc[0, 'Use own account'] = False
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    st.session_state['df_master'].loc[0, 'Example'] = ''
 
     #Jurisdiction specific
     st.session_state.df_master.loc[0, 'Enter search query'] = None

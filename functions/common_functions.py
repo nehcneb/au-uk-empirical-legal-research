@@ -70,6 +70,7 @@ import pause
 
 #Excel
 from io import BytesIO
+import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 import xlsxwriter
 
@@ -365,6 +366,10 @@ search_error_note = 'The database from which this app sources cases did not resp
 #Note truncation
 truncation_note = "The full file is too long for GPT. It was (or will be) truncated if sent to GPT."
 
+# %%
+# Programmaticaly produced GPT headings
+own_gpt_headings = ['Hyperlink', 'File length in tokens', 'GPT cost estimate', 'GPT time estimate']
+
 
 # %% [markdown]
 # # Streamlit
@@ -460,7 +465,8 @@ def convert_df_to_excel(df):
     worksheet = writer.sheets['Sheet1']
 #    format1 = workbook.add_format({'num_format': '0.00'}) 
     worksheet.set_column('A:A', None)#, format1)  
-    writer.save()
+    #writer.save()
+    writer._save()
     processed_data = output.getvalue()
     return processed_data
 
@@ -634,6 +640,67 @@ def date_range_check(date_start, date_end, date_entry):
             return None
     except:
         return None
+
+
+# %%
+#Excel to df with hyperlinks
+
+def excel_to_df_w_links(uploaded_file):
+
+    df = pd.read_excel(uploaded_file)
+    
+    wb = openpyxl.load_workbook(uploaded_file)
+    
+    sheets = wb.sheetnames
+    
+    ws = wb[sheets[0]]
+
+    columns_w_links = link_headings_picker(df)
+
+    for column in columns_w_links:
+        
+        column_index = list(df.columns).index(column) + 1 #Adding 1 because excel column starts with 1 not 0
+        
+        row_length = len(df)
+
+        for row in range(0, row_length):
+            
+            row_index = row + 2 #Adding 1 because excel non-heading row starts with 2 while pandas at 0
+            
+            try:
+	            new_cell = ws.cell(row=row_index, column=column_index).hyperlink.target
+            
+            except:
+
+	            new_cell = (str(ws.cell(row=row_index, column=column_index).value))
+            
+            df.loc[row, column] = new_cell
+            
+    return df
+
+
+# %%
+#Function for getting a df from an uploaded spreadsheet
+def uploaded_file_to_df(uploaded_file):
+    
+    #Get uploaded file extension
+    extension = uploaded_file.name.split('.')[-1].lower()
+    
+    if extension == 'csv':
+        df = pd.read_csv(uploaded_file)
+
+    if extension == 'xlsx':
+        
+        #df = pd.read_excel(uploaded_file)
+        
+        df = excel_to_df_w_links(uploaded_file)
+
+    if extension == 'json':
+        
+        df = pd.read_json(uploaded_file)
+
+    return df
+    
 
 
 # %% [markdown]

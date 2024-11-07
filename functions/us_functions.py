@@ -1784,7 +1784,7 @@ def us_run(df_master):
     questions_json = df_master.loc[0, 'questions_json']
             
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Remove 'opinions' column if opinions sought #, or 'recap_documents' column if PACER docs sought
     if 'opinions' in df_updated.columns:
@@ -1913,7 +1913,7 @@ def us_batch(df_master):
     questions_json = df_master.loc[0, 'questions_json']
 
     #Send batch input to gpt
-    batch_record_df_individual = gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     
     return batch_record_df_individual
 

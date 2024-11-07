@@ -466,8 +466,9 @@ def nsw_tidying_up(df_master, df_individual):
             #df_individual.pop(col_name)
 
     #Reorganise columns
+    df_individual = df_individual.loc[:,~df_individual.columns.duplicated()].copy()
 
-    old_columns = list(df_individual.columns)
+    old_columns = df_individual.columns.to_list()
     
     for i in ['Case name', 'Medium neutral citation', 'Hyperlink to NSW Caselaw']:
         if i in old_columns:
@@ -699,8 +700,8 @@ def nsw_run_direct(df_master):
     
     questions_json = df_master.loc[0, 'questions_json']
             
-    #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    #Engage GPT    
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #tidy up
     df_updated = nsw_tidying_up(df_master, df_updated)
@@ -911,8 +912,8 @@ def nsw_run(df_master):
     
     questions_json = df_master.loc[0, 'questions_json']
 
-    #Engage GPT
-    df_updated = engage_GPT_json(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+    #Engage GPT    
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #tidy up
     df_updated = nsw_tidying_up(df_master, df_updated)
@@ -1124,8 +1125,9 @@ def nsw_batch(df_master):
             
     #Tidu up then send batch input to gpt
     df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
-    
-    batch_record_df_individual = gpt_batch_input(questions_json, df_individual, GPT_activation, gpt_model, system_instruction)
+
+    #Engage GPT
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     
     return batch_record_df_individual
 
