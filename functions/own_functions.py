@@ -400,24 +400,7 @@ def GPT_json_own(questions_json, df_example, file_triple, gpt_model, system_inst
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
-        #Format of the answer depends on whether an example was uploaded
-        if len(df_example.replace('"', '')) > 0:
-            
-            try:
-                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-
-                answers_dict = answers_df.to_dict(orient = 'list')
-                
-            except Exception as e:
-                                
-                answers_dict = json.loads(completion.choices[0].message.content)
-
-                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
-
-                print(e)
-
-        else:
-            answers_dict = json.loads(completion.choices[0].message.content)
+        answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -530,11 +513,11 @@ def engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activatio
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
             #Calculate number of tokens of answers
-            answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
 
-            input_tokens = file_capped_tokens + questions_tokens + other_tokens
+            answers_input_tokens = file_capped_tokens + questions_tokens + other_tokens
             
-            GPT_file_triple = [answers_dict, answers_tokens, input_tokens]
+            GPT_file_triple = [answers_dict, answers_output_tokens, answers_input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
         for answer_index in answers_dict.keys():
@@ -630,10 +613,8 @@ def run_own(df_master, uploaded_docs, uploaded_images):
 
     questions_json = df_master.loc[0, 'questions_json']
         
-    #Engage GPT
-    df_example = st.session_state.df_master.loc[0, 'Example']
-    
-    df_updated = engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction)
+    #Engage GPT    
+    df_updated = engage_GPT_json_own(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     if 'Extracted text' in df_updated.columns:
         df_updated.pop('Extracted text')
@@ -816,24 +797,7 @@ def GPT_b64_json_own(questions_json, df_example, file_triple, gpt_model, system_
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
-        #Format of the answer depends on whether an example was uploaded
-        if len(df_example.replace('"', '')) > 0:
-            
-            try:
-                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-
-                answers_dict = answers_df.to_dict(orient = 'list')
-                
-            except Exception as e:
-                                
-                answers_dict = json.loads(completion.choices[0].message.content)
-
-                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
-
-                print(e)
-
-        else:
-            answers_dict = json.loads(completion.choices[0].message.content)
+        answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -939,11 +903,11 @@ def engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activ
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the file.", "cl100k_base")
 
             #Calculate number of tokens of answers
-            answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
 
-            input_tokens = file_capped_tokens + questions_tokens + other_tokens
+            answers_input_tokens = file_capped_tokens + questions_tokens + other_tokens
             
-            GPT_file_triple = [answers_dict, answers_tokens, input_tokens]
+            GPT_file_triple = [answers_dict, answers_output_tokens, answers_input_tokens]
 
         #Create GPT question headings and append answers to individual spreadsheets
         for answer_index in answers_dict.keys():
@@ -1033,11 +997,8 @@ def run_b64_own(df_master, uploaded_images):
 
     questions_json = df_master.loc[0, 'questions_json']
 
-    #apply GPT_individual to each respondent's file spreadsheet
-
-    df_example = st.session_state.df_master.loc[0, 'Example']
-    
-    df_updated = engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction)
+    #apply GPT_individual to each respondent's file spreadsheet    
+    df_updated = engage_GPT_b64_json_own(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Remove redundant columns
 

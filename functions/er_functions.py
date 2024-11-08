@@ -499,15 +499,7 @@ def er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system
     #Create answer format
     answers_json = {}
 
-    #st.write(f"df_example == {df_example}")
-    
-    #st.write(f"len(df_example) == {len(df_example)}")
-
     if len(df_example.replace('"', '')) > 0:
-
-        #st.write(f"df_example == {df_example}")
-
-        #st.write(type(df_example))
 
         try:
             
@@ -523,9 +515,6 @@ def er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
     
-    #st.write(f"answers_json == {answers_json}")
-
-    #Check if answers format succesfully created by following any example uploaded
     q_keys = [*questions_json]
     
     if len(answers_json) == 0:
@@ -564,25 +553,8 @@ def er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system
         )
         
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
-        
-        #Format of the answer depends on whether an example was uploaded
-        if len(df_example.replace('"', '')) > 0:
-            
-            try:
-                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-
-                answers_dict = answers_df.to_dict(orient = 'list')
-                
-            except Exception as e:
                                 
-                answers_dict = json.loads(completion.choices[0].message.content)
-
-                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
-
-                print(e)
-
-        else:
-            answers_dict = json.loads(completion.choices[0].message.content)
+        answers_dict = json.loads(completion.choices[0].message.content)
         
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -780,12 +752,10 @@ def er_engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activa
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
 
             #Calculate number of tokens of answers
-            answers_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
 
-            input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
+            answers_input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
             
-            GPT_output_list = [answers_dict, answers_tokens, input_tokens]
-
         #Create GPT question headings and append answers to individual spreadsheets
         for answer_index in answers_dict.keys():
 

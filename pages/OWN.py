@@ -36,6 +36,7 @@ import os
 import io
 import math
 from math import ceil
+import traceback
 
 #Conversion to text
 import fitz
@@ -181,6 +182,12 @@ def own_create_df():
     #Language choice
 
     language = language_entry
+
+    #Example
+    try:
+        df_example = st.session_state['df_master'].loc[0, 'Example']
+    except:
+        df_example = ''
     
     new_row = {'Processed': '',
            'Timestamp': timestamp,
@@ -194,7 +201,8 @@ def own_create_df():
             'Use GPT': gpt_activation_status, 
            'Enter your questions for GPT': gpt_questions, 
             'Use own account': own_account,
-            'Use flagship version of GPT': gpt_enhancement
+            'Use flagship version of GPT': gpt_enhancement,
+            'Example': df_example
           }
 
     df_master_new = pd.DataFrame(new_row, index = [0])
@@ -454,15 +462,15 @@ if uploaded_file:
                     
                     df_example_to_show.drop(col, axis=1, inplace = True)
                             
-        st.session_state.df_master.loc[0, 'Example'] = json.dumps(df_example_to_show.to_json(orient = 'split', compression = 'infer', default_handler=str))
+        st.session_state.df_master.loc[0, 'Example'] = json.dumps(df_example_to_show.loc[0].to_json(default_handler=str))
         
-    except:
+    except Exception as e:
         
-        st.error('Sorry, this app is unable to follow this example.')
+        st.error(f'Sorry, this app is unable to follow this example due to this error: {e}')
 
-if ((len(st.session_state.df_master.loc[0, 'Example'].replace('"', '')) > 0) and (len(st.session_state.df_example_to_show) > 0)):
+if len(st.session_state.df_example_to_show) > 0:
         
-    st.success('For a given file, GPT will be asked to produce something like the following:')
+    st.success('For each file, GPT will try produce something like the following:')
 
     st.dataframe(st.session_state.df_example_to_show)
 
@@ -477,7 +485,6 @@ if ((len(st.session_state.df_master.loc[0, 'Example'].replace('"', '')) > 0) and
     
         st.rerun()
     
-    #st.session_state.df_master.loc[0, 'Example'] = json.dumps('')
 
 
 # %% [markdown]
@@ -724,10 +731,15 @@ if run_button:
             except Exception as e:
 
                 st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-
+                
                 st.error(e)
+                
+                st.error(traceback.format_exc())
 
                 print(e)
+
+                print(traceback.format_exc())
+
 
 
 # %%
@@ -812,8 +824,15 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
                 except Exception as e:
         
                     st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-    
+                    
                     st.error(e)
+                    
+                    st.error(traceback.format_exc())
+    
+                    print(e)
+    
+                    print(traceback.format_exc())
+
 
 
 # %%

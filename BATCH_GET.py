@@ -483,10 +483,6 @@ append_counter = 0
 for df_batch_response in df_batch_id_response_list:
     
     batch_id = df_batch_response['batch_id']
-
-    #Get index of all_df_masters
-    index_list = all_df_masters.index[all_df_masters['batch_id']==batch_id].tolist()
-    index = index_list[0]
     
     #Get df_individual from aws
     for key_body in aws_objects:
@@ -514,45 +510,12 @@ for df_batch_response in df_batch_id_response_list:
         if len(judgment_index_list) > 0:
             
             judgment_index = judgment_index_list[0]
-
-            #Get example df
-            if 'Example' in all_df_masters.columns:
-        
-                df_example = all_df_masters.loc[index, 'Example']
-
-                if isinstance(df_example, float): #If no example given, ie nan
-                    
-                    df_example = ''
-                
-            else:
-                
-                df_example = ''
             
-            #Get gpt specific answers
-            answers_string = df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content']
-            
+            #Get gpt specific answers            
             try:
-
-                #Format of the answer depends on whether an example was uploaded                    
-                if len(df_example.replace('"', '')) > 0:
-        
-                    try:
-                        answers_df = pd.read_json(answers_string, orient = 'split')
-        
-                        answers_dict = answers_df.to_dict(orient = 'list')
-                        
-                    except Exception as e:
-                                        
-                        answers_dict = json.loads(answers_string)
-        
-                        print(f"{batch_id}: GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
-                        print(e)
-
-                        st.warning(f"{batch_id}: GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
-                        #st.warning(f"{batch_id}: {e}")
-                    
-                else:
-                    answers_dict = json.loads(answers_string)
+                
+                answers_string = df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content']
+                answers_dict = json.loads(answers_string)
 
             except Exception as e:
                 

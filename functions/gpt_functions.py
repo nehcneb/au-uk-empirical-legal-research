@@ -643,16 +643,8 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
 
     #Create answer format
     answers_json = {}
-
-    #st.write(f"df_example == {df_example}")
     
-    #st.write(f"len(df_example) == {len(df_example)}")
-
     if len(df_example.replace('"', '')) > 0:
-
-        #st.write(f"df_example == {df_example}")
-
-        #st.write(type(df_example))
 
         try:
             
@@ -668,9 +660,6 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
     
-    #st.write(f"answers_json == {answers_json}")
-
-    #Check if answers format succesfully created by following any example uploaded
     q_keys = [*questions_json]
     
     if len(answers_json) == 0:
@@ -708,26 +697,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
 #        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
         
         #To obtain a json directly
-        #Format of the answer depends on whether an example was uploaded
-        if len(df_example.replace('"', '')) > 0:
-
-            try:
-                answers_df = pd.read_json(completion.choices[0].message.content, orient = 'split')
-
-                answers_dict = answers_df.to_dict(orient = 'list')
-                
-            except Exception as e:
-                                
-                answers_dict = json.loads(completion.choices[0].message.content)
-
-                print("GPT failed to produce a JSON following the given example. GPT answer loaded 'directly'.")
-
-                print(e)
-            
-        else:
-            answers_dict = json.loads(completion.choices[0].message.content)
-
-        #st.write(f"answers_dict == {answers_dict}")
+        answers_dict = json.loads(completion.choices[0].message.content)
 
         #Obtain tokens
         output_tokens = completion.usage.completion_tokens
@@ -1006,15 +976,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
     #Create answer format
     answers_json = {}
 
-    #st.write(f"df_example == {df_example}")
-    
-    #st.write(f"len(df_example) == {len(df_example)}")
-
     if len(df_example.replace('"', '')) > 0:
-
-        #st.write(f"df_example == {df_example}")
-
-        #st.write(type(df_example))
 
         try:
             
@@ -1030,8 +992,6 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
     
-    #st.write(f"answers_json == {answers_json}")
-
     #Check if answers format succesfully created by following any example uploaded
     q_keys = [*questions_json]
     
