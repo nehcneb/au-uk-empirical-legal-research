@@ -315,7 +315,7 @@ if retrive_button:
                 if key_body['key'] == f'{batch_id_entry}.csv':
                     df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
                     st.session_state.df_individual = df_individual.copy(deep = True)
-                    st.write(f"Succesfully loaded {key_body['key']}.")
+                    print(f"Succesfully loaded {key_body['key']}.")
 
                     #print(f"Succesfully loaded {key_body['key']}.")
                     break
