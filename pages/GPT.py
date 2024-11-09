@@ -697,6 +697,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     
     if batch_button:
+        
         batch_request_function()
 
     if st.session_state.batch_submitted == True:

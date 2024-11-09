@@ -175,58 +175,60 @@ def delete_all():
         
     else:
 
-        st.write(f"Are you sure you want to delete the requested data? If you do so, **there is no going back**. Your search terms, questions for GPT, and all other entries to obtain the data wil also be deleted.")
+        st.write(f"Are you sure you want to delete your data? If you do so, **there is no going back**. Your search terms, questions for GPT, and all other entries to obtain the data will also be deleted.")
         
         confirm_deletion_entry = st.text_input(label = "Type 'yes'")
         
         if st.button("CONFIRM"):
 
-            if confirm_deletion_entry.lower() != 'yes':
+            with st.spinner('Deleting your data...'):
 
-                st.warning("Please type 'yes' to confirm, or close this window if you do not want to delete the requested data.")
-
-            else:
-                
-                #Get relevant df_individual
-                for key_body in st.session_state.aws_objects:
-                    if key_body['key'] == f'{batch_id_entry}.csv':
-                        df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-                        st.session_state.df_individual = df_individual.copy(deep = True)
-                        print(f"Succesfully loaded {key_body['key']}.")
-                        break
-            
-                if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
-        
-                    st.session_state.df_individual = pd.DataFrame([])
-                        
-                    #Update df_individual on AWS
-                    csv_buffer = StringIO()
-                    st.session_state.df_individual.to_csv(csv_buffer)
-                    #st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
-                    st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').delete()
+                if confirm_deletion_entry.lower() != 'yes':
+    
+                    st.warning("Please type 'yes' to confirm, or close this window if you do not want to delete the requested data.")
+    
+                else:
                     
-                    print(f"Updated {batch_id_entry}.csv online." )
-        
-                    #Update all_df_master and df_master
-                    batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
-        
-                    for col in st.session_state.all_df_masters.columns:
-                        if col not in ['submission_time', 'batch_id', 'input_file_id', 'output_file_id', 'sent_to_user']:
-                            st.session_state.all_df_masters.loc[batch_index, col] = 'deleted'
-        
-                    #Update df_master on aws
-                    csv_buffer = StringIO()
-                    st.session_state.all_df_masters.to_csv(csv_buffer)
-                    st.session_state.s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
-                                    
-                    print(f"Updated all_df_masters.csv online." )
-
-                    #Update status of last retrived/deleted output
-                    st.session_state.df_master.loc[0, 'status'] = 'deleted'
-
-                    #pause.seconds(3)
-                    st.rerun()                    
-
+                    #Get relevant df_individual
+                    for key_body in st.session_state.aws_objects:
+                        if key_body['key'] == f'{batch_id_entry}.csv':
+                            df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+                            st.session_state.df_individual = df_individual.copy(deep = True)
+                            print(f"Succesfully loaded {key_body['key']}.")
+                            break
+                
+                    if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
+            
+                        st.session_state.df_individual = pd.DataFrame([])
+                            
+                        #Update df_individual on AWS
+                        csv_buffer = StringIO()
+                        st.session_state.df_individual.to_csv(csv_buffer)
+                        #st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
+                        st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').delete()
+                        
+                        print(f"Updated {batch_id_entry}.csv online." )
+            
+                        #Update all_df_master and df_master
+                        batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
+            
+                        for col in st.session_state.all_df_masters.columns:
+                            if col not in ['submission_time', 'batch_id', 'input_file_id', 'output_file_id', 'sent_to_user']:
+                                st.session_state.all_df_masters.loc[batch_index, col] = 'deleted'
+            
+                        #Update df_master on aws
+                        csv_buffer = StringIO()
+                        st.session_state.all_df_masters.to_csv(csv_buffer)
+                        st.session_state.s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                                        
+                        print(f"Updated all_df_masters.csv online." )
+    
+                        #Update status of last retrived/deleted output
+                        st.session_state.df_master.loc[0, 'status'] = 'deleted'
+    
+                        #pause.seconds(3)
+                        st.rerun()                    
+    
 
 
 # %%
