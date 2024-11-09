@@ -295,10 +295,6 @@ if st.session_state.df_master.loc[0, 'status'] == 'deleted':
 # # Retrieve
 
 # %%
-st.write(f"st.session_state.df_master.loc[0, 'status'] == {st.session_state.df_master.loc[0, 'status']}")
-st.write(f"len(st.session_state.df_individual) == {len(st.session_state.df_individual)}")
-
-# %%
 if retrive_button:
     if not (batch_id_entry and email_entry):
         st.warning('Please enter your nominated email address and access code.')
