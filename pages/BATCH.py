@@ -99,7 +99,7 @@ def get_aws_s3():
 def get_aws_objects():
     
     #Get a list of all files on s3
-    bucket = s3_resource.Bucket('lawtodata')
+    bucket = st.session_state.s3_resource.Bucket('lawtodata')
     
     aws_objects = []
     
@@ -202,7 +202,7 @@ def delete_all():
                     #Update df_individual on AWS
                     csv_buffer = StringIO()
                     st.session_state.df_individual.to_csv(csv_buffer)
-                    s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
+                    st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
         
                     print(f"Updated {batch_id_entry}.csv online." )
         
@@ -216,7 +216,7 @@ def delete_all():
                     #Update df_master on aws
                     csv_buffer = StringIO()
                     all_df_masters.to_csv(csv_buffer)
-                    s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                    st.session_state.s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                     
                     #st.cache_resource.clear()
                     aws_objects.clear()
@@ -234,7 +234,7 @@ def delete_all():
 # %%
 #Initiate aws_s3, and get all_df_masters
 
-s3_resource = get_aws_s3()
+st.session_state.s3_resource = get_aws_s3()
 
 aws_objects = get_aws_objects()
 
