@@ -357,7 +357,7 @@ For example, the question "What's the defendant's age?" should be labelled "0".
 #For instant mode
 
 @st.cache_data(show_spinner = False)
-def GPT_questions_label(questions_json, gpt_model, questions_check_system_instruction):
+def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
     #Returns a json of checked questions
@@ -366,7 +366,7 @@ def GPT_questions_label(questions_json, gpt_model, questions_check_system_instru
 
     #Create answer format
     
-    q_keys = [*questions_json]
+    q_keys = [*_questions_json]
     
     labels_json = {}
     
@@ -375,7 +375,7 @@ def GPT_questions_label(questions_json, gpt_model, questions_check_system_instru
     
     #Create questions, which include the answer format
     
-    question_to_check = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Return labels in the following JSON form: ' + json.dumps(labels_json, default = str)}]
+    question_to_check = [{"role": "user", "content": json.dumps(_questions_json, default = str) + ' Return labels in the following JSON form: ' + json.dumps(labels_json, default = str)}]
     
     #Create messages in one prompt for GPT
     
@@ -475,19 +475,19 @@ def checked_questions_json(questions_json, gpt_labels_output):
 #Check questions for potential privacy infringement
 
 @st.cache_data(show_spinner = False)
-def GPT_questions_check(questions_json_or_string, gpt_model, questions_check_system_instruction):
+def GPT_questions_check(_questions_json_or_string, gpt_model, questions_check_system_instruction):
     #'questions_str' variable is a string of questions to GPT
     #Returns both a string and a json of checked questions, together with costs, and displays any witheld questions
     
     #Create dict of questions for GPT
 
-    if isinstance(questions_json_or_string, str):
+    if isinstance(_questions_json_or_string, str):
     
-        questions_list = split_by_line(questions_json_or_string[0: question_characters_bound])
+        questions_list = split_by_line(_questions_json_or_string[0: question_characters_bound])
         questions_json = GPT_label_dict(questions_list)
 
     else:
-        questions_json = questions_json_or_string
+        questions_json = _questions_json_or_string
 
     #Check questions for privacy violation
     
@@ -542,10 +542,10 @@ For example, if the text given to you is "John Smith, born 1 January 1950, died 
 
 
 # %%
-#Check answers_to_check_json for potential privacy infringement
+#Check _answers_to_check_json for potential privacy infringement
 
 @st.cache_data(show_spinner = False)
-def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_instruction):
+def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_instruction):
 
     #Check answers
     
@@ -553,25 +553,25 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
 
     #Create answer format
 
-    answers_to_check_list = [answers_to_check_json]
+    answers_to_check_list = [_answers_to_check_json]
 
     redacted_answers_json = {}
     
-    if isinstance(answers_to_check_json, list):
+    if isinstance(_answers_to_check_json, list):
         
-        answers_to_check_list = answers_to_check_json
+        answers_to_check_list = _answers_to_check_json
 
-    for answers_to_check_json in answers_to_check_list:
+    for _answers_to_check_json in answers_to_check_list:
         
-        q_keys = [*answers_to_check_json]
+        q_keys = [*_answers_to_check_json]
         
         for q_index in q_keys:
             
             redacted_answers_json.update({q_index: 'Your response.'})
 
-    #Create answers_to_check_json, which include the answer format
+    #Create _answers_to_check_json, which include the answer format
     
-    question_to_check = [{"role": "user", "content": json.dumps(answers_to_check_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
+    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     

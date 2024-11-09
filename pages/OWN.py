@@ -587,10 +587,9 @@ st.header("Consent")
 
 st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to your files. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
-consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
+consent =  st.checkbox('Yes, I agree.', value = st.session_state['df_master'].loc[0, 'Consent'], disabled = st.session_state.disable_input)
 
-if consent:
-    st.session_state['df_master'].loc[0, 'Consent'] = consent
+st.session_state['df_master'].loc[0, 'Consent'] = consent
 
 st.markdown("""If you do not agree, then please feel free to close this form.""")
 
@@ -619,7 +618,7 @@ with stylable_container(
     }""",
 ):
 
-    run_button = st.button('PRODUCE data')
+    run_button = st.button(label = 'PRODUCE data', disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input)))
     
 if ((st.session_state.own_account == True) and (uploaded_images)):
 

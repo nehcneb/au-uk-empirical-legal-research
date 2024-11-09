@@ -85,7 +85,7 @@ st.set_page_config(
 # %%
 #Get all objects from aws s3
 
-@st.cache_resource(show_spinner = False)
+#@st.cache_resource(show_spinner = False)
 def get_aws_s3():
     
     #Initiate aws s3
@@ -197,8 +197,7 @@ def delete_all():
             
                 if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
         
-                    for col in st.session_state.df_individual.columns:
-                        st.session_state.df_individual[col] = 'deleted'
+                    st.session_state.df_individual = pd.DataFrame([])
                         
                     #Update df_individual on AWS
                     csv_buffer = StringIO()
@@ -219,7 +218,8 @@ def delete_all():
                     all_df_masters.to_csv(csv_buffer)
                     s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                     
-                    st.cache_resource.clear()
+                    #st.cache_resource.clear()
+                    aws_objects.clear()
 
                     print(f"Updated all_df_masters.csv online." )
 
@@ -285,7 +285,7 @@ if st.button(label = 'DELETE data', type = 'primary', disabled = bool(st.session
 
 if st.session_state.df_master.loc[0, 'status'] == 'deleted':
     
-    st.success('Your requested data has been deleted. Once you close this app, you will no longer be able to download your data.')
+    st.success('Your requested data has been deleted. **Once you close this app**, you will no longer be able to download your data.')
 
 
 # %% [markdown]

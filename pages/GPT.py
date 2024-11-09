@@ -410,7 +410,7 @@ st.header("Consent")
 
 st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing data. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
-consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
+consent =  st.checkbox('Yes, I agree.', value = st.session_state['df_master'].loc[0, 'Consent'], disabled = st.session_state.disable_input)
 
 st.session_state['df_master'].loc[0, 'Consent'] = consent
 
@@ -477,7 +477,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = 'PRODUCE data', disabled = bool(st.session_state.need_resetting))
+    run_button = st.button(label = 'PRODUCE data', disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input)))
 
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:

@@ -613,7 +613,7 @@ else: #If PACER records chosen
 
 st.subheader("Your CourtListener API token")
 
-token_entry = st.text_input(label = 'Optional', value = st.session_state['df_master'].loc[0, 'CourtListener API token'])
+token_entry = st.text_input(label = 'Optional (except for requesting data)', value = st.session_state['df_master'].loc[0, 'CourtListener API token'])
 
 st.write('By default, this app will process up to 500 queries per day. If that limit is exceeded, you can still use this app with your own CourtListen API token (click [here](https://www.courtlistener.com/sign-in/) to sign up for one).')
 
