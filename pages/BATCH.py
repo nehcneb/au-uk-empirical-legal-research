@@ -85,7 +85,7 @@ st.set_page_config(
 # %%
 #Get all objects from aws s3
 
-#@st.cache_resource(show_spinner = False)
+@st.cache_resource(show_spinner = False)
 def get_aws_s3():
     
     #Initiate aws s3
@@ -166,7 +166,7 @@ def delete_all():
         #quit()
         st.stop()
     else:        
-        st.session_state['match_status'] = check_email_batch_id(all_df_masters, email_entry, batch_id_entry)
+        st.session_state['match_status'] = check_email_batch_id(st.session_state.all_df_masters, email_entry, batch_id_entry)
 
     if st.session_state['match_status'] == False:
         
@@ -188,7 +188,7 @@ def delete_all():
             else:
                 
                 #Get relevant df_individual
-                for key_body in aws_objects:
+                for key_body in st.session_state.aws_objects:
                     if key_body['key'] == f'{batch_id_entry}.csv':
                         df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
                         st.session_state.df_individual = df_individual.copy(deep = True)
@@ -207,20 +207,17 @@ def delete_all():
                     print(f"Updated {batch_id_entry}.csv online." )
         
                     #Update all_df_master and df_master
-                    batch_index = all_df_masters.index[all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
+                    batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
         
-                    for col in all_df_masters.columns:
+                    for col in st.session_state.all_df_masters.columns:
                         if col not in ['submission_time', 'batch_id', 'input_file_id', 'output_file_id', 'sent_to_user']:
-                            all_df_masters.loc[batch_index, col] = 'deleted'
+                            st.session_state.all_df_masters.loc[batch_index, col] = 'deleted'
         
                     #Update df_master on aws
                     csv_buffer = StringIO()
-                    all_df_masters.to_csv(csv_buffer)
+                    st.session_state.all_df_masters.to_csv(csv_buffer)
                     st.session_state.s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                     
-                    #st.cache_resource.clear()
-                    #aws_objects.clear()
-
                     print(f"Updated all_df_masters.csv online." )
 
                     #Update status of last retrived/deleted output
@@ -234,16 +231,23 @@ def delete_all():
 # %%
 #Initiate aws_s3, and get all_df_masters
 
-st.session_state.s3_resource = get_aws_s3()
+if 's3_resource' not in session_state:
 
-aws_objects = get_aws_objects()
+    st.session_state.s3_resource = get_aws_s3()
 
-for key_body in aws_objects:
-    if key_body['key'] == 'all_df_masters.csv':
-        all_df_masters = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-        print(f"Succesfully loaded {key_body['key']}.")
-        break
-        
+if 'aws_objects' not in st.session_state:
+    
+
+    st.session_state.aws_objects = get_aws_objects()
+    
+if 'all_df_masters' not in st.session_state:
+
+    for key_body in st.session_state.aws_objects:
+        if key_body['key'] == 'all_df_masters.csv':
+            st.session_state['all_df_masters'] = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+            print(f"Succesfully loaded {key_body['key']}.")
+            break
+
 
 # %% [markdown]
 # # Streamlit page
@@ -285,11 +289,15 @@ if st.button(label = 'DELETE data', type = 'primary', disabled = bool(st.session
 
 if st.session_state.df_master.loc[0, 'status'] == 'deleted':
     
-    st.success('Your requested data will deleted soon.')
+    st.success('Your data has been deleted.')
 
 
 # %% [markdown]
 # # Retrieve
+
+# %%
+st.write(f"st.session_state.df_master.loc[0, 'status'] == {st.session_state.df_master.loc[0, 'status']}")
+st.write(f"len(st.session_state.df_individual) == {len(st.session_state.df_individual)}")
 
 # %%
 if retrive_button:
@@ -298,7 +306,7 @@ if retrive_button:
         #quit()
         st.stop()
     else:        
-        st.session_state['match_status'] = check_email_batch_id(all_df_masters, email_entry, batch_id_entry)
+        st.session_state['match_status'] = check_email_batch_id(st.session_state.all_df_masters, email_entry, batch_id_entry)
 
     if st.session_state['match_status'] == False:
         
@@ -308,24 +316,22 @@ if retrive_button:
     else:
         try:
             #Get relevant df_individual
-            for key_body in aws_objects:
+            for key_body in st.session_state.aws_objects:
                 if key_body['key'] == f'{batch_id_entry}.csv':
                     df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
                     st.session_state.df_individual = df_individual.copy(deep = True)
-                    print(f"Succesfully loaded {key_body['key']}.")
+                    st.write(f"Succesfully loaded {key_body['key']}.")
+
+                    #print(f"Succesfully loaded {key_body['key']}.")
                     break
     
             #Update df_master
-            batch_index = all_df_masters.index[all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
-            for col in all_df_masters.columns:
-                st.session_state['df_master'].loc[0, col] = all_df_masters.loc[batch_index, col]
+            batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
+            for col in st.session_state.all_df_masters.columns:
+                st.session_state['df_master'].loc[0, col] = st.session_state.all_df_masters.loc[batch_index, col]
 
-            if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
-                st.rerun()
+            st.rerun()
                 
-            else:
-                st.error('The requested data cannot be found.')
-            
         except Exception as e:
             
             st.error(f'The requested data cannot be retrieved due to the following error: {e}')
@@ -369,5 +375,5 @@ if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.sessio
     )
 
     st.page_link('pages/AI.py', label="Analyse your data with an AI", icon = '🤔')
-    
+
 
