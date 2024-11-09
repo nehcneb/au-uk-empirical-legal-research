@@ -85,7 +85,7 @@ st.set_page_config(
 # %%
 #Get all objects from aws s3
 
-@st.cache_resource(show_spinner = False)
+#@st.cache_resource(show_spinner = False)
 def get_aws_s3():
     
     #Initiate aws s3
@@ -237,7 +237,6 @@ if 's3_resource' not in st.session_state:
 
 if 'aws_objects' not in st.session_state:
     
-
     st.session_state.aws_objects = get_aws_objects()
     
 if 'all_df_masters' not in st.session_state:
