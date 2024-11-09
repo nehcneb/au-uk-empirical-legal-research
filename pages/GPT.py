@@ -407,6 +407,18 @@ if own_account_allowed() > 0:
         st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+        
+else:
+        st.session_state["own_account"] = False
+
+        st.session_state['df_master'].loc[0, 'Use own account'] = False
+    
+        st.session_state.gpt_model = "gpt-4o-mini"
+
+        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    
+        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    
 
 # %% [markdown]
 # ## Consent
