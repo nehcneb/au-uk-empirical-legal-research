@@ -17,12 +17,12 @@
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
 def check_questions_answers():
-    return 1
+    return 0
 
 
 # %%

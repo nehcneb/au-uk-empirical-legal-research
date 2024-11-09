@@ -285,7 +285,7 @@ if st.button(label = 'DELETE data', type = 'primary', disabled = bool(st.session
 
 if st.session_state.df_master.loc[0, 'status'] == 'deleted':
     
-    st.success('Your requested data has been scheduled to be deleted.')
+    st.success('Your requested data will deleted soon.')
 
 
 # %% [markdown]
@@ -320,7 +320,11 @@ if retrive_button:
             for col in all_df_masters.columns:
                 st.session_state['df_master'].loc[0, col] = all_df_masters.loc[batch_index, col]
 
-            st.rerun()
+            if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
+                st.rerun()
+                
+            else:
+                st.error('The requested data cannot be found.')
             
         except Exception as e:
             
