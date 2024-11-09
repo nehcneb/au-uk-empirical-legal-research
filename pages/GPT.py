@@ -72,14 +72,6 @@ from functions.common_functions import own_account_allowed, batch_mode_allowed, 
 #Import variables
 from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, au_date, streamlit_cloud_date_format, spinner_text, own_gpt_headings
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between case scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of case text to process is {judgment_text_lower_bound} tokens.\n")
 
 
 # %%
@@ -93,17 +85,10 @@ if 'page_from' not in st.session_state:
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
+from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run, batch_request_function
 #Import variables
-from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max
+from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption
 #, intro_for_GPT
-
-
-# %%
-if batch_mode_allowed() > 0:
-    print(f'By default, users are allowed to use batch mode. ')
-else:
-    print(f'By default, users are NOT allowed to use batch mode.')
 
 
 # %%
@@ -112,10 +97,6 @@ from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 # %%
 #Module, costs and upperbounds
@@ -181,30 +162,31 @@ if 'disable_input' not in st.session_state:
 #default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max
 
 #Instant mode max/batch mode threshold
-if 'judgment_batch_cutoff' not in st.session_state:
-    if own_account_allowed() > 0:
-        st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
-    else:
-        st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
+if own_account_allowed() > 0:
+    st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
+else:
+    st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
 #Maximum number of judgments to process under any mode
-if "judgment_counter_max" not in st.session_state:
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
 
-    if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
-
-        if own_account_allowed() > 0:
-            st.session_state["judgment_counter_max"] = judgment_batch_max
-        
-        else:
-            st.session_state["judgment_counter_max"] = judgment_batch_cutoff
-            
+    if own_account_allowed() > 0:
+        st.session_state["judgment_counter_max"] = judgment_batch_max
+    
     else:
+        st.session_state["judgment_counter_max"] = judgment_batch_cutoff
         
-        if own_account_allowed() > 0:
-            st.session_state["judgment_counter_max"] = judgment_batch_cutoff
-        
-        else:
-            st.session_state["judgment_counter_max"] = default_judgment_counter_bound
+else:
+    
+    if own_account_allowed() > 0:
+        st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+    
+    else:
+        st.session_state["judgment_counter_max"] = default_judgment_counter_bound
+
+#Initalize for the purpuse of disabling multiple submissions of batch requests
+if "batch_submitted" not in st.session_state:
+    st.session_state["batch_submitted"] = False
 
 #For example df
 if 'df_example_to_show' not in st.session_state:
@@ -273,9 +255,9 @@ else:
     st.session_state['disable_input'] = False
 
 #Upload example
-st.markdown("""This app will produce a spreadsheet with rows of cases and columns of answers to your question(s). If you have a preferred layout, please feel free to upload an example.""")
+st.markdown("""This app will produce a spreadsheet with rows of cases and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example.""")
 
-uploaded_file = st.file_uploader(label = "Optional", 
+uploaded_file = st.file_uploader(label = "Upload an example (optional)", 
                                  type=['csv', 'xlsx', 'json'], 
                                  accept_multiple_files=False, 
                                   key = st.session_state["df_example_key"]
@@ -430,8 +412,7 @@ st.markdown("""By using this app, you agree that the data and/or information thi
 
 consent =  st.checkbox('Yes, I agree.', value = False, disabled = st.session_state.disable_input)
 
-if consent:
-    st.session_state['df_master'].loc[0, 'Consent'] = consent
+st.session_state['df_master'].loc[0, 'Consent'] = consent
 
 st.markdown("""If you do not agree, then please feel free to close this app. """)
 
@@ -460,22 +441,24 @@ estimated_waiting_secs = int(float(st.session_state['df_master'].loc[0, 'Maximum
 st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will **immediately** process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is {estimated_waiting_secs/60} minute(s).
 """)
 
-if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} cases. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
 
 #Warning
-if st.session_state.gpt_model == 'gpt-4o-mini':
-    st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
-
-if st.session_state.gpt_model == "gpt-4o-2024-08-06":
-    st.warning('An expensive GPT model will answer your questions. Please be cautious.')
+if gpt_activation_entry:
+    if st.session_state.gpt_model == 'gpt-4o-mini':
+        st.warning('A low-cost GPT model will answer your questions. Please be cautious.')
+        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+    
+    if st.session_state.gpt_model == "gpt-4o-2024-08-06":
+        st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
 #Buttons
 
 gpt_reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
-if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     with stylable_container(
         "orange",
         css_styles="""
@@ -484,7 +467,7 @@ if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_s
             color: black;
         }""",
     ):
-        batch_button = st.button(label = 'REQUEST data')#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
+        batch_button = st.button(label = 'REQUEST data', disabled = bool(st.session_state.batch_submitted))#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
 
 with stylable_container(
     "green",
@@ -494,7 +477,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = 'PRODUCE data', disabled = bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"]))
+    run_button = st.button(label = 'PRODUCE data', disabled = bool(st.session_state.need_resetting))
 
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:
@@ -660,9 +643,9 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                 try:
 
                     #Definitions and functions for ER
-                    from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+                    from functions.er_functions import er_run_b64, role_content_er#, er_run, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
 
-                    from functions.gpt_functions import get_image_dims, calculate_image_token_cost
+                    #from functions.gpt_functions import get_image_dims, calculate_image_token_cost
                     
                     system_instruction = role_content_er
 
@@ -707,120 +690,17 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
 
 
 # %% [markdown]
-# ## Batching
+# ## Batch
 
 
 # %%
-if ((own_account_allowed() > 0) and (batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
     
     if batch_button:
+        batch_request_function()
+
+    if st.session_state.batch_submitted == True:
         
-        if int(consent) == 0:
-            st.warning("You must tick 'Yes, I agree.' to use the app.")
-    
-        elif len(st.session_state.df_individual)>0:
-            st.warning('You must :red[REMOVE] the data already produced before producing new data.')
-
-        elif st.session_state['df_master'].loc[0, 'Use GPT'] == False:
-            st.error("You must tick 'Use GPT'.")
-                
-        else:
-
-            if st.session_state.jurisdiction_page == 'pages/US.py':
-                
-                if len(str(st.session_state.df_master.loc[0, 'CourtListener API token'])) < 20:
-                    st.error('Please return to the previous page and enter a valid CourtListener API token.')
-                    st.stop()
-                                    
-            if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                    
-                if is_api_key_valid(gpt_api_key_entry) == False:
-                    st.error('Your API key is not valid.')
-                    st.stop()
-
-            #Check if valid email address entered
-            if '@' not in st.session_state['df_master'].loc[0, 'Your email address']:
-                st.error('You must enter a valid email address to receive your request data.')
-                st.stop()
-            
-            else:
-            
-                with st.spinner(spinner_text):
-                    
-                    try:
-        
-                        #Create spreadsheet of responses
-                        df_master = st.session_state.df_master
-
-                        jurisdiction_page = st.session_state.jurisdiction_page
-        
-                        df_master['jurisdiction_page'] = jurisdiction_page
-                        
-                        df_master['status'] = 'to_process'
-        
-                        df_master['submission_time'] = str(datetime.now())
-
-                        #Check questions for potential privacy violation
-                        #Activate user's own key or mine
-                        if st.session_state.own_account == True:
-                            
-                            API_key = df_master.loc[0, 'Your GPT API key']
-            
-                        else:
-                            API_key = st.secrets["openai"]["gpt_api_key"]
-                        
-                        openai.api_key = API_key
-
-                        if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                            gpt_model = "gpt-4o-2024-08-06"
-                        else:        
-                            gpt_model = "gpt-4o-mini"
-
-                        questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
-
-                        #Use checked questions
-                        df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
-                        
-                        #Initiate aws s3
-                        s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-                        
-                        #Get a list of all files on s3
-                        bucket = s3_resource.Bucket('lawtodata')
-        
-                        #Get all_df_masters
-                        for obj in bucket.objects.all():
-                            key = obj.key
-                            if key == 'all_df_masters.csv':
-                                body = obj.get()['Body'].read()
-                                all_df_masters = pd.read_csv(BytesIO(body), index_col=0)
-                                break
-                                
-                        #Add df_master to all_df_masters 
-                        all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
-        
-                        #Upload all_df_masters to aws
-                        csv_buffer = StringIO()
-                        all_df_masters.to_csv(csv_buffer)
-                        s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-                        s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
-                                               
-                        #Send me an email to let me know
-                        send_notification_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
-                                                ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address']
-                                               )
-                        
-                        st.success('Your request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Please feel free to close this app.')
-                        
-                    except Exception as e:
-
-                        st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                        
-                        st.error(e)
-                        
-                        st.error(traceback.format_exc())
-        
-                        print(e)
-        
-                        print(traceback.format_exc())
+        st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
 
 

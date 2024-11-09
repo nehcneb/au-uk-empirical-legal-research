@@ -1411,7 +1411,7 @@ if ask_button:
         st.warning("You must tick 'Yes, I agree.' to use the app.")
 
     elif st.session_state.instruction_left == 0:
-        no_more_instructions = 'You have reached the maximum number of instructions allowed during the pilot stage.'
+        no_more_instructions = 'You have reached the maximum number of instructions allowed. Please feel free to reach out to Ben Chen at ben.chen@sydney.edu.au should you wish give more instructions.'
         st.error(no_more_instructions)
         
         #Keep record of response

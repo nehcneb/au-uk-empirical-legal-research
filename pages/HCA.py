@@ -284,10 +284,6 @@ from functions.gpt_functions import question_characters_bound, default_msg, defa
 
 
 # %%
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
-
-# %%
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
 
@@ -419,7 +415,7 @@ st.caption('CLR or other citations may work only up to 2014.')
 #if citation_entry:
     #if 'hca' not in citation_entry.lower():
         
-        #st.error('Sorry, this pilot app only searches for medium neutral citation (eg [2014] HCA 1).')
+        #st.error('Sorry, this free version only searches for medium neutral citation (eg [2014] HCA 1).')
 
 if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
 

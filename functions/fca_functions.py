@@ -172,7 +172,7 @@ def fca_search(court = '',
 #Define function turning search results url to case_infos to judgments
 
 @st.cache_data(show_spinner = False)
-def fca_search_results_to_judgment_links(_soup, judgment_counter_bound):
+def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_counter_bound):
     
     #_soup is from scraping per fca_search
     
@@ -621,7 +621,7 @@ def fca_run_direct(df_master):
     
     #Conduct search
     
-    search_results_soup = fca_search(court = df_master.loc[0, 'Courts'], 
+    search_results_soup_url = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -638,12 +638,16 @@ def fca_run_direct(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )['soup']
+                    )
+    
+    search_results_soup = search_results_soup_url['soup']
+    
+    results_url = search_results_soup_url['results_url']
         
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
 
     for case_info in case_infos:
         judgment_dict = fca_meta_judgment_dict(case_info)
@@ -710,7 +714,7 @@ def fca_run(df_master):
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Conduct search    
-    search_results_soup = fca_search(court = df_master.loc[0, 'Courts'], 
+    search_results_soup_url = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -727,12 +731,16 @@ def fca_run(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )['soup']
+                    )
+    
+    search_results_soup = search_results_soup_url['soup']
+    
+    results_url = search_results_soup_url['results_url']
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
 
     #Create judgments file
     judgments_file = []
@@ -848,7 +856,7 @@ def fca_batch(df_master):
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Conduct search    
-    search_results_soup = fca_search(court = df_master.loc[0, 'Courts'], 
+    search_results_soup_url = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -865,12 +873,16 @@ def fca_batch(df_master):
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
                      catchwords = df_master.loc[0, 'Catchwords'] 
-                    )['soup']
+                    )
+    
+    search_results_soup = search_results_soup_url['soup']
+    
+    results_url = search_results_soup_url['results_url']
     
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
 
     #Create judgments file
     judgments_file = []

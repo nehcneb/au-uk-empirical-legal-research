@@ -39,8 +39,11 @@ import math
 from math import ceil
 import matplotlib.pyplot as plt
 import ast
+from io import StringIO
 import copy
 #import time
+import traceback
+
 
 #OpenAI
 import openai
@@ -51,6 +54,11 @@ import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 #from streamlit.components.v1 import html
 import streamlit_ext as ste
+
+#aws
+import boto3
+from botocore.config import Config
+from botocore.exceptions import ClientError
 
 #PandasAI
 #from dotenv import load_dotenv
@@ -67,7 +75,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from functions.common_functions import check_questions_answers, default_judgment_counter_bound, truncation_note, search_error_note
+from functions.common_functions import check_questions_answers, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, send_notification_email
 
 # %% [markdown]
 # # gpt-3.5, 4o-mini and 4o
@@ -79,8 +87,6 @@ from functions.common_functions import check_questions_answers, default_judgment
 #Upperbound on the length of questions for GPT
 
 question_characters_bound = 2000
-
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
 
 #Upperbound on number of judgments to scrape
 
@@ -234,7 +240,7 @@ def max_output(gpt_model, messages_for_GPT):
 # %%
 default_msg = f'**Please enter your search terms.** By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from each case.'
 
-default_caption = f'During the pilot stage, the number of cases to scrape is capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases'
+default_caption = f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases.'
 
 
 # %%
@@ -552,6 +558,7 @@ def GPT_answers_check(answers_to_check_json, gpt_model, answers_check_system_ins
     redacted_answers_json = {}
     
     if isinstance(answers_to_check_json, list):
+        
         answers_to_check_list = answers_to_check_json
 
     for answers_to_check_json in answers_to_check_list:
@@ -655,7 +662,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             if isinstance(df_example, dict):
                 
                 answers_json = df_example
-
+                
         except Exception as e:
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
@@ -663,11 +670,12 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
     q_keys = [*questions_json]
     
     if len(answers_json) == 0:
+
         q_counter = 1
         for q_index in q_keys:
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
-            
+    
     #Create questions, which include the answer format
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
     
@@ -1137,6 +1145,138 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
     
 
 
+# %%
+#Batch function
+
+@st.dialog("Requesting data")
+def batch_request_function():
+
+    if int(st.session_state.df_master.loc[0, 'Consent']) == 0:
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
+
+    elif len(st.session_state.df_individual)>0:
+        st.warning('You must :red[REMOVE] the data already produced before producing new data.')
+
+    elif st.session_state['df_master'].loc[0, 'Use GPT'] == False:
+        st.error("You must tick 'Use GPT'.")
+        
+    else:
+
+        if st.session_state.jurisdiction_page == 'pages/US.py':
+            
+            if len(str(st.session_state.df_master.loc[0, 'CourtListener API token'])) < 20:
+                st.error('Please return to the previous page and enter a valid CourtListener API token.')
+                st.stop()
+                                
+        if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(st.session_state.df_master.loc[0, 'Your GPT API key']) == False:
+                st.error('Your API key is not valid.')
+                st.stop()
+
+        #Check if valid email address entered
+        if '@' not in st.session_state['df_master'].loc[0, 'Your email address']:
+
+            st.write('Please enter a valid email address to receive your request data.')
+            
+            batch_email_entry = st.text_input(label = "Your email address (mandatory)", value =  st.session_state['df_master'].loc[0, 'Your email address'])
+
+            if st.button(label = 'CONFIRM', disabled = bool(st.session_state.batch_submitted)):
+                
+                st.session_state['df_master'].loc[0, 'Your email address'] = batch_email_entry
+    
+                if '@' not in st.session_state['df_master'].loc[0, 'Your email address']:
+                
+                    st.error('You must enter a valid email address to receive your request data.')
+                    st.stop()
+        
+        if '@' in st.session_state['df_master'].loc[0, 'Your email address']:
+        
+            with st.spinner(spinner_text):
+                
+                try:
+    
+                    #Create spreadsheet of responses
+                    df_master = st.session_state.df_master
+
+                    jurisdiction_page = st.session_state.jurisdiction_page
+    
+                    df_master['jurisdiction_page'] = jurisdiction_page
+                    
+                    df_master['status'] = 'to_process'
+    
+                    df_master['submission_time'] = str(datetime.now())
+
+                    #Activate user's own key or mine
+                    if st.session_state.own_account == True:
+                        
+                        API_key = st.session_state.df_master.loc[0, 'Your GPT API key']
+        
+                    else:
+                        
+                        API_key = st.secrets["openai"]["gpt_api_key"]
+                        
+                        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = st.session_state["judgment_counter_max"]
+
+                    #Check questions for potential privacy violation
+                    openai.api_key = API_key
+
+                    if df_master.loc[0, 'Use flagship version of GPT'] == True:
+                        gpt_model = "gpt-4o-2024-08-06"
+                    else:        
+                        gpt_model = "gpt-4o-mini"
+
+                    questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
+
+                    #Use checked questions
+                    df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
+                    
+                    #Initiate aws s3
+                    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+                    
+                    #Get a list of all files on s3
+                    bucket = s3_resource.Bucket('lawtodata')
+    
+                    #Get all_df_masters
+                    for obj in bucket.objects.all():
+                        key = obj.key
+                        if key == 'all_df_masters.csv':
+                            body = obj.get()['Body'].read()
+                            all_df_masters = pd.read_csv(BytesIO(body), index_col=0)
+                            break
+                            
+                    #Add df_master to all_df_masters 
+                    all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
+    
+                    #Upload all_df_masters to aws
+                    csv_buffer = StringIO()
+                    all_df_masters.to_csv(csv_buffer)
+                    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+                    s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                                           
+                    #Send me an email to let me know
+                    send_notification_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
+                                            ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address']
+                                           )
+
+
+                    st.session_state["batch_submitted"] = True
+                                        
+                    st.rerun()
+                
+                except Exception as e:
+
+                    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                    
+                    st.error(e)
+                    
+                    st.error(traceback.format_exc())
+    
+                    print(e)
+    
+                    print(traceback.format_exc())
+                    
+
 # %% [markdown]
 # ## Vision
 
@@ -1200,7 +1340,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.hca_functions import hca_run, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
+        from functions.hca_functions import hca_run#, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
         #hca_search_results_to_judgment_links
         
         run = copy.copy(hca_run)
@@ -1211,7 +1351,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
         
-        from functions.nsw_functions import nsw_search, nsw_run, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt
+        from functions.nsw_functions import nsw_run#, nsw_search, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt
     
         run = copy.copy(nsw_run)
     
@@ -1219,7 +1359,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.fca_functions import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        from functions.fca_functions import fca_run#, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
         #fca_link_to_doc
         
         run = copy.copy(fca_run)
@@ -1228,7 +1368,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_run, us_search_function, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        from functions.us_functions import us_run#, us_search_function, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
         
         run = copy.copy(us_run)
 
@@ -1236,7 +1376,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.ca_functions import ca_run, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
+        from functions.ca_functions import ca_run#, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
         
         run = copy.copy(ca_run)
 
@@ -1244,7 +1384,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.uk_functions import uk_run, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
+        from functions.uk_functions import uk_run#, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
         
         run = copy.copy(uk_run)
 
@@ -1252,7 +1392,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         system_instruction = role_content
                 
-        from functions.afca_functions import afca_run, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable, streamlit_timezone
+        from functions.afca_functions import afca_run#, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable, streamlit_timezone
                 
         if streamlit_timezone() == True:
 
@@ -1262,7 +1402,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/ER.py':
 
-        from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+        from functions.er_functions import er_run#, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
 
         system_instruction = role_content_er
 
@@ -1272,7 +1412,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         system_instruction = role_content
                 
-        from functions.kr_functions import kr_run, kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict
+        from functions.kr_functions import kr_run#, kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict
         
         run = copy.copy(kr_run)
 
@@ -1280,7 +1420,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         system_instruction = role_content
                 
-        from functions.scta_functions import scta_run, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
+        from functions.scta_functions import scta_run#, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
         
         run = copy.copy(scta_run)
     
@@ -1304,7 +1444,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.hca_functions import hca_batch, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
+        from functions.hca_functions import hca_batch#, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
         #hca_search_results_to_judgment_links
         
         batch =  copy.copy(hca_batch)
@@ -1315,7 +1455,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
 
-        from functions.nsw_functions import nsw_search, nsw_batch, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
+        from functions.nsw_functions import nsw_batch#, nsw_search, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
     
         batch =  copy.copy(nsw_batch)
     
@@ -1323,7 +1463,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.fca_functions import fca_batch, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        from functions.fca_functions import fca_batch#, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
         #fca_link_to_doc
         batch = copy.copy(fca_batch)
 
@@ -1331,7 +1471,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_batch, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        from functions.us_functions import us_batch#, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
             
         batch = copy.copy(us_batch)
 
@@ -1341,4 +1481,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
     
     return batch_record_df_individual
 
+
+
+# %%
 

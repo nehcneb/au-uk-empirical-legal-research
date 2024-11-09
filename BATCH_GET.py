@@ -69,10 +69,6 @@ from functions.common_functions import check_questions_answers, funder_msg
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, GPT_answers_check
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%
@@ -106,6 +102,8 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 #Try local or streamlit first
 
 try:
+    API_key = st.secrets["openai"]["gpt_api_key"]
+    
     AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
     AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
     AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
@@ -116,6 +114,8 @@ try:
     print('Running locally or on Streamlit')
     
 except:
+    API_key = os.environ['GPT_API_KEY']
+    
     AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
     AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
     AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
@@ -125,9 +125,47 @@ except:
 
     print('Running on GitHub Actions or HuggingFace')
 
-s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-#ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
+
+
+
+# %%
+#Function for getting all objects from aws s3
+
+@st.cache_resource(show_spinner = False)
+def get_aws_s3():
+    
+    #Initiate aws s3
+    s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+    return s3_resource
+
+#Get all objects from aws s3
+
+@st.cache_data(show_spinner = False)
+def get_aws_objects():
+    
+    #Get a list of all files on s3
+    bucket = s3_resource.Bucket('lawtodata')
+    
+    aws_objects = []
+    
+    for obj in bucket.objects.all():
+        key = obj.key
+        body = obj.get()['Body'].read()
+        key_body = {'key': key, 'body': body}
+        aws_objects.append(key_body)
+
+    return aws_objects
+    
+
+
+# %%
+#Function for using aws ses for sending emails
+@st.cache_resource(show_spinner = False)
+def get_aws_ses():
+    ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
+    return ses
 
 
 # %% [markdown]
@@ -137,27 +175,18 @@ ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_A
 st.subheader("Load records")
 
 # %%
-#Get a list of all files on s3
-bucket = s3_resource.Bucket('lawtodata')
+#Initiate aws_s3, and get all_df_masters
+s3_resource = get_aws_s3()
 
-aws_objects = []
-
-for obj in bucket.objects.all():
-    key = obj.key
-    body = obj.get()['Body'].read()
-    key_body = {'key': key, 'body': body}
-    aws_objects.append(key_body)
-
-#Get all_df_masters
+aws_objects = get_aws_objects()
 
 for key_body in aws_objects:
     if key_body['key'] == 'all_df_masters.csv':
         all_df_masters_current = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-        st.success(f"Succesfully loaded {key_body['key']}.")
+        print(f"Succesfully loaded {key_body['key']}.")
         break
-
-#Work on new copy of all_df_masters
-
+        
+#Work on new copy of all_df_masters, which enables comparison with current version on aws
 all_df_masters = all_df_masters_current.copy(deep = True)
 
 #all_df_masters = all_df_masters.fillna('')
@@ -226,10 +255,15 @@ for index in all_df_masters.index:
     if current_status == 'to_process':
 
         try:
+            
+            #Use user's own api key if entered
+            if bool(all_df_masters.loc[index, 'Use own account']) == True:
     
-            api_key = all_df_masters.loc[index, 'Your GPT API key']
+                if len(str(all_df_masters.loc[index, 'Your GPT API key'])) > 40:
+
+                     API_key = all_df_masters.loc[index, 'Your GPT API key']
         
-            openai.api_key = api_key
+            openai.api_key = API_key
             
             df_dict = all_df_masters.loc[index].to_dict()
         
@@ -369,9 +403,14 @@ for index in all_df_masters.index:
 
         try:
         
-            api_key = all_df_masters.loc[index, 'Your GPT API key']
-            
-            openai.api_key = api_key
+            #Use user's own api key if entered
+            if bool(all_df_masters.loc[index, 'Use own account']) == True:
+    
+                if len(str(all_df_masters.loc[index, 'Your GPT API key'])) > 40:
+
+                     API_key = all_df_masters.loc[index, 'Your GPT API key']
+                    
+            openai.api_key = API_key
         
             batch_id = all_df_masters.loc[index, 'batch_id']
         
@@ -463,19 +502,6 @@ if len(df_batch_id_response_list) == 0:
 
 
 # %%
-#Get a list of all files on s3
-bucket = s3_resource.Bucket('lawtodata')
-
-aws_objects = []
-
-for obj in bucket.objects.all():
-    key = obj.key
-    body = obj.get()['Body'].read()
-    key_body = {'key': key, 'body': body}
-    aws_objects.append(key_body)
-
-
-# %%
 # Attach add gpt response to df_individual
 
 append_counter = 0
@@ -488,7 +514,7 @@ for df_batch_response in df_batch_id_response_list:
     for key_body in aws_objects:
         if key_body['key'] == f'{batch_id}.csv':
             df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-            st.success(f"Succesfully loaded {key_body['key']} as df_individual.")
+            print(f"Succesfully loaded {key_body['key']} as df_individual.")
             break
     
     #Get df_individual from google sheets
@@ -608,6 +634,10 @@ for df_batch_response in df_batch_id_response_list:
 
 # %% [markdown]
 # # Sending emails via AWS
+
+# %%
+#Activate emails
+ses = get_aws_ses()
 
 # %%
 st.subheader("Send notification emails")
@@ -751,7 +781,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
         print(e.response['Error']['Message'])
         
     else:
-        st.success(f"Email sent! Message ID: {response['MessageId']}.")        
+        #st.success(f"Email sent! Message ID: {response['MessageId']}.")        
         print(f"Email sent! Message ID: {response['MessageId']}.")        
 
 
@@ -890,6 +920,9 @@ for index in all_df_masters.index:
     if ((status in ['completed', 'error']) and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
         emails_counter_total += 1
 
+if emails_counter_total == 0:
+    st.warning('No emails need to be sent.')
+
 # %%
 #Send emails
 
@@ -971,6 +1004,8 @@ if all_df_masters_needs_update == True:
 
     st.success(f"Updated all_df_masters.csv online." )
     print(f"Updated all_df_masters.csv online." )
+
+    st.cache_resource.clear()
 
 else:
     st.warning(f"No need to update all_df_masters.csv online." )

@@ -73,20 +73,12 @@ from functions.common_functions import own_account_allowed, batch_mode_allowed, 
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between file scraping is {scraper_pause_mean} second.\n")
 
 
 # %%
 #Page bound
 
 default_page_bound = 100
-
-print(f"\nThe maximum number of pages per file is {default_page_bound}.")
 
 #if 'page_bound' not in st.session_state:
     #st.session_state['page_bound'] = default_page_bound
@@ -98,7 +90,6 @@ default_file_counter_bound = default_judgment_counter_bound
 #if 'file_counter_bound' not in st.session_state:
     #st.session_state['file_counter_bound'] = default_file_counter_bound
 
-print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
 # %% [markdown]
 # # Functions for Own Files
@@ -220,10 +211,6 @@ from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_va
 #Import variables
 from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max
 
-
-# %%
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
 # %%
 #Initialize default GPT settings
@@ -348,7 +335,7 @@ st.header(f"Upload :blue[your own files]")
     
 st.success(f'**Please upload your documents or images**. By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
 
-st.caption('During the pilot stage, the number of files and the number of words per file to be processed are capped. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
+st.caption('Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
 
 st.warning('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 
@@ -376,7 +363,7 @@ st.markdown("""In what language is the text from your uploaded file(s) written?"
     
 language_entry = st.selectbox("Please choose a language.", languages_list, index=0)
 
-st.caption('During the pilot stage, the languages supported are limited. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to choose a language which is not available under this menu.')
+st.caption('Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to choose a language which is not available under this menu.')
 
 
 # %% [markdown]
@@ -426,9 +413,9 @@ else:
     st.session_state['disable_input'] = False
     
 #Upload example
-st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your question(s). If you have a preferred layout, please feel free to upload an example.""")
+st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example.""")
 
-uploaded_file = st.file_uploader(label = "Optional", 
+uploaded_file = st.file_uploader(label = "Upload an example (optional)", 
                                  type=['csv', 'xlsx', 'json'], 
                                  accept_multiple_files=False, 
                                   key = st.session_state["df_example_key"]
@@ -613,11 +600,13 @@ st.markdown("""You can now press :green[PRODUCE data] to obtain a spreadsheet wh
 """)
 
 #Warning
-if st.session_state.gpt_model == 'gpt-4o-mini':
-    st.warning('A low-cost GPT model will answer your questions. Please reach out to Ben Chen at ben.chen@sydney.edu.au if you would like to use the flagship model instead.')
-
-if st.session_state.gpt_model == "gpt-4o-2024-08-06":
-    st.warning('An expensive GPT model will answer your questions. Please be cautious.')
+if gpt_activation_entry:
+    if st.session_state.gpt_model == 'gpt-4o-mini':
+        st.warning('A low-cost GPT model will answer your questions. Please be cautious.')
+        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
+    
+    if st.session_state.gpt_model == "gpt-4o-2024-08-06":
+        st.warning('An expensive GPT model will answer your questions. Please be cautious.')
 
 reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
