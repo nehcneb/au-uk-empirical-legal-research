@@ -1161,27 +1161,51 @@ def batch_request_function():
         st.error("You must tick 'Use GPT'.")
         
     else:
-
-        if st.session_state.jurisdiction_page == 'pages/US.py':
-            
-            if len(str(st.session_state.df_master.loc[0, 'CourtListener API token'])) < 20:
-                st.error('Please return to the previous page and enter a valid CourtListener API token.')
-                st.stop()
-                                
+ 
         if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
                                 
             if is_api_key_valid(st.session_state.df_master.loc[0, 'Your GPT API key']) == False:
                 st.error('Your API key is not valid.')
+                
+                st.session_state["batch_ready_for_submission"] = False
+
                 st.stop()
 
+            else:
+                
+                st.session_state["batch_ready_for_submission"] = True
+
+        if st.session_state.jurisdiction_page == 'pages/US.py':
+            
+            if len(str(st.session_state.df_master.loc[0, 'CourtListener API token'])) < 20:
+
+                st.session_state["batch_ready_for_submission"] = False
+
+                st.write('Please enter a valid CourtListener API token. You can sign up for one [here](https://www.courtlistener.com/sign-in/).')
+
+                batch_token_entry = st.text_input(label = 'Mandatory', value = st.session_state['df_master'].loc[0, 'CourtListener API token'])
+
+                if st.button(label = 'CONFIRM your CourtListener API token', disabled = bool(st.session_state.batch_submitted)):
+                    
+                    st.session_state['df_master'].loc[0, 'CourtListener API token'] = batch_token_entry
+
+                    if len(str(st.session_state.df_master.loc[0, 'CourtListener API token'])) < 20:
+                
+                        st.error('You must enter a valid CourtListener API token.')
+                        st.stop()
+                    else:
+                        st.session_state["batch_ready_for_submission"] = True
+        
         #Check if valid email address entered
         if '@' not in st.session_state['df_master'].loc[0, 'Your email address']:
+            
+            st.session_state["batch_ready_for_submission"] = False
 
             st.write('Please enter a valid email address to receive your request data.')
             
             batch_email_entry = st.text_input(label = "Your email address (mandatory)", value =  st.session_state['df_master'].loc[0, 'Your email address'])
 
-            if st.button(label = 'CONFIRM', disabled = bool(st.session_state.batch_submitted)):
+            if st.button(label = 'CONFIRM your email address', disabled = bool(st.session_state.batch_submitted)):
                 
                 st.session_state['df_master'].loc[0, 'Your email address'] = batch_email_entry
     
@@ -1189,8 +1213,10 @@ def batch_request_function():
                 
                     st.error('You must enter a valid email address to receive your request data.')
                     st.stop()
-        
-        if '@' in st.session_state['df_master'].loc[0, 'Your email address']:
+                else:
+                    st.session_state["batch_ready_for_submission"] = True
+
+        if st.session_state["batch_ready_for_submission"] == True:
         
             with st.spinner(spinner_text):
                 
@@ -1275,7 +1301,7 @@ def batch_request_function():
                     print(e)
     
                     print(traceback.format_exc())
-                    
+
 
 # %% [markdown]
 # ## Vision

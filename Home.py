@@ -179,12 +179,17 @@ if home_next_button:
 
         source_entry_index = source_list.index(source_entry)
 
-        #Clear df_master if one has been generated from another page
-        if 'df_master' in st.session_state:
-
-            if page_list[source_entry_index] != st.session_state.page_from:
-
+        #Clear some session_states if changing page
+        if page_list[source_entry_index] != st.session_state.page_from:
+    
+            #Clear df_master if one has been generated from another page
+            if 'df_master' in st.session_state:
+    
                 st.session_state.pop('df_master')
+    
+            #Allow batch submit again
+            if 'batch_submitted' in st.session_state:
+                st.session_state.pop('batch_submitted')
 
         st.session_state.i_understand = i_unstanding_tick
 

@@ -279,6 +279,9 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
+if 'Consent' not in st.session_state.df_master.columns:
+    st.session_state['df_master'].loc[0, 'Consent'] = False
+
 if 'df_individual' not in st.session_state:
 
     st.session_state['df_individual'] = pd.DataFrame([])
@@ -580,18 +583,25 @@ if keep_button:
     st.success('Scroll down to download your entries.')
 
 # %% [markdown]
-# ## Consent and next steps
+# ## Consent
 
 # %%
 st.header("Consent")
 
 st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to your files. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
-consent =  st.checkbox('Yes, I agree.', value = st.session_state['df_master'].loc[0, 'Consent'], disabled = st.session_state.disable_input)
+consent =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
 
 st.session_state['df_master'].loc[0, 'Consent'] = consent
 
 st.markdown("""If you do not agree, then please feel free to close this form.""")
+
+
+
+# %% [markdown]
+# ## Next steps
+
+# %%
 
 st.header("Next steps")
 
@@ -638,7 +648,6 @@ if st.session_state.need_resetting == 1:
     if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual) > 0)):
         st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
         #st.warning('You must :red[RESET] the app before producing new data. Please press the :red[RESET] button above.')
-
 
 # %% [markdown]
 # ## Previous responses and outputs

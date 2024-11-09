@@ -150,7 +150,10 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use own account'] = False
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     st.session_state['df_master'].loc[0, 'Example'] = ''
-    
+
+if 'Consent' not in st.session_state.df_master.columns:
+    st.session_state['df_master'].loc[0, 'Consent'] = False
+
 if 'df_individual' not in st.session_state:
 
     st.session_state['df_individual'] = pd.DataFrame([])
@@ -187,6 +190,9 @@ else:
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
     st.session_state["batch_submitted"] = False
+
+if "batch_ready_for_submission" not in st.session_state:
+    st.session_state["batch_ready_for_submission"] = False
 
 #For example df
 if 'df_example_to_show' not in st.session_state:
@@ -410,7 +416,7 @@ st.header("Consent")
 
 st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing data. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
 
-consent =  st.checkbox('Yes, I agree.', value = st.session_state['df_master'].loc[0, 'Consent'], disabled = st.session_state.disable_input)
+consent =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
 
 st.session_state['df_master'].loc[0, 'Consent'] = consent
 
@@ -467,7 +473,7 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
             color: black;
         }""",
     ):
-        batch_button = st.button(label = 'REQUEST data', disabled = bool(st.session_state.batch_submitted))#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
+        batch_button = st.button(label = 'REQUEST data', disabled = bool((st.session_state.batch_submitted)) or (st.session_state.disable_input))#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
 
 with stylable_container(
     "green",
@@ -477,7 +483,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = 'PRODUCE data', disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input)))
+    run_button = st.button(label = 'PRODUCE data', disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"]))))
 
 #Display need resetting message if necessary
 if st.session_state.need_resetting == 1:
@@ -523,6 +529,7 @@ if len(st.session_state.df_individual)>0:
 if gpt_keep_button:
     
     download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
+    
 
 
 # %%

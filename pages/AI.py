@@ -817,6 +817,9 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
+if 'Consent' not in st.session_state.df_master.columns:
+    st.session_state['df_master'].loc[0, 'Consent'] = False
+
 if 'df_individual' not in st.session_state:
 
     st.session_state['df_individual'] = pd.DataFrame([])
@@ -1108,8 +1111,7 @@ st.markdown("""By using this app, you agree that the data and/or information thi
 
 consent =  st.checkbox('Yes, I agree.', value = False)
 
-if consent:
-    st.session_state['df_master'].loc[0, 'Consent'] = consent
+st.session_state['df_master'].loc[0, 'Consent'] = consent
 
 st.markdown("""If you do not agree, then please feel free to close this form.""")
 
