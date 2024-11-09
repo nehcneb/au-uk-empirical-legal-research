@@ -219,7 +219,7 @@ def delete_all():
                     st.session_state.s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                     
                     #st.cache_resource.clear()
-                    aws_objects.clear()
+                    #aws_objects.clear()
 
                     print(f"Updated all_df_masters.csv online." )
 
@@ -285,7 +285,7 @@ if st.button(label = 'DELETE data', type = 'primary', disabled = bool(st.session
 
 if st.session_state.df_master.loc[0, 'status'] == 'deleted':
     
-    st.success('Your requested data has been deleted. **Once you close this app**, you will no longer be able to download your data.')
+    st.success('Your requested data has been scheduled to be deleted.')
 
 
 # %% [markdown]
@@ -315,13 +315,10 @@ if retrive_button:
                     print(f"Succesfully loaded {key_body['key']}.")
                     break
     
-            #Get df_master
+            #Update df_master
             batch_index = all_df_masters.index[all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
             for col in all_df_masters.columns:
                 st.session_state['df_master'].loc[0, col] = all_df_masters.loc[batch_index, col]
-            
-            #Update status of last retrived/deleted output
-            st.session_state.df_master.loc[0, 'status'] = 'completed'
 
             st.rerun()
             
