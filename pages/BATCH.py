@@ -202,8 +202,9 @@ def delete_all():
                     #Update df_individual on AWS
                     csv_buffer = StringIO()
                     st.session_state.df_individual.to_csv(csv_buffer)
-                    st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
-        
+                    #st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
+                    st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').delete()
+                    
                     print(f"Updated {batch_id_entry}.csv online." )
         
                     #Update all_df_master and df_master
