@@ -224,14 +224,14 @@ def delete_all():
                     st.session_state.df_master.loc[0, 'status'] = 'deleted'
 
                     #pause.seconds(3)
-                    st.rerun()
-                    
+                    st.rerun()                    
+
 
 
 # %%
 #Initiate aws_s3, and get all_df_masters
 
-if 's3_resource' not in session_state:
+if 's3_resource' not in st.session_state:
 
     st.session_state.s3_resource = get_aws_s3()
 
