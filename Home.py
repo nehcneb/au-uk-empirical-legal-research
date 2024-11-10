@@ -182,14 +182,12 @@ if home_next_button:
         #Clear some session_states if changing page
         if page_list[source_entry_index] != st.session_state.page_from:
     
-            #Clear df_master if one has been generated from another page
-            if 'df_master' in st.session_state:
+            #Clear any df_master, example uploaded, batch submit status
+            for key in ['df_master', 'df_example_key', 'df_example_to_show', 'batch_submitted']:
+                
+                if key in st.session_state:
     
-                st.session_state.pop('df_master')
-    
-            #Allow batch submit again
-            if 'batch_submitted' in st.session_state:
-                st.session_state.pop('batch_submitted')
+                    st.session_state.pop(key)
 
         st.session_state.i_understand = i_unstanding_tick
 

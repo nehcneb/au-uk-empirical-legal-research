@@ -69,11 +69,11 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # Canada search engine
 
 # %%
-from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
+from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_meta_judgment_dict
 
 
 # %%
-from functions.common_functions import link
+from functions.common_functions import link, date_year_first
 
 
 # %%
@@ -393,11 +393,11 @@ case_name_mnc_entry = st.text_input(label = "Case name, citation or docket", val
 
 court_tribunal_type_entry = st.selectbox(label = "Court or tribunal type", options = list(ca_court_tribunal_types.keys()), index = list_value_check(list(ca_court_tribunal_types.keys()), st.session_state['df_master'].loc[0, 'Court or tribunal type']))
 
-on_this_date_entry = st.date_input(label = 'Decision date is', value = ca_date(st.session_state['df_master'].loc[0, 'Decision date is']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+on_this_date_entry = st.date_input(label = 'Decision date is', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-after_date_entry = st.date_input(label = 'Decision date is after', value = ca_date(st.session_state['df_master'].loc[0, 'Decision date is after']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+after_date_entry = st.date_input(label = 'Decision date is after', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is after']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-before_date_entry = st.date_input(label = 'Decision date is before', value = ca_date(st.session_state['df_master'].loc[0, 'Decision date is before']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+before_date_entry = st.date_input(label = 'Decision date is before', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is before']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 subjects_entry = st.multiselect(label = 'Subjects', options = all_subjects, default = list_range_check(all_subjects, st.session_state['df_master'].loc[0, 'Subjects']))
 st.caption('If left blank, all subjects will be covered.')

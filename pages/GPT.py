@@ -261,7 +261,7 @@ else:
     st.session_state['disable_input'] = False
 
 #Upload example
-st.markdown("""This app will produce a spreadsheet with rows of cases and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example.""")
+st.markdown("""This app will produce a spreadsheet with rows of cases and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example for GPT to follow.""")
 
 uploaded_file = st.file_uploader(label = "Upload an example (optional)", 
                                  type=['csv', 'xlsx', 'json'], 
@@ -305,7 +305,7 @@ if uploaded_file:
 
 if len(st.session_state.df_example_to_show) > 0:
         
-    st.success('For each case, GPT will try produce something like the following:')
+    st.success('For each case, GPT will *try* to produce something like the following:')
 
     st.dataframe(st.session_state.df_example_to_show)
 
@@ -418,7 +418,7 @@ else:
         st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    
+
 
 # %% [markdown]
 # ## Consent
@@ -578,6 +578,7 @@ if run_button:
                     API_key = df_master.loc[0, 'Your GPT API key']
     
                 else:
+                    
                     API_key = st.secrets["openai"]["gpt_api_key"]
                 
                 openai.api_key = API_key
@@ -677,6 +678,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                         API_key = df_master.loc[0, 'Your GPT API key']
         
                     else:
+                        
                         API_key = st.secrets["openai"]["gpt_api_key"]
                     
                     openai.api_key = API_key

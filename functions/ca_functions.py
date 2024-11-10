@@ -876,15 +876,6 @@ def ca_meta_judgment_dict(judgment_url):
 
 
 # %%
-def ca_date(x):
-    try:
-        return parser.parse(x, yearfirst=True)
-    except:
-        return None
-
-
-
-# %%
 def ca_search_url(df_master):
     df_master = df_master.fillna('')
     

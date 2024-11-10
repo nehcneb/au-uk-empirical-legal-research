@@ -23,18 +23,18 @@ import pandas as pd
 #import shutil
 import numpy as np
 #import re
-#import datetime
-#from datetime import date
-#from datetime import datetime
 import sys
 import pause
 import os
 import io
 from io import BytesIO
 from io import StringIO
-#from dateutil import parser
-#from dateutil.relativedelta import *
-#from datetime import timedelta
+import datetime
+from datetime import date
+from datetime import datetime
+from dateutil import parser
+from dateutil.relativedelta import *
+from datetime import timedelta
 #from PIL import Image
 #import math
 #from math import ceil
@@ -65,10 +65,9 @@ import streamlit as st
 from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
 #For checking questions and answers, acknowledgment
-from functions.common_functions import check_questions_answers, funder_msg
+from functions.common_functions import check_questions_answers, funder_msg, date_year_first
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, GPT_answers_check
-
 
 
 # %%
@@ -788,9 +787,13 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     BODY_TEXT = (
     
     f"Dear {ULTIMATE_RECIPIENT_NAME}\r\n\r\n"
-    
-    "Thank you for using LawtoData. Unfortunately, it was unable to produce your requested data. My Apologies. Please feel free to change your search terms or questions and try again.\r\n\r\n"
+
+    f"Ref: {BATCH_CODE}\r\n\r\n"
         
+    "Thank you for using LawtoData. Unfortunately, it was unable to produce your requested data due to an error. My Apologies.\r\n\r\n"
+    
+    "Please feel free to change your search terms or questions and try the app again. Please also feel free to ask me to look into the error.\r\n\r\n"
+    
     "Kind regards\r\n\r\n"
     
     "Ben\r\n\r\n"
@@ -813,7 +816,13 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     Dear {ULTIMATE_RECIPIENT_NAME}
     </p>
     <p>
-    Thank you for using LawtoData. Unfortunately, it was unable to produce your requested data. My Apologies. Please feel free to change your search terms or questions and try again.
+    Ref: {BATCH_CODE}
+    </p>
+    <p>
+    Thank you for using LawtoData. Unfortunately, it was unable to produce your requested data due to an error. My Apologies.
+    </p>
+    <p>
+    Please feel free to change your search terms or questions and try the app again. Please also feel free to ask me to look into the error.
     </p>
     <p>
     Kind regards

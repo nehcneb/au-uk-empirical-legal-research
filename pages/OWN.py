@@ -416,7 +416,7 @@ else:
     st.session_state['disable_input'] = False
     
 #Upload example
-st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example.""")
+st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example for GPT to follow.""")
 
 uploaded_file = st.file_uploader(label = "Upload an example (optional)", 
                                  type=['csv', 'xlsx', 'json'], 
@@ -460,7 +460,7 @@ if uploaded_file:
 
 if len(st.session_state.df_example_to_show) > 0:
         
-    st.success('For each file, GPT will try produce something like the following:')
+    st.success('For each file, GPT will *try* to produce something like the following:')
 
     st.dataframe(st.session_state.df_example_to_show)
 
@@ -704,6 +704,7 @@ if run_button:
                     API_key = df_master.loc[0, 'Your GPT API key']
     
                 else:
+                    
                     API_key = st.secrets["openai"]["gpt_api_key"]
     
                 openai.api_key = API_key

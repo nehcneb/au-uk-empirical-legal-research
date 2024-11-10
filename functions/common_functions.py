@@ -129,6 +129,15 @@ def date_parser(string):
 
 
 # %%
+def date_year_first(x):
+    try:
+        return parser.parse(x, yearfirst=True)
+    except:
+        return None
+
+
+
+# %%
 #today
 today_in_nums = str(datetime.now())[0:10]
 today = datetime.now().strftime("%d/%m/%Y")
@@ -262,7 +271,8 @@ def list_range_check(some_list, some_string):
                 selected_list.append(item)
 
     except:
-        print(f'List {str(some_list)} does not contain {some_string}')
+        if ((some_string != '') or (some_string != None)):
+            print(f'List {str(some_list)} does not contain {some_string}')
  
     return selected_list
 
