@@ -322,7 +322,6 @@ if retrive_button:
                     st.session_state.df_individual = df_individual.copy(deep = True)
                     print(f"Succesfully loaded {key_body['key']}.")
 
-                    #print(f"Succesfully loaded {key_body['key']}.")
                     break
     
             #Update df_master
@@ -330,7 +329,11 @@ if retrive_button:
             for col in st.session_state.all_df_masters.columns:
                 st.session_state['df_master'].loc[0, col] = st.session_state.all_df_masters.loc[batch_index, col]
 
-            st.rerun()
+            if len(st.session_state.df_individual) > 0:
+                st.rerun()
+            
+            else:
+                st.error('Your nominated email address or access code is not correct, or the requested data cannot be found.')
                 
         except Exception as e:
             
