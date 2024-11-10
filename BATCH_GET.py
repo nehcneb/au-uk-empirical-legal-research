@@ -131,7 +131,6 @@ except:
 # %%
 #Function for getting all objects from aws s3
 
-#@st.cache_resource(show_spinner = False)
 def get_aws_s3():
     
     #Initiate aws s3
@@ -140,8 +139,6 @@ def get_aws_s3():
     return s3_resource
 
 #Get all objects from aws s3
-
-@st.cache_data(show_spinner = False)
 def get_aws_objects():
     
     #Get a list of all files on s3
@@ -161,7 +158,6 @@ def get_aws_objects():
 
 # %%
 #Function for using aws ses for sending emails
-@st.cache_resource(show_spinner = False)
 def get_aws_ses():
     ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
