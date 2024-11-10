@@ -134,6 +134,7 @@ def oalc_filter(dataset, split, config = 'default', where = None, orderby = None
 @st.cache_data(show_spinner = False)
 def get_judgment_from_oalc(mnc_list):
 
+    print(f"The list of mncs to be obtained from OALC is mnc_list == {mnc_list}")
 
     #Figure out jurisdiction
     subset = 'default'

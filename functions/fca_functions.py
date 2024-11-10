@@ -123,6 +123,20 @@ def fca_search(court = '',
 
     #If allowing users to search which court
     base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2F" + fca_courts[court]
+
+
+    #Tidy up dates for batch mode
+    if '-' in str(after_date):
+        after_date = str(after_date).replace('-', '')
+
+    if '/' in str(after_date):
+        after_date = str(after_date).replace('/', '')
+    
+    if '-' in str(before_date):
+        before_date = str(before_date).replace('-', '')
+
+    if '/' in str(after_date):
+        before_date = str(before_date).replace('/', '')
     
     params = {'meta_2' : case_name_mnc, 
               'meta_A' : judge, 
@@ -166,6 +180,12 @@ def fca_search(court = '',
     soup = BeautifulSoup(response.content, "lxml")
 
     return {'soup': soup, 'results_url': results_url, 'results_count': results_count}
+
+# %%
+test = fca_search(court = 'Federal Court', catchwords = 'class actions', before_date = '1Jan22')
+
+# %%
+test['results_url']
 
 
 # %%

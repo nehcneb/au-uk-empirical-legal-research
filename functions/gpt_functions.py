@@ -543,8 +543,8 @@ For example, if the text given to you is "John Smith, born 1 January 1950, died 
 
 # %%
 #Check _answers_to_check_json for potential privacy infringement
+#Don't add @st.cache_data
 
-@st.cache_data(show_spinner = False)
 def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_instruction):
 
     #Check answers
@@ -1044,7 +1044,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
 # %%
 #Define function for creating jsonl file for batching together with df_individual with custom id inserted
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
@@ -1284,7 +1284,6 @@ def batch_request_function():
                     send_notification_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
                                             ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address']
                                            )
-
 
                     st.session_state["batch_submitted"] = True
                                         
