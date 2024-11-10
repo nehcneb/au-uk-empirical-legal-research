@@ -233,6 +233,7 @@ for index in all_df_masters.index:
 
 if batch_request_total == 0:
     st.warning('No requests need to be submitted.')
+    print('No requests need to be submitted.')
 
 
 # %%
@@ -319,6 +320,7 @@ st.subheader("Save scaped judgment data")
 if len(gpt_batch_input_list) == 0:
     
     st.warning('No judgment data have been scraped.')
+    print('No judgment data have been scraped.')
 
 
 # %%
@@ -383,11 +385,11 @@ for index in all_df_masters.index:
 
 if max_retrieve_counter == 0:
     st.warning('No batches are pending retrival.')
+    print('No batches are pending retrival.')
 
 
 # %%
 df_batch_id_response_list = []
-df_batch_id_response_list_indice = []
 
 retrieve_counter = 0
 
@@ -432,49 +434,36 @@ for index in all_df_masters.index:
             status = batch_record.status
     
             #Print any status change
-            if status != 'completed':
-                #If not completed yet
+            if status != all_df_masters.loc[index, 'status']:
                 st.info(f"{batch_id}: status == {status}.")
                 print(f"{batch_id}: status == {status}.")
+
+            #Update status etc on all_df_masters
+            all_df_masters.loc[index, 'status'] = status
+            all_df_masters.loc[index, 'output_file_id'] = output_file_id
             
-            else: #status == 'completed': #If completed
+            if status == 'completed':
                 
                 batch_response = openai.files.content(output_file_id)
         
                 df_batch_response = pd.read_json(batch_response.text, lines=True)
         
                 batch_id_response = {'batch_id': batch_id, 'df_batch_response': df_batch_response, 'gpt_model': gpt_model}
-        
-                #Apppend gpt batch id and responses to list for adding to df_individual later
-                
-                df_batch_id_response_list.append(batch_id_response)
-
-                df_batch_id_response_list_indice.append(index)
-    
-                #Update status etc and remove api key on all_df_masters
-                all_df_masters.loc[index, 'status'] = status
-                all_df_masters.loc[index, 'output_file_id'] = output_file_id
 
                 if 'Your GPT API key' in all_df_masters.columns:
                     all_df_masters.loc[index, 'Your GPT API key'] = ''
                     
                 if 'CourtListener API token' in all_df_masters.columns:
                     all_df_masters.loc[index, 'CourtListener API token'] = ''
-
-                #Update all_df_masters on AWS
-                #csv_buffer = StringIO()
-                #all_df_masters.to_csv(csv_buffer)
-                #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                
+                df_batch_id_response_list.append(batch_id_response)
     
                 #Update counter 
                 retrieve_counter += 1
         
-                #Update google sheet for all_df_masters
-                #conn_all_df_masters.update(worksheet="Sheet1", data=all_df_masters)
-    
                 st.success(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
-                print(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")
-                
+                print(f"{batch_id}: status == {status}. Done {retrieve_counter}/{max_retrieve_counter}")                
+
         except Exception as e:
 
             status = 'error'
@@ -1000,8 +989,6 @@ if all_df_masters_needs_update == True:
 
     st.success(f"Updated all_df_masters.csv online." )
     print(f"Updated all_df_masters.csv online." )
-
-    st.cache_resource.clear()
 
 else:
     st.warning(f"No need to update all_df_masters.csv online." )
