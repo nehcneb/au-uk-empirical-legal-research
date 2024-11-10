@@ -937,7 +937,7 @@ judgment_batch_max = 100
 def gpt_get_custom_id(judgment_json):
     
     #Returns time now by default
-    time_now = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')[11:]
+    time_now = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')[8:]
 
     mnc = ''
 
