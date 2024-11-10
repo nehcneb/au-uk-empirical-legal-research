@@ -379,7 +379,7 @@ for index in all_df_masters.index:
 
     current_status = all_df_masters.loc[index, "status"]
 
-    if current_status == 'validating':
+    if current_status in ['validating', 'in_progress']:
 
         max_retrieve_counter += 1
 
@@ -397,7 +397,7 @@ for index in all_df_masters.index:
 
     current_status = all_df_masters.loc[index, "status"]
 
-    if current_status == 'validating':
+    if current_status in ['validating', 'in_progress']:
 
         try:
         
@@ -433,10 +433,9 @@ for index in all_df_masters.index:
                 
             status = batch_record.status
     
-            #Print any status change
-            if status != all_df_masters.loc[index, 'status']:
-                st.info(f"{batch_id}: status == {status}.")
-                print(f"{batch_id}: status == {status}.")
+            #Print current status change
+            st.info(f"{batch_id}: status == {status}.")
+            print(f"{batch_id}: status == {status}.")
 
             #Update status etc on all_df_masters
             all_df_masters.loc[index, 'status'] = status
