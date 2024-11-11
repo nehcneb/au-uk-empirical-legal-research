@@ -105,11 +105,9 @@ from functions.gpt_functions import question_characters_bound
 #Initialize default GPT settings
 
 if 'gpt_api_key' not in st.session_state:
-
     st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
 #Initialize key validity check
-
 if 'gpt_api_key_validity' not in st.session_state:
     st.session_state['gpt_api_key_validity'] = False
 
@@ -1107,13 +1105,14 @@ if own_account_allowed() > 0:
 # %%
 st.subheader("Consent")
 
-st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
+st.markdown("""By using this app, you agree that the data and/or information you and/or this app provide will be temporarily stored on one or more remote servers. Any such data and/or information may also be given to an artificial intelligence provider. Any such data and/or information [will not be used to train any artificial intelligence model.](https://platform.openai.com/docs/models/how-we-use-your-data#how-we-use-your-data) 
+""")
 
 consent =  st.checkbox('Yes, I agree.', value = False)
 
 st.session_state['df_master'].loc[0, 'Consent'] = consent
 
-st.markdown("""If you do not agree, then please feel free to close this form.""")
+st.markdown("""If you do not agree, then please feel free to close this app. """)
 
 
 # %% [markdown]

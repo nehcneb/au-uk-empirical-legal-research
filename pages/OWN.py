@@ -385,9 +385,9 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your questions for each file")
 
-st.markdown("""Please enter one question **per line or per paragraph**. GPT will answer your questions for **each file** based only on information from the file **itself**. """)
+st.warning("""Please enter **one question per line or paragraph**. GPT will answer your questions for **each file** based **only** on information from the file **itself**. """)
 
-st.markdown("""GPT is instructed to avoid giving answers which cannot be obtained from the relevant file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant file itself.""")
 
 #if st.toggle('See the instruction given to GPT'):
     #st.write(f"{intro_for_GPT[0]['content']}")
@@ -416,9 +416,11 @@ else:
     st.session_state['disable_input'] = False
     
 #Upload example
+st.subheader("Share an exemplar (optional)")
+
 st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example for GPT to follow.""")
 
-uploaded_file = st.file_uploader(label = "Upload an example (optional)", 
+uploaded_file = st.file_uploader(label = "Upload an example", 
                                  type=['csv', 'xlsx', 'json'], 
                                  accept_multiple_files=False, 
                                   key = st.session_state["df_example_key"]
@@ -474,7 +476,6 @@ if len(st.session_state.df_example_to_show) > 0:
         st.session_state.df_master.loc[0, 'Example'] = ''
     
         st.rerun()
-    
 
 
 # %% [markdown]
@@ -485,9 +486,9 @@ if len(st.session_state.df_example_to_show) > 0:
 
 if own_account_allowed() > 0:
     
-    st.subheader(':orange[Enhance app capabilities]')
+    st.header(':orange[Enhance app capabilities]')
     
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of files to process? You can do so with your own GPT account.
+    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum number of files to process? You can do so with your own GPT account.
     """)
     
     own_account_entry = st.toggle(label = 'Use my own GPT account',  disabled = st.session_state.disable_input, value = st.session_state['df_master'].loc[0, 'Use own account'])
@@ -588,14 +589,14 @@ if keep_button:
 # %%
 st.header("Consent")
 
-st.markdown("""By using this app, you agree that the data and/or information this form provides will be temporarily stored on one or more remote servers for the purpose of producing an output containing data in relation to your files. Any such data and/or information may also be given to an artificial intelligence provider for the same purpose.""")
+st.markdown("""By using this app, you agree that the data and/or information you and/or this app provide will be temporarily stored on one or more remote servers. Any such data and/or information may also be given to an artificial intelligence provider. Any such data and/or information [will not be used to train any artificial intelligence model.](https://platform.openai.com/docs/models/how-we-use-your-data#how-we-use-your-data) 
+""")
 
 consent =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
 
 st.session_state['df_master'].loc[0, 'Consent'] = consent
 
-st.markdown("""If you do not agree, then please feel free to close this form.""")
-
+st.markdown("""If you do not agree, then please feel free to close this app. """)
 
 
 # %% [markdown]

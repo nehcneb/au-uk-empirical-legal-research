@@ -571,7 +571,7 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
 
     #Create _answers_to_check_json, which include the answer format
     
-    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
+    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + ' \n Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     
@@ -677,7 +677,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             q_counter += 1
     
     #Create questions, which include the answer format
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -863,7 +863,7 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Respond in the following JSON form: '
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Respond in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer. (The paragraphs, pages or sections from which you obtained your answer)", "cl100k_base")
 
@@ -1011,7 +1011,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
             
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]

@@ -525,7 +525,7 @@ def er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system
 
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' Respond in the following JSON form: ' + json.dumps(answers_json)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     #ER specific intro
@@ -747,7 +747,7 @@ def er_engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activa
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' Respond in the following JSON form: '
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Respond in the following JSON form: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
 
