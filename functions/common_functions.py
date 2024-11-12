@@ -69,7 +69,6 @@ from io import BytesIO
 import pause
 
 #Excel
-from io import BytesIO
 import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 import xlsxwriter

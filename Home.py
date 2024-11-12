@@ -54,10 +54,10 @@ else:
 #Dict of available sources
 page_dict = {"pages/HCA.py": "Judgments of the High Court of Australia",
             "pages/FCA.py": "Judgments of the Federal Court of Australia", 
-            "pages/NSW.py": "Judgments of the New South Wales courts and tribunals", 
-             "pages/US.py": "Cases of select United States courts", 
-            #"pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
-            #"pages/CA.py": 'judgments of the Canadian courts, boards and tribunals', 
+            "pages/NSW.py": "Judgments of select New South Wales courts and tribunals", 
+            "pages/CA.py": 'Judgments of select Canadian courts, boards and tribunals', 
+            "pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
+              "pages/US.py": "Cases of select United States courts", 
             "pages/AFCA.py": 'Decisions of the Australian Financial Complaints Authority', 
             #"pages/SCTA.py": 'Decisions of the Superannuation Complaints Tribunal of Australia', 
             "pages/ER.py": "The English Reports (nearly all English case reports from 1220 to 1866)", 
@@ -107,12 +107,15 @@ st.subheader("An Empirical Legal Research Automator")
 
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving court cases. This app can **automatically**
 
-(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
+(1) collect cases of select courts and tribunals from Australia, Canada, the United Kingdom and the United States; and
 
 (2) extract and code **your** choice of case data or information, partially using GPT.
 
 This app can also process your own files or spreadsheet of data.
 """)
+
+#(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
+
 
 if own_account_allowed() > 0:
     st.markdown("""**Get started below :green[for free] or :orange[with your own GPT account]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
