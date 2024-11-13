@@ -85,10 +85,15 @@ from functions.common_functions import link
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait as Wait
+from selenium.webdriver.support import expected_conditions as EC
 
+#For post June 2024
 options = Options()
 options.add_argument("--disable-gpu")
 options.add_argument("--headless")
@@ -97,17 +102,18 @@ options.add_argument('--disable-dev-shm-usage')
 
 @st.cache_resource(show_spinner = False)
 def get_driver():
-    return webdriver.Chrome(
-        #service=Service(
-            #ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        #),
-        options=options,
-    )
+    return webdriver.Chrome(options=options)
 
-browser = get_driver()
-
-browser.implicitly_wait(30)
-browser.set_page_load_timeout(30)
+try:
+    browser = get_driver()
+    
+    browser.implicitly_wait(30)
+    browser.set_page_load_timeout(30)
+    
+except Exception as e:
+    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
+    print(e)
+    quit()
 
 
 # %%
@@ -128,7 +134,6 @@ all_ca_jurisdictions = {'All': '',
                     'Yukon': 'yk', 
                     'Northwest Territories': 'nt', 
                     'Nunavut': 'nu'}
-
 
 
 # %%
@@ -633,12 +638,13 @@ def ca_search(jurisdiction  =  'All',
     #Default base url with jurisdiction and court to remove if not entered
     base_url = f'https://www.canlii.org/en/jurisdiction_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&jId=jurisdiction_param,unspecified&text=phrase_param&id=case_name_mnc_param'
     
-    #Add jurisdiction, court or year
+    #Add jurisdiction, court or year; these appear before or after #search/type=decision in url depending on whether a juirsdiction is chosen
     if jurisdiction != 'All':
 
         base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[jurisdiction]}')
         
     else:
+        
         base_url = base_url.replace('&jId=jurisdiction_param,unspecified', '').replace('jurisdiction_param/', '')
 
     if court != 'All':
@@ -705,7 +711,6 @@ def ca_search(jurisdiction  =  'All',
     else:
         base_url = base_url.replace('&topics=subjects_param', '')
 
-    
     #Add search terms
     
     if phrase != '':
@@ -725,12 +730,18 @@ def ca_search(jurisdiction  =  'All',
 
     #if cited != '':
         #base_url += f"&origin1=%2Fen%2Freflex%2F937222.html&nquery1={cited}"
+
+    #Directly return url
+
+    return base_url
     
-    response = requests.get(base_url)
-    response.raise_for_status()
+    #headers = {'User-Agent': 'whatever'}    
+    #response = requests.get(base_url, headers=headers)
+    #response.raise_for_status()
     # Process the response (e.g., extract relevant information)
     # Your code here...
-    return response.url
+    
+    #return response.url
 
 
 # %%
@@ -750,7 +761,9 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     browser.delete_all_cookies()
     browser.refresh()
     
-    elements = browser.find_elements(By.CLASS_NAME, "result ")
+    #elements = browser.find_elements(By.CLASS_NAME, "result ")
+
+    elements = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
     
     #Get number of results
     case_num = len(elements)
@@ -763,14 +776,18 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     
         if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in browser.page_source:
     
-            load_more = browser.find_element(By.ID, "loadMoreResults")
+            #load_more = browser.find_element(By.ID, "loadMoreResults")
+
+            load_more = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
             
             #pause.seconds(np.random.randint(10, 20))
             
             browser.execute_script("arguments[0].click();", load_more);
             
-            elements = browser.find_elements(By.CLASS_NAME, "result ")
-    
+            #elements = browser.find_elements(By.CLASS_NAME, "result ")
+            
+            elements = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+
             case_num = len(elements)
     
         else:
@@ -895,6 +912,7 @@ def ca_search_url(df_master):
                                    #cited = '', 
                                    #year = ''
                                   )
+    
     return url
 
 
