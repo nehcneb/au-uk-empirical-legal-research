@@ -373,7 +373,7 @@ st.caption('Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wi
 # ## Form for AI
 
 # %%
-st.header(":blue[Would you to ask GPT questions about your files?]")
+st.header(":blue[Would you like to ask GPT questions about your files?]")
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 

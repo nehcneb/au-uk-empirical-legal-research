@@ -211,7 +211,7 @@ return_button = st.button('RETURN to the previous page')
 
 #st.header("Use GPT as your research assistant")
 
-st.header(":blue[Would you to ask GPT questions about the cases returned by your search terms?]")
+st.header(":blue[Would you like to ask GPT questions about the cases returned by your search terms?]")
 
 st.markdown("""You can use this app without asking GPT any questions. For instance, you can extract metadata and get estimates of file length and GPT cost. 
 """)
