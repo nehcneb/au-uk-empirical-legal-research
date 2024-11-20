@@ -385,7 +385,7 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your questions for each file")
 
-st.warning("""Please enter **one question per line or paragraph**. GPT will answer your questions for **each file** based **only** on information from the file **itself**. """)
+st.warning("""Please enter **one question per line or paragraph**. For **each file**, GPT will answer your questions based **only** on information from the file **itself**. """)
 
 st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant file itself.""")
 

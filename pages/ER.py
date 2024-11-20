@@ -258,7 +258,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[the English Reports]")
+st.header(f"Search the :blue[English Reports]")
 
 st.success(default_msg)
 

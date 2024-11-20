@@ -215,7 +215,7 @@ return_button = st.button('RETURN to the previous page')
 
 #st.header("Use GPT as your research assistant")
 
-st.header(":blue[Would you like to ask GPT questions about the cases returned by your search terms?]")
+st.header(":blue[Would you like to ask GPT questions about the cases found?]")
 
 st.markdown("""You can use this app without asking GPT any questions. For instance, you can extract metadata and get estimates of file length and GPT cost. 
 """)
@@ -228,7 +228,7 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Enter your questions for each case")
 
-st.warning("""Please enter **one question per line or paragraph**. GPT will answer your questions for **each case** based **only** on information from the case **itself**. """)
+st.warning("""Please enter **one question per line or paragraph**. For **each case**, GPT will answer your questions based **only** on information from the case **itself**. """)
 
 st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant case itself.""")
 
