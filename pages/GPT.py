@@ -151,6 +151,9 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
+if 'Example' not in st.session_state.df_master.columns:
+    st.session_state['df_master'].loc[0, 'Example'] = ''
+
 if 'Consent' not in st.session_state.df_master.columns:
     st.session_state['df_master'].loc[0, 'Consent'] = False
 
@@ -201,6 +204,7 @@ if 'df_example_to_show' not in st.session_state:
 #Initalize df_example_key for the purpose of removing uploaded spreadsheets programatically
 if "df_example_key" not in st.session_state:
     st.session_state["df_example_key"] = 0
+
 
 
 # %% [markdown]
