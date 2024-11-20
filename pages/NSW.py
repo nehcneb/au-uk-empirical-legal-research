@@ -333,7 +333,7 @@ if 'df_master' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header("Search :blue[judgments of select New South Wales courts and tribunals]")
+st.header("Search :blue[cases of select New South Wales courts and tribunals]")
 
 st.success(default_msg)
 
@@ -429,44 +429,45 @@ if preview_button:
         st.warning('Please select at least one court or tribunal to cover.')
     
     else:
-
-        df_master = nsw_create_df()
-
-        search_results_w_count = nsw_search_preview(df_master)
+        with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
         
-        results_count = search_results_w_count['results_count']
-
-        results_to_show = search_results_w_count['results_to_show']
-
-        results_url = search_results_w_count['results_url']
+            df_master = nsw_create_df()
+    
+            search_results_w_count = nsw_search_preview(df_master)
             
-        if results_count > 0:
-
-            df_preview = pd.DataFrame(results_to_show)
-
-            #Clean df for display
-            df_preview['uri'] = df_preview['uri'].apply(nsw_link)
-
-            rename_columns_dict = {'title': 'Title', 'uri': 'Hyperlink to NSW Caselaw', 'before': 'Before', 'decisionDate': 'Decision date', 'catchwords': 'Catchwords'}
-
-            df_preview.rename(columns=rename_columns_dict, inplace=True)
-
-            #Get display settings
-            display_df_dict = display_df(df_preview)
-
-            df_preview = display_df_dict['df']
-
-            link_heading_config = display_df_dict['link_heading_config']
-
-            #Display search results
-            st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                        
-            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-
-            st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-
-        else:
-            st.error(no_results_msg)
+            results_count = search_results_w_count['results_count']
+    
+            results_to_show = search_results_w_count['results_to_show']
+    
+            results_url = search_results_w_count['results_url']
+                
+            if results_count > 0:
+    
+                df_preview = pd.DataFrame(results_to_show)
+    
+                #Clean df for display
+                df_preview['uri'] = df_preview['uri'].apply(nsw_link)
+    
+                rename_columns_dict = {'title': 'Title', 'uri': 'Hyperlink to NSW Caselaw', 'before': 'Before', 'decisionDate': 'Decision date', 'catchwords': 'Catchwords'}
+    
+                df_preview.rename(columns=rename_columns_dict, inplace=True)
+    
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+    
+                df_preview = display_df_dict['df']
+    
+                link_heading_config = display_df_dict['link_heading_config']
+    
+                #Display search results
+                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+    
+                st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+    
+            else:
+                st.error(no_results_msg)
 
 
 # %% [markdown]

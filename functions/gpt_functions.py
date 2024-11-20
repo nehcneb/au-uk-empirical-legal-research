@@ -1365,7 +1365,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.hca_functions import hca_run#, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
+        from functions.hca_functions import hca_run, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
         #hca_search_results_to_judgment_links
         
         run = copy.copy(hca_run)
@@ -1376,7 +1376,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
         
-        from functions.nsw_functions import nsw_run#, nsw_search, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt
+        from functions.nsw_functions import nsw_run, nsw_search, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment, nsw_tidying_up, nsw_tidying_up_pre_gpt
     
         run = copy.copy(nsw_run)
     
@@ -1384,7 +1384,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.fca_functions import fca_run#, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        from functions.fca_functions import fca_run, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
         #fca_link_to_doc
         
         run = copy.copy(fca_run)
@@ -1393,7 +1393,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_run#, us_search_function, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        from functions.us_functions import us_run, us_search_function, us_court_choice_to_list, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
         
         run = copy.copy(us_run)
 
@@ -1401,7 +1401,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.ca_functions import ca_run#, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
+        from functions.ca_functions import ca_run, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
         
         run = copy.copy(ca_run)
 
@@ -1409,7 +1409,7 @@ def gpt_run(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.uk_functions import uk_run#, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
+        from functions.uk_functions import uk_run, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
         
         run = copy.copy(uk_run)
 
@@ -1417,7 +1417,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         system_instruction = role_content
                 
-        from functions.afca_functions import afca_run#, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable, streamlit_timezone
+        from functions.afca_functions import afca_run, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable, streamlit_timezone
                 
         if streamlit_timezone() == True:
 
@@ -1427,7 +1427,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/ER.py':
 
-        from functions.er_functions import er_run#, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+        from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
 
         system_instruction = role_content_er
 
@@ -1437,7 +1437,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         system_instruction = role_content
                 
-        from functions.kr_functions import kr_run#, kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict
+        from functions.kr_functions import kr_run, kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict
         
         run = copy.copy(kr_run)
 
@@ -1445,7 +1445,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         system_instruction = role_content
                 
-        from functions.scta_functions import scta_run#, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
+        from functions.scta_functions import scta_run, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
         
         run = copy.copy(scta_run)
     
@@ -1469,7 +1469,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.hca_functions import hca_batch#, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
+        from functions.hca_functions import hca_batch, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
         #hca_search_results_to_judgment_links
         
         batch =  copy.copy(hca_batch)
@@ -1480,7 +1480,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
 
         from nswcaselaw.search import Search
 
-        from functions.nsw_functions import nsw_batch#, nsw_search, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
+        from functions.nsw_functions import nsw_batch, nsw_search, nsw_tidying_up_pre_gpt, nsw_meta_labels_droppable, nsw_courts, nsw_courts_positioning, nsw_default_courts, nsw_tribunals, nsw_tribunals_positioning, nsw_court_choice, nsw_tribunal_choice, nsw_date, nsw_link, nsw_short_judgment
     
         batch =  copy.copy(nsw_batch)
     
@@ -1488,7 +1488,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.fca_functions import fca_batch#, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+        from functions.fca_functions import fca_batch, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
         #fca_link_to_doc
         batch = copy.copy(fca_batch)
 
@@ -1496,7 +1496,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         
         system_instruction = role_content
         
-        from functions.us_functions import us_batch#, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
+        from functions.us_functions import us_batch, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
             
         batch = copy.copy(us_batch)
 

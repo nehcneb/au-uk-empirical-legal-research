@@ -93,7 +93,6 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
 
-#For post June 2024
 options = Options()
 options.add_argument("--disable-gpu")
 options.add_argument("--headless")

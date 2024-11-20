@@ -324,7 +324,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[judgments of select United Kingdom courts and tribunals]")
+st.header(f"Search :blue[cases of select United Kingdom courts and tribunals]")
 
 st.success(default_msg)
 
@@ -391,55 +391,57 @@ with stylable_container(
 
 # %% jp-MarkdownHeadingCollapsed=true
 if preview_button:
-
-    df_master = uk_create_df()
-
-    results_url_num = uk_search_url(df_master)
-        
-    results_count = results_url_num['results_count']
-
-    results_url = results_url_num['results_url']
-
-    search_results_soup = results_url_num['soup']
-
-    if results_count > 0:
     
-        #Get relevant cases
+    with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
         
-        judgments_file = []
+        df_master = uk_create_df()
+    
+        results_url_num = uk_search_url(df_master)
+            
+        results_count = results_url_num['results_count']
+    
+        results_url = results_url_num['results_url']
+    
+        search_results_soup = results_url_num['soup']
+    
+        if results_count > 0:
         
-        judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-        
-        case_infos = uk_search_results_to_judgment_links(search_results_soup, judgments_counter_bound) 
-        
-        for case in case_infos:
-        
-            #add search results to json
-            judgments_file.append(case)
-
-        #Clean df
-        
-        df_preview = pd.DataFrame(judgments_file)
-
-        #Clean df
-        df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
-        
-        #Get display settings
-        display_df_dict = display_df(df_preview)
-
-        df_preview = display_df_dict['df']
-
-        link_heading_config = display_df_dict['link_heading_config']
-
-        #Display search results
-        st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                    
-        st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-
-        st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-
-    else:
-        st.error(no_results_msg)
+            #Get relevant cases
+            
+            judgments_file = []
+            
+            judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+            
+            case_infos = uk_search_results_to_judgment_links(search_results_soup, judgments_counter_bound) 
+            
+            for case in case_infos:
+            
+                #add search results to json
+                judgments_file.append(case)
+    
+            #Clean df
+            
+            df_preview = pd.DataFrame(judgments_file)
+    
+            #Clean df
+            df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
+            
+            #Get display settings
+            display_df_dict = display_df(df_preview)
+    
+            df_preview = display_df_dict['df']
+    
+            link_heading_config = display_df_dict['link_heading_config']
+    
+            #Display search results
+            st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                        
+            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+    
+            st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+    
+        else:
+            st.error(no_results_msg)
 
 
 # %% [markdown]

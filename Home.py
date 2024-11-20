@@ -52,16 +52,16 @@ else:
 
 # %%
 #Dict of available sources
-page_dict = {"pages/HCA.py": "Judgments of the High Court of Australia",
-            "pages/FCA.py": "Judgments of the Federal Court of Australia", 
-            "pages/NSW.py": "Judgments of select New South Wales courts and tribunals", 
-            "pages/CA.py": 'Judgments of select Canadian courts, boards and tribunals', 
-            "pages/UK.py": "Judgments of select United Kingdom courts and tribunals", 
+page_dict = {"pages/HCA.py": "Cases of the High Court of Australia",
+            "pages/FCA.py": "Cases of the Federal Court of Australia", 
+            "pages/NSW.py": "Cases of select New South Wales courts and tribunals", 
+            "pages/CA.py": 'Cases of select Canadian courts, boards and tribunals', 
+            "pages/UK.py": "Cases of select United Kingdom courts and tribunals", 
               "pages/US.py": "Cases of select United States courts", 
-            "pages/AFCA.py": 'Decisions of the Australian Financial Complaints Authority', 
+            "pages/AFCA.py": 'Cases of the Australian Financial Complaints Authority', 
             #"pages/SCTA.py": 'Decisions of the Superannuation Complaints Tribunal of Australia', 
             "pages/ER.py": "The English Reports (nearly all English case reports from 1220 to 1866)", 
-            "pages/KR.py": "The Kercher Reports (judgments of the New South Wales superior courts from 1788 to 1900)", 
+            "pages/KR.py": "The Kercher Reports (cases of the New South Wales superior courts from 1788 to 1900)", 
             "pages/OWN.py": "Your own files", 
             'pages/AI.py': "Your own spreadsheet"
             }

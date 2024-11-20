@@ -419,7 +419,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[decisions of the Australian Financial Complaints Authority]")
+st.header(f"Search :blue[cases of the Australian Financial Complaints Authority]")
 
 st.success(default_msg)
 
@@ -486,7 +486,18 @@ else:
 date_from_entry = st.date_input('Date from', value = au_date(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 date_to_entry = st.date_input('Date to', value = au_date(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
- 
+
+
+#st.subheader("Case metadata collection")
+
+#st.markdown("""Would you like to obtain case metadata? Such data include the case number, the financial firm involved, and the decision date. 
+
+#Case name and hyperlinks to AFCA's website are always included with your results.
+#""")
+
+#meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+meta_data_entry = True
+
 st.info("""You can preview the cases returned by your search terms.""")
 
 with stylable_container(
@@ -521,62 +532,51 @@ if preview_button:
 
     else:
 
-        df_master = afca_create_df()
-
-        if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
-            search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
-                                                all_these_words_input = df_master.loc[0, 'All these words'], 
-                                                this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
-                                                one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
-                                                one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
-                                                one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
-                                                any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
-                                                case_number_input = df_master.loc[0, 'Case number'], 
-                                                date_from_input = df_master.loc[0, 'Date from'], 
-                                                date_to_input = df_master.loc[0, 'Date to'], 
-                                                judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-                                            )
-
-        else:
-            search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
-                        ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
-                        product_line_input = df_master.loc[0, 'Product line'], 
-                        product_category_input = df_master.loc[0, 'Product category'], 
-                        product_name_input = df_master.loc[0, 'Product name'], 
-                        issue_type_input = df_master.loc[0, 'Issue type'], 
-                        issue_input = df_master.loc[0, 'Issue'], 
-                        date_from_input = df_master.loc[0, 'Date from'], 
-                        date_to_input = df_master.loc[0, 'Date to'])
-        
-        if search_results['case_sum'] > 0:
-
-            df_preview = pd.DataFrame(search_results['case_list'])
+        with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
             
-            link_heading_config = {} 
-      
-            link_heading_config['Hyperlink to AFCA Portal'] = st.column_config.LinkColumn(display_text = 'Click')
+            df_master = afca_create_df()
     
-            st.success(f'Your search terms returned {search_results["case_sum"]} result(s). Please see below for the top {min(search_results["case_sum"], default_judgment_counter_bound)} result(s).')
-                        
-            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+            if st.session_state.df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
+                search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
+                                                    all_these_words_input = df_master.loc[0, 'All these words'], 
+                                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
+                                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
+                                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
+                                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
+                                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
+                                                    case_number_input = df_master.loc[0, 'Case number'], 
+                                                    date_from_input = df_master.loc[0, 'Date from'], 
+                                                    date_to_input = df_master.loc[0, 'Date to'], 
+                                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                                )
     
-        else:
-            st.error(no_results_msg)
+            else:
+                search_results = afca_search(keywordsearch_input = df_master.loc[0, 'Search for published decisions'], 
+                            ffsearch_input = df_master.loc[0, 'Search for a financial firm'], 
+                            product_line_input = df_master.loc[0, 'Product line'], 
+                            product_category_input = df_master.loc[0, 'Product category'], 
+                            product_name_input = df_master.loc[0, 'Product name'], 
+                            issue_type_input = df_master.loc[0, 'Issue type'], 
+                            issue_input = df_master.loc[0, 'Issue'], 
+                            date_from_input = df_master.loc[0, 'Date from'], 
+                            date_to_input = df_master.loc[0, 'Date to'])
+            
+            if search_results['case_sum'] > 0:
+    
+                df_preview = pd.DataFrame(search_results['case_list'])
+                
+                link_heading_config = {} 
+          
+                link_heading_config['Hyperlink to AFCA Portal'] = st.column_config.LinkColumn(display_text = 'Click')
+        
+                st.success(f'Your search terms returned {search_results["case_sum"]} result(s). Please see below for the top {min(search_results["case_sum"], default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+        
+            else:
+                st.error(no_results_msg)
+    
 
-
-
-# %% [markdown]
-# ## Metadata choice
-
-# %%
-st.subheader("Case metadata collection")
-
-st.markdown("""Would you like to obtain case metadata? Such data include the case number, the financial firm involved, and the decision date. 
-
-Case name and hyperlinks to AFCA's website are always included with your results.
-""")
-
-meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
 # %% [markdown]
 # ## Buttons
