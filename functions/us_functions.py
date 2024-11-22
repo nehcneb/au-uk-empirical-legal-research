@@ -82,31 +82,44 @@ us_collections = {'Opinions of Federal, State and Territory Courts': 'o',
 }
 
 # %%
-us_order_by = {'Relevance': "score desc",
+us_order_by = {
 'Newest Cases First': "dateFiled desc",
 'Oldest Cases First': "dateFiled asc",
 'Most Cited First': "citeCount desc",
-'Least Cited First': "citeCount asc"
+'Least Cited First': "citeCount asc", 
+'Relevance': "score desc", #Putting relevance last because the API search results are not the same as those from using their website
 }
 
 # %%
-us_pacer_order_by = {'Relevance': "score desc",
+us_pacer_order_by = {
 'Newest Cases First': "dateFiled desc",
 'Oldest Cases First': "dateFiled asc",
 'Newest Documents First': "entry_date_filed desc",
-'Oldest Documents First': "entry_date_filed asc"
+'Oldest Documents First': "entry_date_filed asc", 
+'Relevance': "score desc", #Putting relevance last because the API search results are not the same as those from using their website
 }
 
 # %%
 us_precedential_status = {
-'Precedential': "stat_Precedential",
-'Non-Precedential': "stat_Non-Precedential",
+'Published': "stat_Published",
+'Unpublished': "stat_Unpublished",
 'Errata': "stat_Errata",
-'Separate Opinion': "stat_Separate Opinion",  
+'Separate Opinion': "stat_Separate",  
 'In-chambers': "stat_In-chambers",
-'Relating-to orders': "stat_Relating-to orders", 
+'Relating-to orders': "stat_Relating-to", 
 'Unknown Status': "stat_Unknown Status"
 }
+
+#The following is before the migration on 25 November 2024; see https://www.courtlistener.com/help/api/rest/v4/migration-guide/ 
+#us_precedential_status = {
+#'Precedential': "stat_Precedential",
+#'Non-Precedential': "stat_Non-Precedential",
+#'Errata': "stat_Errata",
+#'Separate Opinion': "stat_Separate Opinion",  
+#'In-chambers': "stat_In-chambers",
+#'Relating-to orders': "stat_Relating-to orders", 
+#'Unknown Status': "stat_Unknown Status"
+#}
 
 # %%
 us_fed_app_courts = {'All': None, 
@@ -1012,7 +1025,7 @@ class us_search_tool:
         self.renamed_keys = ['caseName', 'citation', 'absolute_url', 'docket_absolute_url', 'court', 'dateFiled', 'dateTerminated', 'judge', 'docketNumber'] #, 'neutralCite', 'recap_documents']
 
         #Default arguments/values
-        self.doc_type = 'o'
+        self.doc_type_value = list(us_collections.values())[0] #Scraping opinions by default
         self.params = []
         self.page = None
         self.next_page = None
@@ -1025,7 +1038,7 @@ class us_search_tool:
 
     #Method for conducting search
     def search(self, 
-               doc_type = list(us_collections.keys())[0], 
+               doc_type = list(us_collections.keys())[0], #Scraping opinions by default
                fed_app_courts = [], 
               fed_dist_courts = [], 
               fed_hist_courts = [], 
@@ -1057,13 +1070,13 @@ class us_search_tool:
               ):
 
         #Determine document type sought
-        self.doc_type = us_collections[doc_type]
+        self.doc_type_value = us_collections[doc_type]
 
         #Params for both opinions and PACER docs
         params_raw = [
-            ('type', self.doc_type),
+            ('type', self.doc_type_value),
             ('q', q), 
-            ('type', self.doc_type),
+            ('type', self.doc_type_value),
         ]
 
         if filed_after:
@@ -1081,7 +1094,7 @@ class us_search_tool:
             params_raw.append(('docket_number', docket_number)),
         
         #Params for opinions only
-        if self.doc_type == 'o':
+        if self.doc_type_value == list(us_collections.values())[0]:
 
             params_raw.append(('order_by', us_order_by[order_by]))
 
@@ -1174,7 +1187,7 @@ class us_search_tool:
                 params_raw.append(('court', court_string))
 
         #Params for PACER docs only
-        if self.doc_type == 'r':
+        if self.doc_type_value == list(us_collections.values())[1]:
 
             params_raw.append(('order_by', us_pacer_order_by[order_by]))
 
@@ -1263,11 +1276,12 @@ class us_search_tool:
         #Save page
         self.page = requests.get(advanced_search, params=self.params, headers=self.headers)
 
-        #Save url to search results
+        #Save url to search results for the API page
         self.results_url = self.page.url
 
         #st.write(f"self.results_url is {self.results_url}")
-        
+
+        #Save url to search results for the non-API page
         self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
 
         try:
@@ -1317,10 +1331,10 @@ class us_search_tool:
         #Create results for display
         absolute_url_field = 'absolute_url'
         
-        if self.doc_type == 'o': #Opinions
+        if self.doc_type_value == list(us_collections.values())[0]: #Opinions
             absolute_url_field = 'absolute_url'
 
-        if self.doc_type == 'r': #PACER docs
+        if self.doc_type_value == list(us_collections.values())[1]: #PACER docs
             absolute_url_field = 'docket_absolute_url'
             
         for result in self.results:
@@ -1440,7 +1454,7 @@ class us_search_tool:
     def get_opinions(self):
 
         #Note if doc_type is not opinion
-        if self.doc_type != 'o':
+        if self.doc_type_value != list(us_collections.values())[0]:
             print('Not scraping opinions becase another type of documents is sought.')
         else:
             
@@ -1499,8 +1513,8 @@ class us_search_tool:
     #Method for getting all PDF PACER docs from all results
     def get_docs(self):
 
-        #Note if doc_type is not opinion
-        if self.doc_type != 'r':
+        #Note if doc_type is not pacer docs
+        if self.doc_type_value != list(us_collections.values())[1]:
             print('Not scraping PACER documents because another type of documents is sought.')
         else:
             self.results_w_docs = self.results_to_show.copy()
@@ -1644,12 +1658,15 @@ def us_search_preview(df_master):
                 available_only = df_master.loc[0, 'Only show results with PDFs'],
                 )
     
-    results_url = us_search.results_url
     results_count = us_search.results_count
     results_to_show = us_search.results_to_show
 
+    results_url = us_search.results_url_to_show
+    #Use the following if want to show url to the API page of search results
+    #results_url = us_search.results_url
+    
+    
     return {'results_url': results_url, 'results_count': results_count, 'results_to_show': us_search.results_to_show}
-
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -1664,19 +1681,11 @@ from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, 
 
 
 # %%
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
-
-# %%
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%

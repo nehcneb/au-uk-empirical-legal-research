@@ -923,7 +923,7 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 
 #Cutoff for requiring activate batch mode
 
-judgment_batch_cutoff = 25
+judgment_batch_cutoff = 50
 
 #max number of judgments under any mode
 judgment_batch_max = 100

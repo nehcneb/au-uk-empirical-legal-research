@@ -71,7 +71,6 @@ from functions.common_functions import own_account_allowed, convert_df_to_json, 
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, truncation_note
 
 
-
 # %%
 #Page bound
 
@@ -275,11 +274,6 @@ def image_to_text(uploaded_image, language, page_bound):
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
 from functions.gpt_functions import question_characters_bound
-
-
-# %%
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-print(f"The default number of files to scrape per request is capped at {default_file_counter_bound}.\n")
 
 
 # %%

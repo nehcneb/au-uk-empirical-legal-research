@@ -65,7 +65,6 @@ from functions.common_functions import own_account_allowed, convert_df_to_json, 
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, no_results_msg, search_error_note
 
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
 
 
 # %% [markdown]
@@ -265,15 +264,10 @@ from functions.gpt_functions import question_characters_bound
 
 
 # %%
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
-
-# %%
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, GPT_answers_check, unanswered_questions, checked_questions_json, answers_check_system_instruction
-
 
 
 # %%

@@ -462,6 +462,7 @@ if collection_entry != st.session_state['df_master'].loc[0, 'Collection']:
     st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
     st.session_state['df_master'].loc[0, 'State and Territory Courts'] = ['All']
     st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
+    st.session_state['df_master'].loc[0, 'Search results order'] = list(us_order_by.keys())[0]
 
 #st.subheader('Courts to cover')
 
@@ -606,7 +607,7 @@ else: #If PACER records chosen
     nature_of_suit_entry = st.text_input(label = 'Nature of suit', value = st.session_state['df_master'].loc[0, 'Nature of suit'])
     party_name_entry = st.text_input(label = 'Party name', value = st.session_state['df_master'].loc[0, 'Party name'])
     atty_name_entry = st.text_input(label = 'Attorney name', value = st.session_state['df_master'].loc[0, 'Attorney name'])
-    available_only_entry = st.checkbox(label = 'Only show results with PDFs', value = bool(float(st.session_state['df_master'].loc[0, 'Only show results with PDFs'])))
+    available_only_entry = st.checkbox(label = 'Only show results with PDFs (up to 3 will be processed)', value = bool(float(st.session_state['df_master'].loc[0, 'Only show results with PDFs'])))
     order_by_entry = st.selectbox(label = "Search results order ", options = list(us_pacer_order_by.keys()), index = list(us_pacer_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
 
 st.subheader("Your CourtListener API token")
@@ -681,7 +682,7 @@ if preview_button:
                 link_heading_config = display_df_dict['link_heading_config']
     
                 #Display search results
-                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                st.success(f'Your search terms returned about {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
                             
                 st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
     
@@ -692,6 +693,7 @@ if preview_button:
                 
                 #US-specific
                 st.error('Alternatively, please enter your own CourtListener API token and try again.')
+                
 
 
 # %% [markdown]

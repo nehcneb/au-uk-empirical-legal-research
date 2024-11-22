@@ -43,6 +43,16 @@ else:
 
 # %%
 #Determine whether to allow user to use batch mode
+from functions.common_functions import check_questions_answers
+
+if check_questions_answers() > 0:
+    print(f'By default, questions and answers are checked for potential privacy violation.')
+else:
+    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
+
+
+# %%
+#Determine whether to allow user to use batch mode
 from functions.common_functions import batch_mode_allowed
 
 if batch_mode_allowed() > 0:

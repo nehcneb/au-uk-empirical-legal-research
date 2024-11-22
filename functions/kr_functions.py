@@ -263,19 +263,11 @@ from functions.gpt_functions import question_characters_bound, role_content
 
 
 # %%
-print(f"Questions for GPT are capped at {question_characters_bound} characters.\n")
-print(f"The default number of judgments to scrape per request is capped at {default_judgment_counter_bound}.\n")
-
-# %%
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%

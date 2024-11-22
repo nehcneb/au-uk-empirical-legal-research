@@ -76,13 +76,6 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 
 
 # %%
-#Page bound
-
-default_page_bound = 100
-
-#if 'page_bound' not in st.session_state:
-    #st.session_state['page_bound'] = default_page_bound
-
 #Default file counter bound
 
 default_file_counter_bound = default_judgment_counter_bound
@@ -550,7 +543,7 @@ if own_account_allowed() > 0:
         
         st.write(f'**:orange[You can increase the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
         
-        page_bound_entry = st.number_input(label = 'Enter a number between 1 and 100', min_value = 1, max_value = 100, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
+        page_bound_entry = st.number_input(label = f'Enter a number between 1 and {default_page_bound}', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
 
         #if page_bound_entry:
             

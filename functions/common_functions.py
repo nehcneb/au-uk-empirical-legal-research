@@ -31,6 +31,11 @@ def batch_mode_allowed():
 
 
 # %%
+def pop_judgment():
+    return 1
+
+
+# %%
 huggingface = True
 
 #if depends on director
@@ -93,7 +98,7 @@ default_judgment_counter_bound = 10
 
 # %%
 #Default page bound for OWN.py
-default_page_bound = 50
+default_page_bound = 100
 
 
 # %%

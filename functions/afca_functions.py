@@ -58,18 +58,10 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input
 #Import variables
 from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account')
-else:
-    print(f'By default, users are NOT allowed to use their own account')
-
-print(f"The pause between judgment scraping is {scraper_pause_mean} second.\n")
-
-print(f"The lower bound on lenth of judgment text to process is {judgment_text_lower_bound} tokens.\n")
 
 # %% [markdown]
 # # AFCA search engine
@@ -508,6 +500,8 @@ def afca_old_search(
                         pause.seconds(np.random.randint(5, 15))
 
                         break
+
+    browser_old.close()
     
     return {'case_sum': case_sum, 'case_sum_message': case_sum_msg, 'case_list': case_list}
     
@@ -545,6 +539,8 @@ def afca_old_pdf_judgment(case_meta):
         os.remove(pdf_path)
     
         judgment_text = str(text_list)
+
+        browser_old.close()
     
     except Exception as e:
         print(f"{case_meta['Case name']}: judgment not scrapped")
@@ -560,7 +556,7 @@ afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page
 # %% [markdown]
 # ## Post 14 June 2024
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ### Definitions of menu items
 
 # %%
@@ -1669,6 +1665,8 @@ def afca_search(keywordsearch_input, #= '',
         #print('Search terms returned no results.')
         #print(e)
 
+    browser.close()
+    
     return {'case_sum': len(case_list), 'case_list': case_list, 'urls': urls}
 
 
@@ -1751,10 +1749,6 @@ from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%
@@ -1846,7 +1840,8 @@ def afca_old_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
-    df_updated.pop('judgment')
+    if pop_judgment() > 0:
+        df_updated.pop('judgment')
 
     #Drop metadata if not wanted
 
@@ -1937,7 +1932,8 @@ def afca_new_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
-    df_updated.pop('judgment')
+    if pop_judgment() > 0:
+        df_updated.pop('judgment')
 
     #Drop metadata if not wanted
 
