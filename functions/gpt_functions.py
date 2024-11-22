@@ -356,7 +356,8 @@ For example, the question "What's the defendant's age?" should be labelled "0".
 #Check questions for potential privacy infringement
 #For instant mode
 
-@st.cache_data(show_spinner = False)
+#Don't add @st.cache_data
+
 def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
@@ -473,8 +474,8 @@ def checked_questions_json(questions_json, gpt_labels_output):
 
 # %%
 #Check questions for potential privacy infringement
+#Don't add @st.cache_data
 
-@st.cache_data(show_spinner = False)
 def GPT_questions_check(_questions_json_or_string, gpt_model, questions_check_system_instruction):
     #'questions_str' variable is a string of questions to GPT
     #Returns both a string and a json of checked questions, together with costs, and displays any witheld questions
@@ -1044,7 +1045,6 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
 # %%
 #Define function for creating jsonl file for batching together with df_individual with custom id inserted
 
-#@st.cache_data(show_spinner = False)
 def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df

@@ -552,7 +552,6 @@ if gpt_keep_button:
     download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
     
 
-
 # %%
 if run_button:
     
@@ -636,7 +635,7 @@ if gpt_reset_button:
     st.session_state['df_individual'] = pd.DataFrame([])
     
     st.session_state['need_resetting'] = 0
-    
+        
     st.rerun()
 
 
