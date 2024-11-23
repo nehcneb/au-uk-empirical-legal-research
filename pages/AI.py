@@ -35,8 +35,8 @@ import ast
 #from dotenv import load _dotenv
 import matplotlib.pyplot as plt
 #from matplotlib.backends.backend_agg import RendererAgg
-import statsmodels.api# as sm
-import statsmodels.formula.api# as smf
+#import statsmodels.api as sm
+#import statsmodels.formula.api as smf
 #from sklearn.ensemble import RandomForestClassifier
 #from sklearn.preprocessing import StandardScaler
 #from sklearn.linear_model import LogisticRegression
