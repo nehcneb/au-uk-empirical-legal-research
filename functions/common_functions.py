@@ -72,6 +72,7 @@ import pypdf
 import io
 from io import BytesIO
 import pause
+import re
 
 #Excel
 import openpyxl
@@ -152,37 +153,45 @@ errors_list = set()
 
 
 # %%
-#Split title and mnc from full case full title
+#Split title and mnc from full case title
 
 def split_title_mnc(full_title):
+    
     #Returns a list where first item is full_title and second item mnc
 
-    full_title = str(full_title)
+    full_title = str(full_title) #This is to convert any nan float to str
     
     #Get rid of extra spaces
     while '  ' in full_title:
+        
         full_title = full_title.replace('  ', ' ')
 
-    #Get mnc with potentially extra words after
-    mnc = full_title
-    if '[' in full_title:
-        mnc = '[' + full_title.split('[')[-1]
-
-    #Get rid of extra words after mnc
-    mnc_list = mnc.split(' ')
+    #Get mnc
+    mnc = ''
     
-    if len(mnc_list) > 3:
-        mnc = f"{mnc_list[0]} {mnc_list[1]} {mnc_list[2]}"
+    mnc_list = re.findall(r'\[\d{4}\]\s\D+\s\d+', full_title)
 
+    if len(mnc_list) > 0:
+        
+        mnc = mnc_list[0]
+        
+        if isinstance(mnc, tuple):
+            
+            mnc = mnc[0]
+    
     #Get title 
-    if mnc in full_title:
+    if (len(mnc) > 0) and (mnc in full_title):
         
         title = full_title.split(mnc)[0]
 
         if len(title) > 0:
             
+            while title[0] == ' ':
+                title = title[1:]
+
             while title[-1] == ' ':
                 title = title[:-1]
+                
     else:
         title = full_title
     
@@ -193,7 +202,6 @@ def split_title_mnc(full_title):
 # %%
 #Pause between judgment scraping
 scraper_pause_mean = int(10)
-
 
 
 # %%
@@ -551,7 +559,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
         previous_str = ''
         
         if previous:
-            st.warning('Looking for your last produced data?')
+            st.info('Looking for your last produced data?')
             
             previous_str = 'last produced '
             

@@ -145,7 +145,7 @@ st.markdown("""You will be asked to
 
 (2) enter search terms to identify your preferred cases, or upload your own files; and
 
-(3) enter questions about these cases or files for GPT to answer.
+(3) tell GPT what data or information to get from these cases or files.
 """)
 
 st.subheader(""":green[What would you like to research?]""")

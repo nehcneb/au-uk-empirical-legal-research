@@ -215,20 +215,20 @@ return_button = st.button('RETURN to the previous page')
 
 #st.header("Use GPT as your research assistant")
 
-st.header(":blue[Would you like to ask GPT questions about the cases found?]")
+st.header(":blue[Would you like GPT to get data or information from the cases found?]")
 
-st.markdown("""You can use this app without asking GPT any questions. For instance, you can extract metadata and get estimates of file length and GPT cost. 
+st.markdown("""You don't have to use GPT. This app can extract metadata and get estimates of file length and GPT cost without using GPT. 
 """)
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
 st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
 
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per case. The [exact cost](https://openai.com/pricing) depends on question length, case length, and answer length. You will be given cost estimates.")
+st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per case. The [exact cost](https://openai.com/api/pricing/) depends on question length, case length, and answer length. You will be given cost estimates.")
 
-st.subheader("Enter your questions for each case")
+st.subheader("Tell GPT what to get from each case")
 
-st.warning("""Please enter **one question per line or paragraph**. For **each case**, GPT will answer your questions based **only** on information from the case **itself**. """)
+st.warning("""In question form, please tell GPT what to get from each case. Enter **one question per line or paragraph**. For **each case**, GPT will respond based **only** on information from the case **itself**. """)
 
 st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant case itself.""")
 
@@ -244,7 +244,7 @@ gpt_questions_entry = st.text_area(label = f"You may enter at most {question_cha
     
 st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
 
-st.caption(f"By default, model gpt-4o-mini will answer your questions. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each case.")
+st.caption(f"By default, this app will use model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each case.")
 
 if check_questions_answers() > 0:
     
@@ -475,11 +475,11 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
 #Warning
 if gpt_activation_entry:
     if st.session_state.gpt_model == 'gpt-4o-mini':
-        st.warning('A low-cost GPT model will answer your questions. Please be cautious.')
+        st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
     
     if st.session_state.gpt_model == "gpt-4o-2024-08-06":
-        st.warning('An expensive GPT model will answer your questions. Please be cautious.')
+        st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 #Buttons
 
@@ -550,7 +550,7 @@ if len(st.session_state.df_individual)>0:
 if gpt_keep_button:
     
     download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
-    
+
 
 # %%
 if run_button:

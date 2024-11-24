@@ -366,7 +366,7 @@ st.caption('Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wi
 # ## Form for AI
 
 # %%
-st.header(":blue[Would you like to ask GPT questions about your files?]")
+st.header(":blue[Would you like GPT to get data or information from your files?]")
 
 gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
@@ -374,11 +374,11 @@ gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = 
     
 st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
     
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/pricing) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates.")
+st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates.")
 
-st.subheader("Enter your questions for each file")
+st.subheader("Tell GPT what to get from each file")
 
-st.warning("""Please enter **one question per line or paragraph**. For **each file**, GPT will answer your questions based **only** on information from the file **itself**. """)
+st.warning("""In question form, please tell GPT what to get from each file. Enter **one question per line or paragraph**. For **each file**, GPT will respond based **only** on information from the file **itself**. """)
 
 st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant file itself.""")
 
@@ -390,7 +390,7 @@ if st.toggle('Tips for using GPT'):
 
 gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-st.caption(f"By default, model gpt-4o-mini will answer your questions. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each file.")
+st.caption(f"By default, this app will use model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each file.")
 
 #if gpt_questions_entry:
     
@@ -605,11 +605,11 @@ st.markdown("""You can now press :green[PRODUCE data] to obtain a spreadsheet wh
 #Warning
 if gpt_activation_entry:
     if st.session_state.gpt_model == 'gpt-4o-mini':
-        st.warning('A low-cost GPT model will answer your questions. Please be cautious.')
+        st.warning('A low-cost GPT model will process your files. Please be cautious.')
         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
     
     if st.session_state.gpt_model == "gpt-4o-2024-08-06":
-        st.warning('An expensive GPT model will answer your questions. Please be cautious.')
+        st.warning('An expensive GPT model will process your files. Please be cautious.')
 
 reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
