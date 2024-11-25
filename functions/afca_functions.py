@@ -125,6 +125,7 @@ if streamlit_timezone() == True:
         return uc.Chrome(options = options_old)
     
     try:
+        
         browser_old = get_driver_old()
         
         browser_old.implicitly_wait(60)
@@ -501,7 +502,7 @@ def afca_old_search(
 
                         break
 
-    browser_old.close()
+    #browser_old.close()
     
     return {'case_sum': case_sum, 'case_sum_message': case_sum_msg, 'case_list': case_list}
     
@@ -1665,7 +1666,7 @@ def afca_search(keywordsearch_input, #= '',
         #print('Search terms returned no results.')
         #print(e)
 
-    browser.close()
+    #browser.close()
     
     return {'case_sum': len(case_list), 'case_list': case_list, 'urls': urls}
 
@@ -1780,17 +1781,17 @@ def afca_old_run(df_master):
     #Conduct search
     
     search_results = afca_old_search(earlier_t_o_r_input = df_master.loc[0, 'Include decisions made under earlier Terms of Reference'], 
-                                    all_these_words_input = df_master.loc[0, 'All these words'], 
-                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
-                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
-                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
-                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
-                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
-                                    case_number_input = df_master.loc[0, 'Case number'], 
-                                    date_from_input = df_master.loc[0, 'Date from'], 
-                                    date_to_input = df_master.loc[0, 'Date to'], 
-                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-                                )
+                                                    all_these_words_input = df_master.loc[0, 'All these words'], 
+                                                    this_exact_wording_or_phrase_input = df_master.loc[0, 'This exact wording or phrase'], 
+                                                    one_or_more_of_these_words_1_input = df_master.loc[0, 'One or more of these words - 1'], 
+                                                    one_or_more_of_these_words_2_input = df_master.loc[0, 'One or more of these words - 2'], 
+                                                    one_or_more_of_these_words_3_input = df_master.loc[0, 'One or more of these words - 3'], 
+                                                    any_of_these_unwanted_words_input = df_master.loc[0, 'Any of these unwanted words'], 
+                                                    case_number_input = df_master.loc[0, 'Case number'], 
+                                                    date_from_input = df_master.loc[0, 'Date from'], 
+                                                    date_to_input = df_master.loc[0, 'Date to'], 
+                                                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                                )
 
     #for link in judgments_links:
     for case in search_results['case_list']:
@@ -1945,6 +1946,7 @@ def afca_new_run(df_master):
                 pass
                 
     return df_updated
+    
 
 
 # %% [markdown]
@@ -1959,5 +1961,6 @@ def afca_run(df_master):
         df_updated = afca_new_run(df_master)
 
     return df_updated
+    
 
 

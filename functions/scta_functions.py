@@ -135,6 +135,7 @@ def scta_search_results_to_case_link_pairs(_soup, url_search_results, judgment_c
     for ending in range(10, docs_found, 10):
         if counter <= min(judgment_counter_bound, docs_found):
             url_next_page = url_search_results + ';offset=' + f"{ending}"
+            headers = {'User-Agent': 'whatever'}
             page_judgment_next_page = requests.get(url_next_page, headers=headers)
             soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
             
