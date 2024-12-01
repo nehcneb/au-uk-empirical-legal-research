@@ -476,7 +476,7 @@ def afca_old_search(
                         
                                     counter += 1
 
-                            pause.seconds(np.random.randint(5, 15))
+                            pause.seconds(np.random.randint(15, 30))
 
                             break
 
@@ -498,7 +498,7 @@ def afca_old_search(
                     
                                 counter += 1
                         
-                        pause.seconds(np.random.randint(5, 15))
+                        pause.seconds(np.random.randint(15, 30))
 
                         break
 
@@ -1806,7 +1806,7 @@ def afca_old_run(df_master):
     
             judgments_file.append(judgment_dict)
             
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(15, 30))
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -1904,7 +1904,8 @@ def afca_new_run(df_master):
 
             counter += 1
             
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(15, 30))
+            
         else:
             break
     
