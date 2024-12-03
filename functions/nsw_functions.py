@@ -272,7 +272,7 @@ def nsw_search(courts = [],
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def nsw_search_preview(df_master):
     df_master = df_master.fillna('')
     
@@ -565,7 +565,7 @@ def nsw_tidying_up_pre_gpt(df_master, df_individual):
 #Download directly from Caselaw NSW without looking in OALC first
 #NOT IN USE
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def nsw_run_direct(df_master):
     df_master = df_master.fillna('')
     
@@ -705,7 +705,7 @@ def nsw_run_direct(df_master):
 # %%
 #Download from Caselaw NSW if can't find judgment in OALC
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def nsw_run(df_master):
     
     df_master = df_master.fillna('')

@@ -142,7 +142,7 @@ def uk_link(x):
 # %%
 #Function turning search terms to search results url
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def uk_search(query= '', 
               from_day= '',
               from_month='', 
@@ -193,7 +193,7 @@ def uk_search(query= '',
 # %%
 #Define function turning search results url to case_infos to judgments
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
     #Reponse is from scraping per uk_search
     
@@ -363,7 +363,7 @@ uk_meta_labels_droppable = ['Date',
                          'Header'
                         ]
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def uk_meta_judgment_dict(judgment_url_xml):
 
     judgment_dict = {'Case name': '',
@@ -492,7 +492,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def uk_run(df_master):
     df_master = df_master.fillna('')
 

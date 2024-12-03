@@ -82,7 +82,7 @@ er_method_types = ['auto', 'boolean', 'any', 'all', 'phrase', 'title']
 
 # %%
 #Function turning search terms to search results url
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_search(query= '', 
               method = ''
              ):
@@ -110,7 +110,7 @@ def er_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from er_search
 
@@ -194,7 +194,7 @@ def er_judgment_text(case_link_pair):
 
 # %%
 #Meta labels and judgment combined
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
@@ -238,7 +238,7 @@ def er_meta_judgment_dict(case_link_pair):
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_search_url(df_master):
 
     df_master = df_master.fillna('')
@@ -288,7 +288,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_run(df_master):
     df_master = df_master.fillna('')
 
@@ -365,7 +365,7 @@ from functions.gpt_functions import get_image_dims, calculate_image_token_cost
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_judgment_tokens_b64(case_link_pair):
 
     output_b64 = {'judgment':[], 'tokens_raw': 0}
@@ -795,7 +795,7 @@ def er_engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activa
 # %%
 #For gpt-4o vision
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def er_run_b64(df_master):
 
     df_master = df_master.fillna('')

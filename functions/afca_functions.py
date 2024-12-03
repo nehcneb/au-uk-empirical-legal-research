@@ -274,7 +274,7 @@ def afca_old_element_meta(inner_html):
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def afca_old_search(
     earlier_t_o_r_input, 
     all_these_words_input, 
@@ -1496,7 +1496,7 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
 # %%
 #Define search boxes
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def afca_search(keywordsearch_input, #= '', 
                 ffsearch_input, #= '', 
                 product_line_input, #= '', 
@@ -1673,7 +1673,7 @@ def afca_search(keywordsearch_input, #= '',
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def afca_meta_judgment_dict(judgment_url):
 
     judgment_dict = {'Case name': '', 'Hyperlink to AFCA Portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
@@ -1765,7 +1765,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def afca_old_run(df_master):
     
     df_master = df_master.fillna('')
@@ -1862,7 +1862,7 @@ def afca_old_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def afca_new_run(df_master):
     
     df_master = df_master.fillna('')
@@ -1954,7 +1954,7 @@ def afca_new_run(df_master):
 # ## Run function to use
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def afca_run(df_master):
     if df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
         df_updated = afca_old_run(df_master)

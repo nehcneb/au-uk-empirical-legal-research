@@ -79,7 +79,7 @@ hca_collections = ['Judgments 2000-present', 'Judgments 1948-1999', '1 CLR - 100
 # %%
 #Function turning search terms to search results url AND number of search results
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_search(collection = hca_collections[0], 
                quick_search = '', 
                #citation = '', 
@@ -128,7 +128,7 @@ def hca_search(collection = hca_collections[0],
 #Define function turning search results url to cases_w_mnc_links to judgments
 #NOT IN USE
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Scrape webpage of search results
     
@@ -262,7 +262,7 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
 # %%
 #Define function for judgment link containing PDF
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_pdf_judgment(url):
     pdf_url = url.replace('showCase', 'downloadPdf')
     headers = {'User-Agent': 'whatever'}
@@ -287,7 +287,7 @@ hca_meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catch
 # %%
 #If judgment link contains 'showCase'
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
@@ -419,7 +419,7 @@ def hca_meta_judgment_dict(judgment_url):
 # %%
 #If judgment link contains 'showbyHandle'
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_meta_judgment_dict_alt(judgment_url):
     
     judgment_dict = {'Case name': '',
@@ -586,7 +586,7 @@ def hca_meta_judgment_dict_alt(judgment_url):
 # %%
 #Slow way of finding a case from mnc
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_mnc_to_link_browse(collection, year, num):
 
     #Default judgment without the prefix https://eresources.hcourt.gov.au
@@ -658,7 +658,7 @@ def hca_mnc_to_link_browse(collection, year, num):
 # %%
 #Function for turning citation to judgment_url
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_citation_to_link(collection, citation):
 
     #Placeholder error url
@@ -831,7 +831,7 @@ hca_df = hca_load_data(hca_data_url)
 # %%
 #Function to excluding unwanted jugdments
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_judgment_to_exclude(case_info,
                         collection, 
                         own_parties_include, 
@@ -1037,7 +1037,7 @@ def hca_judgment_to_exclude(case_info,
 # %%
 #Function to get judgment links with filters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_search_results_to_judgment_links_filtered_df(_soup, 
                                                      url_search_results, 
                                      judgment_counter_bound,
@@ -1337,7 +1337,7 @@ def hca_terms_to_add(years_list, parties_list):
 
 # %%
 #Search function for adding year and judge, if entered, to search terms 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_enhanced_search(collection, 
                quick_search, 
                #citation = '', 
@@ -1517,7 +1517,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #For getting judgments directly from the High Court without searching in OALC first
 #NOT IN USE
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_run_direct(df_master):
     df_master = df_master.fillna('')
 
@@ -1632,7 +1632,7 @@ def hca_run_direct(df_master):
 # %%
 #For getting judgments directly from the High Court if not available in OALC
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1807,7 +1807,7 @@ def hca_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def hca_batch(df_master):
     df_master = df_master.fillna('')
 

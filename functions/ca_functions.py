@@ -610,7 +610,7 @@ all_subjects = ['Access to information and privacy', 'Administrative remedies', 
 
 # %%
 #Function turning search terms to search results url
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def ca_search(jurisdiction  =  'All', 
               court = 'All', 
               phrase = '', 
@@ -736,7 +736,7 @@ def ca_search(jurisdiction  =  'All',
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Start counter
     
@@ -832,7 +832,7 @@ ca_meta_dict = {
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def ca_meta_judgment_dict(judgment_url):
     
     judgment_dict = {'Case name': '', 'Medium neutral citation':'', 'Hyperlink to CanLII': link(judgment_url), 'File number': '', 'Other citations': '', 'Most recent unfavourable mention': '', 'judgment': ''}
@@ -938,7 +938,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def ca_run(df_master):
     df_master = df_master.fillna('')
 

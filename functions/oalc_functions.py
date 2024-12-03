@@ -60,7 +60,7 @@ def load_corpus():
 # %%
 #Function for getting texts from a list of cases then match with the mnc
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def get_judgment_from_oalc_direct(mnc_list):
 
     #Load corpus
@@ -131,7 +131,7 @@ def oalc_filter(dataset, split, config = 'default', where = None, orderby = None
 # %%
 #Function for getting texts from a list of cases then match with the mnc, without downloading
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def get_judgment_from_oalc(mnc_list):
 
     print(f"The list of mncs to be obtained from OALC is mnc_list == {mnc_list}")

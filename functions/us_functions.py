@@ -1380,7 +1380,7 @@ class us_search_tool:
             self.results_to_show.append(result_to_show)
 
     #Function for getting opinion text from opinion_raw
-    @st.cache_data(show_spinner = False)
+    #@st.cache_data(show_spinner = False)
     def clean_opinion_json(_self, opinion_raw, headers):
 
         opinion_id = opinion_raw['id']
@@ -1498,7 +1498,7 @@ class us_search_tool:
                         self.metadata_droppable.append(key)
 
     #Define function for getting PDF from one link
-    @st.cache_data(show_spinner = False)
+    #@st.cache_data(show_spinner = False)
     def clean_doc_json(_self, recap_document, headers):
 
         headers.update({'User-Agent': 'whatever'})
@@ -1542,7 +1542,7 @@ class us_search_tool:
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def us_search_function(token, 
               judgment_counter_bound, 
                 doc_type,
@@ -1612,7 +1612,7 @@ def us_search_function(token,
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def us_search_preview(df_master):
     
     df_master = df_master.fillna('')
@@ -1699,7 +1699,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def us_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1817,7 +1817,7 @@ def us_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def us_batch(df_master):
     df_master = df_master.fillna('')
 

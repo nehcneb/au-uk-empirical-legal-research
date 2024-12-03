@@ -91,7 +91,7 @@ fca_courts_list = list(fca_courts.keys())
 # %%
 #Function turning search terms to search results url
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_search(court = '', 
                case_name_mnc= '', 
                judge ='', 
@@ -172,12 +172,6 @@ def fca_search(court = '',
     soup = BeautifulSoup(response.content, "lxml")
 
     return {'soup': soup, 'results_url': results_url, 'results_count': results_count}
-
-# %%
-test = fca_search(court = 'Federal Court', catchwords = 'class actions', before_date = '1Jan22')
-
-# %%
-test['results_url']
 
 
 # %%
@@ -368,7 +362,7 @@ fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'C
 #'MNC', 
 fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to', 'Order']
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_meta_judgment_dict(case_info):
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
@@ -549,7 +543,7 @@ def fca_pdf_name(name_mnc_list, mnc):
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_search_url(df_master):
     df_master = df_master.fillna('')
         
@@ -610,7 +604,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #For getting judgments directly from the Federal Court without checking OALC first
 #NOT IN USE
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_run_direct(df_master):
     df_master = df_master.fillna('')
 
@@ -707,7 +701,7 @@ def fca_run_direct(df_master):
 # %%
 #For getting judgments from the Federal Court if unavailable in OALC
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_run(df_master):
     df_master = df_master.fillna('')
 
@@ -849,7 +843,7 @@ def fca_run(df_master):
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_batch(df_master):
     df_master = df_master.fillna('')
 

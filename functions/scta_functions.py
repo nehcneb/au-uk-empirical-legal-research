@@ -81,7 +81,7 @@ scta_method_types = ['auto', 'title', 'boolean', 'any', 'all']
 # %%
 #Function turning search terms to search results url
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def scta_search(query= '', 
               method = ''
              ):
@@ -109,7 +109,7 @@ def scta_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def scta_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from scta_search
 
@@ -167,7 +167,7 @@ def scta_search_results_to_case_link_pairs(_soup, url_search_results, judgment_c
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def scta_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
@@ -186,7 +186,7 @@ def scta_judgment_text(case_link_pair):
 # %%
 #Meta labels and judgment combined
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def scta_meta_judgment_dict(case_link_pair):
     
     judgment_dict = {'Case name': '',
@@ -232,7 +232,7 @@ def scta_meta_judgment_dict(case_link_pair):
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def scta_search_url(df_master):
 
     df_master = df_master.fillna('')
@@ -275,7 +275,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def scta_run(df_master):
     df_master = df_master.fillna('')
 

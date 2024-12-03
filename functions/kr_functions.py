@@ -82,7 +82,7 @@ kr_method_types = ['auto', 'title', 'boolean', 'any', 'all']
 # %%
 #Function turning search terms to search results url
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def kr_search(query= '', 
               method = ''
              ):
@@ -110,7 +110,7 @@ def kr_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from kr_search
 
@@ -173,7 +173,7 @@ def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_cou
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def kr_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
@@ -192,7 +192,7 @@ def kr_judgment_text(case_link_pair):
 # %%
 #Meta labels and judgment combined
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def kr_meta_judgment_dict(case_link_pair):
     try:
         judgment_dict = {'Case name': '',
@@ -237,7 +237,7 @@ def kr_meta_judgment_dict(case_link_pair):
 
 
 # %%
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def kr_search_url(df_master):
 
     df_master = df_master.fillna('')
@@ -282,7 +282,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def kr_run(df_master):
     df_master = df_master.fillna('')
 
