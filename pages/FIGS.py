@@ -37,7 +37,7 @@ image_list = ['figs/relationship.png',
              'figs/age.png', 
               'figs/gender.png', 
               'figs/outcome.png',
-              'figs/1p1d_total_costs_proportion.png'
+              'figs/1p1d_total_costs_proportion.png',
             'figs/1p1d_costs_relative_female.png', 
               'figs/1p1d_costs_relative_male.png', 
              ]
