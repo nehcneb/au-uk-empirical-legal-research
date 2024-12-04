@@ -29,6 +29,11 @@ from functions.common_functions import split_title_mnc, judgment_text_lower_boun
 #from common_functions import split_title_mnc
 
 
+# %%
+#Decide whether to use Umar Butler's or mine
+corpus_dir = 'nehcneb/oalc_cases'
+#corpus_dir = 'umarbutler/open-australian-legal-corpus'
+
 # %% [markdown]
 # # Download corpus then search
 
@@ -48,7 +53,15 @@ def load_corpus():
         print(e)
     
     if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
-        corpus = load_dataset('nehcneb/oalc_cases', split='train', revision='refs/convert/parquet')#, streaming=True)
+
+        if 'nehcneb' in corpus_dir:
+        
+            corpus = load_dataset('nehcneb/oalc_cases', split='train', revision='refs/convert/parquet')#, streaming=True)
+
+        else:
+            
+            corpus = load_dataset('umarbutler/open-australian-legal-corpus', split='corpus') # Set `keep_in_memory` to `True` if you wish to load the entire corpus into memory.
+
     else:        
         #If running locally
         corpus = load_from_disk(st.secrets['huggingface']['oalc_cases_local_path']) #keep_in_memory=False, 
@@ -99,7 +112,14 @@ def get_judgment_from_oalc_direct(mnc_list):
 # %%
 #Based on https://huggingface.co/docs/dataset-viewer/en/filter
 
-def oalc_filter(dataset, split, config = 'default', where = None, orderby = None, offset = None, length = None):
+def oalc_filter(dataset, 
+                #split, 
+                config = 'default', 
+                where = None, 
+                orderby = None, 
+                offset = None, 
+                length = None
+               ):
 
     base_url = "https://datasets-server.huggingface.co/filter"
 
@@ -109,6 +129,17 @@ def oalc_filter(dataset, split, config = 'default', where = None, orderby = None
     except: #If running on Huggingface or Github Actions
         HF_TOKEN = os.environ['HF_TOKEN']
 
+    if 'nehcneb' in dataset:
+        
+        split = 'train'
+    
+    if 'umarbutler' in dataset:
+        
+        split = 'corpus'
+
+        config = 'default'
+        
+    
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     params = {
     'dataset':dataset, #the dataset name, for example nyu-mll/glue or mozilla-foundation/common_voice_10_0
@@ -120,12 +151,12 @@ def oalc_filter(dataset, split, config = 'default', where = None, orderby = None
     'offset': offset, #the offset of the slice, for example 150
     'length': length
         }
+    
     response = requests.get(base_url, params=params, headers=headers)
 
     #print(response.url)
     
     return response.json()
-
 
 
 # %%
@@ -160,8 +191,8 @@ def get_judgment_from_oalc(mnc_list):
     where_str = ' OR '.join(where_list)
 
     #Get judgments from corpus online
-    data = oalc_filter(dataset = 'nehcneb/oalc_cases', 
-                 split = 'train', 
+    data = oalc_filter(dataset = corpus_dir, 
+                 #split = 'train', 
                config = subset, 
                 where = where_str, 
                  #where = """
