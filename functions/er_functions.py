@@ -110,7 +110,7 @@ def er_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def er_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from er_search
 
@@ -175,7 +175,7 @@ def er_search_results_to_case_link_pairs(_soup, url_search_results, judgment_cou
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def er_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
@@ -288,7 +288,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def er_run(df_master):
     df_master = df_master.fillna('')
 
@@ -795,7 +795,7 @@ def er_engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activa
 # %%
 #For gpt-4o vision
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def er_run_b64(df_master):
 
     df_master = df_master.fillna('')

@@ -282,7 +282,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def kr_run(df_master):
     df_master = df_master.fillna('')
 

@@ -201,7 +201,7 @@ def uk_create_df():
           }
 
     df_master_new = pd.DataFrame([new_row])
-    
+
 #    df_master_new.to_json(current_dir + '/df_master.json', orient = 'split', compression = 'infer')
 #    df_master_new.to_excel(current_dir + '/df_master.xlsx', index=False)
 
@@ -341,7 +341,7 @@ if default_on:
     st.session_state['df_master'].at[0, 'Courts'] = uk_courts_default_list
 
 courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to search', options = uk_courts_list, default = st.session_state['df_master'].loc[0, 'Courts'])
-    
+
 #st.caption("All courts and tribunals listed in this menu will be covered if left blank.")
 
 #Search terms

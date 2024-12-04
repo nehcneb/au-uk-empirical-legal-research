@@ -177,7 +177,7 @@ def fca_search(court = '',
 # %%
 #Define function turning search results url to case_infos to judgments
 
-@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_counter_bound):
     
     #_soup is from scraping per fca_search
@@ -604,7 +604,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #For getting judgments directly from the Federal Court without checking OALC first
 #NOT IN USE
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def fca_run_direct(df_master):
     df_master = df_master.fillna('')
 
@@ -701,7 +701,7 @@ def fca_run_direct(df_master):
 # %%
 #For getting judgments from the Federal Court if unavailable in OALC
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def fca_run(df_master):
     df_master = df_master.fillna('')
 
@@ -843,7 +843,7 @@ def fca_run(df_master):
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def fca_batch(df_master):
     df_master = df_master.fillna('')
 

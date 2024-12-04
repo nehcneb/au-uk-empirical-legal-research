@@ -344,12 +344,29 @@ def save_input(df_master):
     
     for key in st.session_state.df_master.keys():
         
-        if key not in keys_to_carry_over:
-            try:            
+        if (key not in keys_to_carry_over) and key in df_master.columns:
+            
+            try:
+                
                 st.session_state.df_master.loc[0, key]  = df_master.loc[0, key]
+                
             except Exception as e:
-                print(f'{key} not saved.')
-                print(e)
+                
+                print(f"{key} of {type(df_master.loc[0, key])} not saved, trying to convert type of st.session_state.df_master[{key}] to 'object'.")
+
+                if isinstance(df_master.loc[0, key], list):
+                
+                    st.session_state.df_master[key] = st.session_state.df_master[key].astype('object')
+                    
+                    st.session_state.df_master.at[0, key] = df_master.loc[0, key]
+
+                    print(f"{key} of {type(df_master.loc[0, key])} now saved.")
+
+            except Exception as e2:
+                
+                print(f"{key} still not saved after converting type of st.session_state.df_master[{key}] to 'object'.")
+
+                print(e2)
 
 
 

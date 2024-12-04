@@ -162,7 +162,7 @@ def uk_search(query= '',
               'to_date_0' : to_day, 
               'to_date_1' : to_month, 
               'to_date_2' : to_year, 
-              'court' : court, 
+              'court' : uk_court_choice(court), 
               'party' : party, 
               'judge' : judge}
 
@@ -193,7 +193,7 @@ def uk_search(query= '',
 # %%
 #Define function turning search results url to case_infos to judgments
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
     #Reponse is from scraping per uk_search
     
@@ -436,7 +436,7 @@ def uk_search_url(df_master):
 
     df_master = df_master.fillna('')
 
-    df_master['Courts'] = df_master['Courts'].apply(uk_court_choice)
+    #df_master['Courts'] = df_master['Courts'].apply(uk_court_choice)
     
     #Combining catchwords into new column
     
@@ -492,7 +492,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def uk_run(df_master):
     df_master = df_master.fillna('')
 
@@ -500,7 +500,12 @@ def uk_run(df_master):
      
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    df_master['Courts'] = df_master['Courts'].apply(uk_court_choice)
+
+    #st.write(f"Before apply, df_master['Courts'] == {df_master['Courts']}")
+    
+    #df_master['Courts'] = df_master['Courts'].apply(uk_court_choice)
+
+    #st.write(f"After apply, df_master['Courts'] == {df_master['Courts']}")
     
     #Create judgments file
     judgments_file = []

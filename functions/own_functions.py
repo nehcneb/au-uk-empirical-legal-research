@@ -553,7 +553,7 @@ def engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activatio
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def run_own(df_master, uploaded_docs, uploaded_images):
     df_master = df_master.fillna('')
 
@@ -943,7 +943,7 @@ def engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activ
 # %%
 #For gpt-4o vision
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def run_b64_own(df_master, uploaded_images):
 
     df_master = df_master.fillna('')

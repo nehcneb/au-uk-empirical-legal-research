@@ -40,7 +40,7 @@ corpus_dir = 'nehcneb/oalc_cases'
 # %%
 #Load corpus
 
-@st.cache_resource(show_spinner = False)
+@st.cache_resource(show_spinner = False, ttl=600)
 def load_corpus():
 
     #Determine whether to load corpus remotely or locally

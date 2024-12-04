@@ -262,7 +262,7 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
 # %%
 #Define function for judgment link containing PDF
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_pdf_judgment(url):
     pdf_url = url.replace('showCase', 'downloadPdf')
     headers = {'User-Agent': 'whatever'}
@@ -586,7 +586,7 @@ def hca_meta_judgment_dict_alt(judgment_url):
 # %%
 #Slow way of finding a case from mnc
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_mnc_to_link_browse(collection, year, num):
 
     #Default judgment without the prefix https://eresources.hcourt.gov.au
@@ -658,7 +658,7 @@ def hca_mnc_to_link_browse(collection, year, num):
 # %%
 #Function for turning citation to judgment_url
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_citation_to_link(collection, citation):
 
     #Placeholder error url
@@ -1037,7 +1037,7 @@ def hca_judgment_to_exclude(case_info,
 # %%
 #Function to get judgment links with filters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_search_results_to_judgment_links_filtered_df(_soup, 
                                                      url_search_results, 
                                      judgment_counter_bound,
@@ -1456,7 +1456,6 @@ def hca_enhanced_search(collection,
 # %%
 #Function to get link to search results and number of results
 
-@st.cache_resource(show_spinner = False)
 def hca_search_url(df_master):
     df_master = df_master.fillna('')
     
@@ -1517,7 +1516,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 #For getting judgments directly from the High Court without searching in OALC first
 #NOT IN USE
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_run_direct(df_master):
     df_master = df_master.fillna('')
 
@@ -1632,7 +1631,7 @@ def hca_run_direct(df_master):
 # %%
 #For getting judgments directly from the High Court if not available in OALC
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1807,7 +1806,7 @@ def hca_run(df_master):
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def hca_batch(df_master):
     df_master = df_master.fillna('')
 

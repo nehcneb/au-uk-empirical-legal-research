@@ -210,7 +210,7 @@ def nsw_link(x):
 #Define function for short judgments, which checks if judgment is in PDF
 #returns a list of judgment type and judgment text
 
-@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def nsw_short_judgment(uri):
     
     html_link = 'https://www.caselaw.nsw.gov.au'+ uri
@@ -237,7 +237,7 @@ def nsw_short_judgment(uri):
 
 
 # %%
-@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def nsw_search(courts = [],
     tribunals = [],
     body = '',
@@ -253,8 +253,8 @@ def nsw_search(courts = [],
     casesCited = '',
     pause = int(0)
     ):
-    query = Search(courts = courts,
-                    tribunals = tribunals, 
+    query = Search(courts = nsw_court_choice(courts),
+                    tribunals = nsw_tribunal_choice(tribunals), 
                     body = body, 
                     title = title, 
                     before = before, 
@@ -278,8 +278,8 @@ def nsw_search_preview(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
 
     #Combining search terms into new column
     
@@ -370,8 +370,8 @@ def nsw_search_url(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
 
     #Combining search terms into new column
     
@@ -565,14 +565,14 @@ def nsw_tidying_up_pre_gpt(df_master, df_individual):
 #Download directly from Caselaw NSW without looking in OALC first
 #NOT IN USE
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def nsw_run_direct(df_master):
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
@@ -705,15 +705,15 @@ def nsw_run_direct(df_master):
 # %%
 #Download from Caselaw NSW if can't find judgment in OALC
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def nsw_run(df_master):
     
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
@@ -916,15 +916,15 @@ def nsw_run(df_master):
 # %%
 #For batch mode
 
-@st.cache_data#(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def nsw_batch(df_master):
 
     df_master = df_master.fillna('')
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
+    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
+    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
     df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     

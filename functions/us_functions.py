@@ -1542,7 +1542,7 @@ class us_search_tool:
 
 
 # %%
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def us_search_function(token, 
               judgment_counter_bound, 
                 doc_type,
@@ -1612,7 +1612,6 @@ def us_search_function(token,
 
 
 # %%
-#@st.cache_data(show_spinner = False)
 def us_search_preview(df_master):
     
     df_master = df_master.fillna('')
@@ -1665,8 +1664,8 @@ def us_search_preview(df_master):
     #Use the following if want to show url to the API page of search results
     #results_url = us_search.results_url
     
-    
     return {'results_url': results_url, 'results_count': results_count, 'results_to_show': us_search.results_to_show}
+
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -1687,7 +1686,6 @@ from functions.common_functions import check_questions_answers
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
 
-
 # %%
 #Jurisdiction specific instruction and functions
 
@@ -1699,7 +1697,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def us_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1817,7 +1815,7 @@ def us_run(df_master):
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False)
+@st.cache_data(show_spinner = False, ttl=600)
 def us_batch(df_master):
     df_master = df_master.fillna('')
 
