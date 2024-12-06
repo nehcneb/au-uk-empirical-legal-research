@@ -156,7 +156,7 @@ def gpt_input_cost(gpt_model):
     if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         gpt_input_cost = 1/1000000*5
 
-    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
+    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
         gpt_input_cost = 1/1000000*2.5
 
     if gpt_model == "gpt-4o":
@@ -174,7 +174,7 @@ def gpt_output_cost(gpt_model):
     if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         gpt_output_cost = 1/1000000*15
 
-    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
+    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
         gpt_output_cost = 1/1000000*10
 
     if gpt_model == "gpt-4o":
@@ -198,7 +198,7 @@ def tokens_cap(gpt_model):
     if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
         tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
-    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
+    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
         
         tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
@@ -221,7 +221,7 @@ def max_output(gpt_model, messages_for_GPT):
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
-    if gpt_model == "gpt-4o-2024-08-06": #From 20241002, gpt-4o points towards gpt-4o-2024-08-06
+    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
@@ -921,13 +921,11 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 # ## Batch mode
 
 # %%
-#If own account
-
 #Cutoff for requiring activate batch mode
 
-judgment_batch_cutoff = 50
+judgment_batch_cutoff = 25
 
-#max number of judgments under any mode
+#max number of judgments under batch mode
 judgment_batch_max = 100
 
 
@@ -1249,7 +1247,7 @@ def batch_request_function():
                     openai.api_key = API_key
 
                     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                        gpt_model = "gpt-4o-2024-08-06"
+                        gpt_model = "gpt-4o"
                     else:        
                         gpt_model = "gpt-4o-mini"
 

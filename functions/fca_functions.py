@@ -669,7 +669,7 @@ def fca_run_direct(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o-2024-08-06"
+        gpt_model = "gpt-4o"
     else:        
         gpt_model = "gpt-4o-mini"
         
@@ -811,7 +811,7 @@ def fca_run(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o-2024-08-06"
+        gpt_model = "gpt-4o"
     else:        
         gpt_model = "gpt-4o-mini"
         
@@ -960,7 +960,7 @@ def fca_batch(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o-2024-08-06"
+        gpt_model = "gpt-4o"
     else:        
         gpt_model = "gpt-4o-mini"
         

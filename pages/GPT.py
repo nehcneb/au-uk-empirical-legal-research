@@ -165,7 +165,7 @@ if 'df_individual' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
-#default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max
+#default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max/2
 
 #Instant mode max/batch mode threshold
 if own_account_allowed() > 0:
@@ -174,21 +174,27 @@ else:
     st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
 #Maximum number of judgments to process under any mode
+if "judgment_counter_max" not in st.session_state:
+
+    st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
 
     if own_account_allowed() > 0:
+        
         st.session_state["judgment_counter_max"] = judgment_batch_max
     
     else:
-        st.session_state["judgment_counter_max"] = judgment_batch_cutoff
         
-else:
+        st.session_state["judgment_counter_max"] = int(round(judgment_batch_max/2))
+        
+#else:
     
-    if own_account_allowed() > 0:
-        st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+    #if own_account_allowed() > 0:
+        #st.session_state["judgment_counter_max"] = judgment_batch_cutoff
     
-    else:
-        st.session_state["judgment_counter_max"] = default_judgment_counter_bound
+    #else:
+        #st.session_state["judgment_counter_max"] = default_judgment_counter_bound
 
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
@@ -382,7 +388,7 @@ if own_account_allowed() > 0:
         if gpt_enhancement_entry:
 
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
-            st.session_state.gpt_model = "gpt-4o-2024-08-06"
+            st.session_state.gpt_model = "gpt-4o"
 
         else:
             
@@ -437,9 +443,9 @@ st.header("Consent")
 st.markdown("""By using this app, you agree that the data and/or information you and/or this app provide will be temporarily stored on one or more remote servers. Any such data and/or information may also be given to an artificial intelligence provider. Any such data and/or information [will not be used to train any artificial intelligence model.](https://platform.openai.com/docs/models/how-we-use-your-data#how-we-use-your-data) 
 """)
 
-consent =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
+consent_entry =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
 
-st.session_state['df_master'].loc[0, 'Consent'] = consent
+st.session_state['df_master'].loc[0, 'Consent'] = consent_entry
 
 st.markdown("""If you do not agree, then please feel free to close this app. """)
 
@@ -478,7 +484,7 @@ if gpt_activation_entry:
         st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
     
-    if st.session_state.gpt_model == "gpt-4o-2024-08-06":
+    if st.session_state.gpt_model == "gpt-4o":
         st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 #Buttons
@@ -555,7 +561,7 @@ if gpt_keep_button:
 # %%
 if run_button:
     
-    if int(consent) == 0:
+    if int(consent_entry) == 0:
         st.warning("You must tick 'Yes, I agree.' to use the app.")
 
     elif len(st.session_state.df_individual)>0:
@@ -647,7 +653,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
 
     if er_run_button_b64:
         
-        if int(consent) == 0:
+        if int(consent_entry) == 0:
             st.warning("You must tick 'Yes, I agree.' to use the app.")
     
         elif len(st.session_state.df_individual)>0:

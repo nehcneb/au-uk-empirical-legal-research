@@ -172,6 +172,13 @@ def own_create_df():
         df_example = st.session_state['df_master'].loc[0, 'Example']
     except:
         df_example = ''
+
+    #Consent
+    try:
+        consent = consent_entry
+    except:
+        print('Consent not entered')
+        consent = True
     
     new_row = {'Processed': '',
            'Timestamp': timestamp,
@@ -186,7 +193,8 @@ def own_create_df():
            'Enter your questions for GPT': gpt_questions, 
             'Use own account': own_account,
             'Use flagship version of GPT': gpt_enhancement,
-            'Example': df_example
+            'Example': df_example, 
+            'Consent': consent
           }
 
     df_master_new = pd.DataFrame(new_row, index = [0])
@@ -286,30 +294,32 @@ if 'disable_input' not in st.session_state:
 #default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max
 
 #Instant mode max/batch mode threshold
-if 'judgment_batch_cutoff' not in st.session_state:
-    if own_account_allowed() > 0:
-        st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
-    else:
-        st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
+#if 'judgment_batch_cutoff' not in st.session_state:
+    #if own_account_allowed() > 0:
+        #st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
+    #else:
+        #st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
 #Maximum number of judgments to process under any mode
 if "judgment_counter_max" not in st.session_state:
 
-    if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
+    st.session_state["judgment_counter_max"] = judgment_batch_cutoff
 
-        if own_account_allowed() > 0:
-            st.session_state["judgment_counter_max"] = judgment_batch_max
+    #if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py'])):
+
+        #if own_account_allowed() > 0:
+            #st.session_state["judgment_counter_max"] = judgment_batch_max
         
-        else:
-            st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+        #else:
+            #st.session_state["judgment_counter_max"] = judgment_batch_cutoff
             
-    else:
+    #else:
         
-        if own_account_allowed() > 0:
-            st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+        #if own_account_allowed() > 0:
+            #st.session_state["judgment_counter_max"] = judgment_batch_cutoff
         
-        else:
-            st.session_state["judgment_counter_max"] = default_judgment_counter_bound
+        #else:
+            #st.session_state["judgment_counter_max"] = default_judgment_counter_bound
             
 #For example df
 if 'df_example_to_show' not in st.session_state:
@@ -476,7 +486,6 @@ if len(st.session_state.df_example_to_show) > 0:
 
 # %%
 
-
 if own_account_allowed() > 0:
     
     st.header(':orange[Enhance app capabilities]')
@@ -525,7 +534,7 @@ if own_account_allowed() > 0:
 
         if gpt_enhancement_entry == True:
         
-            st.session_state.gpt_model = "gpt-4o-2024-08-06"
+            st.session_state.gpt_model = "gpt-4o"
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
 
         else:
@@ -585,9 +594,9 @@ st.header("Consent")
 st.markdown("""By using this app, you agree that the data and/or information you and/or this app provide will be temporarily stored on one or more remote servers. Any such data and/or information may also be given to an artificial intelligence provider. Any such data and/or information [will not be used to train any artificial intelligence model.](https://platform.openai.com/docs/models/how-we-use-your-data#how-we-use-your-data) 
 """)
 
-consent =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
+consent_entry =  st.checkbox('Yes, I agree.', value = bool(st.session_state['df_master'].loc[0, 'Consent']), disabled = st.session_state.disable_input)
 
-st.session_state['df_master'].loc[0, 'Consent'] = consent
+st.session_state['df_master'].loc[0, 'Consent'] = consent_entry
 
 st.markdown("""If you do not agree, then please feel free to close this app. """)
 
@@ -608,7 +617,7 @@ if gpt_activation_entry:
         st.warning('A low-cost GPT model will process your files. Please be cautious.')
         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
     
-    if st.session_state.gpt_model == "gpt-4o-2024-08-06":
+    if st.session_state.gpt_model == "gpt-4o":
         st.warning('An expensive GPT model will process your files. Please be cautious.')
 
 reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
@@ -670,7 +679,7 @@ if run_button:
 
         st.warning("You must tick 'Use GPT' and enter some questions.")
         
-    elif int(consent) == 0:
+    elif int(consent_entry) == 0:
         
         st.warning("You must tick 'Yes, I agree.' to use the app.")
     
@@ -733,7 +742,6 @@ if run_button:
                 print(traceback.format_exc())
 
 
-
 # %%
 if ((st.session_state.own_account == True) and (uploaded_images)):
     
@@ -747,7 +755,7 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
     
             st.warning("You must tick 'Use GPT' and enter some questions.")
     
-        elif int(consent) == 0:
+        elif int(consent_entry) == 0:
             st.warning("You must tick 'Yes, I agree.' to use the app.")
         
         elif len(st.session_state.df_individual)>0:
