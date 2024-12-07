@@ -79,23 +79,29 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
 
 #For post June 2024
-options = Options()
-options.add_argument("--disable-gpu")
-options.add_argument("--headless")
-options.add_argument('--no-sandbox')  
-options.add_argument('--disable-dev-shm-usage')  
+options = uc.ChromeOptions()
+#options.headless = True
+
+#options = Options()
+#options.add_argument("--disable-gpu")
+#options.add_argument("--headless")
+#options.add_argument('--no-sandbox')  
+#options.add_argument('--disable-dev-shm-usage')  
 
 @st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
-    return webdriver.Chrome(options=options)
+    return uc.Chrome(options = options)
+    #return webdriver.Chrome(options=options)
 
 try:
     browser = get_driver()
-    
     browser.implicitly_wait(30)
     browser.set_page_load_timeout(30)
+
+    browser.minimize_window()#set_window_position(-2000,0)
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -106,9 +112,7 @@ except Exception as e:
 #Only works if running locally at the moment
 
 if streamlit_timezone() == True:
-    
-    import undetected_chromedriver as uc
-    
+        
     #For headlessness, see https://github.com/ultrafunkamsterdam/undetected-chromedriver/discussions/1768
     download_dir = os.getcwd() + '/AFCA_PDFs'
     options_old = uc.ChromeOptions()
@@ -1679,10 +1683,16 @@ def afca_meta_judgment_dict(judgment_url):
     judgment_dict = {'Case name': '', 'Hyperlink to AFCA Portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
 
     try:
-        headers = {'User-Agent': 'whatever'}
-        page = requests.get(judgment_url, headers=headers)
-        soup = BeautifulSoup(page.content, "lxml")
-            
+        #headers = {'User-Agent': 'whatever'}
+        #page = requests.get(judgment_url, headers=headers)
+        #soup = BeautifulSoup(page.content, "lxml")
+
+        page = browser.get(judgment_url)
+        browser.delete_all_cookies()
+        browser.refresh()
+        html_source = browser.page_source
+        soup = BeautifulSoup(html_source, "lxml")
+        
         case_name = soup.find('li', attrs={'class': 'active'}).text
         
         if case_name[0]== ' ':
@@ -1722,6 +1732,8 @@ def afca_meta_judgment_dict(judgment_url):
     except Exception as e:
         print(f"{judgment_dict['Case name']}: judgment not scrapped")
         print(e)
+
+    #browser.close()
     
     return judgment_dict
 

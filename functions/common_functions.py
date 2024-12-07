@@ -541,7 +541,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             
             st.success('Your entries are now available for download.')
         
-        responses_output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
+        responses_output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
         
         xlsx = convert_df_to_excel(df_master_to_show)
         
