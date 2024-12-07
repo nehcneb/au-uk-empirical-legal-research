@@ -45,7 +45,7 @@ from io import BytesIO
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
@@ -61,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, download_buttons
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -339,37 +339,7 @@ if keep_button:
 
         save_input(df_master)
         
-        responses_output_name = str(df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_responses'
-    
-        #Produce a file to download
-    
-        csv = convert_df_to_csv(df_master)
-        
-        ste.download_button(
-            label="Download as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=responses_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
-
-
-        xlsx = convert_df_to_excel(df_master)
-        
-        ste.download_button(label='Download as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=responses_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-        
-        json = convert_df_to_json(df_master)
-        
-        ste.download_button(
-            label="Download as a JSON", 
-            data = json,
-            file_name= responses_output_name + '.json', 
-            mime= "application/json", 
-        )
+        download_buttons(df_master = df_master, df_individual = [], saving = True, previous = False)
 
 
 # %%

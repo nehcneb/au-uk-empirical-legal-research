@@ -82,6 +82,15 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
+#Title of webpage
+st.set_page_config(
+   page_title="LawtoData: An Empirical Legal Research Automator",
+   page_icon="🧊",
+   layout="wide",
+   initial_sidebar_state="collapsed",
+)
+
+# %%
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, reverse_link, link_headings_picker, clean_link_columns, display_df, uploaded_file_to_df, excel_to_df_w_links
 #Import variables
@@ -214,6 +223,97 @@ def ai_model_printing(ai_choice, gpt_model_choice):
         output = f'GPT model {gpt_model_choice}'
 
     return output
+
+
+# %%
+#Function to seeing history
+@st.fragment
+def history_on_function():
+    st.subheader('Conversation')
+
+    st.write('Instructions and responses are displayed in chronological order.')
+
+    st.caption(spreadsheet_caption)
+
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        st.caption(' ')
+        st.caption(message["time"][0:19])
+        with st.chat_message(message["role"]):
+
+            #For pandas ai responses
+            if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
+                
+                if isinstance(message["content"], dict):
+
+                    if 'prompt' in message["content"]:
+                        st.write(message["content"]['prompt'])
+                    
+                    if 'answer' in message["content"]:                           
+                        st.write(message["content"]['answer'])
+
+                        #Display caption if response is a dataframe
+                        if isinstance(message["content"]['answer'], pd.DataFrame):
+                            
+                            st.caption(spreadsheet_caption)
+
+                    if 'error' in message["content"]:                           
+                        st.error(message["content"]['error'])
+
+                    if 'image' in message["content"]:                           
+                        st.image(message["content"]['image'], use_column_width = "never")
+                        st.caption('Right click to save this image.')
+
+                    if 'matplotlib figure' in message["content"]:
+                        st.pyplot(fig = message["content"]['matplotlib figure'])
+                        st.caption('Right click to save this image.')
+                        
+                    if 'code' in message["content"]:
+                        st.code(message["content"]['code'])
+
+                    #else:                           
+                        #st.write(message["content"])
+                else:
+                    st.write(message["content"])
+            
+            else: #if st.session_state.ai_choice == 'LangChain':
+                if isinstance(message["content"], dict):
+                    langchain_write(message["content"])
+                else: #not isinstance(message["content"], str)
+                    st.write(message["content"])
+
+    #Create and export json file with instructions and responses for downloading
+    
+    df_history = pd.DataFrame(st.session_state.messages)
+
+    history_output_name = str(today_in_nums) + '_chat_history'
+    
+    csv = convert_df_to_csv(df_history)
+
+    st.download_button(
+        label="Download the conversation as a CSV (for use in Excel etc)", 
+        data = csv,
+        file_name=history_output_name + '.csv', 
+        mime= "text/csv", 
+#            key='download-csv'
+    )
+
+    xlsx = convert_df_to_excel(df_history)
+    
+    st.download_button(label='Download the conversation as an Excel spreadsheet (XLSX)',
+                        data=xlsx,
+                        file_name=history_output_name + '.xlsx', 
+                        mime='application/vnd.ms-excel',
+                       )
+
+    json = convert_df_to_json(df_history)
+    
+    st.download_button(
+        label="Download the conversation as a JSON", 
+        data = json,
+        file_name= history_output_name + '.json', 
+        mime= "application/json", 
+    )
 
 
 # %% [markdown]
@@ -382,7 +482,7 @@ def pandasai_ask():
                 
                         plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
                         
-                        pdf_button = ste.download_button(
+                        pdf_button = st.download_button(
                            label="DOWNLOAD as a PDF",
                            data=pdf_to_download,
                            file_name='chart.pdf',
@@ -391,7 +491,7 @@ def pandasai_ask():
                     with col2e:
                         plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
                         
-                        png_button = ste.download_button(
+                        png_button = st.download_button(
                            label="DOWNLOAD as a PNG",
                            data=png_to_download,
                            file_name='chart.png',
@@ -489,8 +589,12 @@ def pandasai_merge_df_produced():
     
     try:
         st.session_state.df_produced = current_pd.merge(df_to_add, on = 'Case name', how = 'left')
-    except:
+    except Exception as e1:
+        print("Can't merge spreadshees due to: {e1}.")
         st.session_state.df_produced = current_pd.merge(df_to_add, how = 'left')
+    except Exception as e2:
+        st.error("Sorry, the spreadsheet produced can't be merged with the original spreadsheet." )
+        st.stop()
         
     st.session_state.df_produced = st.session_state.df_produced.loc[:,~st.session_state.df_produced.columns.duplicated()].copy()
     
@@ -1624,88 +1728,4 @@ if len(st.session_state.messages) > 0:
     if history_on:
     #if st.toggle(label = 'Display all instructions and responses'):
     
-        st.subheader('Conversation')
-
-        st.write('Instructions and responses are displayed in chronological order.')
-
-        st.caption(spreadsheet_caption)
-
-        # Display chat messages from history on app rerun
-        for message in st.session_state.messages:
-            st.caption(' ')
-            st.caption(message["time"][0:19])
-            with st.chat_message(message["role"]):
-
-                #For pandas ai responses
-                if st.session_state.ai_choice in {'GPT', 'BambooLLM'}:
-                    
-                    if isinstance(message["content"], dict):
-
-                        if 'prompt' in message["content"]:
-                            st.write(message["content"]['prompt'])
-                        
-                        if 'answer' in message["content"]:                           
-                            st.write(message["content"]['answer'])
-
-                            #Display caption if response is a dataframe
-                            if isinstance(message["content"]['answer'], pd.DataFrame):
-                                
-                                st.caption(spreadsheet_caption)
-
-                        if 'error' in message["content"]:                           
-                            st.error(message["content"]['error'])
-
-                        if 'image' in message["content"]:                           
-                            st.image(message["content"]['image'], use_column_width = "never")
-                            st.caption('Right click to save this image.')
-
-                        if 'matplotlib figure' in message["content"]:
-                            st.pyplot(fig = message["content"]['matplotlib figure'])
-                            st.caption('Right click to save this image.')
-                            
-                        if 'code' in message["content"]:
-                            st.code(message["content"]['code'])
-
-                        #else:                           
-                            #st.write(message["content"])
-                    else:
-                        st.write(message["content"])
-                
-                else: #if st.session_state.ai_choice == 'LangChain':
-                    if isinstance(message["content"], dict):
-                        langchain_write(message["content"])
-                    else: #not isinstance(message["content"], str)
-                        st.write(message["content"])
-
-        #Create and export json file with instructions and responses for downloading
-        
-        df_history = pd.DataFrame(st.session_state.messages)
-    
-        history_output_name = str(today_in_nums) + '_chat_history'
-        
-        csv = convert_df_to_csv(df_history)
-    
-        ste.download_button(
-            label="Download the conversation as a CSV (for use in Excel etc)", 
-            data = csv,
-            file_name=history_output_name + '.csv', 
-            mime= "text/csv", 
-    #            key='download-csv'
-        )
-    
-        xlsx = convert_df_to_excel(df_history)
-        
-        ste.download_button(label='Download the conversation as an Excel spreadsheet (XLSX)',
-                            data=xlsx,
-                            file_name=history_output_name + '.xlsx', 
-                            mime='application/vnd.ms-excel',
-                           )
-    
-        json = convert_df_to_json(df_history)
-        
-        ste.download_button(
-            label="Download the conversation as a JSON", 
-            data = json,
-            file_name= history_output_name + '.json', 
-            mime= "application/json", 
-        )
+        history_on_function()

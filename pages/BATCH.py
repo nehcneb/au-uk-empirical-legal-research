@@ -48,7 +48,7 @@ from io import StringIO
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 #from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
@@ -68,11 +68,6 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
-#Import functions and variables
-from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums, spinner_text
-
-
-# %% editable=true slideshow={"slide_type": ""}
 #Title of webpage
 st.set_page_config(
    page_title="LawtoData: An Empirical Legal Research Kickstarter",
@@ -80,6 +75,10 @@ st.set_page_config(
    layout="centered",
    initial_sidebar_state="collapsed",
 )
+
+# %%
+#Import functions and variables
+from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums, spinner_text, download_buttons
 
 
 # %%
@@ -345,38 +344,8 @@ if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.sessio
 
     st.session_state["page_from"] = 'pages/BATCH.py'           
 
-    #Write results
-    st.success("Your data is now available for download. Thank you for using *LawtoData*!")
+    #Download data
+    download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
 
-    #Button for downloading results
-    output_name = str(st.session_state.df_master.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_results'
-        
-    excel_xlsx = convert_df_to_excel(st.session_state.df_individual)
-    
-    ste.download_button(label='Download your data as an Excel spreadsheet (XLSX)',
-                        data=excel_xlsx,
-                        file_name= output_name + '.xlsx', 
-                        mime='application/vnd.ms-excel',
-                       )
-
-    csv_output = convert_df_to_csv(st.session_state.df_individual)
-    
-    ste.download_button(
-        label="Download your data as a CSV (for use in Excel etc)", 
-        data = csv_output,
-        file_name= output_name + '.csv', 
-        mime= "text/csv", 
-    )
-    
-    json_output = convert_df_to_json(st.session_state.df_individual)
-    
-    ste.download_button(
-        label="Download your data as a JSON", 
-        data = json_output,
-        file_name= output_name + '.json', 
-        mime= "application/json", 
-    )
-
-    st.page_link('pages/AI.py', label="Analyse your data with an AI", icon = '🤔')
 
 

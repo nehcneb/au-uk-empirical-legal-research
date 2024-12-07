@@ -51,7 +51,7 @@ import mammoth
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
@@ -67,21 +67,21 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
+#Title of webpage
+st.set_page_config(
+   page_title="LawtoData: An Empirical Legal Research Automator",
+   page_icon="🧊",
+   layout="centered",
+   initial_sidebar_state="collapsed",
+)
+
+# %%
 #Import functions
 from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df
 
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings
 
-
-
-# %%
-#Default file counter bound
-
-default_file_counter_bound = default_judgment_counter_bound
-
-#if 'file_counter_bound' not in st.session_state:
-    #st.session_state['file_counter_bound'] = default_file_counter_bound
 
 
 # %% [markdown]

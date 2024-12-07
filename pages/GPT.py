@@ -46,7 +46,7 @@ import traceback
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 #from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
@@ -64,6 +64,15 @@ from botocore.exceptions import ClientError
 #Excel
 import openpyxl
 from pyxlsb import open_workbook as open_xlsb
+
+# %%
+#Title of webpage
+st.set_page_config(
+   page_title="LawtoData: An Empirical Legal Research Automator",
+   page_icon="🧊",
+   layout="centered",
+   initial_sidebar_state="collapsed",
+)
 
 # %%
 #Import functions

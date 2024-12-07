@@ -83,7 +83,7 @@ import xlsxwriter
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 
 #AWS
 import boto3
@@ -512,7 +512,7 @@ def convert_df_to_excel(df):
 
 # %%
 #Download entries and results
-
+@st.fragment
 def download_buttons(df_master, df_individual = [], saving = False, previous = False):
     #Enable the saving argument if want to allow saving of entries
     #Enable the previous argument if want to allow saving of last produced results
@@ -545,7 +545,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
         
         xlsx = convert_df_to_excel(df_master_to_show)
         
-        ste.download_button(label='DOWNLOAD your entries as an Excel spreadsheet (XLSX)',
+        st.download_button(label='DOWNLOAD your entries as an Excel spreadsheet (XLSX)',
                             data=xlsx,
                             file_name=responses_output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
@@ -553,7 +553,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
     
         csv = convert_df_to_csv(df_master_to_show)
     
-        ste.download_button(
+        st.download_button(
             label="DOWNLOAD your entries as a CSV", 
             data = csv,
             file_name=responses_output_name + '.csv', 
@@ -562,7 +562,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
     
         json = convert_df_to_json(df_master_to_show)
         
-        ste.download_button(
+        st.download_button(
             label="DOWNLOAD your entries as a JSON", 
             data = json,
             file_name= responses_output_name + '.json', 
@@ -589,7 +589,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
 
         excel_xlsx = convert_df_to_excel(df_individual)
         
-        ste.download_button(label=f'DOWNLOAD your {previous_str}data as an Excel spreadsheet (XLSX)',
+        st.download_button(label=f'DOWNLOAD your {previous_str}data as an Excel spreadsheet (XLSX)',
                             data=excel_xlsx,
                             file_name= output_name + '.xlsx', 
                             mime='application/vnd.ms-excel',
@@ -597,7 +597,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
     
         csv_output = convert_df_to_csv(df_individual)
         
-        ste.download_button(
+        st.download_button(
             label=f'DOWNLOAD your {previous_str}data as a CSV', 
             data = csv_output,
             file_name= output_name + '.csv', 
@@ -606,7 +606,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
         
         json_output = convert_df_to_json(df_individual)
         
-        ste.download_button(
+        st.download_button(
             label=f'DOWNLOAD your {previous_str}data as a JSON', 
             data = json_output,
             file_name= output_name + '.json', 
