@@ -117,7 +117,7 @@ st.subheader("An Empirical Legal Research Automator")
 
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving court cases. This app can **automatically**
 
-(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
+(1) collect cases from Australia, the United Kingdom and the United States; and
 
 (2) extract and code **your** choice of case data or information, partially using GPT.
 
@@ -125,6 +125,8 @@ This app can also process your own files or spreadsheet of data.
 """)
 
 #(1) collect cases of select courts and tribunals from Australia, Canada, the United Kingdom and the United States; and
+
+#(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
 
 if own_account_allowed() > 0:
     st.markdown("""**Get started below :green[for free] or :orange[with your own GPT account]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
