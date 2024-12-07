@@ -82,7 +82,7 @@ from functions.common_functions import own_account_allowed, batch_mode_allowed, 
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings
 
-
+default_file_counter_bound = default_judgment_counter_bound
 
 # %% [markdown]
 # # Functions for Own Files
@@ -271,7 +271,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Your name'] = ''
     st.session_state['df_master'].loc[0, 'Your email address'] = ''
     st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound
+    st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
     st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = default_page_bound
     st.session_state['df_master'].loc[0, 'Language choice'] = 'English'
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
