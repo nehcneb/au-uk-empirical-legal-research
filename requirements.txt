@@ -23,7 +23,7 @@ pydeck==0.8.1b0
 pytesseract==0.3.10
 pyxlsb==1.0.10
 #seaborn==0.13.2
-selenium==4.23.1
+selenium==4.27.1
 #six==1.12.0
 #st-gsheets-connection==0.1.0
 #st-files-connection==0.1.0

@@ -53,7 +53,7 @@ import tiktoken
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 #from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 
 #aws
 import boto3
