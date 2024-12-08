@@ -55,7 +55,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
 from streamlit.components.v1 import html
-import streamlit_ext as ste
+#import streamlit_ext as ste
 from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
