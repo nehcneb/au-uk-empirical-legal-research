@@ -618,9 +618,9 @@ st.write('By default, this app will process up to 500 queries per day. If that l
 
 st.subheader("Case metadata collection")
 
-st.markdown("""Would you like to obtain case metadata? Such data include the name of the judge, the filing date and so on. 
+st.markdown("""Would you like to obtain case metadata? Such data include the judge(s), the filing date and so on. 
 
-Case name and citation are always included with your results.
+You will always obtain case names and citations.
 """)
 
 meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])

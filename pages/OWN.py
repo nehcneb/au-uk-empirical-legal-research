@@ -542,17 +542,17 @@ if own_account_allowed() > 0:
             st.session_state.gpt_model = 'gpt-4o-mini'
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
-        st.write(f'**:green[You can increase the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
+        st.write(f'**:green[You can change the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
 
-        file_counter_bound_entry = st.number_input(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
+        file_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
 
         #if file_counter_bound_entry:
             
         st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
         
-        st.write(f'**:orange[You can increase the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
+        st.write(f'**:orange[You can change the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
         
-        page_bound_entry = st.number_input(label = f'Enter a number between 1 and {default_page_bound}', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
+        page_bound_entry = st.slider(label = f'Up to {default_page_bound}', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
 
         #if page_bound_entry:
             
@@ -847,8 +847,6 @@ if keep_button:
         st.warning('You must enter some questions for GPT.')
             
     else:
-
-        st.subheader('Your entries are now available for download.')
 
         df_master = own_create_df()
 

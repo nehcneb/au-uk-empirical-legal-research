@@ -365,9 +365,9 @@ party_entry = st.text_input(label = 'Party name', value = st.session_state.df_ma
 
 st.subheader("Judgment metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the names of the parties and so on. 
+st.markdown("""Would you like to obtain judgment metadata? Such data include the judge(s), the parties and so on. 
 
-Case name and medium neutral citation are always included with your results.
+You will always obtain case names and medium neutral citations.
 """)
 
 meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])

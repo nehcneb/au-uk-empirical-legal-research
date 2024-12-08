@@ -94,6 +94,9 @@ print(f"The default number of files to scrape per request is capped at {default_
 # # Functions for Own Files
 
 # %%
+file_error_note = 'This app was unable to scrape text from this file. This file was not sent to GPT.'
+
+# %%
 #File types and languages for processing
 doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", 'cs', 'xml', 'html', 'json'] #"fb2", "cbz", "svg",
 image_types = ["pdf", "jpg", "jpeg", "png", "bmp", "gif", "tiff"] #, "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"]
@@ -452,7 +455,7 @@ def engage_GPT_json_own(questions_json, df_example, df_individual, GPT_activatio
         if 'Extracted text' in file_triple.keys():
             if len(file_triple['Extracted text']) == 0:
                 text_error = True
-                df_individual.loc[file_index, 'Note'] = search_error_note
+                df_individual.loc[file_index, 'Note'] = file_error_note
                 print(f"File indexed {file_index} not sent to GPT given full text was not scrapped.")
         
         #Calculate and append number of tokens of file, regardless of whether given to GPT
@@ -849,7 +852,7 @@ def engage_GPT_b64_json_own(questions_json, df_example, df_individual, GPT_activ
         if 'Extracted text' in file_triple.keys():
             if len(file_triple['Extracted text']) == 0:
                 text_error = True
-                df_individual.loc[file_index, 'Note'] = search_error_note
+                df_individual.loc[file_index, 'Note'] = file_error_note
                 print(f"File indexed {file_index} not sent to GPT given full text was not scrapped.")
         
         #Calculate and append number of tokens of file, regardless of whether given to GPT

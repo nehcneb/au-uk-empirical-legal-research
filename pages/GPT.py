@@ -406,7 +406,7 @@ if own_account_allowed() > 0:
 
         st.write(f'**:green[You can change the maximum number of cases to process.]** The default maximum is {default_judgment_counter_bound}.')
         
-        judgments_counter_bound_entry = st.number_input(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
+        judgments_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
         
         #if judgments_counter_bound_entry:
         

@@ -115,7 +115,7 @@ st.title(":blue[LawtoData]")
 
 st.subheader("An Empirical Legal Research Automator")
 
-st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving court cases. This app can **automatically**
+st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects using court cases. It can **automatically**
 
 (1) collect cases from Australia, the United Kingdom and the United States; and
 
