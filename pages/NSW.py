@@ -333,7 +333,7 @@ if 'df_master' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header("Search :blue[cases of select New South Wales courts and tribunals]")
+st.header("Search :blue[cases of the New South Wales courts and tribunals]")
 
 st.success(default_msg)
 

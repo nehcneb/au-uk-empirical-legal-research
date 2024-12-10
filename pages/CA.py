@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, save_input, download_buttons
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -142,59 +142,51 @@ def ca_create_df():
     phrase = phrase_entry
 
     #Court/tribunal types
-    if court_tribunal_type_entry == None:
-        
-        court_tribunal_type = 'All courts and tribunals'
-    else:
+    court_tribunal_type = 'All courts and tribunals'
+    try:
         court_tribunal_type = court_tribunal_type_entry
-    
+    except:
+        print('court_tribunal_type not entered.')
+
     #dates
     
     on_this_date = ''
 
-    if on_this_date_entry != 'None':
+    try:
 
-        try:
+        on_this_date = on_this_date_entry.strftime("%Y-%m-%d")
 
-            on_this_date = on_this_date_entry.strftime("%Y-%m-%d")
-
-        except:
-            pass
-        
+    except:
+        print('on_this_date not entered.')
     
     before_date = ''
 
-    if before_date_entry != 'None':
+    try:
 
-        try:
-
-            before_date = before_date_entry.strftime("%Y-%m-%d")
-            
-        except:
-            pass
-
-    
-    after_date = ''
-
-    if after_date_entry != 'None':
+        before_date = before_date_entry.strftime("%Y-%m-%d")
         
-        try:
-            after_date = after_date_entry.strftime("%Y-%m-%d")
-            
-        except:
-            pass
+    except:
+        print('before_date not entered.')
+
+    after_date = ''
+        
+    try:
+        after_date = after_date_entry.strftime("%Y-%m-%d")
+        
+    except:
+        print('after_date not entered.')
 
     #Subjects
 
-    subjects = ''
+    subjects = []
 
     try:
         
-        subjects = ",".join(subjects_entry)
+        subjects = subjects_entry
         
     except:
         
-        pass
+        print('Subjects not entered.')
     
     #GPT choice and entry
     try:
@@ -238,7 +230,7 @@ def ca_create_df():
             'Use flagship version of GPT' : gpt_enhancement
           }
 
-    df_master_new = pd.DataFrame(new_row, index = [0])
+    df_master_new = pd.DataFrame([new_row])
             
     return df_master_new
 
@@ -296,31 +288,36 @@ if 'need_resetting' not in st.session_state:
 if 'df_master' not in st.session_state:
 
     #Generally applicable
-    st.session_state['df_master'] = pd.DataFrame([])
-    st.session_state['df_master'].loc[0, 'Your name'] = ''
-    st.session_state['df_master'].loc[0, 'Your email address'] = ''
-    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
-    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
-    st.session_state['df_master'].loc[0, 'Use GPT'] = False
-    st.session_state['df_master'].loc[0, 'Use own account'] = False
-    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    st.session_state['df_master'].loc[0, 'Example'] = ''
+    df_master_dict = {'Your name' : '', 
+    'Your email address' : '', 
+    'Your GPT API key' : '', 
+    'Metadata inclusion' : True, 
+    'Maximum number of judgments' : default_judgment_counter_bound, 
+    'Enter your questions for GPT' : '', 
+    'Use GPT' : False, 
+    'Use own account' : False, 
+    'Use flagship version of GPT' : False,
+    'Example' : ''
+    }
 
     #Jurisdiction specific
-    st.session_state['df_master'].loc[0, 'Jurisdiction'] = 'All'
-    st.session_state['df_master'].loc[0, 'Courts'] = 'All' 
-    st.session_state['df_master'].loc[0, 'Document text'] = None 
-    st.session_state['df_master'].loc[0, 'Case name, citation or docket'] = None
-    st.session_state['df_master'].loc[0, 'Subjects'] = ''
-    st.session_state['df_master'].loc[0, 'Court or tribunal type'] = None 
-    st.session_state['df_master'].loc[0, 'Decision date is'] = None
-    st.session_state['df_master'].loc[0, 'Decision date is after'] = None
-    st.session_state['df_master'].loc[0, 'Decision date is before'] = None
+    jurisdiction_specific_dict = {'Jurisdiction': 'All', 
+    'Courts': 'All', 
+    'Document text': None, 
+    'Case name, citation or docket': None, 
+    'Subjects': [], 
+    #'Court or tribunal type': None, 
+    'Court or tribunal type': 'All courts and tribunals', 
+    'Decision date is': None, 
+    'Decision date is after': None, 
+    'Decision date is before': None
+    }
 
-    st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
+    #Make into  df
+    df_master_dict.update(jurisdiction_specific_dict)
     
+    st.session_state['df_master'] = pd.DataFrame([df_master_dict])
+
 if 'df_individual_output' not in st.session_state:
 
     st.session_state['df_individual_output'] = pd.DataFrame([])
@@ -359,7 +356,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[cases of select Canadian courts, boards and tribunals]")
+st.header(f"Search :blue[cases of the Canadian courts, boards and tribunals]")
 
 st.success(default_msg)
 
@@ -399,7 +396,8 @@ after_date_entry = st.date_input(label = 'Decision date is after', value = date_
 
 before_date_entry = st.date_input(label = 'Decision date is before', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is before']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-subjects_entry = st.multiselect(label = 'Subjects', options = all_subjects, default = list_range_check(all_subjects, st.session_state['df_master'].loc[0, 'Subjects']))
+subjects_entry = st.multiselect(label = 'Subjects', options = all_subjects, default = st.session_state['df_master'].loc[0, 'Subjects'])
+
 st.caption('If left blank, all subjects will be covered.')
 
 #Can't get Noteup/Discussion to work given dynamic

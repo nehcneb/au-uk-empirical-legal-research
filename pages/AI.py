@@ -1128,7 +1128,7 @@ if own_account_allowed() > 0:
     
     st.subheader(':orange[Enhance app capabilities]')
     
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum nunber of instructions to process? You can do so with your own GPT account.
+    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum number of instructions to process? You can do so with your own GPT account.
     """)
     
     own_account_entry = st.toggle(label = 'Use my own GPT account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
@@ -1446,7 +1446,7 @@ except Exception as e:
     st.stop()
 
 #Area for entering instructions
-st.subheader(f'Enter your instructions for {st.session_state.ai_choice}')
+st.subheader(f'Give instructions to {st.session_state.ai_choice}')
 
 st.write(f':green[Please give your instructions in sequence.] {ai_model_printing(st.session_state.ai_choice, st.session_state.gpt_model)} will respond to at most {st.session_state.instructions_bound} instructions. It will **only** use  the data and/or information from your spreadsheet.')
 
@@ -1478,12 +1478,11 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 
     with col1:
         #Explain 
-        explain_toggle = st.toggle('Explain', help = f'Get {st.session_state.ai_choice} to explain its response.', disabled = st.session_state.disable_input)
+        explain_toggle = st.toggle('Explain', help = f'Ask {st.session_state.ai_choice} to explain its response.', disabled = st.session_state.disable_input)
 
     with col2:
         #Get code 
-        code_toggle = st.toggle('Code', help = f'Get {st.session_state.ai_choice} to produce a code.', disabled = st.session_state.disable_input)
-
+        code_toggle = st.toggle('Code', help = f'Ask {st.session_state.ai_choice} to produce a code.', disabled = st.session_state.disable_input)
 
 
 # %% [markdown]

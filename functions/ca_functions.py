@@ -605,7 +605,7 @@ ca_court_tribunal_types = {'All courts and tribunals': '',
 }
 
 # %%
-all_subjects = ['Access to information and privacy', 'Administrative remedies', 'Appeal', 'Arbitration', 'Bankruptcy and insolvency', 'Business', 'Child custody and access', 'Child protection', 'Citizenship and immigration', 'Commerce and industry', 'Constitution', 'Contracts', 'Creditors and debtors', 'Criminal or statutory infractions', 'Damages', 'Defences', 'Environment', 'Evidence', 'Family', 'Guardianship', 'Health and safety', 'Indigenous peoples', 'Insurance', 'Intellectual property', 'International', 'Interpretation', 'Judicial review', 'Labour and employment', 'Motor vehicles', 'Municipalities', 'Negligence', 'Practice and procedure', 'Professions and occupations', 'Property and trusts', 'Public administration', 'Residential tenancies', 'Rights and freedoms', 'Search and seizure', 'Sentencing', 'Support and maintenance', 'Taxation', 'Torts', 'Wills and estates', 'Young offenders', '']
+all_subjects = ['Access to information and privacy', 'Administrative remedies', 'Appeal', 'Arbitration', 'Bankruptcy and insolvency', 'Business', 'Child custody and access', 'Child protection', 'Citizenship and immigration', 'Commerce and industry', 'Constitution', 'Contracts', 'Creditors and debtors', 'Criminal or statutory infractions', 'Damages', 'Defences', 'Environment', 'Evidence', 'Family', 'Guardianship', 'Health and safety', 'Indigenous peoples', 'Insurance', 'Intellectual property', 'International', 'Interpretation', 'Judicial review', 'Labour and employment', 'Motor vehicles', 'Municipalities', 'Negligence', 'Practice and procedure', 'Professions and occupations', 'Property and trusts', 'Public administration', 'Residential tenancies', 'Rights and freedoms', 'Search and seizure', 'Sentencing', 'Support and maintenance', 'Taxation', 'Torts', 'Wills and estates', 'Young offenders'] #, '']
 
 
 # %%
@@ -616,7 +616,7 @@ def ca_search(jurisdiction  =  'All',
               phrase = '', 
               case_name_mnc= '', 
               court_tribunal_type = 'All courts and tribunals', 
-              subjects = '', 
+              subjects = [], 
              on_this_date = '',
             after_date = '',
             before_date = '',
@@ -696,8 +696,11 @@ def ca_search(jurisdiction  =  'All',
         base_url = base_url.replace('&date=on_this_date_param', '')
 
     #Add topics 
-    if subjects != '':
-        base_url = base_url.replace('subjects_param', subjects)
+    if len(subjects) > 0:
+
+        subjects_text = ",".join(subjects)
+
+        base_url = base_url.replace('subjects_param', subjects_text)
 
     else:
         base_url = base_url.replace('&topics=subjects_param', '')
