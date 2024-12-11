@@ -345,7 +345,7 @@ reset_button = st.button(label='RESET', type = 'primary')
 
 st.subheader("Courts and tribunals to cover")
 
-default_on_courts = st.checkbox(label = 'Prefill the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court')#, value = st.session_state.dafault_courts_status)
+default_on_courts = st.button(label = 'ADD the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court', help = 'You may need to press :red[RESET] to add these courts.')#, value = st.session_state.dafault_courts_status)
 
 if default_on_courts:
     st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')

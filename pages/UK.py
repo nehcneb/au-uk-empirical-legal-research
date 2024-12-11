@@ -334,7 +334,7 @@ reset_button = st.button(label='RESET', type = 'primary')
 
 st.subheader("Courts and tribunals to cover")
 
-default_on = st.checkbox('Prefill the Supreme Court, the Privy Council, the Court of Appeal, the High Court of England & Wales')
+default_on = st.button('ADD the Supreme Court, the Privy Council, the Court of Appeal, and the High Court of England & Wales', help = 'You may need to press :red[RESET] to add these courts.')
 
 if default_on:
     st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
