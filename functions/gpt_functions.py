@@ -752,10 +752,14 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
         text_error = False
         for text_key in ['judgment', 'opinions', 'recap_documents', 'extracted_text']:
             if text_key in judgment_json.keys():
-                if len(judgment_json[text_key]) == 0:
-                    text_error = True
-                    df_individual.loc[judgment_index, 'Note'] = search_error_note
-                    print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                
+                if not isinstance(judgment_json[text_key], float):
+    
+                    if len(judgment_json[text_key]) == 0:
+                        text_error = True
+                        df_individual.loc[judgment_index, 'Note'] = search_error_note
+                        print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                        
                 break
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
@@ -1468,11 +1472,15 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
         text_error = False
         for text_key in ['judgment', 'opinions', 'recap_documents', 'extracted_text', 'judgment_b64', 'b64_list']:
             if text_key in judgment_json.keys():
-                if len(judgment_json[text_key]) == 0:
-                    text_error = True
-                    df_individual.loc[judgment_index, 'Note'] = search_error_note
-                    print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
-                break
+                
+                if not isinstance(judgment_json[text_key], float):
+                    
+                    if len(judgment_json[text_key]) == 0:
+                        text_error = True
+                        df_individual.loc[judgment_index, 'Note'] = search_error_note
+                        print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                        
+            break
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
         judgment_tokens = num_tokens_from_string(str(judgment_json), "cl100k_base")
