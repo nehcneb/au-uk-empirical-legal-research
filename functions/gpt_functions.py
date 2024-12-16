@@ -44,7 +44,6 @@ import copy
 #import time
 import traceback
 
-
 #OpenAI
 import openai
 import tiktoken
@@ -149,44 +148,6 @@ def is_api_key_valid(key_to_check):
 #Define input and output costs, token caps and maximum characters
 #each token is about 4 characters
 
-def gpt_input_cost(gpt_model):
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_input_cost = 1/1000000*0.5
-        
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
-        gpt_input_cost = 1/1000000*5
-
-    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
-        gpt_input_cost = 1/1000000*2.5
-
-    if gpt_model == "gpt-4o":
-        gpt_input_cost = 1/1000000*2.5
-        
-    if gpt_model == "gpt-4o-mini":
-        gpt_input_cost = 1/1000000*0.15
-        
-    return gpt_input_cost
-
-def gpt_output_cost(gpt_model):
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_output_cost = 1/1000000*1.5
-        
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
-        gpt_output_cost = 1/1000000*15
-
-    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
-        gpt_output_cost = 1/1000000*10
-
-    if gpt_model == "gpt-4o":
-        gpt_output_cost = 1/1000000*10
-    
-    if gpt_model == "gpt-4o-mini":
-        gpt_output_cost = 1/1000000*0.6
-    
-    return gpt_output_cost
-    
-#As of 2024-06-07, questions are capped at about 1000 characters ~ 250 tokens, role_content/system_instruction is about 115 tokens, json_direction is about 11 tokens, answers_json is about 8 tokens plus 30 tokens per question 
-
 def tokens_cap(gpt_model):
     #This is the global cap for each model, which will be shown to users
     #Leaving 1000 tokens to spare
@@ -195,44 +156,52 @@ def tokens_cap(gpt_model):
         
         tokens_cap = int(16385 - 3000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
-        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
-
-    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
-        
-        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
-
-    if gpt_model == "gpt-4o":
-        
-        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
-    
-    if gpt_model == "gpt-4o-mini":
+    elif "gpt-4o-mini" in gpt_model:
         tokens_cap = int(128000 - 3000) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
+
+    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
     return tokens_cap
 
+def gpt_input_cost(gpt_model):
+    if gpt_model == "gpt-3.5-turbo-0125":
+        gpt_input_cost = 1/1000000*0.5
+
+    elif "gpt-4o-mini" in gpt_model:
+        gpt_input_cost = 1/1000000*0.15
+    
+    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+        gpt_input_cost = 1/1000000*2.5
+        
+    return gpt_input_cost
+
+def gpt_output_cost(gpt_model):
+    if gpt_model == "gpt-3.5-turbo-0125":
+        gpt_output_cost = 1/1000000*1.5
+        
+    elif "gpt-4o-mini" in gpt_model:
+        gpt_output_cost = 1/1000000*0.6
+
+    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+        gpt_output_cost = 1/1000000*10
+
+    return gpt_output_cost
+    
 def max_output(gpt_model, messages_for_GPT):
 
     if gpt_model == "gpt-3.5-turbo-0125":
         
         max_output_tokens = int(16385 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
-    
-    if gpt_model == "gpt-4o-2024-05-13": #As of 20240910, gpt-4o points towards gpt-4o-2024-05-13
-        
-        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 4096.
 
-    if gpt_model == "gpt-4o": #From 20241002, gpt-4o points towards gpt-4o
-        
-        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
-
-    if gpt_model == "gpt-4o":
-        
-        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.s
-    
-    if gpt_model == "gpt-4o-mini":
+    elif gpt_model == "gpt-4o-mini":
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
+    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+        
+        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.s
+    
     return min(4096, abs(max_output_tokens))
     
 
@@ -267,19 +236,16 @@ def judgment_prompt_json(judgment_json, gpt_model):
             judgment_json[key] = ''
             break
 
-    #Determine whether 'judgment', opinions, or 'recap_documents' contains text
+    #Determine whether 'judgment', opinions, 'recap_documents', or extracted_text contains text
 
     text_key = ''
+
+    #Loop through non-b64 keys
+    for key in ['judgment', 'opinions', 'recap_documents', 'extracted_text']:
+        if key in judgment_json.keys():
+            text_key = key
+            break
     
-    if 'judgment' in judgment_json.keys():
-        text_key = 'judgment'
-
-    if 'opinions' in judgment_json.keys():
-        text_key = 'opinions'
-
-    if 'recap_documents' in judgment_json.keys():
-        text_key = 'recap_documents'
-
     #st.write(f"text_key is {text_key}")
     
     #Just use original judgment_json if no long text
@@ -287,7 +253,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         return judgment_json
 
     else:        
-        #Turn judgment, opinions or recap_documents to string
+        #Turn judgment, opinions, 'recap_documents', or extracted_text to string
         if isinstance(judgment_json[text_key], list):
             try:
                 judgment_to_string = '\n'.join(judgment_json[text_key])
@@ -301,7 +267,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
         else:
             judgment_to_string = str(judgment_json[text_key])
     
-        #Truncate judgment, opinions or recap_documents if needed
+        #Truncate judgment, opinions, 'recap_documents', or extracted_text if needed
         judgment_content = f'Based on the metadata and {text_key} in the following JSON: """ {json.dumps(judgment_json, default=str)} """'
     
         judgment_content_tokens = num_tokens_from_string(judgment_content, "cl100k_base")
@@ -694,6 +660,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
     #client = OpenAI()
     
     try:
+        
         #completion = client.chat.completions.create(
         completion = openai.chat.completions.create(
             model = gpt_model,
@@ -783,12 +750,12 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 
         #Check wither error in getting the full text
         text_error = False
-        for text_key in ['judgment', 'opinions', 'recap_documents']:
+        for text_key in ['judgment', 'opinions', 'recap_documents', 'extracted_text']:
             if text_key in judgment_json.keys():
                 if len(judgment_json[text_key]) == 0:
                     text_error = True
                     df_individual.loc[judgment_index, 'Note'] = search_error_note
-                    print(f"Case indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                    print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
                 break
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
@@ -918,6 +885,409 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 
 
 # %% [markdown]
+# ## Vision instant mode
+
+# %%
+#Tokens counter
+
+def get_image_dims(image):
+    if re.match(r"data:image\/\w+;base64", image):
+        image = re.sub(r"data:image\/\w+;base64,", "", image)
+        image = Image.open(BytesIO(base64.b64decode(image)))
+        return image.size
+    else:
+        raise ValueError("Image must be a base64 string.")
+
+def calculate_image_token_cost(image, detail="auto"):
+    # Constants
+    LOW_DETAIL_COST = 85
+    HIGH_DETAIL_COST_PER_TILE = 170
+    ADDITIONAL_COST = 85
+
+    if detail == "auto":
+        # assume high detail for now
+        detail = "high"
+
+    if detail == "low":
+        # Low detail images have a fixed cost
+        return LOW_DETAIL_COST
+    elif detail == "high":
+        # Calculate token cost for high detail images
+        width, height = get_image_dims(image)
+        # Check if resizing is needed to fit within a 2048 x 2048 square
+        if max(width, height) > 2048:
+            # Resize the image to fit within a 2048 x 2048 square
+            ratio = 2048 / max(width, height)
+            width = int(width * ratio)
+            height = int(height * ratio)
+        # Further scale down to 768px on the shortest side
+        if min(width, height) > 768:
+            ratio = 768 / min(width, height)
+            width = int(width * ratio)
+            height = int(height * ratio)
+        # Calculate the number of 512px squares
+        num_squares = math.ceil(width / 512) * math.ceil(height / 512)
+        # Calculate the total token cost
+        total_cost = num_squares * HIGH_DETAIL_COST_PER_TILE + ADDITIONAL_COST
+        return total_cost
+    else:
+        # Invalid detail_option
+        raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
+
+
+# %%
+#Define GPT answer function for answers in json form, YES TOKENS
+#For gpt-4o vision
+
+@st.cache_data(show_spinner = False)
+def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction):
+    #'question_json' variable is a json of questions to GPT
+
+    #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
+
+    #Add images to messages to GPT
+    image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+
+    for key in ['judgment_b64', 'b64_list']:
+        if key in judgment_json.keys():
+            for image_b64 in judgment_json[key]:
+                image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                image_content_value.append(image_message_to_attach)
+            break
+
+    image_content = [{"role": "user", 
+                      "content": image_content_value
+                     }
+                  ]
+
+    metadata_content = [{"role": "user", "content": ''}]
+
+    metadata_json_raw = judgment_json
+
+    for key in ['tokens_raw', 'judgment_b64', 'b64_list']: #'Hyperlink to CommonLII'
+        if key in metadata_json_raw.keys():
+            metadata_json_raw.pop(key)
+        #except:
+            #print(f'Unable to remove {key} from metadata_json_raw')
+
+    metadata_json = metadata_json_raw
+
+    #print(f"metadata_json == {metadata_json}")
+    
+    #if 'judgment' not in metadata_json.keys():
+    metadata_content = [{"role": "user", "content": 'Based on the following metadata:' + str(metadata_json)}]
+
+    #print(f"metadata_content == {metadata_content}")
+
+    #Create json direction content
+
+    json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
+
+    file_for_GPT = image_content + metadata_content + json_direction
+    
+    #Create answer format
+    answers_json = {}
+
+    if len(df_example.replace('"', '')) > 0:
+
+        try:
+            
+            if isinstance(df_example, str):
+                
+                answers_json = json.loads(df_example)
+
+            if isinstance(df_example, dict):
+                
+                answers_json = df_example
+
+        except Exception as e:
+            print(f"Example provided but can't produce json to send to GPT.")
+            print(e)
+    
+    q_keys = [*questions_json]
+    
+    if len(answers_json) == 0:
+        q_counter = 1
+        for q_index in q_keys:
+            answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
+            q_counter += 1
+
+    #Create questions, which include the answer format
+    
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json)}]
+    
+    #Create messages in one prompt for GPT
+    if 'Language choice' in metadata_json.keys():
+        language_content = f"The file is written in {metadata_json['Language choice']}."
+    else:
+        language_content = ''
+
+    intro_for_GPT = [{"role": "system", "content": system_instruction + language_content}] 
+
+    messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
+    
+#   return messages_for_GPT
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    try:
+        #completion = client.chat.completions.create(
+        completion = openai.chat.completions.create(
+            model=gpt_model,
+            messages=messages_for_GPT, 
+            response_format={"type": "json_object"}, 
+            temperature = 0.2, 
+            top_p = 0.2
+        )
+        
+#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
+                                
+        answers_dict = json.loads(completion.choices[0].message.content)
+        
+        #Obtain tokens
+        output_tokens = completion.usage.completion_tokens
+        
+        prompt_tokens = completion.usage.prompt_tokens
+        
+        #return [answers_dict, output_tokens, prompt_tokens]
+
+        #Check answers
+
+        if check_questions_answers() > 0:
+            
+            try:
+                redacted_output = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
+        
+                redacted_answers_dict = redacted_output[0]
+        
+                redacted_answers_output_tokens = redacted_output[1]
+        
+                redacted_answers_prompt_tokens = redacted_output[2]
+        
+                return [redacted_answers_dict, output_tokens + redacted_answers_output_tokens, prompt_tokens + redacted_answers_prompt_tokens]
+
+                print('Answers checked.')
+                
+            except Exception as e:
+    
+                print('Answers check failed.')
+    
+                print(e)
+    
+                return [answers_dict, output_tokens, prompt_tokens]
+
+        else:
+
+            print('Answers not checked.')
+            
+            return [answers_dict, output_tokens, prompt_tokens]
+
+    except Exception as error:
+        
+        print('GPT failed to produce answers.')
+        
+        for q_index in q_keys:
+            
+            answers_json.update({q_index: error})
+        
+        return [answers_json, 0, 0]
+
+
+
+# %%
+#Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
+#For gpt-4o vision
+
+#The following function DOES NOT check for existence of questions for GPT
+    # To so check, active line marked as #*
+
+@st.cache_data(show_spinner = False)
+def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
+    # Variable questions_json refers to the json of questions
+    # Variable df_individual refers to each respondent's df
+    # Variable activation refers to status of GPT activation (real or test)
+    # The output is a new JSON for the relevant respondent with new columns re:
+        # f"Length of first 10 pages in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
+        # 'GPT cost estimate (USD excl GST)'
+        # 'GPT time estimate (seconds)'
+        # GPT questions/answers
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+
+    #Check questions for privacy violation
+    if check_questions_answers() > 0:
+    
+        questions_checked_dict = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
+
+        questions_json = questions_checked_dict['questions_json']
+    
+        questions_check_output_tokens = questions_checked_dict['questions_check_output_tokens']
+    
+        questions_check_input_tokens = questions_checked_dict['questions_check_input_tokens']
+
+    else:
+
+        print('Questions not checked.')
+        
+        questions_check_output_tokens = 0
+        
+        questions_check_input_tokens = 0
+
+    #Process questions
+
+    #GPT use counter
+    gpt_use_counter = 0
+    
+    for judgment_index in df_individual.index:
+        
+        judgment_json = df_individual.to_dict('index')[judgment_index]
+
+        #Check wither error in getting the full text
+        text_error = False
+        for key in ['judgment_b64', 'b64_list']:#, 'extracted_text']:
+            if key in judgment_json.keys():
+                if len(judgment_json[key]) == 0:
+                    text_error = True
+                    df_individual.loc[judgment_index, 'Note'] = search_error_note
+                    print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                break
+
+        #Calculate and append number of tokens of judgment, regardless of whether given to GPT
+        df_individual.loc[judgment_index, f"Tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_json['tokens_raw']       
+
+        #Create columns for respondent's GPT cost, time
+        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
+        df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = ''
+                
+        #Calculate GPT start time
+
+        GPT_start_time = datetime.now()
+
+        #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
+
+        if ((int(GPT_activation) > 0) and (text_error == False)):
+            GPT_output_list = GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            answers_dict = GPT_output_list[0]
+
+            if check_questions_answers() > 0:
+            
+                GPT_answers_check_output_list = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
+
+                #Get potentially redacted answers and costs
+                answers_dict = GPT_answers_check_output_list[0]
+                redacted_answers_output_tokens = GPT_answers_check_output_list[1]
+                redacted_answers_prompt_tokens = GPT_answers_check_output_list[2]
+
+            else:
+                print('Answers not checked.')
+                redacted_answers_output_tokens = 0
+                redacted_answers_prompt_tokens = 0
+
+            #Calculate GPT cost of answering questions
+            answers_output_tokens = GPT_output_list[1] + redacted_answers_output_tokens
+            answers_input_tokens  = GPT_output_list[2] + redacted_answers_output_tokens
+                    
+            #Calculate and append GPT finish time and time difference to individual df
+            GPT_finish_time = datetime.now()
+            
+            GPT_time_difference = GPT_finish_time - GPT_start_time
+    
+            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()    
+
+            #Display GPT use counter
+            gpt_use_counter += 1
+            print(f"GPT proccessed {gpt_use_counter}/{len(df_individual)} cases.")
+                    
+        else:
+            answers_dict = {}    
+            
+            question_keys = [*questions_json]
+
+            for q_index in question_keys:
+                #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
+                answer = ''
+                answers_dict.update({questions_json[q_index]: answer})
+            
+            #Calculate capped judgment tokens
+
+            judgment_capped_tokens = min(judgment_json['tokens_raw'], tokens_cap(gpt_model))
+
+            #Calculate questions tokens and cost
+
+            questions_tokens = num_tokens_from_string(json.dumps(questions_json), "cl100k_base")
+
+            #Calculate metadata tokens
+
+            metadata_tokens = 0
+            
+            metadata_json_for_counting = judgment_json
+
+            for key in ['tokens_raw', 'judgment_b64', 'b64_list']: #['Hyperlink to CommonLII', 'judgment', 'tokens_raw']:
+                if key in metadata_json_for_counting.keys():
+                    metadata_json_for_counting.pop(key)
+                #except:
+                    #print(f'Unable to remove {key} from metadata_json_for_counting')        
+
+            #if 'judgment' not in metadata_json_for_counting.keys():
+            metadata_tokens = metadata_tokens + num_tokens_from_string(str(metadata_json_for_counting), "cl100k_base")
+
+            #Calculate other instructions' tokens
+
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Respond in the following JSON form: '
+
+            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
+
+            #Calculate number of tokens of answers
+            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+
+            answers_input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
+            
+        #Create GPT question headings and append answers to individual spreadsheets
+        for answer_index in answers_dict.keys():
+
+            #Check any errors
+            answer_string = str(answers_dict[answer_index]).lower()
+            
+            if ((answer_string.startswith('your answer.')) or (answer_string.startswith('your response.'))):
+                
+                answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
+
+            #Append answer to spreadsheet
+
+            answer_header = answer_index
+
+            try:
+            
+                df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
+
+            except:
+
+                df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
+                
+        #Calculate GPT costs
+
+        #If check for questions
+        GPT_cost = (answers_output_tokens + questions_check_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (answers_input_tokens + questions_check_input_tokens/len(df_individual))*gpt_input_cost(gpt_model)
+
+        #If no check for questions
+        #GPT_cost = answers_output_tokens*gpt_output_cost(gpt_model) + answers_input_tokens*gpt_input_cost(gpt_model)
+
+        #Calculate and append GPT cost to individual df
+        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
+    
+    return df_individual
+    
+
+
+# %% [markdown]
 # ## Batch mode
 
 # %%
@@ -949,7 +1319,7 @@ def gpt_get_custom_id(judgment_json):
         mnc = judgment_json['mnc'].replace(' ', '_')
 
     else:
-        mnc = 'unknown_mnc'
+        mnc = ''
 
     case_name = ''
 
@@ -959,9 +1329,13 @@ def gpt_get_custom_id(judgment_json):
     elif 'title' in judgment_json.keys():
 
         case_name = judgment_json['title'].replace(' ', '_')
-
+    
+    elif 'File name' in judgment_json.keys():
+    
+        case_name = judgment_json['File name'].replace(' ', '_')
+    
     else:
-        case_name = 'unknown_case_name'
+        case_name = ''
     
     custom_id = f"{time_now}_{case_name}_{mnc}"[0:50]
 
@@ -977,7 +1351,32 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
-    judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
+    #Loop through non-b64 keys
+    for key in ['judgment', 'opinions', 'recap_documents', 'extracted_text']:
+        if key in judgment_json.keys():      
+            judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
+            
+            break
+            
+    else: #If one of b64 key ['judgment_b64', 'b64_list'] in judgment_json.keys():
+        
+        #Add images to messages to GPT
+        image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+        
+        for key in ['judgment', 'b64_list']:
+            if key in judgment_json.keys():
+                for image_b64 in judgment_json[key]:
+                    image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                    image_content_value.append(image_message_to_attach)
+                    
+                break
+        
+        image_content = [{"role": "user", 
+                          "content": image_content_value
+                         }
+                      ]
+
+        judgment_for_GPT = image_content
 
     json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
 
@@ -1067,12 +1466,12 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
 
         #Check wither error in getting the full text
         text_error = False
-        for text_key in ['judgment', 'opinions', 'recap_documents']:
+        for text_key in ['judgment', 'opinions', 'recap_documents', 'extracted_text', 'judgment_b64', 'b64_list']:
             if text_key in judgment_json.keys():
                 if len(judgment_json[text_key]) == 0:
                     text_error = True
                     df_individual.loc[judgment_index, 'Note'] = search_error_note
-                    print(f"Case indexed {judgment_index} not sent to GPT given full text was not scrapped.")
+                    print(f"Case/file indexed {judgment_index} not sent to GPT given full text was not scrapped.")
                 break
         
         #Calculate and append number of tokens of judgment, regardless of whether given to GPT
@@ -1100,8 +1499,8 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
 
             batch_input_list.append(get_id_oneline['oneline'])
 
-            #Remove full text
-            for text_key in ['judgment', 'opinions', 'recap_documents']:
+            #Remove full text/b64
+            for text_key in ['judgment', 'opinions', 'recap_documents', 'extracted_text', 'judgment_b64', 'b64_list']:
                 if text_key in df_individual.columns:
                     df_individual.loc[judgment_index, text_key] = ''
                     break
@@ -1122,6 +1521,8 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
     df_jsonl = pd.DataFrame(batch_input_list)
 
     jsonl_for_batching = df_jsonl.to_json(orient='records', lines=True)
+
+    #print(f"jsonl_for_batching == {jsonl_for_batching}")
     
     batch_input_file = openai.files.create(
         file = jsonl_for_batching.encode(encoding="utf-8"),
@@ -1281,7 +1682,8 @@ def batch_request_function():
                                            
                     #Send me an email to let me know
                     send_notification_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
-                                            ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address']
+                                            ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address'], 
+                                            jurisdiction_page = st.session_state['df_master'].loc[0, 'jurisdiction_page']
                                            )
 
                     st.session_state["batch_submitted"] = True
@@ -1299,57 +1701,6 @@ def batch_request_function():
                     print(e)
     
                     print(traceback.format_exc())
-
-
-# %% [markdown]
-# ## Vision
-
-# %%
-#Tokens counter
-
-def get_image_dims(image):
-    if re.match(r"data:image\/\w+;base64", image):
-        image = re.sub(r"data:image\/\w+;base64,", "", image)
-        image = Image.open(BytesIO(base64.b64decode(image)))
-        return image.size
-    else:
-        raise ValueError("Image must be a base64 string.")
-
-def calculate_image_token_cost(image, detail="auto"):
-    # Constants
-    LOW_DETAIL_COST = 85
-    HIGH_DETAIL_COST_PER_TILE = 170
-    ADDITIONAL_COST = 85
-
-    if detail == "auto":
-        # assume high detail for now
-        detail = "high"
-
-    if detail == "low":
-        # Low detail images have a fixed cost
-        return LOW_DETAIL_COST
-    elif detail == "high":
-        # Calculate token cost for high detail images
-        width, height = get_image_dims(image)
-        # Check if resizing is needed to fit within a 2048 x 2048 square
-        if max(width, height) > 2048:
-            # Resize the image to fit within a 2048 x 2048 square
-            ratio = 2048 / max(width, height)
-            width = int(width * ratio)
-            height = int(height * ratio)
-        # Further scale down to 768px on the shortest side
-        if min(width, height) > 768:
-            ratio = 768 / min(width, height)
-            width = int(width * ratio)
-            height = int(height * ratio)
-        # Calculate the number of 512px squares
-        num_squares = math.ceil(width / 512) * math.ceil(height / 512)
-        # Calculate the total token cost
-        total_cost = num_squares * HIGH_DETAIL_COST_PER_TILE + ADDITIONAL_COST
-        return total_cost
-    else:
-        # Invalid detail_option
-        raise ValueError("Invalid value for detail parameter. Use 'low' or 'high'.")
 
 
 # %% [markdown]
@@ -1426,7 +1777,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/ER.py':
 
-        from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+        from functions.er_functions import er_run, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, role_content_er, er_judgment_tokens_b64, er_meta_judgment_dict_b64
 
         system_instruction = role_content_er
 
@@ -1443,7 +1794,7 @@ def gpt_run(jurisdiction_page, df_master):
     if jurisdiction_page == 'pages/SCTA.py':
 
         system_instruction = role_content
-                
+        
         from functions.scta_functions import scta_run, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
         
         run = copy.copy(scta_run)
@@ -1457,7 +1808,7 @@ def gpt_run(jurisdiction_page, df_master):
 
 
 # %% [markdown]
-# # Batch run
+# # GPT batch run
 
 # %%
 #Jurisdiction specific instruction and functions
@@ -1504,7 +1855,6 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
     batch_record_df_individual = batch(df_master)
     
     return batch_record_df_individual
-
 
 
 # %%

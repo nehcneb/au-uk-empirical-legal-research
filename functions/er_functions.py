@@ -40,6 +40,10 @@ import urllib.request
 import pypdf
 import io
 from io import BytesIO
+import pdf2image
+#from PIL import Image
+#import math
+#from math import ceil
 
 #Streamlit
 import streamlit as st
@@ -60,11 +64,14 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
+test = 'A Copiholders Case [1657] EngR 1; (1657) Het 138; 124 E.R. 405 (B) (1 January 1657)'
+re.findall(r'(\d+\sE\.?R\.?\s\d+((\s\(\w+\))?))', test)[0]
+
+# %%
 #Import functions
 from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, no_results_msg, search_error_note
-
 
 
 # %% [markdown]
@@ -217,11 +224,26 @@ def er_meta_judgment_dict(case_link_pair):
             
         try:
             case_name = case_link_pair['case'].split('[')[0][:-1]
-            nr_cite = case_link_pair['case'].split(';')[1][1:]
-            er_cite = case_link_pair['case'].split(';')[2][1:]
+            nr_cite = case_link_pair['case'].split(';')[-2][1:]
+            er_cite = case_link_pair['case'].split(';')[-1][1:]
+
+            if ('ER' not in er_cite) and ('E.R.' not in er_cite):
+
+                try:
+                    
+                    er_cite_raw = re.findall(r'(\d+\sE\.?R\.?\s\d+((\s\(\w+\))?))', case_link_pair['case'])[0]
+    
+                    if isinstance(er_cite_raw, tuple):
+                        er_cite = er_cite_raw[0]
+                    else:
+                        er_cite = str(er_cite_raw)
+
+                except:
+                    print(f"{mnc}: can't get ER cite.")
+            
         except:
             pass
-                    
+        
         judgment_dict['Case name'] = case_name
         judgment_dict['Medium neutral citation'] = mnc
         judgment_dict['English Reports'] = er_cite
@@ -258,7 +280,7 @@ def er_search_url(df_master):
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
+from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
 from functions.gpt_functions import question_characters_bound
 
@@ -348,27 +370,20 @@ def er_run(df_master):
     return df_updated
 
 # %% [markdown]
-# # For vision, ER only
-
-# %%
-import pdf2image
-from PIL import Image
-import math
-from math import ceil
-
+# # For vision
 
 # %%
 #Import functions
-from functions.gpt_functions import get_image_dims, calculate_image_token_cost
+from functions.gpt_functions import get_image_dims, calculate_image_token_cost, GPT_b64_json, engage_GPT_b64_json
 
 
 # %%
-#Convert case-link pairs to judgment text
+#Convert case-link pairs to judgment_b64 text
 
 #@st.cache_data(show_spinner = False)
 def er_judgment_tokens_b64(case_link_pair):
 
-    output_b64 = {'judgment':[], 'tokens_raw': 0}
+    output_b64 = {'judgment_b64':[], 'tokens_raw': 0}
     
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
@@ -394,9 +409,9 @@ def er_judgment_tokens_b64(case_link_pair):
         b64_to_attach = data_url
         #b64_to_attach = f"data:image/png;base64,{b64}"
 
-        output_b64['judgment'].append(b64_to_attach)
+        output_b64['judgment_b64'].append(b64_to_attach)
     
-    for image_b64 in output_b64['judgment']:
+    for image_b64 in output_b64['judgment_b64']:
 
         output_b64['tokens_raw'] = output_b64['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
     
@@ -405,7 +420,7 @@ def er_judgment_tokens_b64(case_link_pair):
 
 
 # %%
-#Meta labels and judgment combined
+#Meta labels and judgment_b64 combined
 
 def er_meta_judgment_dict_b64(case_link_pair):
 
@@ -416,7 +431,7 @@ def er_meta_judgment_dict_b64(case_link_pair):
                          'Nominate Reports': '', 
                          'Hyperlink to CommonLII': '', 
                          'Year' : '', 
-                         'judgment': '', 
+                         'judgment_b64': '', 
                          'tokens_raw': 0
                         }
     
@@ -441,354 +456,14 @@ def er_meta_judgment_dict_b64(case_link_pair):
         judgment_dict['Nominate Reports'] = nr_cite
         judgment_dict['Year'] = year
         judgment_dict['Hyperlink to CommonLII'] = link(case_link_pair['link_direct'])
-        judgment_dict['judgment'] = er_judgment_tokens_b64(case_link_pair)['judgment']
+        judgment_dict['judgment_b64'] = er_judgment_tokens_b64(case_link_pair)['judgment_b64']
         judgment_dict['tokens_raw'] = er_judgment_tokens_b64(case_link_pair)['tokens_raw']
 
     except Exception as e:
-        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(f"{judgment_dict['Case name']}: judgment_b64 not scrapped")
         print(e)
     
     return judgment_dict
-    
-
-
-# %%
-#Define GPT answer function for answers in json form, YES TOKENS
-#For gpt-4o vision
-
-@st.cache_data(show_spinner = False)
-def er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction):
-    #'question_json' variable is a json of questions to GPT
-
-    #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
-
-    #Add images to messages to GPT
-    image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
-
-    for image_b64 in judgment_json['judgment']:
-        image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
-        image_content_value.append(image_message_to_attach)
-
-    image_content = [{"role": "user", 
-                      "content": image_content_value
-                     }
-                  ]
-
-    metadata_content = [{"role": "user", "content": ''}]
-
-    metadata_json_raw = judgment_json
-
-    for key in ['Hyperlink to CommonLII', 'judgment', 'tokens_raw']:
-        try:
-            metadata_json_raw.pop(key)
-        except:
-            print(f'Unable to remove {key} from metadata_json_raw')
-
-    metadata_json = metadata_json_raw
-
-    if 'judgment' not in metadata_json.keys():
-        metadata_content = [{"role": "user", "content": 'Based on the following metadata:' + str(metadata_json)}]
-
-    #Create json direction content
-
-    json_direction = [{"role": "user", "content": 'You will be given questions to answer in JSON form.'}]
-
-    file_for_GPT = image_content + metadata_content + json_direction
-    
-    #Create answer format
-    answers_json = {}
-
-    if len(df_example.replace('"', '')) > 0:
-
-        try:
-            
-            if isinstance(df_example, str):
-                
-                answers_json = json.loads(df_example)
-
-            if isinstance(df_example, dict):
-                
-                answers_json = df_example
-
-        except Exception as e:
-            print(f"Example provided but can't produce json to send to GPT.")
-            print(e)
-    
-    q_keys = [*questions_json]
-    
-    if len(answers_json) == 0:
-        q_counter = 1
-        for q_index in q_keys:
-            answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
-            q_counter += 1
-
-    #Create questions, which include the answer format
-    
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json)}]
-    
-    #Create messages in one prompt for GPT
-    #ER specific intro
-
-    intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
-    messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
-    
-#   return messages_for_GPT
-
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
-    
-    try:
-        #completion = client.chat.completions.create(
-        completion = openai.chat.completions.create(
-            model=gpt_model,
-            messages=messages_for_GPT, 
-            response_format={"type": "json_object"}, 
-            temperature = 0.2, 
-            top_p = 0.2
-        )
-        
-#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
-                                
-        answers_dict = json.loads(completion.choices[0].message.content)
-        
-        #Obtain tokens
-        output_tokens = completion.usage.completion_tokens
-        
-        prompt_tokens = completion.usage.prompt_tokens
-        
-        #return [answers_dict, output_tokens, prompt_tokens]
-
-        #Check answers
-
-        if check_questions_answers() > 0:
-            
-            try:
-                redacted_output = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
-        
-                redacted_answers_dict = redacted_output[0]
-        
-                redacted_answers_output_tokens = redacted_output[1]
-        
-                redacted_answers_prompt_tokens = redacted_output[2]
-        
-                return [redacted_answers_dict, output_tokens + redacted_answers_output_tokens, prompt_tokens + redacted_answers_prompt_tokens]
-
-                print('Answers checked.')
-                
-            except Exception as e:
-    
-                print('Answers check failed.')
-    
-                print(e)
-    
-                return [answers_dict, output_tokens, prompt_tokens]
-
-        else:
-
-            print('Answers not checked.')
-            
-            return [answers_dict, output_tokens, prompt_tokens]
-
-    except Exception as error:
-        
-        print('GPT failed to produce answers.')
-        
-        for q_index in q_keys:
-            
-            answers_json.update({q_index: error})
-        
-        return [answers_json, 0, 0]
-
-
-
-# %%
-#Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
-#For gpt-4o vision
-
-#The following function DOES NOT check for existence of questions for GPT
-    # To so check, active line marked as #*
-
-@st.cache_data(show_spinner = False)
-def er_engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
-    # Variable questions_json refers to the json of questions
-    # Variable df_individual refers to each respondent's df
-    # Variable activation refers to status of GPT activation (real or test)
-    # The output is a new JSON for the relevant respondent with new columns re:
-        # f"Length of first 10 pages in tokens (up to {tokens_cap(gpt_model)} given to GPT)"
-        # 'GPT cost estimate (USD excl GST)'
-        # 'GPT time estimate (seconds)'
-        # GPT questions/answers
-
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
-
-    #Check questions for privacy violation
-    if check_questions_answers() > 0:
-    
-        questions_checked_dict = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
-
-        questions_json = questions_checked_dict['questions_json']
-    
-        questions_check_output_tokens = questions_checked_dict['questions_check_output_tokens']
-    
-        questions_check_input_tokens = questions_checked_dict['questions_check_input_tokens']
-
-    else:
-
-        print('Questions not checked.')
-        
-        questions_check_output_tokens = 0
-        
-        questions_check_input_tokens = 0
-
-    #Process questions
-
-    #GPT use counter
-    gpt_use_counter = 0
-    
-    for judgment_index in df_individual.index:
-        
-        judgment_json = df_individual.to_dict('index')[judgment_index]
-
-        #Check wither error in getting the full text
-        text_error = False
-        if 'judgment' in judgment_json.keys():
-            if len(judgment_json['judgment']) == 0:
-                text_error = True
-                df_individual.loc[judgment_index, 'Note'] = search_error_note
-                print(f"Case indexed {judgment_index} not sent to GPT given full text was not scrapped.")
-
-        #Calculate and append number of tokens of judgment, regardless of whether given to GPT
-        df_individual.loc[judgment_index, f"Tokens (up to {tokens_cap(gpt_model)} given to GPT)"] = judgment_json['tokens_raw']       
-
-        #Create columns for respondent's GPT cost, time
-        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = ''
-        df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = ''
-                
-        #Calculate GPT start time
-
-        GPT_start_time = datetime.now()
-
-        #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
-
-        if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_output_list = er_GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
-            answers_dict = GPT_output_list[0]
-
-            if check_questions_answers() > 0:
-            
-                GPT_answers_check_output_list = GPT_answers_check(answers_dict, gpt_model, answers_check_system_instruction)
-
-                #Get potentially redacted answers and costs
-                answers_dict = GPT_answers_check_output_list[0]
-                redacted_answers_output_tokens = GPT_answers_check_output_list[1]
-                redacted_answers_prompt_tokens = GPT_answers_check_output_list[2]
-
-            else:
-                print('Answers not checked.')
-                redacted_answers_output_tokens = 0
-                redacted_answers_prompt_tokens = 0
-
-            #Calculate GPT cost of answering questions
-            answers_output_tokens = GPT_output_list[1] + redacted_answers_output_tokens
-            answers_input_tokens  = GPT_output_list[2] + redacted_answers_output_tokens
-                    
-            #Calculate and append GPT finish time and time difference to individual df
-            GPT_finish_time = datetime.now()
-            
-            GPT_time_difference = GPT_finish_time - GPT_start_time
-    
-            df_individual.loc[judgment_index, 'GPT time estimate (seconds)'] = GPT_time_difference.total_seconds()    
-
-            #Display GPT use counter
-            gpt_use_counter += 1
-            print(f"GPT proccessed {gpt_use_counter}/{len(df_individual)} cases.")
-                    
-        else:
-            answers_dict = {}    
-            
-            question_keys = [*questions_json]
-
-            for q_index in question_keys:
-                #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
-                answer = ''
-                answers_dict.update({questions_json[q_index]: answer})
-            
-            #Calculate capped judgment tokens
-
-            judgment_capped_tokens = min(judgment_json['tokens_raw'], tokens_cap(gpt_model))
-
-            #Calculate questions tokens and cost
-
-            questions_tokens = num_tokens_from_string(json.dumps(questions_json), "cl100k_base")
-
-            #Calculate metadata tokens
-
-            metadata_tokens = 0
-            
-            metadata_json_for_counting = judgment_json
-
-            for key in ['Hyperlink to CommonLII', 'judgment', 'tokens_raw']:
-                try:
-                    metadata_json_for_counting.pop(key)
-                except:
-                    print(f'Unable to remove {key} from metadata_json_for_counting')        
-
-            if 'judgment' not in metadata_json_for_counting.keys():
-                metadata_tokens = metadata_tokens + num_tokens_from_string(str(metadata_json_for_counting), "cl100k_base")
-
-            #Calculate other instructions' tokens
-
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Respond in the following JSON form: '
-
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
-
-            #Calculate number of tokens of answers
-            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
-
-            answers_input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
-            
-        #Create GPT question headings and append answers to individual spreadsheets
-        for answer_index in answers_dict.keys():
-
-            #Check any errors
-            answer_string = str(answers_dict[answer_index]).lower()
-            
-            if ((answer_string.startswith('your answer.')) or (answer_string.startswith('your response.'))):
-                
-                answers_dict[answer_index] = 'Error. Please try a different question or GPT model.'
-
-            #Append answer to spreadsheet
-
-            answer_header = answer_index
-
-            try:
-            
-                df_individual.loc[judgment_index, answer_header] = answers_dict[answer_index]
-
-            except:
-
-                df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
-                
-        #Calculate GPT costs
-
-        #If check for questions
-        GPT_cost = (answers_output_tokens + questions_check_output_tokens/len(df_individual))*gpt_output_cost(gpt_model) + (answers_input_tokens + questions_check_input_tokens/len(df_individual))*gpt_input_cost(gpt_model)
-
-        #If no check for questions
-        #GPT_cost = answers_output_tokens*gpt_output_cost(gpt_model) + answers_input_tokens*gpt_input_cost(gpt_model)
-
-        #Calculate and append GPT cost to individual df
-        df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
-    
-    return df_individual
     
 
 
@@ -843,17 +518,17 @@ def er_run_b64(df_master):
     else:        
         gpt_model = "gpt-4o-mini"
         
-    #apply GPT_individual to each respondent's judgment spreadsheet
+    #apply GPT_individual to each respondent's judgment_b64 spreadsheet
     
     questions_json = df_master.loc[0, 'questions_json']
             
-    #apply GPT_individual to each respondent's judgment spreadsheet
+    #apply GPT_individual to each respondent's judgment_b64 spreadsheet
 
-    df_updated = er_engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Remove redundant columns
 
-    for column in ['tokens_raw', 'judgment']:
+    for column in ['tokens_raw', 'judgment_b64']:
         try:
             df_updated.pop(column)
         except:

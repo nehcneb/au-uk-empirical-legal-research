@@ -94,7 +94,7 @@ if 'page_from' not in st.session_state:
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run, batch_request_function
+from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, gpt_run, batch_request_function #GPT_json, engage_GPT_json
 #Import variables
 from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption
 #, intro_for_GPT
@@ -219,7 +219,6 @@ if 'df_example_to_show' not in st.session_state:
 #Initalize df_example_key for the purpose of removing uploaded spreadsheets programatically
 if "df_example_key" not in st.session_state:
     st.session_state["df_example_key"] = 0
-
 
 
 # %% [markdown]
@@ -414,7 +413,7 @@ if own_account_allowed() > 0:
     
         if judgments_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
-            st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} cases need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
+            st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} cases may need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
 
         st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each case, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} case(s).*")
     
@@ -441,7 +440,6 @@ else:
     
         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     
-
 
 # %% [markdown]
 # ## Consent
@@ -477,7 +475,7 @@ st.header("Next steps")
 
 #Calculate estimating waiting time
 
-estimated_waiting_secs = int(float(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))*30
+estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
 
 #Instructions
 st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will **immediately** process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is {estimated_waiting_secs/60} minute(s).
@@ -525,6 +523,7 @@ with stylable_container(
 if st.session_state.need_resetting == 1:
     if len(st.session_state.df_individual) > 0:
         st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
+        
 
 
 # %% [markdown]
@@ -542,7 +541,7 @@ Alternatively, you can send the relevant PDFs to GPT as images. This alternative
     #st.write('Not getting the best responses for your images? You can try a more costly')
     #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
     er_run_button_b64 = st.button(label = 'SEND PDFs to GPT as images')
-
+    
 
 # %% [markdown]
 # ## Previous responses and outputs
@@ -747,5 +746,6 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
     if st.session_state.batch_submitted == True:
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
+        
 
 

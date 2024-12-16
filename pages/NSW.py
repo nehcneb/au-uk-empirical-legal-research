@@ -348,8 +348,14 @@ st.subheader("Courts and tribunals to cover")
 default_on_courts = st.button(label = 'ADD the Court of Appeal, the Court of Criminal Appeal, and the Supreme Court', help = 'You may need to press :red[RESET] to add these courts.')#, value = st.session_state.dafault_courts_status)
 
 if default_on_courts:
-    st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
-    st.session_state['df_master'].at[0, 'Courts'] = nsw_default_courts
+    
+    if isinstance(st.session_state['df_master'].loc[0, 'Courts'], list):
+        for court in nsw_default_courts:
+            if court not in st.session_state['df_master'].loc[0, 'Courts']:
+                st.session_state['df_master'].loc[0, 'Courts'].append(court)
+    else:
+        st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
+        st.session_state['df_master'].at[0, 'Courts'] = nsw_default_courts
 
 courts_entry = st.multiselect(label = 'Courts', options = nsw_courts, default = st.session_state['df_master'].loc[0, 'Courts'])
 

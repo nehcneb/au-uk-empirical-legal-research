@@ -337,8 +337,14 @@ st.subheader("Courts and tribunals to cover")
 default_on = st.button('ADD the Supreme Court, the Privy Council, the Court of Appeal, and the High Court of England & Wales', help = 'You may need to press :red[RESET] to add these courts.')
 
 if default_on:
-    st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
-    st.session_state['df_master'].at[0, 'Courts'] = uk_courts_default_list
+    
+    if isinstance(st.session_state['df_master'].loc[0, 'Courts'], list):
+        for court in uk_courts_default_list:
+            if court not in st.session_state['df_master'].loc[0, 'Courts']:
+                st.session_state['df_master'].loc[0, 'Courts'].append(court)
+    else:
+        st.session_state['df_master']['Courts'] = st.session_state['df_master']['Courts'].astype('object')
+        st.session_state['df_master'].at[0, 'Courts'] = uk_courts_default_list
 
 courts_entry = st.multiselect(label = 'Select or type in the courts and tribunals to search', options = uk_courts_list, default = st.session_state['df_master'].loc[0, 'Courts'])
 

@@ -36,18 +36,24 @@ def pop_judgment():
 
 
 # %%
+def immediate_b64():
+    return 0
+
+
+# %%
 huggingface = True
 
 #if depends on director
-
 huggingface_directory = 0
 
 if huggingface_directory > 1:
     
     current_dir = ''
+    
     try:
         current_dir = os.getcwd()
         print(f"current_dir == {current_dir}")
+        
     except Exception as e:
         print(f"current_dir not generated.")
         print(e)
@@ -398,7 +404,7 @@ search_error_display = 'The database from which this app sources cases is not re
 
 # %%
 #Note error for scraping
-search_error_note = 'The database from which this app sources cases did not respond. This case was not sent to GPT.'
+search_error_note = 'Error: case/file not sent to GPT given full text was not scrapped.'
 
 
 # %%
@@ -749,7 +755,7 @@ def uploaded_file_to_df(uploaded_file):
 #AWS email
 #Define send email function
 
-def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL):
+def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, jurisdiction_page):
 
     ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
     
@@ -768,7 +774,7 @@ def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL):
     
     BODY_TEXT = (
     
-    f"{ULTIMATE_RECIPIENT_NAME} at {ULTIMATE_RECIPIENT_EMAIL} has requested data via LawtoData."
+    f"{ULTIMATE_RECIPIENT_NAME} at {ULTIMATE_RECIPIENT_EMAIL} has requested data for {jurisdiction_page} via LawtoData."
     
     )
       

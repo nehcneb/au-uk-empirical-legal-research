@@ -213,10 +213,10 @@ for column in boolean_columns:
 #all_df_masters.reset_index(drop=True)
 
 # %% [markdown]
-# # Submit updated all_df_masters to GPT
+# # Get df_individuals and submit to GPT
 
 # %%
-st.subheader("Scrape judgments and submit batches to GPT")
+st.subheader("Scrape judgments and submit as batches to GPT")
 
 # %%
 #requests counter
@@ -419,7 +419,9 @@ for index in all_df_masters.index:
                 
             #Get batch record
             batch_record = openai.batches.retrieve(batch_id)
-        
+
+            #st.write(f"{batch_id}: batch_record == {batch_record}")
+            
             output_file_id = ''
         
             try:
@@ -439,10 +441,14 @@ for index in all_df_masters.index:
             #Update status etc on all_df_masters
             all_df_masters.loc[index, 'status'] = status
             all_df_masters.loc[index, 'output_file_id'] = output_file_id
-            
+
+            #st.write(f"all_df_masters.loc[index] == {all_df_masters.loc[index]}")
+
             if status == 'completed':
                 
                 batch_response = openai.files.content(output_file_id)
+
+                #st.write(f"batch_response == {batch_response}")
         
                 df_batch_response = pd.read_json(batch_response.text, lines=True)
         
@@ -476,7 +482,7 @@ for index in all_df_masters.index:
 # # Append retrieved output to df_individuals
 
 # %%
-st.subheader("Append GPT output to judgment data")
+st.subheader("Append GPT output to judgment or file data")
 
 # %%
 if len(df_batch_id_response_list) == 0:
@@ -653,8 +659,6 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     
     f"{funder_msg} \r\n\r\n"
 
-    "Please note that the data produced has been checked to avoid exposing personally identifiable information. \r\n\r\n"
-
     "Please don't hesitate to reach out if I could be of assistance.\r\n\r\n"
     
     "Kind regards\r\n\r\n"
@@ -668,7 +672,10 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     "Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html\r\n"
     "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
     )
-        
+
+    #"Please note that the data produced has been checked to avoid exposing personally identifiable information. \r\n\r\n"
+
+    
     #<h1>LawtoData: an Empirical Legal Research Automator</h1>
 
     # The HTML body of the email.
@@ -687,9 +694,6 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     <p>
     Your access code is {BATCH_CODE}
     </p>    
-    <p>
-    Please note that the data produced has been checked to avoid exposing personally identifiable information.
-    </p>
     <p>
     {funder_msg}
     </p>    
@@ -718,6 +722,11 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     </html>
     """
 
+    #<p>
+    #Please note that the data produced has been checked to avoid exposing personally identifiable information.
+    #</p>
+
+    
     # The character encoding for the email.
     CHARSET = "UTF-8"
     
