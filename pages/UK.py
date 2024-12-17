@@ -202,15 +202,8 @@ def uk_create_df():
 
     df_master_new = pd.DataFrame([new_row])
 
-#    df_master_new.to_json(current_dir + '/df_master.json', orient = 'split', compression = 'infer')
-#    df_master_new.to_excel(current_dir + '/df_master.xlsx', index=False)
-
-#    if len(df_master_new) > 0:
-        
     return df_master_new
 
-#    else:
-#        return 'Error: spreadsheet of reponses NOT generated.' 
 
 # %% [markdown]
 # # GPT functions and parameters

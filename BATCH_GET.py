@@ -665,7 +665,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     
     "Ben\r\n\r\n"
     
-    "Ben Chen | Senior Research Fellow and Senior Lecturer\r\n"
+    "Ben Chen | Associate Professor\r\n"
     "The University of Sydney Law School\r\n"
     " \r\n"
     "Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)\r\n"
@@ -705,7 +705,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Ben
     </p>   
     <p>
-    <b>Ben Chen</b> | Senior Research Fellow and Senior Lecturer
+    <b>Ben Chen</b> | Associate Professor
     <p>
     The University of Sydney Law School
     </p>
@@ -807,7 +807,7 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     
     "Ben\r\n\r\n"
     
-    "Ben Chen | Senior Research Fellow and Senior Lecturer\r\n"
+    "Ben Chen | Associate Professor\r\n"
     "The University of Sydney Law School\r\n"
     " \r\n"
     "Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)\r\n"
@@ -840,7 +840,7 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     Ben
     </p>   
     <p>
-    <b>Ben Chen</b> | Senior Research Fellow and Senior Lecturer
+    <b>Ben Chen</b> | Associate Professor
     <p>
     The University of Sydney Law School
     </p>
