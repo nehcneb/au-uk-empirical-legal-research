@@ -667,9 +667,8 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
     if 'extracted_text' in df_individual.columns:
         df_individual.pop('extracted_text')
 
-    #Making a list only to enable @st.cache_data
-    return [batch_record_df_individual]
-
+    return batch_record_df_individual
+    
 
 
 # %%
@@ -747,13 +746,13 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
                 
                 #Get batch_record, df_individual as a list
-                batch_record_df_individual_list = batch_own(df_master, uploaded_docs, uploaded_images)
+                batch_record_df_individual = batch_own(df_master, uploaded_docs, uploaded_images)
 
-                #print(f"batch_record_df_individual_list == {batch_record_df_individual_list}")
+                #print(f"batch_record_df_individual == {batch_record_df_individual}")
                 
-                df_individual = batch_record_df_individual_list[0]['df_individual']
+                df_individual = batch_record_df_individual['df_individual']
                 
-                batch_dict = batch_record_df_individual_list[0]['batch_record'].to_dict()
+                batch_dict = batch_record_df_individual['batch_record'].to_dict()
                 
                 batch_id = batch_dict['id']
                 input_file_id = batch_dict['input_file_id']

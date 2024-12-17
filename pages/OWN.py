@@ -639,7 +639,7 @@ st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet w
 """)
 
 if batch_mode_allowed() > 0:
-    st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} cases. Your requested data will be sent to your nominated email address in about **2 business days**. 
+    st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} files. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
 
 #Warning
