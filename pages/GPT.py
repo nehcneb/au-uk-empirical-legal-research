@@ -148,17 +148,19 @@ if 'need_resetting' not in st.session_state:
 if 'df_master' not in st.session_state:
 
     #Generally applicable
-    st.session_state['df_master'] = pd.DataFrame([])
-    st.session_state['df_master'].loc[0, 'Your name'] = ''
-    st.session_state['df_master'].loc[0, 'Your email address'] = ''
-    st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
-    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
-    st.session_state['df_master'].loc[0, 'Use GPT'] = False
-    st.session_state['df_master'].loc[0, 'Use own account'] = False
-    st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    st.session_state['df_master'].loc[0, 'Example'] = ''
+    df_master_dict = {'Your name': '',
+    'Your email address': '',
+    'Your GPT API key': '',
+    'Metadata inclusion': True,
+    'Maximum number of judgments': default_judgment_counter_bound,
+    'Enter your questions for GPT': '',
+    'Use GPT': False,
+    'Use own account': False,
+    'Use flagship version of GPT': False,
+    'Example': ''
+    }
+    
+    st.session_state['df_master'] = pd.DataFrame([df_master_dict])
 
 if 'Example' not in st.session_state.df_master.columns:
     st.session_state['df_master'].loc[0, 'Example'] = ''
@@ -242,9 +244,9 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Tell GPT what to get from each case")
 
-st.warning("""In question form, please tell GPT what to get from each case. Enter **one question per line or paragraph**. For **each case**, GPT will respond based **only** on information from the case **itself**. """)
+st.warning("""In question form, please tell GPT what to get from each case. Enter **one question per paragraph**. """)
 
-st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant case itself.""")
+st.markdown("""For each case, GPT will be instructed to respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
 #if st.toggle('See the instruction given to GPT'):
     #st.write(f"{intro_for_GPT[0]['content']}")
@@ -439,7 +441,7 @@ else:
         st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    
+
 
 # %% [markdown]
 # ## Consent
@@ -541,7 +543,7 @@ Alternatively, you can send the relevant PDFs to GPT as images. This alternative
     #st.write('Not getting the best responses for your images? You can try a more costly')
     #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
     er_run_button_b64 = st.button(label = 'SEND PDFs to GPT as images')
-    
+
 
 # %% [markdown]
 # ## Previous responses and outputs

@@ -404,9 +404,9 @@ st.caption("Use of GPT is costly and funded by a grant. For the model used by de
 
 st.subheader("Tell GPT what to get from each file")
 
-st.warning("""In question form, please tell GPT what to get from each file. Enter **one question per line or paragraph**. For **each file**, GPT will respond based **only** on information from the file **itself**. """)
+st.warning("""In question form, please tell GPT what to get from each file. Enter **one question per paragraph**. """)
 
-st.markdown("""To minimise the risk of giving incorrect information (ie hallucination), GPT will be instructed to avoid giving answers which cannot be obtained from the relevant file itself.""")
+st.markdown("""For each file, GPT will be instructed to respond based only on information from the file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
 #if st.toggle('See the instruction given to GPT'):
     #st.write(f"{intro_for_GPT[0]['content']}")
