@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
 from functions.common_functions import today_in_nums, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -332,7 +332,8 @@ def scta_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
-    df_updated.pop('judgment')
+    if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
+        df_updated.pop('judgment')
     
     return df_updated
 

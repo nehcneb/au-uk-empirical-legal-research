@@ -72,7 +72,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, send_notification_email
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, send_notification_email
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, truncation_note, spinner_text
 
@@ -361,7 +361,7 @@ def run_own(df_master, uploaded_docs, uploaded_images):
     #df_updated = engage_GPT_json_own(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
-    if 'extracted_text' in df_updated.columns:
+    if (pop_judgment() > 0) and ('extracted_text' in df_updated.columns):
         df_updated.pop('extracted_text')
     
     return df_updated
@@ -664,7 +664,7 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
     batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Remove before text before saving to aws
-    if 'extracted_text' in df_individual.columns:
+    if (pop_judgment() > 0) and ('extracted_text' in df_individual.columns):
         df_individual.pop('extracted_text')
 
     return batch_record_df_individual

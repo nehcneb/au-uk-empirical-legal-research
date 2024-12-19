@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -1513,122 +1513,6 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 
 # %%
-#For getting judgments directly from the High Court without searching in OALC first
-#NOT IN USE
-
-@st.cache_data(show_spinner = False, ttl=600)
-def hca_run_direct(df_master):
-    df_master = df_master.fillna('')
-
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
-    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Create judgments file
-    judgments_file = []
-    
-    #Conduct search
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    case_infos = hca_enhanced_search(collection = df_master.loc[0, 'Collection'], 
-                        quick_search = df_master.loc[0, 'Quick search'], 
-                        full_text = df_master.loc[0, 'Full text search'],
-                    judgments_counter_bound = judgments_counter_bound,
-                    own_parties_include = df_master.loc[0, 'Parties include'], 
-                    own_parties_exclude = df_master.loc[0, 'Parties do not include'], 
-                    #own_min_year, 
-                    #own_max_year, 
-                    after_date = df_master.loc[0, 'Decision date is after'], 
-                     before_date = df_master.loc[0, 'Decision date is before'], 
-                    #own_case_numbers_include, 
-                    #own_case_numbers_exclude, 
-                    own_judges_include = df_master.loc[0, 'Judges include'], 
-                    own_judges_exclude = df_master.loc[0, 'Judges do not include']
-                    )
-
-    #Get judgments from HCA database
-    for case in case_infos:
-        judgment_link = case['Hyperlink to High Court Judgments Database']
-        
-        if 'showbyHandle' in judgment_link:
-            
-            judgment_dict = hca_meta_judgment_dict_alt(judgment_link)
-
-        else: #If 'showCase' in judgment_link:
-
-            judgment_dict = hca_meta_judgment_dict(judgment_link)
-
-        for key in judgment_dict.keys():
-            if key not in case.keys():
-                case.update({key: judgment_dict[key]}) 
-        
-        judgments_file.append(case)
-        
-        pause.seconds(np.random.randint(5, 15))
-
-    #Add judgment if mnc entered
-
-    if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
-        direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
-
-        if len(direct_link) > 0:
-            
-            judgment_dict_direct = hca_meta_judgment_dict(direct_link)
-            
-            judgments_file.append(judgment_dict_direct)
-
-    #Make judgment_link clickable
-    for decision in judgments_file:
-        if '=HYPERLINK' not in decision['Hyperlink to High Court Judgments Database']:
-            clickable_link =  link(decision['Hyperlink to High Court Judgments Database'])
-            decision.update({'Hyperlink to High Court Judgments Database': clickable_link})
-    
-    #Create and export json file with search results
-    json_individual = json.dumps(judgments_file, indent=2)
-
-#    df_individual = pd.DataFrame(judgments_file)
-    
-    df_individual = pd.read_json(json_individual)
-    
-    #Instruct GPT
-    
-    #GPT model
-
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
-    else:        
-        gpt_model = "gpt-4o-mini"
-        
-    #apply GPT_individual to each respondent's judgment spreadsheet
-
-    #Need to convert date column to string
-
-    df_individual['Date'] = df_individual['Date'].astype(str)
-    
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
-
-    questions_json = df_master.loc[0, 'questions_json']
-            
-    #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
-
-    if 'judgment' in df_updated.columns:
-        df_updated.pop('judgment')
-
-    #Drop metadata if not wanted
-
-    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
-        for meta_label in hca_meta_labels_droppable:
-            try:
-                df_updated.pop(meta_label)
-            except:
-                pass
-    
-    return df_updated
-
-
-# %%
 #For getting judgments directly from the High Court if not available in OALC
 
 @st.cache_data(show_spinner = False, ttl=600)
@@ -1788,7 +1672,7 @@ def hca_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
-    if 'judgment' in df_updated.columns:
+    if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
         df_updated.pop('judgment')
 
     #Drop metadata if not wanted

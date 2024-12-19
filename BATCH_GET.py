@@ -65,7 +65,7 @@ import streamlit as st
 from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
 #For checking questions and answers, acknowledgment
-from functions.common_functions import check_questions_answers, funder_msg, date_year_first
+from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_year_first
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, GPT_answers_check
 
@@ -598,15 +598,15 @@ for df_batch_response in df_batch_id_response_list:
                     df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
         
         #Remove judgment, opinions and PACER records columns
-        
-        if 'judgment' in df_individual.columns:
-            df_individual.pop('judgment')
-            
-        if 'opinions' in df_individual.columns:
-            df_individual.pop('opinions')
-
-        if 'recap_documents' in df_individual.columns:
-            df_individual.pop('recap_documents')
+        if pop_judgment() > 0:
+            if 'judgment' in df_individual.columns:
+                df_individual.pop('judgment')
+                
+            if 'opinions' in df_individual.columns:
+                df_individual.pop('opinions')
+    
+            if 'recap_documents' in df_individual.columns:
+                df_individual.pop('recap_documents')
         
         #Update df_individual on AWS
         csv_buffer = StringIO()

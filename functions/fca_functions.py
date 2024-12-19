@@ -59,7 +59,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -601,104 +601,6 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 
 # %%
-#For getting judgments directly from the Federal Court without checking OALC first
-#NOT IN USE
-
-@st.cache_data(show_spinner = False, ttl=600)
-def fca_run_direct(df_master):
-    df_master = df_master.fillna('')
-
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
-    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Create judgments file
-    judgments_file = []
-    
-    #Conduct search
-    
-    search_results_soup_url = fca_search(court = df_master.loc[0, 'Courts'], 
-                     case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
-                     judge = df_master.loc[0, 'Judge'], 
-                     reported_citation = df_master.loc[0, 'Reported citation'],
-                     file_number  = df_master.loc[0, 'File number'],
-                     npa = df_master.loc[0, 'National practice area'], 
-                     with_all_the_words  = df_master.loc[0, 'With all the words'], 
-                     with_at_least_one_of_the_words = df_master.loc[0, 'With at least one of the words'],
-                     without_the_words = df_master.loc[0, 'Without the words'],
-                     phrase  = df_master.loc[0, 'Phrase'], 
-                     proximity = df_master.loc[0, 'Proximity'], 
-                     on_this_date = df_master.loc[0, 'On this date'], 
-                     after_date = df_master.loc[0, 'Decision date is after'], 
-                     before_date = df_master.loc[0, 'Decision date is before'], 
-                     legislation = df_master.loc[0, 'Legislation'], 
-                     cases_cited = df_master.loc[0, 'Cases cited'], 
-                     catchwords = df_master.loc[0, 'Catchwords'] 
-                    )
-    
-    search_results_soup = search_results_soup_url['soup']
-    
-    results_url = search_results_soup_url['results_url']
-        
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
-
-    for case_info in case_infos:
-        judgment_dict = fca_meta_judgment_dict(case_info)
-        case_info.update({'judgment': str(judgment_dict)})
-        
-        #Make judgment_link clickable
-        clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-        case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
-
-        judgments_file.append(case_info)
-        pause.seconds(np.random.randint(5, 15))
-    
-    #Create and export json file with search results
-    json_individual = json.dumps(judgments_file, indent=2)
-
-#    df_individual = pd.DataFrame(judgments_file)
-    
-    df_individual = pd.read_json(json_individual)
-
-    #Instruct GPT
-    
-    #GPT model
-
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
-    else:        
-        gpt_model = "gpt-4o-mini"
-        
-    #apply GPT_individual to each respondent's judgment spreadsheet
-    
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
-
-    questions_json = df_master.loc[0, 'questions_json']
-            
-    #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
-
-    #Pop judgment
-    if 'judgment' in df_updated:
-        df_updated.pop('judgment')
-        
-    #Drop metadata if not wanted
-
-    if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
-        for meta_label in fca_metalabels_droppable:
-            try:
-                df_updated.pop(meta_label)
-            except:
-                pass
-    
-    return df_updated
-
-
-# %%
 #For getting judgments from the Federal Court if unavailable in OALC
 
 @st.cache_data(show_spinner = False, ttl=600)
@@ -825,7 +727,7 @@ def fca_run(df_master):
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Pop jugdment
-    if 'judgment' in df_updated:
+    if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
         df_updated.pop('judgment')
 
     #Drop metadata if not wanted

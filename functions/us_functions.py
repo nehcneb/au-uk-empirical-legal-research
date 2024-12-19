@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -852,6 +852,8 @@ all_us_pacer_jurisdictions = {'Federal Appellate Courts': us_pacer_fed_app_court
 # %%
 #Court string to list
 #Need for batch mode because df_master from aws only has strings
+
+#NOT IN USE?
 
 def us_court_choice_to_list(str_or_list):
 
@@ -1794,10 +1796,10 @@ def us_run(df_master):
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
     #Remove 'opinions' column if opinions sought #, or 'recap_documents' column if PACER docs sought
-    if 'opinions' in df_updated.columns:
+    if (pop_judgment() > 0) and ('opinions' in df_updated.columns):
         df_updated.pop('opinions')
 
-    if 'recap_documents' in df_updated.columns:
+    if (pop_judgment() > 0) and ('recap_documents' in df_updated.columns):
         df_updated.pop('recap_documents')
 
     #Drop metadata if not wanted
