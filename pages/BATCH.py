@@ -292,7 +292,7 @@ if st.button(label = 'DELETE data', type = 'primary', disabled = bool(st.session
 
 if st.session_state.df_master.loc[0, 'status'] == 'deleted':
     
-    st.success('Your data has been deleted.')
+    st.info('Your data has been deleted.')
 
 
 # %% [markdown]
