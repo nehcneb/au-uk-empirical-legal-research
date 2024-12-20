@@ -313,30 +313,34 @@ if retrive_button:
         st.stop()
         
     else:
-        try:
-            #Get relevant df_individual
-            for key_body in st.session_state.aws_objects:
-                if key_body['key'] == f'{batch_id_entry}.csv':
-                    df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-                    st.session_state.df_individual = df_individual.copy(deep = True)
-                    print(f"Succesfully loaded {key_body['key']}.")
+        with st.spinner('Retrieving your data...'):
 
-                    break
+            pause.seconds(3)
+            
+            try:
+                #Get relevant df_individual
+                for key_body in st.session_state.aws_objects:
+                    if key_body['key'] == f'{batch_id_entry}.csv':
+                        df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+                        st.session_state.df_individual = df_individual.copy(deep = True)
+                        print(f"Succesfully loaded {key_body['key']}.")
     
-            #Update df_master
-            batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
-            for col in st.session_state.all_df_masters.columns:
-                st.session_state['df_master'].loc[0, col] = st.session_state.all_df_masters.loc[batch_index, col]
-
-            if len(st.session_state.df_individual) > 0:
-                st.rerun()
-            
-            else:
-                st.error('Your nominated email address or access code is not correct, or the requested data cannot be found.')
+                        break
+        
+                #Update df_master
+                batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
+                for col in st.session_state.all_df_masters.columns:
+                    st.session_state['df_master'].loc[0, col] = st.session_state.all_df_masters.loc[batch_index, col]
+    
+                if len(st.session_state.df_individual) > 0:
+                    st.rerun()
                 
-        except Exception as e:
-            
-            st.error(f'The requested data cannot be retrieved due to the following error: {e}')
+                else:
+                    st.error('Your nominated email address or access code is not correct, or the requested data cannot be found.')
+                    
+            except Exception as e:
+                
+                st.error(f'The requested data cannot be retrieved due to the following error: {e}')
 
 
 # %%
