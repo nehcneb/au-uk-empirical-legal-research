@@ -177,6 +177,8 @@ class ukpo_search_tool:
     #def search(self, keyword = '', outcomes_list = [], topics_list = [], types_list = [], sortby = list(ukpo_sortby_dict.keys())[-1], page = 0):
     def search(self):
 
+        #st.write('Running search()')
+
         ukpo_url = 'https://www.pensions-ombudsman.org.uk/decisions'
     
         #Add search params
@@ -236,20 +238,29 @@ class ukpo_search_tool:
         #return {'results_url': response.url, 'results_count': results_count, 'soup': soup}
 
     #Function for getting case infos from search results page
-    #def get_case_infos(self):
+    def get_case_infos(self):
 
         #Get case infos
-    
+
+        #st.write(f'judgment_counter_bound == {self.judgment_counter_bound}')
+        
         #Initialise results obtained
-        result_counter = 0
+        #result_counter = 0
 
         #There are 12 cases per page, where the page number parameter starts at 0/none
         page_max = math.ceil(self.results_count/12-1)
     
         for page_to_check in range(0, page_max + 1):
+
+            #st.write(f'result_counter == {result_counter}')
+
+            #st.write(f'Checking page {page_to_check}')
             
-            if result_counter < self.judgment_counter_bound:
-    
+            #st.write(f'len(self.case_infos) == {len(self.case_infos)}')
+            
+            #if result_counter < self.judgment_counter_bound:
+            if len(self.case_infos) < self.judgment_counter_bound:
+
                 #For all pages except the initial page, need to pause and update search results page
                 if page_to_check > 0:
                     
@@ -260,13 +271,14 @@ class ukpo_search_tool:
 
                     self.search()
 
-                #Get case infos 
+                #Get case infos
                 search_results = self.soup.find_all('div', {'class': 'card-item teal'})
             
                 for search_result in search_results:
                     
-                    if result_counter < self.judgment_counter_bound:
-            
+                    #if result_counter < self.judgment_counter_bound:
+                    if len(self.case_infos) < self.judgment_counter_bound:
+
                         #Get case name
                         case_name = search_result.find('a', {'class': 'h3'}).text
                         case_name
@@ -331,11 +343,10 @@ class ukpo_search_tool:
                                 if last_added in case_info.keys():
                                     case_info[last_added] += meta
                                 
-            
                         #Append case to return list and increase counter
                         self.case_infos.append(case_info)
             
-                        result_counter += 1
+                        #result_counter += 1
                     
                     else:
                         #stop if reached the maximum number of results wanted
@@ -349,6 +360,8 @@ class ukpo_search_tool:
             
     #Function for getting judgment text
     def get_judgments(self):
+
+        #st.write('Running get_judgments()')
 
         #Initialise list of case_infos with judgment text
         
@@ -480,6 +493,8 @@ def ukpo_search_function(keyword,
                 )
     
     ukpo_search.search()
+
+    ukpo_search.get_case_infos()
     
     return ukpo_search
 

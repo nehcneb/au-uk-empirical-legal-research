@@ -58,7 +58,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input, is_date
 #Import variables
 from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -71,6 +71,7 @@ from functions.common_functions import today_in_nums, today, errors_list, scrape
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
@@ -83,6 +84,8 @@ import undetected_chromedriver as uc
 
 #For post June 2024
 options = uc.ChromeOptions()
+download_dir = os.getcwd() + '/AFCA_PDFs'
+
 #options.headless = True
 
 #options = Options()
@@ -114,7 +117,6 @@ except Exception as e:
 if streamlit_timezone() == True:
         
     #For headlessness, see https://github.com/ultrafunkamsterdam/undetected-chromedriver/discussions/1768
-    download_dir = os.getcwd() + '/AFCA_PDFs'
     options_old = uc.ChromeOptions()
     options_old.add_experimental_option('prefs', {
     "download.default_directory": download_dir, #Change default directory for downloads
@@ -561,7 +563,7 @@ afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page
 # %% [markdown]
 # ## Post 14 June 2024
 
-# %% [markdown] jp-MarkdownHeadingCollapsed=true
+# %% [markdown]
 # ### Definitions of menu items
 
 # %%
@@ -1107,9 +1109,27 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
  'Unfair contract terms': {'value': '8333d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'}}
 
-
 # %% [markdown]
 # ### Obtain search results
+
+# %%
+#For getting clean text
+#Based on https://stackoverflow.com/questions/1936466/how-to-scrape-only-visible-webpage-text-with-beautifulsoup
+
+from bs4.element import Comment
+def tag_visible(element):
+    if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
+        return False
+    if isinstance(element, Comment):
+        return False
+    return True
+
+def text_from_html(body):
+    soup = BeautifulSoup(body, 'lxml')
+    texts = soup.find_all(text=True)
+    visible_texts = filter(tag_visible, texts)  
+    return u"\n".join(t.strip() for t in visible_texts)
+
 
 # %%
 #Define search boxes
@@ -1307,22 +1327,67 @@ def afca_meta_judgment_dict(judgment_url):
         html_source = browser.page_source
         soup = BeautifulSoup(html_source, "lxml")
         
-        case_name = soup.find('li', attrs={'class': 'active'}).text
-        
-        if case_name[0]== ' ':
-            case_name = case_name[1:]
+        #The following gets judgment text but also a lot of html tags
+        #judgment_html_text = soup.get_text(separator="\n", strip=True)
     
-        judgment_dict['Case name'] = case_name  
-        
-        judgment_text = soup.get_text(separator="\n", strip=True)
-    
-        judgment_dict['judgment'] = judgment_text  
-    
+        #Get text from html   
+        judgment_html_text = text_from_html(html_source)
+
+        #Try to get judgment text from PDF first, get from html if that fails
         try:
-            if 'Case number\n' in judgment_text:
-                case_number = judgment_text.split('Case number\n')[1].split('\n')[0]
-            elif 'Case numbers\n' in judgment_text:
-                case_number = judgment_text.split('Case numbers\n')[1].split('\n')[0]
+            print_options = PrintOptions()
+            browser.get(judgment_url)
+            pdf_b64 = browser.print_page(print_options)
+    
+            buffer=base64.b64decode(pdf_b64)
+            f=io.BytesIO(buffer)
+            
+            pdfdoc_remote = pypdf.PdfReader(f)
+            
+            text_list = []
+            
+            for page in pdfdoc_remote.pages:
+                text_list.append(page.extract_text())
+    
+            judgment_pdf_text = str(text_list)
+    
+            judgment_dict['judgment'] = judgment_pdf_text
+    
+            #Save judgment pdf if not popping judgment
+            if pop_judgment() == 0:
+                
+                file_id = judgment_url.split('id=')[1] + '.pdf'
+                
+                with open(f"{download_dir}/{file_id}", "wb") as f:
+                    f.write(base64.b64decode(pdf_b64))
+
+        except:
+
+            if 'Download PDF' in judgment_html_text:
+                judgment_html_text = judgment_html_text.split('Download PDF')[1]
+    
+            if 'Before you complain to us' in judgment_html_text:
+                judgment_html_text = judgment_html_text.split('Before you complain to us')[0]
+            
+            judgment_dict['judgment'] = judgment_html_text
+        
+        #Get case name
+        try:
+        
+            case_name = soup.find('title').get_text(separator="\n", strip=True)
+            
+            judgment_dict['Case name'] = case_name.split('\xa0')[0]
+        
+        except:
+             print(f'{judgment_url}: case name not found.')
+
+        #Get case number
+        try:
+            
+            if 'Case number\n' in judgment_html_text:
+                case_number = judgment_html_text.split('Case number\n')[1].split('\n')[0]
+            elif 'Case numbers\n' in judgment_html_text:
+                case_number = judgment_html_text.split('Case numbers\n')[1].split('\n')[0]
             elif 'Determination For Case ' in case_name:
                 case_number = case_name.split('Determination For Case ')[1]
             else:
@@ -1331,26 +1396,37 @@ def afca_meta_judgment_dict(judgment_url):
             judgment_dict['Case number'] = case_number
             
         except:
-            print('Case number not found.')
-    
+            print(f'{judgment_url}: case number not found.')
+
+        #Get financial firm
         try:
-            judgment_dict['Financial firm'] = judgment_text.split('Financial firm\n')[1].split('\n')[0]
+            judgment_dict['Financial firm'] = judgment_html_text.split('Financial firm\n')[1].split('\n')[0]
         except:
-            print('Case number not found.')
-    
+            print(f'{judgment_url}: financial firm not found.')
+
+        #Get date
         try:
-            judgment_dict['Date'] = judgment_text.split(f'{case_number}\n')[3].split('\n')[0]
+            potential_dates = judgment_html_text.split('\n')
+
+            date = ''
+            
+            for potential_date in potential_dates:
+                if is_date(potential_date) == True:
+                    date = potential_date
+                    break
+                    
+            judgment_dict['Date'] = date
+            
         except:
-            print('Date not found.')
+            print(f'{judgment_url}: date not found.')
 
     except Exception as e:
-        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(f"{judgment_url}: judgment not scrapped")
         print(e)
 
     #browser.close()
     
     return judgment_dict
-
 
 
 # %%
@@ -1375,7 +1451,6 @@ print(f"The default number of judgments to scrape per request is capped at {defa
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
 
 
 # %%
@@ -1513,6 +1588,8 @@ def afca_new_run(df_master):
                 date_from_input = df_master.loc[0, 'Date from'], 
                 date_to_input = df_master.loc[0, 'Date to'])
 
+    pause.seconds(np.random.randint(15, 30))
+    
     #Create list of judgment links
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
@@ -1522,6 +1599,7 @@ def afca_new_run(df_master):
 
     #for link in judgments_links:
     for link in search_results['urls']:
+        
         if counter < judgments_counter_bound:
 
             judgment_dict = afca_meta_judgment_dict(link)
@@ -1530,9 +1608,10 @@ def afca_new_run(df_master):
 
             counter += 1
             
-            pause.seconds(np.random.randint(20, 40))
+            pause.seconds(np.random.randint(15, 30))
             
         else:
+            
             break
     
     #Create and export json file with search results

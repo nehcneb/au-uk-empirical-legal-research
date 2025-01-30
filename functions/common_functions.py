@@ -17,7 +17,7 @@
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
@@ -32,7 +32,7 @@ def batch_mode_allowed():
 
 # %%
 def pop_judgment():
-    return 1
+    return 0
 
 
 # %%
