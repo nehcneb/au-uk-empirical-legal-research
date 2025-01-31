@@ -83,6 +83,14 @@ from functions.common_functions import check_questions_answers, pop_judgment, de
 # ## Common functions and variables
 
 # %%
+#Cutoff for requiring activate batch mode
+
+judgment_batch_cutoff = 100
+
+#max number of judgments under batch mode
+judgment_batch_max = 100
+
+# %%
 #Upperbound on the length of questions for GPT
 
 question_characters_bound = 2000
@@ -1296,15 +1304,6 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
 
 # %% [markdown]
 # ## Batch mode
-
-# %%
-#Cutoff for requiring activate batch mode
-
-judgment_batch_cutoff = 25
-
-#max number of judgments under batch mode
-judgment_batch_max = 100
-
 
 # %%
 #Create custom id for one judgment_json file
