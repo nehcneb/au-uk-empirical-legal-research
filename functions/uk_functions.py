@@ -189,7 +189,6 @@ def uk_search(query= '',
     return {'results_url': response.url, 'results_count': results_count, 'soup': soup}
     
 
-
 # %%
 #Define function turning search results url to case_infos to judgments
 
@@ -319,7 +318,6 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
                                 
                                 case_info['Case name'] = title
                 
-                                
                                 court_raw = link.find('span', {'class': "judgment-listing__court"})
                                 court = court_raw.get_text(strip = True)
                 

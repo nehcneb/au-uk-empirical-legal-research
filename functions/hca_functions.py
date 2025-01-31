@@ -201,8 +201,8 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
                 if len(raw_links_new_page) > 0:
 
                     #Get list of catchwords
-                    catchwords_list = soup.find_all("div", {"class": "well"})
-                    null_result = soup.find_all('div', {'class' : 'well', 'id': 'top'})
+                    catchwords_list = soup_new_page.find_all("div", {"class": "well"})
+                    null_result = soup_new_page.find_all('div', {'class' : 'well', 'id': 'top'})
                     
                     for result in null_result:
                         if result in catchwords_list:
