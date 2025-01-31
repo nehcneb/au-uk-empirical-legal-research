@@ -85,7 +85,7 @@ from functions.common_functions import check_questions_answers, pop_judgment, de
 # %%
 #Cutoff for requiring activate batch mode
 
-judgment_batch_cutoff = 100
+judgment_batch_cutoff = 25
 
 #max number of judgments under batch mode
 judgment_batch_max = 100
