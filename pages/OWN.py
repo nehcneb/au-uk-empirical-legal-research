@@ -319,7 +319,7 @@ if "judgment_counter_max" not in st.session_state:
 
 if batch_mode_allowed() > 0:
 
-    st.session_state["judgment_counter_max"] = int(round(judgment_batch_max/2))
+    st.session_state["judgment_counter_max"] = int(round(judgment_batch_max))
 
     #if own_account_allowed() > 0:
         
@@ -564,7 +564,7 @@ if own_account_allowed() > 0:
         
         st.write(f'**:green[You can change the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
 
-        file_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
+        file_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]} files', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
 
         #if file_counter_bound_entry:
             
@@ -576,7 +576,7 @@ if own_account_allowed() > 0:
 
         st.write(f'**:orange[You can change the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
         
-        page_bound_entry = st.slider(label = f'Up to {default_page_bound}', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
+        page_bound_entry = st.slider(label = f'Up to {default_page_bound} pages', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
 
         #if page_bound_entry:
             
