@@ -28,7 +28,7 @@ import datetime
 from datetime import date
 from datetime import datetime
 from dateutil import parser
-from dateutil.relativedelta import *
+#from dateutil.relativedelta import *
 from datetime import timedelta
 import sys
 import pause
@@ -290,8 +290,9 @@ from functions.gpt_functions import question_characters_bound, questions_check_s
 role_content_own = """You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. 
 Please answer questions based only on information contained in the file. Where your answer comes from a part of the file, include a reference to that part of the file. 
 If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found".
-Respond in JSON form. In your response, produce as many keys as you need. 
 """
+
+#Respond in JSON form. In your response, produce as many keys as you need. 
 
 system_instruction = role_content_own
 

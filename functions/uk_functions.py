@@ -27,7 +27,7 @@ import re
 import datetime
 from datetime import date
 from dateutil import parser
-from dateutil.relativedelta import *
+#from dateutil.relativedelta import *
 from datetime import datetime, timedelta
 import sys
 import pause
@@ -187,7 +187,7 @@ def uk_search(query= '',
 
     
     return {'results_url': response.url, 'results_count': results_count, 'soup': soup}
-    
+
 
 # %%
 #Define function turning search results url to case_infos to judgments

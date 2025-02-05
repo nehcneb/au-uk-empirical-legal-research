@@ -28,7 +28,7 @@ import datetime
 from datetime import date
 from datetime import datetime
 from dateutil import parser
-from dateutil.relativedelta import *
+#from dateutil.relativedelta import *
 from datetime import timedelta
 import sys
 import pause

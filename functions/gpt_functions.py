@@ -32,7 +32,7 @@ import os
 import io
 from io import BytesIO
 from dateutil import parser
-from dateutil.relativedelta import *
+#from dateutil.relativedelta import *
 from datetime import timedelta
 from PIL import Image
 import math
@@ -510,9 +510,10 @@ answers_check_system_instruction = """
 You are a compliance officer helping an academic researcher to redact information about birth and address. 
 You will be given text to check in JSON form. Please check the text based only on information contained in the JSON. 
 Where any part of the text identifies birth or an address, you replace that part with "[redacted]". 
-You then return the remainder of the text unredacted.
+You then return the remainder of the text unredacted. Do not explain your reasoning. 
 You redact birth and address only. Do not redact anything else, such as names, date of death, age.
 For example, if the text given to you is "John Smith, born 1 January 1950, died on 20 December 2008 at 1 Main St Blackacre aged 58.", you return "John Smith, born [redacted], died on 20 December 2008 at [redacted] aged 58.".
+For example, if the text given to you is "", you return "".
 """
 
 
@@ -546,7 +547,7 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
 
     #Create _answers_to_check_json, which include the answer format
     
-    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + ' \n Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
+    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(redacted_answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     
@@ -604,9 +605,8 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
 role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and the associated metadata in JSON form. 
 Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
 If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'. 
-Respond in JSON form. In your response, produce as many keys as you need. 
 """
-
+#Respond in JSON form. In your response, produce as many keys as you need. 
 
 # %% [markdown]
 # ## GPT instant response
@@ -653,7 +653,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             q_counter += 1
     
     #Create questions, which include the answer format
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -847,7 +847,7 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Respond in the following JSON form: '
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Return your answer as a JSON object, following this example: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer. (The paragraphs, pages or sections from which you obtained your answer)", "cl100k_base")
 
@@ -1029,7 +1029,7 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
 
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json)}]
     
     #Create messages in one prompt for GPT
     if 'Language choice' in metadata_json.keys():
@@ -1256,7 +1256,7 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Respond in the following JSON form: '
+            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Return your answer as a JSON object, following this example: '
 
             other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
 
@@ -1416,7 +1416,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
             
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]

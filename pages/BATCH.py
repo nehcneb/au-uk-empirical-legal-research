@@ -29,7 +29,7 @@ import re
 import datetime
 from datetime import date
 from dateutil import parser
-from dateutil.relativedelta import *
+#from dateutil.relativedelta import *
 from datetime import datetime, timedelta
 #import sys
 import pause
