@@ -215,9 +215,9 @@ def max_output(gpt_model, messages_for_GPT):
 
 
 # %%
-default_msg = f'**Please enter your search terms.** By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from each case.'
+default_msg = f'Please enter your search terms.'
 
-default_caption = f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases.'
+default_caption = f'By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words per case. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or process more words per case.'
 
 
 # %%

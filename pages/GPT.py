@@ -190,13 +190,13 @@ if "judgment_counter_max" not in st.session_state:
 
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py',  'pages/US.py'])):
 
-    if own_account_allowed() > 0:
+    #if own_account_allowed() > 0:
         
-        st.session_state["judgment_counter_max"] = judgment_batch_max
+    st.session_state["judgment_counter_max"] = judgment_batch_max
     
-    else:
+    #else:
         
-        st.session_state["judgment_counter_max"] = int(round(judgment_batch_max/2))
+        #st.session_state["judgment_counter_max"] = int(round(judgment_batch_max/2))
         
 #else:
     
