@@ -886,7 +886,7 @@ def nsw_run(df_master):
         except Exception as e:
             
             df_individual.loc[judgment_index, "judgment"] = ''
-            print(f'{df_individual.loc[judgment_index, "Case name"]}: judgment text scraping error.')
+            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
             print(e)
 
     #Instruct GPT
@@ -1097,7 +1097,7 @@ def nsw_batch(df_master):
         except Exception as e:
             
             df_individual.loc[judgment_index, "judgment"] = ''
-            print(f'{df_individual.loc[judgment_index, "Case name"]}: judgment text scraping error.')
+            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
             print(e)
 
     #Instruct GPT

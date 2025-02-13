@@ -547,7 +547,7 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
 
     #Create _answers_to_check_json, which include the answer format
     
-    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(redacted_answers_json, default = str)}]
+    question_to_check = [{"role": "user", "content": json.dumps(_answers_to_check_json, default = str) + '\n Respond in the following JSON form: ' + json.dumps(redacted_answers_json, default = str)}]
     
     #Create messages in one prompt for GPT
     
@@ -627,6 +627,8 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
     #Create answer format
     answers_json = {}
     
+    q_keys = [*questions_json]
+
     if len(df_example.replace('"', '')) > 0:
 
         try:
@@ -638,12 +640,12 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             if isinstance(df_example, dict):
                 
                 answers_json = df_example
-                
+
+            answers_json_instruction = '\n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)
+            
         except Exception as e:
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
-    
-    q_keys = [*questions_json]
     
     if len(answers_json) == 0:
 
@@ -651,9 +653,11 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
         for q_index in q_keys:
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
-    
+        
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)
+
     #Create questions, which include the answer format
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
@@ -829,12 +833,16 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
             answers_dict = {}
             
             question_keys = [*questions_json]
-            
+
+            q_counter = 1
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
                 answer = ''
-                answers_dict.update({questions_json[q_index]: answer})
+                answers_dict.update({f'GPT question {q_counter}: {questions_json[q_index]}': answer})
+                q_counter += 1
 
+            answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_dict, default = str)
+            
             #st.write(answers_dict)
             
             #Calculate capped judgment tokens
@@ -847,14 +855,14 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Return your answer as a JSON object, following this example: '
+            system_answers_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + answers_json_instruction
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer. (The paragraphs, pages or sections from which you obtained your answer)", "cl100k_base")
+            system_answers_tokens = num_tokens_from_string(system_answers_instructions, "cl100k_base")
 
             #Calculate number of tokens of answers
-            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+            answers_output_tokens = num_tokens_from_string(json.dumps(answers_dict, default = str), "cl100k_base")
 
-            answers_input_tokens = judgment_capped_tokens + questions_tokens + other_tokens
+            answers_input_tokens = judgment_capped_tokens + questions_tokens + system_answers_tokens
             
     	#Create GPT question headings, append answers to individual spreadsheets, and remove template answers
 
@@ -1003,6 +1011,8 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
     #Create answer format
     answers_json = {}
 
+    q_keys = [*questions_json]
+    
     if len(df_example.replace('"', '')) > 0:
 
         try:
@@ -1015,11 +1025,11 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
                 
                 answers_json = df_example
 
+            answers_json_instruction = '\n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)
+        
         except Exception as e:
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
-    
-    q_keys = [*questions_json]
     
     if len(answers_json) == 0:
         q_counter = 1
@@ -1027,9 +1037,11 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
 
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)
+    
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
     
     #Create messages in one prompt for GPT
     if 'Language choice' in metadata_json.keys():
@@ -1226,10 +1238,14 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
             
             question_keys = [*questions_json]
 
+            q_counter = 1
             for q_index in question_keys:
                 #Increases judgment index by 2 to ensure consistency with Excel spreadsheet
                 answer = ''
-                answers_dict.update({questions_json[q_index]: answer})
+                answers_dict.update({f'GPT question {q_counter}: {questions_json[q_index]}': answer})
+                q_counter += 1
+
+            answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_dict, default = str)
             
             #Calculate capped judgment tokens
 
@@ -1256,14 +1272,14 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
 
             #Calculate other instructions' tokens
 
-            other_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + ' \n Return your answer as a JSON object, following this example: '
+            system_answers_instructions = system_instruction + 'you will be given questions to answer in JSON form.' + answers_json_instruction
 
-            other_tokens = num_tokens_from_string(other_instructions, "cl100k_base") + len(question_keys)*num_tokens_from_string("GPT question x:  Your answer to the question with index GPT question x. State specific page numbers or sections of the judgment.", "cl100k_base")
+            system_answers_tokens = num_tokens_from_string(system_answers_instructions, "cl100k_base")
 
             #Calculate number of tokens of answers
-            answers_output_tokens = num_tokens_from_string(str(answers_dict), "cl100k_base")
+            answers_output_tokens = num_tokens_from_string(json.dumps(answers_dict, default = str), "cl100k_base")
 
-            answers_input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + other_tokens
+            answers_input_tokens = judgment_capped_tokens + questions_tokens + metadata_tokens + system_answers_tokens
             
         #Create GPT question headings and append answers to individual spreadsheets
         for answer_index in answers_dict.keys():
@@ -1389,6 +1405,8 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
     #Create answer format
     answers_json = {}
 
+    q_keys = [*questions_json]
+    
     if len(df_example.replace('"', '')) > 0:
 
         try:
@@ -1400,23 +1418,24 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
             if isinstance(df_example, dict):
                 
                 answers_json = df_example
-
+        
+            answers_json_instruction = '\n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)
+        
         except Exception as e:
             print(f"Example provided but can't produce json to send to GPT.")
             print(e)
-    
-    #Check if answers format succesfully created by following any example uploaded
-    q_keys = [*questions_json]
-    
+        
     if len(answers_json) == 0:
         q_counter = 1
         for q_index in q_keys:
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
-            
+
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)
+
     #Create questions, which include the answer format
     
-    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + ' \n Return your answer as a JSON object, following this example: ' + json.dumps(answers_json, default = str)}]
+    question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
     
     #Create messages in one prompt for GPT
     intro_for_GPT = [{"role": "system", "content": system_instruction}]
