@@ -663,7 +663,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     
     "Kind regards\r\n\r\n"
     
-    "Ben\r\n\r\n"
+    "Ben\r\n\r\n\r\n\r\n"
     
     "Ben Chen | Associate Professor\r\n"
     "The University of Sydney Law School\r\n"
@@ -703,6 +703,8 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     </p> 
     <p>
     Ben
+    </p>   
+    <p>
     </p>   
     <p>
     <b>Ben Chen</b> | Associate Professor
