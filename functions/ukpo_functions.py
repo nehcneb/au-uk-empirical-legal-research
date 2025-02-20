@@ -220,6 +220,7 @@ class ukpo_search_tool:
         
         #Get number of results    
         results_text = soup.find('div', {'role': 'status'}).text
+        results_text = results_text.replace(',', '').replace('.', '')
         results_count_list = re.findall(r'\d+', results_text)
     
         if len(results_count_list) > 0:

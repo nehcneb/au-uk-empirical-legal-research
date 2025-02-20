@@ -163,6 +163,7 @@ def fca_search(court = '',
         results_num_raw = soup.find('p', {'class': 'txarial'})
         results_num_raw_text = results_num_raw.get_text(strip = True)
         results_count = results_num_raw_text.split('\r\n')[0].split(' ')[-1]
+        results_count = results_count.replace(',', '').replace('.', '')
         results_count = int(float(results_count))
 
     except:

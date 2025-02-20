@@ -356,6 +356,7 @@ def nsw_search_preview(df_master):
         soup_html = BeautifulSoup(page_html.content, "lxml")
         results_count_raw = soup_html.find('div', {'id': 'paginationcontainer'})
         results_count_text = results_count_raw.get_text(strip = True)
+        results_count_text = results_count_text.replace(',', '').replace('.', '')
         results_count = int(float(results_count_text.split(' ')[-2]))
 
     return {'results_to_show': results_to_show, 'results_url': results_url, 'results_count': results_count}
