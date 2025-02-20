@@ -31,7 +31,7 @@ from functions.common_functions import split_title_mnc, judgment_text_lower_boun
 
 # %%
 #Decide whether to use Umar Butler's or mine
-corpus_dir = 'nehcneb/oalc_cases'
+corpus_dir = 'lawtodata/oalc_cases'
 #corpus_dir = 'umarbutler/open-australian-legal-corpus'
 
 # %% [markdown]
@@ -54,13 +54,13 @@ def load_corpus():
     
     if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
 
-        if 'nehcneb' in corpus_dir:
+        if 'lawtodata' in corpus_dir:
         
-            corpus = load_dataset('nehcneb/oalc_cases', split='train', revision='refs/convert/parquet')#, streaming=True)
+            corpus = load_dataset(corpus_dir, split='train', revision='refs/convert/parquet')#, streaming=True)
 
-        else:
+        else: #'umarbutler' in corpus_dir:
             
-            corpus = load_dataset('umarbutler/open-australian-legal-corpus', split='corpus') # Set `keep_in_memory` to `True` if you wish to load the entire corpus into memory.
+            corpus = load_dataset(corpus_dir, split='corpus') # Set `keep_in_memory` to `True` if you wish to load the entire corpus into memory.
 
     else:        
         #If running locally
@@ -129,7 +129,7 @@ def oalc_filter(dataset,
     except: #If running on Huggingface or Github Actions
         HF_TOKEN = os.environ['HF_TOKEN']
 
-    if 'nehcneb' in dataset:
+    if 'lawtodata' in dataset:
         
         split = 'train'
     
@@ -139,7 +139,6 @@ def oalc_filter(dataset,
 
         config = 'default'
         
-    
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     params = {
     'dataset':dataset, #the dataset name, for example nyu-mll/glue or mozilla-foundation/common_voice_10_0
@@ -165,7 +164,7 @@ def oalc_filter(dataset,
 #@st.cache_data(show_spinner = False)
 def get_judgment_from_oalc(mnc_list):
 
-    print(f"The list of mncs to be obtained from OALC is mnc_list == {mnc_list}")
+    print(f"To obtain from {corpus_dir}: mnc_list == {mnc_list}")
 
     #Figure out jurisdiction
     subset = 'default'
@@ -218,7 +217,7 @@ def get_judgment_from_oalc(mnc_list):
                 mnc_judgment_dict[mnc] = judgment
 
     except Exception as e:
-        print(e)
+        print(f"Can't get case from oalc due to error: {e}")
     
     #Remove any blank or very short judgments
     mncs_to_pop = []
