@@ -353,11 +353,11 @@ if "df_example_key" not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Upload :blue[your own files]")
+st.header(f"Research :blue[your own files]")
     
-st.success(f'**Please upload your documents or images**. By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file.')
+st.success(f'Please upload your documents or images.')
 
-st.caption('Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
+st.caption(f'By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
 
 st.warning('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 

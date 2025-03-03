@@ -22,7 +22,7 @@ def own_account_allowed():
 
 # %%
 def check_questions_answers():
-    return 1
+    return 0
 
 
 # %%
