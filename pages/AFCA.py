@@ -314,10 +314,6 @@ from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%

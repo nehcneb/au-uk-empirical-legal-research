@@ -85,7 +85,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email
 
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings, check_questions_answers
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings, check_questions_answers, gpt_cost_msg
 
 default_file_counter_bound = default_judgment_counter_bound
 
@@ -400,7 +400,7 @@ gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = 
     
 st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
     
-st.caption("Use of GPT is costly and funded by a grant. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates.")
+st.caption(f"{gpt_cost_msg}")
 
 st.subheader("Tell GPT what to get from each file")
 

@@ -486,7 +486,13 @@ spinner_text = r"$\textsf{\normalsize In progress... }$"
 
 # %%
 #Funder
-funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
+#funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
+
+funder_msg = "I continue to develop LawtoData with a view to promoting and advancing quantitative legal research. Please feel free to spread the word about this app if you find it useful. "
+
+# %%
+#Cost
+gpt_cost_msg = "This app uses a costly version of GPT. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates."
 
 
 # %%
