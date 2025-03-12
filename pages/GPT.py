@@ -235,7 +235,7 @@ st.header(":blue[Would you like GPT to get data or information from the cases fo
 st.markdown("""You don't have to use GPT. This app can extract metadata and get estimates of file length and GPT cost without using GPT. 
 """)
 
-gpt_activation_entry = st.checkbox(label = 'Use GPT (free by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
+gpt_activation_entry = st.checkbox(label = 'Use GPT (free for users by default)', value = st.session_state['df_master'].loc[0, 'Use GPT'])
 
 st.session_state['df_master'].loc[0, 'Use GPT'] = gpt_activation_entry
 

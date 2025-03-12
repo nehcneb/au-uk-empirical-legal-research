@@ -1633,7 +1633,7 @@ def batch_request_function():
             
             st.session_state["batch_ready_for_submission"] = False
 
-            st.write('Please enter a valid email address to receive your request data.')
+            st.write('Please enter a valid email address to receive your requested data.')
             
             batch_email_entry = st.text_input(label = "Your email address (mandatory)", value =  st.session_state['df_master'].loc[0, 'Your email address'])
 
@@ -1643,7 +1643,7 @@ def batch_request_function():
     
                 if '@' not in st.session_state['df_master'].loc[0, 'Your email address']:
                 
-                    st.error('You must enter a valid email address to receive your request data.')
+                    st.error('You must enter a valid email address to receive your requested data.')
                     st.stop()
                 else:
                     st.session_state["batch_ready_for_submission"] = True

@@ -492,7 +492,7 @@ funder_msg = "I continue to develop LawtoData with a view to promoting and advan
 
 # %%
 #Cost
-gpt_cost_msg = "This app uses a costly version of GPT. For the model used by default (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates."
+gpt_cost_msg = "This app uses a costly GPT service. For the default model (gpt-4o-mini), Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates."
 
 
 # %%
