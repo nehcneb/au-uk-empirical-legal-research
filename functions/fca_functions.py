@@ -282,7 +282,7 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
             page_judgment_next_page = requests.get(url_next_page)
             soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
 
-            print(f"Searching url_next_page == {url_next_page}")
+            #print(f"Searching url_next_page == {url_next_page}")
             
             results_list = soup_judgment_next_page.find_all('div', attrs={'class' : 'result'})
 
@@ -360,7 +360,7 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
                         counter = counter + 1
                         #print(counter)
 
-                        print(f'len(case_infos) == {len(case_infos)}')
+                        #print(f'len(case_infos) == {len(case_infos)}')
 
 
     return case_infos
