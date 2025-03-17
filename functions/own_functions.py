@@ -611,6 +611,8 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
 
     page_bound = int(df_master.loc[0,'Maximum number of pages per file'])
 
+    #st.write(f"file_counter_bound == {file_counter_bound}, page_bound == {page_bound}")
+    
     language = df_master.loc[0, 'Language choice']
     
     #Convert uploaded documents to text
@@ -732,7 +734,9 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 else:
                     
                     API_key = st.secrets["openai"]["gpt_api_key"]
-                    
+
+                    st.session_state['df_master'].loc[0, 'Maximum number of files'] = st.session_state["judgment_counter_max"]
+
                 #Check questions for potential privacy violation
                 openai.api_key = API_key
 

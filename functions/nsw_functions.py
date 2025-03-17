@@ -970,6 +970,8 @@ def nsw_batch(df_master):
 
     judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
+    #st.write(f"judgments_counter_bound == {judgments_counter_bound}")
+    
     if huggingface == False: #If not running on HuggingFace
 
         for decision in query.results():
