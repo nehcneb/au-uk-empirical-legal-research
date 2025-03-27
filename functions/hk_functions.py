@@ -747,15 +747,21 @@ class hk_search_tool:
 
                         pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
 
-                        try:
-                            
-                            judgment_text = pdf_judgment(pdf_url)
+                        if len(judgment_text) == 0:
 
-                            print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+                            pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
                         
-                        except Exception as e:
+                            try:
+                                
+                                judgment_text = pdf_judgment(pdf_url)
 
-                            print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+                                case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
+                                
+                                print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+                            
+                            except Exception as e:
+
+                                print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
 
                     if len(judgment_text) == 0:
                     
@@ -764,7 +770,9 @@ class hk_search_tool:
                             docx_url = f'https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.docx'
                             
                             judgment_text = docx_judgment(docx_url)
-    
+
+                            case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
+                            
                             print(f"{case_number}: Got judgment in language == {language} from docx.")
     
                         except Exception as e:
@@ -791,7 +799,7 @@ class hk_search_tool:
             #Get cases on subsequent page
             self.search()
 
-            #Get judgments from cases shown on the subsequent page
+            #Get judgments from cases shown on the initial page (page 1)
             for case_info in self.case_infos:
                 
                 if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
@@ -810,23 +818,29 @@ class hk_search_tool:
                         case_number_numbers_6_digis = '0' + case_number_numbers_6_digis
                     
                     judgment_text = ''
-
+    
                     for language in ['en', 'ch']:
-
+    
                         for doc_type in ['docx', 'doc']:
-
+    
                             pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-
-                            try:
-                                
-                                judgment_text = pdf_judgment(pdf_url)
-
-                                print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+    
+                            if len(judgment_text) == 0:
+    
+                                pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
                             
-                            except Exception as e:
-
-                                print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-
+                                try:
+                                    
+                                    judgment_text = pdf_judgment(pdf_url)
+    
+                                    case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
+                                    
+                                    print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+                                
+                                except Exception as e:
+    
+                                    print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+    
                         if len(judgment_text) == 0:
                         
                             try:
@@ -834,7 +848,9 @@ class hk_search_tool:
                                 docx_url = f'https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.docx'
                                 
                                 judgment_text = docx_judgment(docx_url)
-        
+    
+                                case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
+                                
                                 print(f"{case_number}: Got judgment in language == {language} from docx.")
         
                             except Exception as e:
@@ -842,7 +858,7 @@ class hk_search_tool:
                                 print(f"{case_number}: Can't get judgment from pdf or docx.")
                     
                     case_info.update({'judgment': judgment_text})
-
+    
                     #Make judgment link clickable
                     case_info['Hyperlink to the Hong Kong Legal Reference System'] = link(case_info['Hyperlink to the Hong Kong Legal Reference System'])
                     
