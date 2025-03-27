@@ -58,7 +58,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, au_date, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input, is_date
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, list_value_check, streamlit_cloud_date_format, streamlit_timezone, save_input, is_date
 #Import variables
 from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -547,7 +547,7 @@ def afca_old_pdf_judgment(case_meta):
     
         judgment_text = str(text_list)
 
-        browser_old.close()
+        #browser_old.close()
     
     except Exception as e:
         print(f"{case_meta['Case name']}: judgment not scrapped")

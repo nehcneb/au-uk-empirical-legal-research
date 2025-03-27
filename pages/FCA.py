@@ -59,7 +59,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, au_date, save_input, pdf_judgment, display_df, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, date_parser, save_input, pdf_judgment, display_df, download_buttons
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -393,11 +393,11 @@ phrase_entry = st.text_input(label = 'Phrase', value = st.session_state.df_maste
 
 proximity_entry  = st.text_input(label = 'Proximity', value = st.session_state.df_master.loc[0, 'Proximity'])
 
-on_this_date_entry = st.date_input(label = 'On this date', value = au_date(st.session_state.df_master.loc[0, 'On this date']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+on_this_date_entry = st.date_input(label = 'On this date', value = date_parser(st.session_state.df_master.loc[0, 'On this date']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-after_date_entry = st.date_input(label = 'Decision date is after', value = au_date(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+after_date_entry = st.date_input(label = 'Decision date is after', value = date_parser(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-before_date_entry = st.date_input(label = 'Decision date is before', value = au_date(st.session_state.df_master.loc[0, 'Decision date is before'] ), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+before_date_entry = st.date_input(label = 'Decision date is before', value = date_parser(st.session_state.df_master.loc[0, 'Decision date is before'] ), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 st.caption('This app will not collect catchwords or other metadata from judgments published before 1995 (given their [PDF](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) format).')
 

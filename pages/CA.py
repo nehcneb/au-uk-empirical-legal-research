@@ -73,7 +73,7 @@ from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_
 
 
 # %%
-from functions.common_functions import link, date_year_first
+from functions.common_functions import link, date_parser
 
 
 # %%
@@ -390,11 +390,11 @@ case_name_mnc_entry = st.text_input(label = "Case name, citation or docket", val
 
 court_tribunal_type_entry = st.selectbox(label = "Court or tribunal type", options = list(ca_court_tribunal_types.keys()), index = list_value_check(list(ca_court_tribunal_types.keys()), st.session_state['df_master'].loc[0, 'Court or tribunal type']))
 
-on_this_date_entry = st.date_input(label = 'Decision date is', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+on_this_date_entry = st.date_input(label = 'Decision date is', value = date_parser(st.session_state['df_master'].loc[0, 'Decision date is']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-after_date_entry = st.date_input(label = 'Decision date is after', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is after']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+after_date_entry = st.date_input(label = 'Decision date is after', value = date_parser(st.session_state['df_master'].loc[0, 'Decision date is after']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-before_date_entry = st.date_input(label = 'Decision date is before', value = date_year_first(st.session_state['df_master'].loc[0, 'Decision date is before']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+before_date_entry = st.date_input(label = 'Decision date is before', value = date_parser(st.session_state['df_master'].loc[0, 'Decision date is before']), format="YYYY-MM-DD", min_value = date(1800, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 subjects_entry = st.multiselect(label = 'Subjects', options = all_subjects, default = st.session_state['df_master'].loc[0, 'Subjects'])
 

@@ -76,7 +76,7 @@ from functions.hca_functions import hca_collections, hca_search, hca_pdf_judgmen
 
 
 # %%
-from functions.common_functions import link, is_date, list_value_check, au_date
+from functions.common_functions import link, is_date, list_value_check, date_parser
 
 
 # %%
@@ -462,9 +462,9 @@ if filter_toggle:
 
 
     
-    after_date_entry = st.date_input(label = 'Decision date is after', value = date_range_check(date_start, date_end, au_date(st.session_state.df_master.loc[0, 'Decision date is after'])), format="DD/MM/YYYY", min_value = date_start, max_value = date_end, help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    after_date_entry = st.date_input(label = 'Decision date is after', value = date_range_check(date_start, date_end, date_parser(st.session_state.df_master.loc[0, 'Decision date is after'])), format="DD/MM/YYYY", min_value = date_start, max_value = date_end, help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
-    before_date_entry = st.date_input(label = 'Decision date is before', value = date_range_check(date_start, date_end, au_date(st.session_state.df_master.loc[0, 'Decision date is before'])), format="DD/MM/YYYY", min_value = date_start,  max_value = date_end,help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    before_date_entry = st.date_input(label = 'Decision date is before', value = date_range_check(date_start, date_end, date_parser(st.session_state.df_master.loc[0, 'Decision date is before'])), format="DD/MM/YYYY", min_value = date_start,  max_value = date_end,help = "If you cannot change this date entry, please press :red[RESET] and try again.")
     
     if collection_entry != '1 CLR - 100 CLR (judgments 1903-1958)':
     

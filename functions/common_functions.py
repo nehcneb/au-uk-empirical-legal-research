@@ -79,6 +79,7 @@ import io
 from io import BytesIO
 import pause
 import re
+import mammoth
 
 #Excel
 import openpyxl
@@ -130,22 +131,47 @@ def is_date(string, fuzzy=False):
 
 
 # %%
-def date_parser(string):
+def date_parser(x):
+
+    #st.write(f"x = {x}")
+    
     try:
-        date = parser.parse(string, dayfirst=True)
-        return date
-    except:
+
+        if isinstance(x, datetime):
+            
+            return x
+
+        else:
+            
+            #Determine if day first or year first
+            first_digits_list = re.findall(r'^\d+', str(x))
+
+            if len(first_digits_list) > 0:
+
+                first_digits = first_digits_list[0]
+
+                #st.write(f"first_digits == {first_digits}")
+                
+                if len(first_digits) == 4:
+                
+                    return parser.parse(str(x), yearfirst=True)
+        
+                elif len(first_digits) in [1, 2]:
+        
+                    return parser.parse(str(x), dayfirst=True)
+        
+                else:
+        
+                    return None
+            else:
+                return None
+    
+    except Exception as e:
+
+        #st.write(e)
+        
         return None
-
-
-
-# %%
-def date_year_first(x):
-    try:
-        return parser.parse(x, yearfirst=True)
-    except:
-        return None
-
+        
 
 
 # %%
@@ -240,6 +266,19 @@ def pdf_judgment(url):
 
 
 # %%
+#Define function for judgment link containing docx
+def docx_judgment(url):
+    headers = {'User-Agent': 'whatever'}
+    r = requests.get(url, headers=headers)
+    remote_file_bytes = io.BytesIO(r.content)
+    
+    doc_string = mammoth.convert_to_html(remote_file_bytes).value
+    
+    return doc_string
+
+
+
+# %%
 def tips():
     st.markdown(""":green[**DO's**:]
 - :green[Do break down complex tasks into simple sub-tasks.]
@@ -272,6 +311,7 @@ def list_value_check(some_list, some_value):
         return index
     except:
         return None
+        
 
 
 # %%
@@ -294,14 +334,6 @@ def list_range_check(some_list, some_string):
  
     return selected_list
 
-
-
-# %%
-def au_date(x):
-    try:
-        return parser.parse(x, dayfirst=True)
-    except:
-        return None
 
 
 # %%
@@ -488,7 +520,8 @@ spinner_text = r"$\textsf{\normalsize In progress... }$"
 #Funder
 #funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
 
-funder_msg = "I continue to develop LawtoData with a view to promoting and advancing quantitative legal research. Please feel free to spread the word about this app if you find it useful. "
+funder_msg = "Please feel free to share LawtoData with others if you find it useful. "
+
 
 # %%
 #Cost

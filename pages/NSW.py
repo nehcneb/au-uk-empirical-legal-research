@@ -63,7 +63,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, au_date, save_input, download_buttons, display_df
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, date_parser, save_input, download_buttons, display_df
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display, no_results_msg
 
@@ -381,11 +381,11 @@ mnc_entry = st.text_input(label = "Medium neutral citation", value = st.session_
 
 st.caption("Must include square brackets eg [2022] NSWSC 922")
 
-startDate_entry = st.date_input(label = "Decision date from", value = au_date(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+startDate_entry = st.date_input(label = "Decision date from", value = date_parser(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 st.caption("Pre-1999 decisions are usually [not available](https://www.caselaw.nsw.gov.au/about) from NSW Caselaw and will unlikely to be collected.")
 
-endDate_entry = st.date_input(label = "Decision date to", value = au_date(st.session_state['df_master'].loc[0, 'Decision date to']),  format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+endDate_entry = st.date_input(label = "Decision date to", value = date_parser(st.session_state['df_master'].loc[0, 'Decision date to']),  format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 fileNumber_entry = st.text_input(label = "File number", value = st.session_state['df_master'].loc[0, 'File number'])
 
@@ -416,7 +416,6 @@ with stylable_container(
     }""",
 ):
     preview_button = st.button(label = 'PREVIEW')
-
 
 
 # %% [markdown]

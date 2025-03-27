@@ -608,7 +608,7 @@ else: #If PACER records chosen
     party_name_entry = st.text_input(label = 'Party name', value = st.session_state['df_master'].loc[0, 'Party name'])
     atty_name_entry = st.text_input(label = 'Attorney name', value = st.session_state['df_master'].loc[0, 'Attorney name'])
     available_only_entry = st.checkbox(label = 'Only show results with PDFs (up to 3 will be processed)', value = bool(float(st.session_state['df_master'].loc[0, 'Only show results with PDFs'])))
-    order_by_entry = st.selectbox(label = "Search results order ", options = list(us_pacer_order_by.keys()), index = list(us_pacer_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
+    order_by_entry = st.selectbox(label = "Search results order", options = list(us_pacer_order_by.keys()), index = list(us_pacer_order_by.keys()).index(st.session_state['df_master'].loc[0, 'Search results order']))
 
 st.subheader("Your CourtListener API token")
 

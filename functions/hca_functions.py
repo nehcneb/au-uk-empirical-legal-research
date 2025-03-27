@@ -69,7 +69,7 @@ from functions.common_functions import huggingface, today_in_nums, errors_list, 
 # # High Court of Australia search engine
 
 # %%
-from functions.common_functions import link, is_date, list_value_check, au_date, split_title_mnc
+from functions.common_functions import link, is_date, list_value_check, date_parser, split_title_mnc
 
 # %%
 #Collections available

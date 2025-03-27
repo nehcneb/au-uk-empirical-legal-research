@@ -282,16 +282,16 @@ class ukpo_search_tool:
 
                         #Get case name
                         case_name = search_result.find('a', {'class': 'h3'}).text
-                        case_name
+                        #case_name
                         
                         #Link to case
                         link = search_result.find('a', {'class': 'h3'})['href']
-                        link
+                        #link
                         
                         #Get metadata
                         meta_text =  search_result.find('div', {'class': 'teal_font'}).get_text()
                         meta_list = meta_text.splitlines()
-                        meta_list
+                        #meta_list
                         
                         #Initialise meta labels
                         complainant = ''
@@ -380,7 +380,7 @@ class ukpo_search_tool:
                 pause.seconds(np.random.randint(15, 20))
 
                 result_url = case_info['Hyperlink to the Pensions Ombudsman']
-                result_response = requests.get(result_url, headers= {'User-Agent': 'whatever'})
+                result_response = requests.get(result_url, headers = {'User-Agent': 'whatever'})
                 result_soup = BeautifulSoup(result_response.content, "lxml")
 
                 #Get appeal status

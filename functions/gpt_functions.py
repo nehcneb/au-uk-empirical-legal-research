@@ -1771,6 +1771,14 @@ def gpt_run(jurisdiction_page, df_master):
         
         run = copy.copy(fca_run)
 
+    if jurisdiction_page == 'pages/HK.py':
+                
+        from functions.hk_functions import hk_run, role_content_hk
+
+        system_instruction = role_content_hk
+        
+        run = copy.copy(hk_run)
+    
     if jurisdiction_page == 'pages/US.py':
         
         system_instruction = role_content
@@ -1883,6 +1891,14 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         #fca_link_to_doc
         batch = copy.copy(fca_batch)
 
+    if jurisdiction_page == 'pages/HK.py':
+                
+        from functions.hk_functions import hk_batch, role_content_hk
+
+        system_instruction = role_content_hk
+        
+        batch = copy.copy(hk_batch)
+    
     if jurisdiction_page == 'pages/US.py':
         
         system_instruction = role_content

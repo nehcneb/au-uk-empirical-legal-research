@@ -1666,7 +1666,8 @@ def us_search_preview(df_master):
     #Use the following if want to show url to the API page of search results
     #results_url = us_search.results_url
     
-    return {'results_url': results_url, 'results_count': results_count, 'results_to_show': us_search.results_to_show}
+    return {'results_url': results_url, 'results_count': results_count, 'results_to_show': results_to_show}
+    
 
 
 # %% [markdown]
