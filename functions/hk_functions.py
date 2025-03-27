@@ -589,10 +589,12 @@ class hk_search_tool:
                 self.soup = BeautifulSoup(browser.page_source, "lxml")
         
                 #Get case infos from search results page
-                     
+                
                 case_numbers_list_raw = self.soup.find_all('a', {'class': 'searchfont result-caseno'})
                 
                 link_mnc_list_raw = self.soup.find_all('div', {'class': 'col-md-6 pl-1'}) #Every second item in this list is redundant
+
+                #st.write(f"link_mnc_list_raw == {link_mnc_list_raw}")
                 
                 date_list_raw = self.soup.find_all('div', {'class': 'col-md-4 pl-1'})
                 
@@ -617,15 +619,21 @@ class hk_search_tool:
                 mnc_counter = 0
                 
                 for link_mnc_raw in link_mnc_list_raw:
-                    
+
                     if mnc_counter % 2 == 0:
                         
-                        link_mnc_raw = link_mnc_raw.get_text(strip = True)
-                
+                        #link_mnc_raw = link_mnc_raw.get_text(strip = True) #This doesn't work on Streamlit Cloud
+                        
+                        link_mnc_raw = str(link_mnc_raw)
+                        
+                        #st.write(f"link_mnc_raw == {link_mnc_raw}")
+
                         if re.search(r'\[\d{4}\].+\d+', link_mnc_raw):
+                            
                             mnc = re.findall(r'\[\d{4}\].+\d+', link_mnc_raw)[0]
                         
                         else:
+                            
                             mnc = ''
                 
                         if re.search(r"\'DIS.+\'", link_mnc_raw):
@@ -755,7 +763,7 @@ class hk_search_tool:
                                 
                                 judgment_text = pdf_judgment(pdf_url)
 
-                                case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
+                                #case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
                                 
                                 print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
                             
@@ -771,7 +779,7 @@ class hk_search_tool:
                             
                             judgment_text = docx_judgment(docx_url)
 
-                            case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
+                            #case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
                             
                             print(f"{case_number}: Got judgment in language == {language} from docx.")
     
@@ -833,7 +841,7 @@ class hk_search_tool:
                                     
                                     judgment_text = pdf_judgment(pdf_url)
     
-                                    case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
+                                    #case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
                                     
                                     print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
                                 
@@ -849,7 +857,7 @@ class hk_search_tool:
                                 
                                 judgment_text = docx_judgment(docx_url)
     
-                                case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
+                                #case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
                                 
                                 print(f"{case_number}: Got judgment in language == {language} from docx.")
         
