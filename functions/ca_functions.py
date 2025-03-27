@@ -739,7 +739,7 @@ def ca_search(jurisdiction  =  'All',
 
 
 # %%
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
     #Start counter
     
@@ -941,7 +941,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def ca_run(df_master):
     df_master = df_master.fillna('')
 
