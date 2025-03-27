@@ -94,7 +94,7 @@ download_dir = os.getcwd() + '/AFCA_PDFs'
 #options.add_argument('--no-sandbox')  
 #options.add_argument('--disable-dev-shm-usage')  
 
-@st.cache_resource(show_spinner = False, ttl=600)
+#@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
     return uc.Chrome(options = options)
     #return webdriver.Chrome(options=options)
@@ -125,7 +125,7 @@ if streamlit_timezone() == True:
     "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
     })
     
-    @st.cache_resource(show_spinner = False, ttl=600)
+    #@st.cache_resource(show_spinner = False, ttl=600)
     def get_driver_old():
         
         return uc.Chrome(options = options_old)

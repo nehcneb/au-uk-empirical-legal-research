@@ -91,7 +91,7 @@ options.add_argument("--headless")
 options.add_argument('--no-sandbox')  
 options.add_argument('--disable-dev-shm-usage')  
 
-@st.cache_resource(show_spinner = False, ttl=600)
+#@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
     return webdriver.Chrome(options=options)
 
