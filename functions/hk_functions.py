@@ -107,6 +107,8 @@ try:
     
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(15)
+
+    #browser.quit()
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -729,6 +731,11 @@ class hk_search_tool:
 
         self.case_infos_w_judgments = []
 
+        #Search if not done yet
+        if len(self.case_infos) == 0:
+
+            self.search()
+        
         #Get judgments from cases shown on the initial page (page 1)
         for case_info in self.case_infos:
             
@@ -874,8 +881,8 @@ class hk_search_tool:
                     
                     print(f"Processed {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
 
-        browser.delete_all_cookies()
-        browser.close()
+        #browser.delete_all_cookies()
+        #browser.close()
 
 
 # %%

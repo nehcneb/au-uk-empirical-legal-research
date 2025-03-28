@@ -809,7 +809,7 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
         else:
             break
 
-    browser.close()
+    #browser.close()
     
     return case_links
 
