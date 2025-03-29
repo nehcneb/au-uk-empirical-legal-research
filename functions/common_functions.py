@@ -520,7 +520,7 @@ spinner_text = r"$\textsf{\normalsize In progress... }$"
 #Funder
 #funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
 
-funder_msg = "I have developed LawtoData with a view to promoting and advancing quantitative legal research. Please feel free to share this app with others if you find it useful. "
+funder_msg = "I developed LawtoData with a view to promoting and advancing quantitative legal research. Please feel free to share this app with others if you find it useful. "
 
 
 # %%
