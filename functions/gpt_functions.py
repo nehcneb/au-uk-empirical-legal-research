@@ -654,7 +654,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
         
-        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Each key in your JSON response must contain the relevant question.'
 
     #Create questions, which include the answer format
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
@@ -1037,7 +1037,7 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
 
-        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Each key in your JSON response must contain the relevant question.'
     
     #Create questions, which include the answer format
     
@@ -1431,7 +1431,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
 
-        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str)
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Each key in your JSON response must contain the relevant question.'
 
     #Create questions, which include the answer format
     

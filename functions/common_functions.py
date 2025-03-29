@@ -244,9 +244,17 @@ judgment_text_lower_bound = 4000 #~3000 words
 # %%
 #Tidy up hyperlink
 def link(x):
-    value = '=HYPERLINK("' + str(x) + '")'
-    return value
-
+    
+    if len(str(x)) > 0:
+        
+        value = '=HYPERLINK("' + str(x) + '")'
+        
+        return value
+    
+    else:
+        
+        return x
+        
 
 
 # %%
@@ -508,7 +516,7 @@ def streamlit_cloud_date_format(date):
 
 # %%
 #No results msg
-no_results_msg = 'Your search terms returned 0 results. Please change your search terms and try again.'
+no_results_msg = 'Your search terms returned 0 results. Please change your search terms and try again. \nIf this problem persists, please close this app and try again later.'
 
 # %%
 #Default spinner_text

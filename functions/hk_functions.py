@@ -115,6 +115,11 @@ except Exception as e:
     print(e)
     quit()
 
+# %%
+#judgment_url = 'https://legalref.judiciary.hk/lrs/common/search/search_result_detail_frame.jsp?DIS=137279&QS=%24%28murder%29&TP=JU'
+
+#browser.get(judgment_url)
+
 # %% [markdown]
 # ## Definitions
 
@@ -711,7 +716,7 @@ class hk_search_tool:
                                      'Reported': reported,
                                     'Case number': case_number,
                                     'Date': date
-                                                }
+                                    }
         
                         self.case_infos.append(case_info)
         
@@ -726,7 +731,207 @@ class hk_search_tool:
 
                 print(f"Failed to get search results due to error: {e}")
     
-    #Function for getting judgment text
+    #Function for attaching judgment text to case_info dict
+    def attach_judgment_text_and_urls(self, case_info):
+
+        #Initialise urls for docx, pdf, and Chinese translation and English original, and for judgment text
+        docx_url = ''
+        pdf_url = ''
+        chinese_url = ''
+        english_url = ''        
+        judgment_text = ''
+
+        case_number = case_info['Case number']
+        
+        #Try to get judgment from html first
+        try:
+
+            judgment_url = case_info['Hyperlink to the Hong Kong Legal Reference System']
+
+            browser.get(judgment_url)
+            
+            #Click away any altert
+            try:
+                Wait(browser, 5).until(EC.alert_is_present())
+                browser.switch_to.alert.accept()
+                print(f'{case_number}: clicked away alert.')
+            
+            except:
+                print(f'{case_number}: no alert or failed to click away any altert.')
+            
+            #Get urls for docx, pdf, and Chinese translation/English original if available
+            browser.switch_to.frame("topFrame")
+            
+            hrefs = browser.find_elements(By.XPATH, "//a[@href]")
+            
+            top_buttons_dict = {}
+            
+            for elem in hrefs:
+                button_name = {elem.text}
+                button_link = elem.get_attribute('href')
+                
+                top_buttons_dict.update({str(button_name).lower(): button_link})
+            
+            for key in top_buttons_dict.keys():
+            
+                if 'word' in key:
+                    docx_url = top_buttons_dict[key]
+            
+                if 'pdf' in key:
+                    pdf_url = top_buttons_dict[key]
+            
+                if 'chinese' in key:
+                    chinese_url = top_buttons_dict[key]
+                    
+                if 'english' in key:
+                    english_url = top_buttons_dict[key]
+
+            #Redirect to English original if available
+            if len(english_url) > 0:
+            
+                judgment_url = english_url
+                
+                print(f"{case_number}: redirecting to Englsh original")
+
+                #Pause to avoid getting kicked out
+                pause.seconds(5)
+                
+                browser.get(judgment_url)
+
+                #Get urls for docx, pdf, and Chinese translation for the English original
+                browser.switch_to.frame("topFrame")
+                
+                hrefs = browser.find_elements(By.XPATH, "//a[@href]")
+                
+                english_top_buttons_dict = {}
+                
+                for elem in hrefs:
+                    button_name = {elem.text}
+                    button_link = elem.get_attribute('href')
+                    
+                    english_top_buttons_dict.update({str(button_name).lower(): button_link})
+                
+                for key in top_buttons_dict.keys():
+                
+                    if 'word' in key:
+                        docx_url = english_top_buttons_dict[key]
+                
+                    if 'pdf' in key:
+                        pdf_url = english_top_buttons_dict[key]
+                
+                    if 'chinese' in key:
+                        chinese_url = english_top_buttons_dict[key]
+
+                browser.switch_to.default_content()
+            
+            else:
+                
+                browser.switch_to.default_content()
+            
+            browser.switch_to.frame("mainFrame")
+
+            judgment_text = BeautifulSoup(browser.page_source, "lxml").get_text()
+
+            print(f"{case_number}: Got judgment from html.")
+        
+        except Exception as e:
+            
+            print(f"{case_number}: Failed to get judgment from html.")
+        
+        #Get judgment text from pdf if necessary
+        if len(judgment_text) == 0:
+        
+            try:
+                
+                judgment_text = pdf_judgment(pdf_url)
+                
+                print(f"{case_number}: Got judgment from pdf.")
+            
+            except Exception as e:
+
+                print(f"{case_number}: Can't get judgment from pdf.")
+
+        #Get judgment text from docx if necessary
+        if len(judgment_text) == 0:
+        
+            try:
+                
+                judgment_text = docx_judgment(docx_url)
+                
+                print(f"{case_number}: Got judgment from docx.")
+            
+            except Exception as e:
+
+                print(f"{case_number}: Can't get judgment from docx.")
+        
+        #Older method for getting judgment text from pdf or docx by inference from case number
+
+        #if len(judgment_text) == 0:
+
+            #case_number_ds = re.findall(r'\d+', case_number)
+            #case_number_numbers = case_number_ds[0]
+            #case_number_alphabets = case_number.split(case_number_numbers)[0]
+            #case_number_year = case_number_ds[1]
+            #case_number_numbers_6_digis = case_number_numbers
+            #while len(case_number_numbers_6_digis) < 6:
+                #case_number_numbers_6_digis = '0' + case_number_numbers_6_digis
+                
+            #for language in ['en', 'ch']:
+
+                #for doc_type in ['docx', 'doc']:
+
+                    #pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
+
+                    #if len(judgment_text) == 0:
+
+                        #pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
+                    
+                        #try:
+                            
+                            #judgment_text = pdf_judgment(pdf_url)
+                            
+                            #print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+                        
+                        #except Exception as e:
+
+                            #print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
+
+            #if len(judgment_text) == 0:
+            
+                #try:
+
+                    #docx_url = f'https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.docx'
+                    
+                    #judgment_text = docx_judgment(docx_url)
+                    
+                    #print(f"{case_number}: Got judgment in language == {language} from docx.")
+
+                #except Exception as e:
+                    
+                    #print(f"{case_number}: Can't get judgment from pdf or docx.")
+        
+        #Create updated case_info dict with judgment text and links to Chinese translation, English original
+        case_info_w_judgment = {'Case name': case_info['Case name'],
+                                'Hyperlink to the Hong Kong Legal Reference System': case_info['Hyperlink to the Hong Kong Legal Reference System'],
+                                'Hyperlink to Chinese translation (if any)': chinese_url,
+                                'Hyperlink to English original (if any)': english_url, 
+                                 'Medium neutral citation': case_info['Medium neutral citation'],
+                                 'Reported': case_info['Reported'],
+                                'Case number': case_info['Case number'],
+                                'Date': case_info['Date'], 
+                                'judgment': judgment_text
+                                }
+
+        #Make links clickable
+        for key in case_info_w_judgment:
+            if 'Hyperlink' in key:
+                case_info_w_judgment[key] = link(case_info_w_judgment[key])
+
+        #case_info_w_judgment['Hyperlink to the Hong Kong Legal Reference System'] = link(case_info['Hyperlink to the Hong Kong Legal Reference System'])
+        
+        return case_info_w_judgment
+        
+    #Function for getting all requested judgments
     def get_judgments(self):
 
         self.case_infos_w_judgments = []
@@ -744,62 +949,10 @@ class hk_search_tool:
                 #Pause to avoid getting kicked out
                 pause.seconds(np.random.randint(5, 10))
 
-                case_number = case_info['Case number']
-                
-                case_number_ds = re.findall(r'\d+', case_number)
-                case_number_numbers = case_number_ds[0]
-                case_number_alphabets = case_number.split(case_number_numbers)[0]
-                case_number_year = case_number_ds[1]
-                case_number_numbers_6_digis = case_number_numbers
-                while len(case_number_numbers_6_digis) < 6:
-                    case_number_numbers_6_digis = '0' + case_number_numbers_6_digis
-                
-                judgment_text = ''
-
-                for language in ['en', 'ch']:
-
-                    for doc_type in ['docx', 'doc']:
-
-                        pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-
-                        if len(judgment_text) == 0:
-
-                            pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-                        
-                            try:
-                                
-                                judgment_text = pdf_judgment(pdf_url)
-
-                                #case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
-                                
-                                print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-                            
-                            except Exception as e:
-
-                                print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-
-                    if len(judgment_text) == 0:
-                    
-                        try:
-    
-                            docx_url = f'https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.docx'
-                            
-                            judgment_text = docx_judgment(docx_url)
-
-                            #case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
-                            
-                            print(f"{case_number}: Got judgment in language == {language} from docx.")
-    
-                        except Exception as e:
-                            
-                            print(f"{case_number}: Can't get judgment from pdf or docx.")
-                
-                case_info.update({'judgment': judgment_text})
-
-                #Make judgment link clickable
-                case_info['Hyperlink to the Hong Kong Legal Reference System'] = link(case_info['Hyperlink to the Hong Kong Legal Reference System'])
-                
-                self.case_infos_w_judgments.append(case_info)
+                #Attach judgment text and urls to case_info dict
+                case_info_w_judgment = self.attach_judgment_text_and_urls(case_info)
+        
+                self.case_infos_w_judgments.append(case_info_w_judgment)
                 
                 print(f"Processed {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
 
@@ -821,66 +974,14 @@ class hk_search_tool:
     
                     #Pause to avoid getting kicked out
                     pause.seconds(np.random.randint(5, 10))
-    
-                    case_number = case_info['Case number']
-                    
-                    case_number_ds = re.findall(r'\d+', case_number)
-                    case_number_numbers = case_number_ds[0]
-                    case_number_alphabets = case_number.split(case_number_numbers)[0]
-                    case_number_year = case_number_ds[1]
-                    case_number_numbers_6_digis = case_number_numbers
-                    while len(case_number_numbers_6_digis) < 6:
-                        case_number_numbers_6_digis = '0' + case_number_numbers_6_digis
-                    
-                    judgment_text = ''
-    
-                    for language in ['en', 'ch']:
-    
-                        for doc_type in ['docx', 'doc']:
-    
-                            pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-    
-                            if len(judgment_text) == 0:
-    
-                                pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-                            
-                                try:
-                                    
-                                    judgment_text = pdf_judgment(pdf_url)
-    
-                                    #case_info['Hyperlink to the Hong Kong Legal Reference System'] = pdf_url
-                                    
-                                    print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-                                
-                                except Exception as e:
-    
-                                    print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-    
-                        if len(judgment_text) == 0:
-                        
-                            try:
-        
-                                docx_url = f'https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.docx'
-                                
-                                judgment_text = docx_judgment(docx_url)
-    
-                                #case_info['Hyperlink to the Hong Kong Legal Reference System'] = docx_url
-                                
-                                print(f"{case_number}: Got judgment in language == {language} from docx.")
-        
-                            except Exception as e:
-                                
-                                print(f"{case_number}: Can't get judgment from pdf or docx.")
-                    
-                    case_info.update({'judgment': judgment_text})
-    
-                    #Make judgment link clickable
-                    case_info['Hyperlink to the Hong Kong Legal Reference System'] = link(case_info['Hyperlink to the Hong Kong Legal Reference System'])
-                    
-                    self.case_infos_w_judgments.append(case_info)
+
+                    #Attach judgment text and urls to case_info dict
+                    case_info_w_judgment = self.attach_judgment_text_and_urls(case_info)
+
+                    self.case_infos_w_judgments.append(case_info_w_judgment)
                     
                     print(f"Processed {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
-
+    
         #browser.delete_all_cookies()
         #browser.close()
 
@@ -1082,8 +1183,14 @@ def hk_run(df_master):
     #Pop judgment
     if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
         df_updated.pop('judgment')
+
+    #Pop empty columns (eg columns of Chinese original, English translation)
+    df_updated.replace("", np.nan, inplace=True)
+    df_updated.dropna(how='all', axis=1, inplace=True)
+    df_updated.replace(np.nan, '', inplace=True)
     
     return df_updated
+    
 
 
 # %% editable=true slideshow={"slide_type": ""}
@@ -1147,7 +1254,6 @@ def hk_batch(df_master):
     #apply GPT_individual to each respondent's judgment spreadsheet
 
     #Need to convert date column to string
-
     if 'Date' in df_individual.columns:
 
         df_individual['Date'] = df_individual['Date'].astype(str)

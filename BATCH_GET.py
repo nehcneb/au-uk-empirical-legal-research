@@ -648,6 +648,11 @@ for df_batch_response in df_batch_id_response_list:
     
             if 'recap_documents' in df_individual.columns:
                 df_individual.pop('recap_documents')
+
+        #Drop empty columns
+        df_individual.replace("", np.nan, inplace=True)
+        df_individual.dropna(how='all', axis=1, inplace=True)
+        df_individual.replace(np.nan, '', inplace=True)
         
         #Update df_individual on AWS
         csv_buffer = StringIO()
