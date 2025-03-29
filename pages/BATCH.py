@@ -12,9 +12,6 @@
 #     name: python3
 # ---
 
-# %% editable=true slideshow={"slide_type": ""}
-#streamlit run Dropbox/Python/GitHub/au-uk-empirical-legal-research-unlimited/BATCH.py
-
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Preliminaries
 
@@ -92,13 +89,51 @@ def get_aws_s3():
 
     return s3_resource
 
-#Get all objects from aws s3
 
-#@st.cache_data(show_spinner = False)
+
+# %%
+#Function for getting df from aws
+def get_aws_df(df_name):
+#df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
+#Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
+
+    #Initialise s3_resource if not already
+    if 's3_resource' not in st.session_state:
+
+        st.session_state.s3_resource = get_aws_s3()
+    
+    try:
+
+        #Get relevant df from aws
+        obj = st.session_state.s3_resource.Object('lawtodata', df_name).get()
+        body = obj['Body'].read()
+
+        df = pd.read_csv(BytesIO(body), index_col=0)
+        
+        print(f"Sucessfully loaded {df_name} from aws.")
+
+    except Exception as e:
+
+        print(f"Failed to load {df_name} from aws due to error: {e}.")
+
+        df = pd.DataFrame([])
+        
+    return df
+    
+
+
+# %%
+#Testing get_aws_df
+#get_aws_df('all_df_masters.csv')
+
+# %%
+#Get all objects from aws s3
+#NOT IN USE
+
 def get_aws_objects():
     
     #Get a list of all files on s3
-    bucket = st.session_state.s3_resource.Bucket('lawtodata')
+    bucket = s3_resource.Bucket('lawtodata')
     
     aws_objects = []
     
@@ -176,7 +211,7 @@ def delete_all():
 
         st.write(f"Are you sure you want to delete your data? If you do so, **there is no going back**. Your search terms, questions for GPT, and all other entries to obtain the data will also be deleted.")
         
-        confirm_deletion_entry = st.text_input(label = "Type 'yes'")
+        confirm_deletion_entry = st.text_input(label = "Type 'yes' in lower case to delete your data.")
         
         if st.button("CONFIRM"):
 
@@ -189,12 +224,7 @@ def delete_all():
                 else:
                     
                     #Get relevant df_individual
-                    for key_body in st.session_state.aws_objects:
-                        if key_body['key'] == f'{batch_id_entry}.csv':
-                            df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-                            st.session_state.df_individual = df_individual.copy(deep = True)
-                            print(f"Succesfully loaded {key_body['key']}.")
-                            break
+                    st.session_state.df_individual = get_aws_df(f"{batch_id_entry}.csv")
                 
                     if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
             
@@ -238,19 +268,11 @@ with st.spinner(spinner_text):
     if 's3_resource' not in st.session_state:
     
         st.session_state.s3_resource = get_aws_s3()
-    
-    if 'aws_objects' not in st.session_state:
-        
-        st.session_state.aws_objects = get_aws_objects()
         
     if 'all_df_masters' not in st.session_state:
-    
-        for key_body in st.session_state.aws_objects:
-            if key_body['key'] == 'all_df_masters.csv':
-                st.session_state['all_df_masters'] = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-                print(f"Succesfully loaded {key_body['key']}.")
-                break
 
+        st.session_state['all_df_masters'] = get_aws_df('all_df_masters.csv')
+    
 
 # %% [markdown]
 # # Streamlit page
@@ -315,17 +337,11 @@ if retrive_button:
     else:
         with st.spinner('Retrieving your data...'):
 
-            pause.seconds(3)
+            #pause.seconds(3)
             
             try:
                 #Get relevant df_individual
-                for key_body in st.session_state.aws_objects:
-                    if key_body['key'] == f'{batch_id_entry}.csv':
-                        df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-                        st.session_state.df_individual = df_individual.copy(deep = True)
-                        print(f"Succesfully loaded {key_body['key']}.")
-    
-                        break
+                st.session_state.df_individual = get_aws_df(f'{batch_id_entry}.csv')
         
                 #Update df_master
                 batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
@@ -333,6 +349,14 @@ if retrive_button:
                     st.session_state['df_master'].loc[0, col] = st.session_state.all_df_masters.loc[batch_index, col]
     
                 if len(st.session_state.df_individual) > 0:
+
+                    #State the status of this df_individual
+                    st.session_state.df_master.loc[0, 'status'] = st.session_state.all_df_masters.loc[batch_index, 'status']
+
+                    #st.write(f"st.session_state.df_master.loc[0, 'status'] == {st.session_state.df_master.loc[0, 'status']}")
+
+                    #pause.seconds(3)
+                    
                     st.rerun()
                 
                 else:
@@ -350,6 +374,5 @@ if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.sessio
 
     #Download data
     download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
-
 
 

@@ -502,7 +502,7 @@ def streamlit_cloud_date_format(date):
     if time_zone in ['AEST', 'ACST', 'AWST', 'BST']:
         date_to_send = parser.parse(date, dayfirst=True).strftime("%d/%m/%Y")
     else:
-        date_to_send = parser.parse(date, dayfirst=True).strftime("%m/%d/%Y")
+        date_to_send = parser.parse(date, dayfirst=False).strftime("%m/%d/%Y")
     return date_to_send
 
 
@@ -520,7 +520,7 @@ spinner_text = r"$\textsf{\normalsize In progress... }$"
 #Funder
 #funder_msg = "Lawtodata is partially funded by a 2022 University of Sydney Research Accelerator (SOAR) Prize and a 2023 Discovery Early Career Researcher Award (DECRA). Please kindly acknowledge this if you use your requested data to produce any research output. "
 
-funder_msg = "Please feel free to share LawtoData with others if you find it useful. "
+funder_msg = "I have developed LawtoData with a view to promoting and advancing quantitative legal research. Please feel free to share this app with others if you find it useful. "
 
 
 # %%

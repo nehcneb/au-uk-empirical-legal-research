@@ -126,6 +126,36 @@ except:
 
 
 
+# %%
+#Function for getting df from aws
+def get_aws_df(df_name):
+#df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
+#Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
+
+    #Initialise s3_resource if not already
+    if 's3_resource' not in st.session_state:
+
+        st.session_state.s3_resource = get_aws_s3()
+    
+    try:
+
+        #Get relevant df from aws
+        obj = st.session_state.s3_resource.Object('lawtodata', df_name).get()
+        body = obj['Body'].read()
+
+        df = pd.read_csv(BytesIO(body), index_col=0)
+        
+        print(f"Sucessfully loaded {df_name} from aws.")
+
+    except Exception as e:
+
+        print(f"Failed to load {df_name} from aws due to error: {e}.")
+
+        df = pd.DataFrame([])
+        
+    return df
+    
+
 
 # %%
 #Function for getting all objects from aws s3
@@ -137,7 +167,12 @@ def get_aws_s3():
 
     return s3_resource
 
+
+
+# %%
 #Get all objects from aws s3
+#NOT IN USE
+
 def get_aws_objects():
     
     #Get a list of all files on s3
@@ -173,16 +208,19 @@ st.subheader("Load records")
 #Initiate aws_s3, and get all_df_masters
 s3_resource = get_aws_s3()
 
-aws_objects = get_aws_objects()
+all_df_masters_current =  get_aws_df('all_df_masters.csv')
 
-for key_body in aws_objects:
-    if key_body['key'] == 'all_df_masters.csv':
-        all_df_masters_current = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-        print(f"Succesfully loaded {key_body['key']}.")
-        break
-        
 #Work on new copy of all_df_masters, which enables comparison with current version on aws
 all_df_masters = all_df_masters_current.copy(deep = True)
+
+#Old method which involves loading all objects from aws first 
+#aws_objects = get_aws_objects()
+
+#for key_body in aws_objects:
+    #if key_body['key'] == 'all_df_masters.csv':
+        #all_df_masters_current = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+        #print(f"Succesfully loaded {key_body['key']}.")
+        #break
 
 #all_df_masters = all_df_masters.fillna('')
 
@@ -476,6 +514,7 @@ for index in all_df_masters.index:
             print(traceback.format_exc())
             print(e)
             st.error(e)
+            
 
 
 # %% [markdown]
@@ -500,11 +539,13 @@ for df_batch_response in df_batch_id_response_list:
     batch_id = df_batch_response['batch_id']
     
     #Get df_individual from aws
-    for key_body in aws_objects:
-        if key_body['key'] == f'{batch_id}.csv':
-            df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-            print(f"Succesfully loaded {key_body['key']} as df_individual.")
-            break
+    df_individual = get_aws_df(f"{batch_id}.csv")
+    
+    #for key_body in aws_objects:
+        #if key_body['key'] == f'{batch_id}.csv':
+            #df_individual = pd.read_csv(BytesIO(key_body['body']), index_col=0)
+            #print(f"Succesfully loaded {key_body['key']} as df_individual.")
+            #break
     
     #Get df_individual from google sheets
     #conn_all_df_individuals = st.connection("gsheets_record_all_df_individuals", type=GSheetsConnection, ttl=0)
