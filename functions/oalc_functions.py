@@ -151,7 +151,7 @@ def oalc_filter(dataset,
     'length': length
         }
     
-    #response = requests.get(base_url, params=params, headers=headers)
+    response = requests.get(base_url, params=params, headers=headers)
 
     #print(response.url)
 
