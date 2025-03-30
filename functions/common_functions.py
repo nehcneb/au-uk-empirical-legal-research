@@ -847,13 +847,13 @@ def get_aws_s3():
 
 # %%
 #Function for getting df from aws
-def get_aws_df(df_name):
+def get_aws_df(s3_resource, df_name):
 #df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
 #Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
 
     try:
 
-        s3_resource = get_aws_s3()
+        #s3_resource = get_aws_s3()
         
         #Get relevant df from aws
         obj = s3_resource.Object('lawtodata', df_name).get()

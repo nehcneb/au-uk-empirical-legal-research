@@ -77,51 +77,6 @@ st.set_page_config(
 #Import functions and variables
 from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums, spinner_text, download_buttons, get_aws_s3, get_aws_df
 
-
-# %%
-#Get all objects from aws s3
-
-#@st.cache_resource(show_spinner = False)
-def get_aws_s3():
-    
-    #Initiate aws s3
-    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-
-    return s3_resource
-
-
-
-# %%
-#Function for getting df from aws
-def get_aws_df(df_name):
-#df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
-#Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
-
-    #Initialise s3_resource if not already
-    if 's3_resource' not in st.session_state:
-
-        st.session_state.s3_resource = get_aws_s3()
-    
-    try:
-
-        #Get relevant df from aws
-        obj = st.session_state.s3_resource.Object('lawtodata', df_name).get()
-        body = obj['Body'].read()
-
-        df = pd.read_csv(BytesIO(body), index_col=0)
-        
-        print(f"Sucessfully loaded {df_name} from aws.")
-
-    except Exception as e:
-
-        print(f"Failed to load {df_name} from aws due to error: {e}.")
-
-        df = pd.DataFrame([])
-        
-    return df
-    
-
-
 # %%
 #Testing get_aws_df
 #get_aws_df('all_df_masters.csv')
@@ -203,7 +158,7 @@ def delete_all():
                 else:
                     
                     #Get relevant df_individual
-                    st.session_state.df_individual = get_aws_df(f"{batch_id_entry}.csv")
+                    st.session_state.df_individual = get_aws_df(s3_resource, f"{batch_id_entry}.csv")
                 
                     if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
             
@@ -212,8 +167,8 @@ def delete_all():
                         #Update df_individual on AWS
                         csv_buffer = StringIO()
                         st.session_state.df_individual.to_csv(csv_buffer)
-                        #st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
-                        st.session_state.s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').delete()
+                        #s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
+                        s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').delete()
                         
                         print(f"Updated {batch_id_entry}.csv online." )
             
@@ -227,7 +182,7 @@ def delete_all():
                         #Update df_master on aws
                         csv_buffer = StringIO()
                         st.session_state.all_df_masters.to_csv(csv_buffer)
-                        st.session_state.s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                        s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                         
                         print(f"Updated all_df_masters.csv online." )
     
@@ -242,15 +197,17 @@ def delete_all():
 # %%
 #Initiate aws_s3, and get all_df_masters
 
+s3_resource = get_aws_s3()
+
 with st.spinner(spinner_text):
     
-    if 's3_resource' not in st.session_state:
+    #if 's3_resource' not in st.session_state:
     
-        st.session_state.s3_resource = get_aws_s3()
-        
+        #s3_resource = get_aws_s3()
+    
     if 'all_df_masters' not in st.session_state:
 
-        st.session_state['all_df_masters'] = get_aws_df('all_df_masters.csv')
+        st.session_state['all_df_masters'] = get_aws_df(s3_resource, 'all_df_masters.csv')
 
 
 # %% [markdown]
@@ -320,7 +277,7 @@ if retrive_button:
             
             try:
                 #Get relevant df_individual
-                st.session_state.df_individual = get_aws_df(f'{batch_id_entry}.csv')
+                st.session_state.df_individual = get_aws_df(s3_resource, f'{batch_id_entry}.csv')
         
                 #Update df_master
                 batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]

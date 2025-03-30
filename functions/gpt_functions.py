@@ -1698,7 +1698,7 @@ def batch_request_function():
                     #bucket = s3_resource.Bucket('lawtodata')
     
                     #Get all_df_masters
-                    all_df_masters = get_aws_df('all_df_masters.csv')
+                    all_df_masters = get_aws_df(s3_resource, 'all_df_masters.csv')
                     #for obj in bucket.objects.all():
                         #key = obj.key
                         #if key == 'all_df_masters.csv':

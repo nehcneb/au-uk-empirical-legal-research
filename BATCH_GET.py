@@ -137,7 +137,7 @@ st.subheader("Load records")
 #Initiate aws_s3, and get all_df_masters
 s3_resource = get_aws_s3()
 
-all_df_masters_current = get_aws_df('all_df_masters.csv')
+all_df_masters_current = get_aws_df(s3_resource, 'all_df_masters.csv')
 
 #Work on new copy of all_df_masters, which enables comparison with current version on aws
 all_df_masters = all_df_masters_current.copy(deep = True)
@@ -457,7 +457,7 @@ for df_batch_response in df_batch_id_response_list:
     batch_id = df_batch_response['batch_id']
     
     #Get df_individual from aws
-    df_individual = get_aws_df(f"{batch_id}.csv")
+    df_individual = get_aws_df(s3_resource, f"{batch_id}.csv")
     
     #for key_body in aws_objects:
         #if key_body['key'] == f'{batch_id}.csv':
