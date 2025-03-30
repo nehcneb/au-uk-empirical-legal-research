@@ -75,7 +75,7 @@ st.set_page_config(
 
 # %%
 #Import functions and variables
-from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums, spinner_text, download_buttons
+from functions.common_functions import convert_df_to_json, convert_df_to_csv, convert_df_to_excel, today_in_nums, spinner_text, download_buttons, get_aws_s3, get_aws_df
 
 
 # %%
@@ -125,27 +125,6 @@ def get_aws_df(df_name):
 # %%
 #Testing get_aws_df
 #get_aws_df('all_df_masters.csv')
-
-# %%
-#Get all objects from aws s3
-#NOT IN USE
-
-def get_aws_objects():
-    
-    #Get a list of all files on s3
-    bucket = s3_resource.Bucket('lawtodata')
-    
-    aws_objects = []
-    
-    for obj in bucket.objects.all():
-        key = obj.key
-        body = obj.get()['Body'].read()
-        key_body = {'key': key, 'body': body}
-        aws_objects.append(key_body)
-
-    return aws_objects
-    
-
 
 # %%
 #Initialise 
@@ -272,7 +251,7 @@ with st.spinner(spinner_text):
     if 'all_df_masters' not in st.session_state:
 
         st.session_state['all_df_masters'] = get_aws_df('all_df_masters.csv')
-    
+
 
 # %% [markdown]
 # # Streamlit page

@@ -151,9 +151,11 @@ def oalc_filter(dataset,
     'length': length
         }
     
-    response = requests.get(base_url, params=params, headers=headers)
+    #response = requests.get(base_url, params=params, headers=headers)
 
     #print(response.url)
+
+    #print(response.content)
     
     return response.json()
 
@@ -231,6 +233,10 @@ def get_judgment_from_oalc(mnc_list):
     
     return mnc_judgment_dict
 
+
+# %%
+#mnc_list = ['[2015] NSWSC 52', '[2015] NSWSC 186', '[2015] NSWSC 172', '[2021] NSWSC 1406', '[1999] NSWSC 1028']
+#get_judgment_from_oalc(mnc_list)
 
 # %%
 #Based on  https://huggingface.co/docs/dataset-viewer/en/search

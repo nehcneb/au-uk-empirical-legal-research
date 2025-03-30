@@ -74,7 +74,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, send_notification_email, streamlit_timezone
+from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, get_aws_df, get_aws_ses, send_notification_email
 
 # %% [markdown]
 # # gpt-3.5, 4o-mini and 4o
@@ -1690,18 +1690,21 @@ def batch_request_function():
                     df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
                     
                     #Initiate aws s3
-                    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+                    #s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+
+                    s3_resource = get_aws_s3()
                     
                     #Get a list of all files on s3
-                    bucket = s3_resource.Bucket('lawtodata')
+                    #bucket = s3_resource.Bucket('lawtodata')
     
                     #Get all_df_masters
-                    for obj in bucket.objects.all():
-                        key = obj.key
-                        if key == 'all_df_masters.csv':
-                            body = obj.get()['Body'].read()
-                            all_df_masters = pd.read_csv(BytesIO(body), index_col=0)
-                            break
+                    all_df_masters = get_aws_df('all_df_masters.csv')
+                    #for obj in bucket.objects.all():
+                        #key = obj.key
+                        #if key == 'all_df_masters.csv':
+                            #body = obj.get()['Body'].read()
+                            #all_df_masters = pd.read_csv(BytesIO(body), index_col=0)
+                            #break
                             
                     #Add df_master to all_df_masters 
                     all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
@@ -1709,7 +1712,7 @@ def batch_request_function():
                     #Upload all_df_masters to aws
                     csv_buffer = StringIO()
                     all_df_masters.to_csv(csv_buffer)
-                    s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+                    #s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
                     s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                            
                     #Send me an email to let me know

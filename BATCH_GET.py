@@ -62,11 +62,11 @@ import streamlit as st
 
 # %%
 #Import functions
+from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, get_aws_df, get_aws_ses
+
 from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
 #For checking questions and answers, acknowledgment
-from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser
-
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, GPT_answers_check
 
 
@@ -86,14 +86,6 @@ if 'page_from' not in st.session_state:
     st.session_state['page_from'] = 'pages/BATCH_GET.py'
 
 # %%
-st.title(":blue[LawtoData]")
-
-st.subheader("An Empirical Legal Research Automator")
-
-st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research.""") 
-
-
-# %%
 #Initiate aws s3 and ses
 
 #If running on Github Actions, then '/home/runner/' in current_dir
@@ -101,6 +93,7 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 #Try local or streamlit first
 
 try:
+    
     API_key = st.secrets["openai"]["gpt_api_key"]
     
     AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
@@ -113,6 +106,7 @@ try:
     print('Running locally or on Streamlit')
     
 except:
+    
     API_key = os.environ['GPT_API_KEY']
     
     AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
@@ -125,77 +119,12 @@ except:
     print('Running on GitHub Actions or HuggingFace')
 
 
-
 # %%
-#Function for getting df from aws
-def get_aws_df(df_name):
-#df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
-#Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
+st.title(":blue[LawtoData]")
 
-    #Initialise s3_resource if not already
-    if 's3_resource' not in st.session_state:
+st.subheader("An Empirical Legal Research Automator")
 
-        st.session_state.s3_resource = get_aws_s3()
-    
-    try:
-
-        #Get relevant df from aws
-        obj = st.session_state.s3_resource.Object('lawtodata', df_name).get()
-        body = obj['Body'].read()
-
-        df = pd.read_csv(BytesIO(body), index_col=0)
-        
-        print(f"Sucessfully loaded {df_name} from aws.")
-
-    except Exception as e:
-
-        print(f"Failed to load {df_name} from aws due to error: {e}.")
-
-        df = pd.DataFrame([])
-        
-    return df
-    
-
-
-# %%
-#Function for getting all objects from aws s3
-
-def get_aws_s3():
-    
-    #Initiate aws s3
-    s3_resource = boto3.resource('s3',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-
-    return s3_resource
-
-
-
-# %%
-#Get all objects from aws s3
-#NOT IN USE
-
-def get_aws_objects():
-    
-    #Get a list of all files on s3
-    bucket = s3_resource.Bucket('lawtodata')
-    
-    aws_objects = []
-    
-    for obj in bucket.objects.all():
-        key = obj.key
-        body = obj.get()['Body'].read()
-        key_body = {'key': key, 'body': body}
-        aws_objects.append(key_body)
-
-    return aws_objects
-    
-
-
-# %%
-#Function for using aws ses for sending emails
-def get_aws_ses():
-    ses = boto3.client('ses',region_name=AWS_DEFAULT_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-    #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
-    return ses
+st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects involving judgments. It automates the most costly and time-consuming aspects of empirical research.""") 
 
 
 # %% [markdown]
@@ -208,21 +137,10 @@ st.subheader("Load records")
 #Initiate aws_s3, and get all_df_masters
 s3_resource = get_aws_s3()
 
-all_df_masters_current =  get_aws_df('all_df_masters.csv')
+all_df_masters_current = get_aws_df('all_df_masters.csv')
 
 #Work on new copy of all_df_masters, which enables comparison with current version on aws
 all_df_masters = all_df_masters_current.copy(deep = True)
-
-#Old method which involves loading all objects from aws first 
-#aws_objects = get_aws_objects()
-
-#for key_body in aws_objects:
-    #if key_body['key'] == 'all_df_masters.csv':
-        #all_df_masters_current = pd.read_csv(BytesIO(key_body['body']), index_col=0)
-        #print(f"Succesfully loaded {key_body['key']}.")
-        #break
-
-#all_df_masters = all_df_masters.fillna('')
 
 #Alternative download file example
 #NOT IN USE
@@ -964,8 +882,12 @@ all_df_masters.fillna('')
 emails_counter_total = 0
 
 for index in all_df_masters.index:
-    
-    sent_to_user = all_df_masters.loc[index, 'sent_to_user']
+
+    if 'sent_to_user' in all_df_masters.columns:
+        sent_to_user = all_df_masters.loc[index, 'sent_to_user']
+    else:
+        sent_to_user = False
+        all_df_masters.loc[index, 'sent_to_user'] = sent_to_user
 
     status = all_df_masters.loc[index, 'status']
 

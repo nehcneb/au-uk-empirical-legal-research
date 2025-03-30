@@ -75,6 +75,7 @@ import pandas as pd
 import numpy as np
 import requests
 import pypdf
+import os
 import io
 from io import BytesIO
 import pause
@@ -799,12 +800,116 @@ def uploaded_file_to_df(uploaded_file):
 # # AWS
 
 # %%
+#Get credentials
+
+#If running on Github Actions, then '/home/runner/' in current_dir
+
+#Try local or streamlit first
+
+try:
+    
+    API_key = st.secrets["openai"]["gpt_api_key"]
+    
+    AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
+    AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+    
+    SENDER = st.secrets["email_notifications"]["email_sender"]
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+        
+    print('Running locally or on Streamlit')
+    
+except:
+    
+    API_key = os.environ['GPT_API_KEY']
+    
+    AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    
+    SENDER = os.environ['EMAIL_SENDER']
+    RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
+
+    print('Running on GitHub Actions or HuggingFace')
+
+
+# %%
+#Function for initiating aws s3
+
+def get_aws_s3():
+    
+    #Initiate aws s3
+    s3_resource = boto3.resource('s3', region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+
+    return s3_resource
+
+
+
+# %%
+#Function for getting df from aws
+def get_aws_df(df_name):
+#df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
+#Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
+
+    try:
+
+        s3_resource = get_aws_s3()
+        
+        #Get relevant df from aws
+        obj = s3_resource.Object('lawtodata', df_name).get()
+        body = obj['Body'].read()
+
+        df = pd.read_csv(BytesIO(body), index_col=0)
+        
+        print(f"Sucessfully loaded {df_name} from aws.")
+
+    except Exception as e:
+
+        print(f"Failed to load {df_name} from aws due to error: {e}.")
+
+        df = pd.DataFrame([])
+        
+    return df
+
+
+
+# %%
+#Get all objects from aws s3
+#NOT IN USE
+
+def get_aws_objects():
+    
+    #Get a list of all files on s3
+    bucket = s3_resource.Bucket('lawtodata')
+    
+    aws_objects = []
+    
+    for obj in bucket.objects.all():
+        key = obj.key
+        body = obj.get()['Body'].read()
+        key_body = {'key': key, 'body': body}
+        aws_objects.append(key_body)
+
+    return aws_objects
+
+
+
+# %%
+#Function for using aws ses for sending emails
+def get_aws_ses():
+    ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+    #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
+    return ses
+
+
+# %%
 #AWS email
 #Define send email function
 
 def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, jurisdiction_page):
 
-    ses = boto3.client('ses',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+    #ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+    ses = get_aws_ses()
     
     #Based on the following upon substituting various arguments, https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
     
