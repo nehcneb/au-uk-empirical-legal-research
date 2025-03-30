@@ -62,7 +62,7 @@ import streamlit as st
 
 # %%
 #Import functions
-from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, get_aws_df, get_aws_ses
+from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, get_aws_df, get_aws_ses, str_to_int, default_judgment_counter_bound
 
 from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
@@ -139,8 +139,16 @@ s3_resource = get_aws_s3()
 
 all_df_masters_current = get_aws_df(s3_resource, 'all_df_masters.csv')
 
+
+# %%
+#all_df_masters_current
+
+# %%
 #Convert judgment number col to int
-all_df_masters_current['Maximum number of judgments'] = all_df_masters_current['Maximum number of judgments'].astype(int)
+
+for col in all_df_masters_current.columns:
+    if 'number' in col:
+        all_df_masters_current[col] = all_df_masters_current[col].apply(str_to_int)
 
 #Work on new copy of all_df_masters, which enables comparison with current version on aws
 all_df_masters = all_df_masters_current.copy(deep = True)

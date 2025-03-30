@@ -352,7 +352,7 @@ def str_to_int(string):
         output = int(float(string))
         return output
     except:
-        return int(default_judgment_counter_bound)
+        return 1
 
 
 # %%
