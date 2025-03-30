@@ -941,7 +941,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False, ttl=600)
+@st.cache_data(show_spinner = False, ttl=600)
 def ca_run(df_master):
     df_master = df_master.fillna('')
 

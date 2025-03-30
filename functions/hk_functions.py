@@ -1116,7 +1116,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False, ttl=600)
+@st.cache_data(show_spinner = False, ttl=600)
 def hk_run(df_master):
     df_master = df_master.fillna('')
 
@@ -1196,7 +1196,7 @@ def hk_run(df_master):
 # %% editable=true slideshow={"slide_type": ""}
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False, ttl=600)
+@st.cache_data(show_spinner = False, ttl=600)
 def hk_batch(df_master):
     df_master = df_master.fillna('')
 

@@ -1466,7 +1466,7 @@ intro_for_GPT = [{"role": "system", "content": system_instruction}]
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False, ttl=600)
+@st.cache_data(show_spinner = False, ttl=600)
 def afca_old_run(df_master):
     
     df_master = df_master.fillna('')
@@ -1563,7 +1563,7 @@ def afca_old_run(df_master):
 # %%
 #Obtain parameters
 
-#@st.cache_data(show_spinner = False, ttl=600)
+@st.cache_data(show_spinner = False, ttl=600)
 def afca_new_run(df_master):
     
     df_master = df_master.fillna('')
@@ -1659,7 +1659,7 @@ def afca_new_run(df_master):
 # ## Run function to use
 
 # %%
-#@st.cache_data(show_spinner = False, ttl=600)
+@st.cache_data(show_spinner = False, ttl=600)
 def afca_run(df_master):
     if df_master.loc[0, 'Collection'] == 'Decisions published before 14 June 2024':
         df_updated = afca_old_run(df_master)

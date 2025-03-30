@@ -139,6 +139,9 @@ s3_resource = get_aws_s3()
 
 all_df_masters_current = get_aws_df(s3_resource, 'all_df_masters.csv')
 
+#Convert judgment number col to int
+all_df_masters_current['Maximum number of judgments'] = all_df_masters_current['Maximum number of judgments'].astype(int)
+
 #Work on new copy of all_df_masters, which enables comparison with current version on aws
 all_df_masters = all_df_masters_current.copy(deep = True)
 
