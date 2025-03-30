@@ -150,14 +150,24 @@ def oalc_filter(dataset,
     'offset': offset, #the offset of the slice, for example 150
     'length': length
         }
-    
-    response = requests.get(base_url, params=params, headers=headers)
 
-    #print(response.url)
-
-    #print(response.content)
+    try:
+        response = requests.get(base_url, params=params, headers=headers)
     
-    return response.json()
+        #print(response.url)
+    
+        #print(response.content)
+
+        #print('Sucessfully obtained cases from OLAC.')
+        
+        return response.json()
+
+    except Exception as e:
+
+        print('Failed to obtain cases from OLAC.')
+
+        return {}
+        
 
 
 # %%
@@ -219,6 +229,7 @@ def get_judgment_from_oalc(mnc_list):
                 mnc_judgment_dict[mnc] = judgment
 
     except Exception as e:
+        
         print(f"Can't get case from oalc due to error: {e}")
     
     #Remove any blank or very short judgments
