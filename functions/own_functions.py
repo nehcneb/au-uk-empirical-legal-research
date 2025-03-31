@@ -72,7 +72,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, send_notification_email, get_aws_s3, get_aws_df
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, send_notification_email, get_aws_s3, aws_df_get, aws_df_put
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, truncation_note, spinner_text
 
@@ -779,13 +779,15 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 #bucket = s3_resource.Bucket('lawtodata')
 
                 #Upload df_individual onto AWS
-                csv_buffer = StringIO()
-                df_individual.to_csv(csv_buffer)
-                s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
+                aws_df_put(s3_resource, df_individual, f'{batch_id}.csv')
+
+                #csv_buffer = StringIO()
+                #df_individual.to_csv(csv_buffer)
+                #s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
                                     
                 #Get all_df_masters
 
-                all_df_masters = get_aws_df(s3_resource, 'all_df_masters.csv')
+                all_df_masters = aws_df_get(s3_resource, 'all_df_masters.csv')
                 
                 #for obj in bucket.objects.all():
                     #key = obj.key
@@ -798,10 +800,12 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
 
                 #Upload all_df_masters to aws
-                csv_buffer = StringIO()
-                all_df_masters.to_csv(csv_buffer)
-                s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-                s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                aws_df_put(s3_resource, all_df_masters, 'all_df_masters.csv')
+                
+                #csv_buffer = StringIO()
+                #all_df_masters.to_csv(csv_buffer)
+                #s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
+                #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                 
                 #Send me an email to let me know
                 send_notification_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 

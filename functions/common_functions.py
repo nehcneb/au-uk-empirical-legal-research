@@ -78,6 +78,7 @@ import pypdf
 import os
 import io
 from io import BytesIO
+from io import StringIO
 import pause
 import re
 import mammoth
@@ -366,31 +367,34 @@ def str_to_int_page(string):
 
 
 # %%
+#Keys to keep while switching pages
+keys_to_carry_over = ['Your name', 
+                    'Your email address', 
+                    'Your GPT API key', 
+                    'Maximum number of judgments', 
+                    'Maximum number of files',
+                    'Maximum number of pages per file',
+                    'Language choice',
+                    'Enter your questions for GPT', 
+                    'Use GPT', 
+                    'Use own account', 
+                    'Use flagship version of GPT', 
+                     'submission_time', 
+                     'status', 
+                      'jurisdiction_page', 
+                      'Consent',
+                      #'CourtListener API token' #US specific
+                     ]
+
+
+# %%
 #Save jurisdiction specific input
 def save_input(df_master):
-
-    keys_to_carry_over = ['Your name', 
-                        'Your email address', 
-                        'Your GPT API key', 
-                        'Maximum number of judgments', 
-                        'Maximum number of files',
-                        'Maximum number of pages per file',
-                        'Language choice',
-                        'Enter your questions for GPT', 
-                        'Use GPT', 
-                        'Use own account', 
-                        'Use flagship version of GPT', 
-                         'submission_time', 
-                         'status', 
-                          'jurisdiction_page', 
-                          'Consent',
-                          #'CourtListener API token' #US specific
-                         ]
     
-    df_master = df_master.replace({np.nan: None})
+    #df_master = df_master.replace({np.nan: None})
     
     for key in st.session_state.df_master.keys():
-        
+    
         if (key not in keys_to_carry_over) and key in df_master.columns:
             
             try:
@@ -847,7 +851,7 @@ def get_aws_s3():
 
 # %%
 #Function for getting df from aws
-def get_aws_df(s3_resource, df_name):
+def aws_df_get(s3_resource, df_name):
 #df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
 #Returns the relevant df as Pandas object if found, or an empty Pandas object if not found or other error
 
@@ -871,6 +875,18 @@ def get_aws_df(s3_resource, df_name):
         
     return df
 
+
+
+# %%
+#Function for uploading df to aws
+def aws_df_put(s3_resource, df, df_name):
+#df is the Pandas object
+#df_name is a string of the file name of the relevant df to upload to aws, WITH the extension (ie csv)
+
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer)
+    s3_resource.Object('lawtodata', df_name).put(Body=csv_buffer.getvalue())
+    
 
 
 # %%

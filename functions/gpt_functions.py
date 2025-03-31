@@ -74,7 +74,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, get_aws_df, get_aws_ses, send_notification_email
+from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, send_notification_email
 
 # %% [markdown]
 # # gpt-3.5, 4o-mini and 4o
@@ -655,7 +655,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
         
-        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Each key in your JSON response must contain the relevant question.'
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Every key in your JSON response must contain the relevant question.'
 
     #Create questions, which include the answer format
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
@@ -1038,7 +1038,7 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
 
-        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Each key in your JSON response must contain the relevant question.'
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Every key in your JSON response must contain the relevant question.'
     
     #Create questions, which include the answer format
     
@@ -1432,7 +1432,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
             answers_json.update({f'GPT question {q_counter}: {questions_json[q_index]}': f'Your answer. (The paragraphs, pages or sections from which you obtained your answer)'})
             q_counter += 1
 
-        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Each key in your JSON response must contain the relevant question.'
+        answers_json_instruction = '\n Respond in the following JSON form: ' + json.dumps(answers_json, default = str) + '\n Every key in your JSON response must contain the relevant question.'
 
     #Create questions, which include the answer format
     
@@ -1711,7 +1711,7 @@ def batch_request_function():
                     #bucket = s3_resource.Bucket('lawtodata')
     
                     #Get all_df_masters
-                    all_df_masters = get_aws_df(s3_resource, 'all_df_masters.csv')
+                    all_df_masters = aws_df_get(s3_resource, 'all_df_masters.csv')
                     #for obj in bucket.objects.all():
                         #key = obj.key
                         #if key == 'all_df_masters.csv':
@@ -1723,10 +1723,11 @@ def batch_request_function():
                     all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
     
                     #Upload all_df_masters to aws
-                    csv_buffer = StringIO()
-                    all_df_masters.to_csv(csv_buffer)
-                    #s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
-                    s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+                    aws_df_put(s3_resource, all_df_masters, 'all_df_masters.csv')
+
+                    #csv_buffer = StringIO()
+                    #all_df_masters.to_csv(csv_buffer)
+                    #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
                                            
                     #Send me an email to let me know
                     send_notification_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 

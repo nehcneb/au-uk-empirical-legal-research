@@ -62,7 +62,7 @@ import streamlit as st
 
 # %%
 #Import functions
-from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, get_aws_df, get_aws_ses, str_to_int, default_judgment_counter_bound
+from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, str_to_int, default_judgment_counter_bound
 
 from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
@@ -137,11 +137,8 @@ st.subheader("Load records")
 #Initiate aws_s3, and get all_df_masters
 s3_resource = get_aws_s3()
 
-all_df_masters_current = get_aws_df(s3_resource, 'all_df_masters.csv')
+all_df_masters_current = aws_df_get(s3_resource, 'all_df_masters.csv')
 
-
-# %%
-#all_df_masters_current
 
 # %%
 #Convert judgment number col to int
@@ -267,6 +264,7 @@ for index in all_df_masters.index:
             st.write(f'{index} error: {e}')
 
     #Keep batching record on AWS
+    #aws_df_put(s3_resource, all_df_masters, 'all_df_masters.csv')
     #Upload all_df_masters to aws
     #csv_buffer = StringIO()
     #all_df_masters.to_csv(csv_buffer)
@@ -311,9 +309,10 @@ for gpt_batch_input in gpt_batch_input_list:
     df_individual = gpt_batch_input['df_individual']
 
     #Upload df_individual onto AWS
-    csv_buffer = StringIO()
-    df_individual.to_csv(csv_buffer)
-    s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
+    aws_df_put(s3_resource, df_individual, f'{batch_id}.csv')
+    #csv_buffer = StringIO()
+    #df_individual.to_csv(csv_buffer)
+    #s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
 
     save_counter += 1
 
@@ -468,7 +467,7 @@ for df_batch_response in df_batch_id_response_list:
     batch_id = df_batch_response['batch_id']
     
     #Get df_individual from aws
-    df_individual = get_aws_df(s3_resource, f"{batch_id}.csv")
+    df_individual = aws_df_get(s3_resource, f"{batch_id}.csv")
     
     #for key_body in aws_objects:
         #if key_body['key'] == f'{batch_id}.csv':
@@ -584,9 +583,11 @@ for df_batch_response in df_batch_id_response_list:
         df_individual.replace(np.nan, '', inplace=True)
         
         #Update df_individual on AWS
-        csv_buffer = StringIO()
-        df_individual.to_csv(csv_buffer)
-        s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
+        aws_df_put(s3_resource, df_individual, f'{batch_id}.csv')
+
+        #csv_buffer = StringIO()
+        #df_individual.to_csv(csv_buffer)
+        #s3_resource.Object('lawtodata', f'{batch_id}.csv').put(Body=csv_buffer.getvalue())
         
         #Update df_individual on google sheet
         #conn_all_df_individuals.update(worksheet=batch_id, data=df_individual)                
@@ -974,23 +975,55 @@ st.subheader("Finish")
 # %%
 #Upload all_df_masters to aws if needed
 
-all_df_masters_needs_update = False
+#Identify a list of rows to update
+indices_to_update = []
 
 for index in all_df_masters.index:
     if all_df_masters.loc[index, 'status'] != all_df_masters_current.loc[index, 'status']:
-        all_df_masters_needs_update = True
-        break
+        indices_to_update.append(index)
 
-if all_df_masters_needs_update == True:
+#If need to update
+if len(indices_to_update) > 0:
     
-    csv_buffer = StringIO()
-    all_df_masters.to_csv(csv_buffer)
-    s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
+    #Get the lastest all_df_masters
+    all_df_masters_latest = aws_df_get(s3_resource, 'all_df_masters.csv')
+
+    for index in indices_to_update:
+        for col in all_df_masters.columns:
+
+            try:
+                all_df_masters_latest.loc[index, col] = all_df_masters.loc[index, col]
+                
+            except Exception as e:
+                
+                print(f"{col} of {type(all_df_masters.loc[index, col])} not saved, trying to convert type of all_df_masters_latest[{col}] to 'object'.")
+
+                if isinstance(all_df_masters.loc[index, col], list):
+                
+                    all_df_masters_latest[col] = all_df_masters_latest[col].astype('object')
+                    
+                    all_df_masters_latest.at[index, col] = all_df_masters.loc[index, col]
+
+                    print(f"{col} of {type(all_df_masters.loc[index, col])} now saved.")
+
+            except Exception as e2:
+                
+                print(f"{col} still not saved after converting type of all_df_masters_latest[{col}] to 'object'.")
+
+                print(e2)
+
+    #Upload onto AWS
+    aws_df_put(s3_resource, all_df_masters_latest, 'all_df_masters.csv')
+
+    #csv_buffer = StringIO()
+    #all_df_masters_latest.to_csv(csv_buffer)
+    #s3_resource.Object('lawtodata', 'all_df_masters.csv').put(Body=csv_buffer.getvalue())
 
     st.success(f"Updated all_df_masters.csv online." )
     print(f"Updated all_df_masters.csv online." )
 
 else:
+    
     st.warning(f"No need to update all_df_masters.csv online." )
     print(f"No need to update all_df_masters.csv online." )
 

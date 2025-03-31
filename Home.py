@@ -33,32 +33,25 @@ st.set_page_config(
 )
 
 # %%
-#Determine whether to allow user to use own account
-from functions.common_functions import own_account_allowed
+from functions.common_functions import own_account_allowed, check_questions_answers, batch_mode_allowed, list_value_check
 
-if own_account_allowed() > 0:
-    print(f'By default, users are allowed to use their own account.')
-else:
-    print(f'By default, users are NOT allowed to use their own account.')
+#if own_account_allowed() > 0:
+    #print(f'By default, users are allowed to use their own account.')
+#else:
+    #print(f'By default, users are NOT allowed to use their own account.')
 
 # %%
-#Determine whether to allow user to use batch mode
-from functions.common_functions import check_questions_answers
-
-if check_questions_answers() > 0:
-    print(f'By default, questions and answers are checked for potential privacy violation.')
-else:
-    print(f'By default, questions and answers are NOT checked for potential privacy violation.')
+#if check_questions_answers() > 0:
+    #print(f'By default, questions and answers are checked for potential privacy violation.')
+#else:
+    #print(f'By default, questions and answers are NOT checked for potential privacy violation.')
 
 
 # %%
-#Determine whether to allow user to use batch mode
-from functions.common_functions import batch_mode_allowed
-
-if batch_mode_allowed() > 0:
-    print(f'By default, users are allowed to use batch mode.')
-else:
-    print(f'By default, users are NOT allowed to use batch mode.')
+#if batch_mode_allowed() > 0:
+    #print(f'By default, users are allowed to use batch mode.')
+#else:
+    #print(f'By default, users are NOT allowed to use batch mode.')
 
 # %%
 #Dict of available sources
@@ -82,19 +75,6 @@ page_list = [*page_dict.keys()]
 
 #List of sources
 source_list = [*page_dict.values()]
-
-
-# %%
-#Return index of page if available, none otherwise
-def page_index(page_from):
-    try:
-        index = page_list.index(page_from)
-        return index
-        
-    except: 
-        return None
-
-
 
 # %% editable=true slideshow={"slide_type": ""}
 #Initialize
@@ -154,13 +134,13 @@ st.markdown("""You will be asked to
 
 st.subheader(""":green[What would you like to research?]""")
 
-source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = source_list, index = page_index(st.session_state.page_from))
+source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = source_list, index = list_value_check(page_list, st.session_state.page_from))
 
 if source_entry:
 
     st.warning(f"This app is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
 
-    if source_list.index(source_entry) != page_index(st.session_state.page_from):
+    if source_list.index(source_entry) != list_value_check(page_list, st.session_state.page_from):
 
         st.session_state['i_understand'] = False
     
@@ -170,11 +150,11 @@ home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry))
 
 if source_entry:
 
-    if source_list.index(source_entry) != page_index(st.session_state.page_from):
+    if source_list.index(source_entry) != list_value_check(page_list, st.session_state.page_from):
 
-        if ((page_index(st.session_state.page_from) != None) and ('df_master' in st.session_state)):
+        if ((list_value_check(page_list, st.session_state.page_from) != None) and ('df_master' in st.session_state)):
 
-            page_from_name = source_list[page_index(st.session_state.page_from)]
+            page_from_name = source_list[list_value_check(page_list, st.session_state.page_from)]
 
             st.warning(f'Pressing NEXT will :red[erase] any earlier entries and data produced. To download such entries or data, please select {page_from_name[0].lower()}{page_from_name[1:]} instead.')
 
