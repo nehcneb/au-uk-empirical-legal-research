@@ -680,7 +680,7 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
 @st.dialog("Requesting data")
 def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
      
-    if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+    if ((st.session_state['df_master'].loc[0, 'Use own account'] == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
                             
         if is_api_key_valid(st.session_state.df_master.loc[0, 'Your GPT API key']) == False:
             st.error('Your API key is not valid.')
@@ -692,6 +692,9 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
         else:
             
             st.session_state["batch_ready_for_submission"] = True
+    else:
+        st.session_state["batch_ready_for_submission"] = True
+
     
     #Check if valid email address entered
     if '@' not in st.session_state['df_master'].loc[0, 'Your email address']:
@@ -727,7 +730,7 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 df_master['submission_time'] = str(datetime.now())
 
                 #Activate user's own key or mine
-                if st.session_state.own_account == True:
+                if st.session_state['df_master'].loc[0, 'Use own account'] == True:
                     
                     API_key = st.session_state.df_master.loc[0, 'Your GPT API key']
     
@@ -806,7 +809,9 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                                         jurisdiction_page = st.session_state['df_master'].loc[0, 'jurisdiction_page']
                                        )
 
+                #Change session states
                 st.session_state["batch_submitted"] = True
+                st.session_state['need_resetting'] = 1
                                     
                 st.rerun()
             

@@ -122,8 +122,65 @@ if 'gpt_api_key' not in st.session_state:
 #if 'judgments_counter_bound' not in st.session_state:
     #st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
 
+
 # %% [markdown]
 # # Streamlit form, functions and parameters
+
+# %% [markdown]
+# ### Function for saving entries for own account
+
+# %%
+#Function for saving entries for own account:
+
+def own_account_entries_function():
+
+    if own_account_allowed() > 0:
+
+        st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
+
+        if st.session_state['df_master'].loc[0, 'Use own account']:
+            
+            st.session_state['df_master'].loc[0, 'Your name'] = name_entry
+    
+            st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+    
+            st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
+    
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = gpt_enhancement_entry
+    
+            if st.session_state['df_master'].loc[0, 'Use flagship version of GPT']:
+            
+                st.session_state.gpt_model = "gpt-4o"
+    
+            else:
+                
+                st.session_state.gpt_model = 'gpt-4o-mini'
+    
+            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
+    
+        else:
+            
+            st.session_state['df_master'].loc[0, 'Use own account'] = False
+        
+            st.session_state.gpt_model = "gpt-4o-mini"
+    
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+        
+            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    
+    else:
+
+        st.session_state['df_master'].loc[0, 'Use own account'] = False
+    
+        st.session_state.gpt_model = "gpt-4o-mini"
+
+        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    
+        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+
+    st.session_state.estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
+
+
 
 # %% [markdown]
 # ## Initialize session states
@@ -137,8 +194,8 @@ if st.session_state.page_from != 'pages/GPT.py':
 
 
 # %%
-if 'own_account' not in st.session_state:
-    st.session_state['own_account'] = False
+#if 'own_account' not in st.session_state:
+    #st.session_state['own_account'] = False
 
 if 'need_resetting' not in st.session_state:
         
@@ -193,18 +250,6 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
     #if own_account_allowed() > 0:
         
     st.session_state["judgment_counter_max"] = judgment_batch_max
-    
-    #else:
-        
-        #st.session_state["judgment_counter_max"] = int(round(judgment_batch_max/2))
-        
-#else:
-    
-    #if own_account_allowed() > 0:
-        #st.session_state["judgment_counter_max"] = judgment_batch_cutoff
-    
-    #else:
-        #st.session_state["judgment_counter_max"] = default_judgment_counter_bound
 
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
@@ -220,6 +265,12 @@ if 'df_example_to_show' not in st.session_state:
 #Initalize df_example_key for the purpose of removing uploaded spreadsheets programatically
 if "df_example_key" not in st.session_state:
     st.session_state["df_example_key"] = 0
+
+#Initialise waiting time
+if 'estimated_waiting_secs' not in st.session_state:
+    
+    st.session_state['estimated_waiting_secs'] = int(float(st.session_state["judgment_batch_cutoff"]))*30
+
 
 
 # %% [markdown]
@@ -243,7 +294,7 @@ st.caption(f"{gpt_cost_msg}")
 
 st.subheader("Tell GPT what to get from each case")
 
-st.warning("""In question form, please tell GPT what to get from each case. Enter **one question per paragraph**. """)
+st.success("""In question form, please tell GPT what to get from each case. **Enter one question per paragraph**. """)
 
 st.markdown("""For each case, GPT will be instructed to respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
@@ -348,7 +399,13 @@ if len(st.session_state.df_example_to_show) > 0:
 # ## Own account
 
 # %%
-if own_account_allowed() > 0:
+if own_account_allowed() == 0:
+    
+    own_account_entry == False
+
+else:
+    
+#if own_account_allowed() > 0:
     
     st.header(':orange[Enhance app capabilities]')
     
@@ -359,9 +416,9 @@ if own_account_allowed() > 0:
     
     if own_account_entry:
 
-        st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
+        #st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
         
-        st.session_state["own_account"] = True
+        #st.session_state["own_account"] = True
     
         st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
 """)
@@ -370,19 +427,19 @@ if own_account_allowed() > 0:
 
         #if name_entry:
             
-        st.session_state['df_master'].loc[0, 'Your name'] = name_entry
+        #st.session_state['df_master'].loc[0, 'Your name'] = name_entry
         
         email_entry = st.text_input(label = "Your email address", value =  st.session_state['df_master'].loc[0, 'Your email address'])
 
         #if email_entry:
             
-        st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+        #st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
         
         if gpt_api_key_entry:
             
-            st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
+            #st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
 
             if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
                 
@@ -394,15 +451,16 @@ if own_account_allowed() > 0:
         
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
 
-        if gpt_enhancement_entry:
+        #if gpt_enhancement_entry:
 
-            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
-            st.session_state.gpt_model = "gpt-4o"
-
-        else:
+            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
             
-            st.session_state.gpt_model = 'gpt-4o-mini'
-            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+            #st.session_state.gpt_model = "gpt-4o"
+
+        #else:
+            
+            #st.session_state.gpt_model = 'gpt-4o-mini'
+            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
         st.write(f'**:green[You can change the maximum number of cases to process.]** The default maximum is {default_judgment_counter_bound}.')
         
@@ -410,36 +468,36 @@ if own_account_allowed() > 0:
         
         #if judgments_counter_bound_entry:
         
-        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
+        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
     
         if judgments_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
             st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} cases may need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
 
-        st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each case, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} case(s).*")
+        #st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each case, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} case(s).*")
     
-    else:
+    #else:
         
-        st.session_state["own_account"] = False
+        #st.session_state["own_account"] = False
 
-        st.session_state['df_master'].loc[0, 'Use own account'] = False
+        #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = "gpt-4o-mini"
 
-        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
-        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
         
-else:
-        st.session_state["own_account"] = False
+#else:
+        #st.session_state["own_account"] = False
 
-        st.session_state['df_master'].loc[0, 'Use own account'] = False
+        #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = "gpt-4o-mini"
 
-        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
-        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
 
 # %% [markdown]
@@ -465,6 +523,7 @@ st.markdown("""If you do not agree, then please feel free to close this app. """
 gpt_keep_button = st.button(label = 'DOWNLOAD entries')
 
 if gpt_keep_button:
+    
     st.success('Scroll down to download your entries.')
 
 
@@ -476,24 +535,18 @@ st.header("Next steps")
 
 #Calculate estimating waiting time
 
-estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
+#estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{estimated_waiting_secs/60} minute(s)**.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {st.session_state["judgment_batch_cutoff"]} cases. The estimated waiting time is **{st.session_state["judgment_batch_cutoff"]*30/60} minute(s)**.
 """)
+
+#st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{estimated_waiting_secs/60} minute(s)**.""")
 
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
     st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} cases. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
 
-#Warning
-if gpt_activation_entry:
-    if st.session_state.gpt_model == 'gpt-4o-mini':
-        st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
-        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
-    
-    if st.session_state.gpt_model == "gpt-4o":
-        st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 #Buttons
 
@@ -508,7 +561,10 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
             color: black;
         }""",
     ):
-        batch_button = st.button(label = 'REQUEST data', disabled = bool((st.session_state.batch_submitted)) or (st.session_state.disable_input))#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
+        batch_button = st.button(label = 'REQUEST data', 
+                                 help = 'You can only :orange[REQUEST] data once per session.', 
+                                 disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
+                                )#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
 
 with stylable_container(
     "green",
@@ -518,13 +574,15 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = 'PRODUCE data', disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"]))))
+    run_button = st.button(label = 'PRODUCE data', 
+                           help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
+                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"])))
+                          )
 
 #Display need resetting message if necessary
-if st.session_state.need_resetting == 1:
-    if len(st.session_state.df_individual) > 0:
-        st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
-        
+#if st.session_state.need_resetting == 1:
+    #if len(st.session_state.df_individual) > 0:
+        #st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
 
 
 # %% [markdown]
@@ -532,7 +590,7 @@ if st.session_state.need_resetting == 1:
 
 # %%
 #if st.session_state.gpt_model == "gpt-4o":
-if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_page == 'pages/ER.py')):
+if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py')):
     
     st.markdown("""The English Reports are available as PDFs. By default, this app will use an Optical Character Recognition (OCR) engine to extract text from the relevant PDFs, and then send such text to GPT.
     
@@ -545,14 +603,22 @@ Alternatively, you can send the relevant PDFs to GPT as images. This alternative
 
 
 # %% [markdown]
-# ## Previous responses and outputs
+# ## Download entries and and outputs
 
 # %%
 #Create placeholder download buttons if previous entries and output in st.session_state:
 
-if len(st.session_state.df_individual)>0:
+if len(st.session_state.df_individual) > 0:
 
-    download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
+    #Current output
+    if st.session_state["page_from"] == 'pages/GPT.py':
+
+        download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
+
+    #Previous entries and output
+    else:
+        download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
+
 
 
 # %% [markdown]
@@ -564,6 +630,8 @@ if len(st.session_state.df_individual)>0:
 # %%
 if gpt_keep_button:
     
+    own_account_entries_function()
+    
     download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
 
 
@@ -573,18 +641,30 @@ if run_button:
     if int(consent_entry) == 0:
         st.warning("You must tick 'Yes, I agree.' to use the app.")
 
-    elif len(st.session_state.df_individual)>0:
+    elif len(st.session_state.df_individual) > 0:
+        
         st.warning('You must :red[REMOVE] the last produced data before producing new data.')
             
     else:
 
-        if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+        own_account_entries_function()
+        
+        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
                                 
             if is_api_key_valid(gpt_api_key_entry) == False:
                 st.error('Your API key is not valid.')
                 st.stop()
                 
-        spinner_text += f'The estimated waiting time is {estimated_waiting_secs/60} minute(s).'
+        #Warning
+        if gpt_activation_entry:
+            if st.session_state.gpt_model == 'gpt-4o-mini':
+                st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+            
+            #if st.session_state.gpt_model == "gpt-4o":
+                #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+    
+        spinner_text += f'The estimated waiting time has been revised to {st.session_state.estimated_waiting_secs/60} minute(s).'
 
         with st.spinner(spinner_text):
 
@@ -596,7 +676,7 @@ if run_button:
                 #st.write(f"df_master.loc[0, 'Example'] == {df_master.loc[0, 'Example']}")
                 
                 #Activate user's own key or mine
-                if st.session_state.own_account == True:
+                if own_account_entry:
                     
                     API_key = df_master.loc[0, 'Your GPT API key']
     
@@ -620,8 +700,10 @@ if run_button:
                 st.session_state["page_from"] = 'pages/GPT.py'           
 
                 #Download data
-                download_buttons(df_master, df_individual)
-                
+                #download_buttons(df_master, df_individual)
+
+                st.rerun()
+            
             except Exception as e:
     
                 st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
@@ -638,6 +720,8 @@ if run_button:
 
 # %%
 if return_button:
+
+    own_account_entries_function()
     
     st.session_state["page_from"] = 'pages/GPT.py'
 
@@ -646,11 +730,13 @@ if return_button:
 
 # %%
 if gpt_reset_button:
-
+    
     st.session_state['df_individual'] = pd.DataFrame([])
     
     st.session_state['need_resetting'] = 0
-        
+
+    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    
     st.rerun()
 
 
@@ -658,7 +744,7 @@ if gpt_reset_button:
 # ## ER
 
 # %%
-if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_page == 'pages/ER.py')):
+if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py')):
 
     if er_run_button_b64:
         
@@ -669,17 +755,29 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
             st.warning('You must :red[REMOVE] the data already produced before producing new data.')
                 
         else:
-    
-            if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+
+            own_account_entries_function()
+            
+            if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
                                     
                 if is_api_key_valid(gpt_api_key_entry) == False:
                     st.error('Your API key is not valid.')
                     st.stop()
 
-            #Increase waiting time
-            estimated_waiting_secs = estimated_waiting_secs*10
+            #Warning
+            if gpt_activation_entry:
+                if st.session_state.gpt_model == 'gpt-4o-mini':
+                    st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                    st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+                
+                #if st.session_state.gpt_model == "gpt-4o":
+                    #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+    
             
-            spinner_text += f'The estimated waiting time is {estimated_waiting_secs/60} minute(s).'
+            #Increase waiting time
+            st.session_state.estimated_waiting_secs = st.session_state.estimated_waiting_secs*10
+            
+            spinner_text += f'The estimated waiting time has been revised to {st.session_state.estimated_waiting_secs/60} minute(s).'
     
             with st.spinner(spinner_text):
 
@@ -696,7 +794,7 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     df_master = st.session_state.df_master
     
                     #Activate user's own key or mine
-                    if st.session_state.own_account == True:
+                    if own_account_entry:
                         
                         API_key = df_master.loc[0, 'Your GPT API key']
         
@@ -718,7 +816,9 @@ if ((st.session_state.own_account == True) and (st.session_state.jurisdiction_pa
                     st.session_state["page_from"] = 'pages/GPT.py'           
     
                     #Download data
-                    download_buttons(df_master, df_individual)
+                    #download_buttons(df_master, df_individual)
+
+                    st.rerun()
                     
                 except Exception as e:
                     
@@ -742,11 +842,21 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
     
     if batch_button:
         
+        own_account_entries_function()
+        
         batch_request_function()
 
-    if st.session_state.batch_submitted == True:
+    if st.session_state.batch_submitted and st.session_state.need_resetting:
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
-        
+
+        #Warning
+        if gpt_activation_entry:
+            if st.session_state.gpt_model == 'gpt-4o-mini':
+                st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+            
+            #if st.session_state.gpt_model == "gpt-4o":
+                #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 

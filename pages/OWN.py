@@ -128,21 +128,36 @@ def own_create_df():
         print('API key not entered')
 
     #Own account status
-    own_account = st.session_state.own_account
+    try:
+        own_account = own_account_entry
+    except:
+        own_account = False
+        print('Own account not selected')
     
     #file counter bound
-    file_counter_bound = st.session_state['df_master'].loc[0, 'Maximum number of files']
+    #file_counter_bound = st.session_state['df_master'].loc[0, 'Maximum number of files']
+    try:
+        file_counter_bound = file_counter_bound_entry
+    except:
+        print('File counter bound not entered')
+        file_counter_bound = default_file_counter_bound
 
     #Page counter bound
-
-    page_bound = st.session_state['df_master'].loc[0,'Maximum number of pages per file']
+    #page_bound = st.session_state['df_master'].loc[0,'Maximum number of pages per file']
+    try:
+        page_bound = page_bound_entry
+    except:
+        print('Page bound not entered')
+        page_bound = default_page_bound
     
     #GPT enhancement
     try:
         gpt_enhancement = gpt_enhancement_entry
+        st.session_state.gpt_model = "gpt-4o"
     except:
         print('GPT enhancement not entered')
         gpt_enhancement = False
+        st.session_state.gpt_model = "gpt-4o-mini"
 
     #GPT choice and entry
     try:
@@ -203,7 +218,7 @@ def own_create_df():
           }
 
     df_master_new = pd.DataFrame(new_row, index = [0])
-        
+    
     return df_master_new
 
 
@@ -261,8 +276,8 @@ st.session_state['jurisdiction_page'] = 'pages/OWN.py'
 if 'gpt_api_key_validity' not in st.session_state:
     st.session_state['gpt_api_key_validity'] = False
 
-if 'own_account' not in st.session_state:
-    st.session_state['own_account'] = False
+#if 'own_account' not in st.session_state:
+    #st.session_state['own_account'] = False
 
 if 'need_resetting' not in st.session_state:
         
@@ -300,13 +315,6 @@ if 'disable_input' not in st.session_state:
 #default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max
 
 #Instant mode max/batch mode threshold
-#if 'judgment_batch_cutoff' not in st.session_state:
-    #if own_account_allowed() > 0:
-        #st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
-    #else:
-        #st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
-
-#Instant mode max/batch mode threshold
 if own_account_allowed() > 0:
     st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
 else:
@@ -320,14 +328,6 @@ if "judgment_counter_max" not in st.session_state:
 if batch_mode_allowed() > 0:
 
     st.session_state["judgment_counter_max"] = int(round(judgment_batch_max))
-
-    #if own_account_allowed() > 0:
-        
-        #st.session_state["judgment_counter_max"] = judgment_batch_max
-    
-    #else:
-        
-        #st.session_state["judgment_counter_max"] = int(round(judgment_batch_max/2))
 
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
@@ -343,6 +343,12 @@ if 'df_example_to_show' not in st.session_state:
 #Initalize df_example_key for the purpose of removing uploaded spreadsheets programatically
 if "df_example_key" not in st.session_state:
     st.session_state["df_example_key"] = 0
+
+#Initialise waiting time
+if 'estimated_waiting_secs' not in st.session_state:
+    
+    st.session_state['estimated_waiting_secs'] = int(float(st.session_state["judgment_batch_cutoff"]))*30
+
 
 
 # %% [markdown]
@@ -404,7 +410,7 @@ st.caption(f"{gpt_cost_msg}")
 
 st.subheader("Tell GPT what to get from each file")
 
-st.warning("""In question form, please tell GPT what to get from each file. Enter **one question per paragraph**. """)
+st.success("""In question form, please tell GPT what to get from each file. **Enter one question per paragraph**. """)
 
 st.markdown("""For each file, GPT will be instructed to respond based only on information from the file itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
@@ -505,8 +511,13 @@ if len(st.session_state.df_example_to_show) > 0:
 # ## Own account
 
 # %%
+if own_account_allowed() == 0:
+    
+    own_account_entry == False
 
-if own_account_allowed() > 0:
+else:
+    
+#if own_account_allowed() > 0:
     
     st.header(':orange[Enhance app capabilities]')
     
@@ -517,9 +528,9 @@ if own_account_allowed() > 0:
     
     if own_account_entry:
     
-        st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
+        #st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
         
-        st.session_state["own_account"] = True
+        #st.session_state["own_account"] = True
     
         st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
     """)
@@ -528,19 +539,19 @@ if own_account_allowed() > 0:
 
         #if name_entry:
             
-        st.session_state['df_master'].loc[0, 'Your name'] = name_entry
+        #st.session_state['df_master'].loc[0, 'Your name'] = name_entry
         
         email_entry = st.text_input(label = "Your email address", value =  st.session_state['df_master'].loc[0, 'Your email address'])
 
         #if email_entry:
             
-        st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+        #st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
         
         gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
         
         if gpt_api_key_entry:
             
-            st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
+            #st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
 
             if ((len(gpt_api_key_entry) < 40) or (gpt_api_key_entry[0:2] != 'sk')):
                 
@@ -552,15 +563,15 @@ if own_account_allowed() > 0:
         
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
 
-        if gpt_enhancement_entry == True:
+        #if gpt_enhancement_entry == True:
         
-            st.session_state.gpt_model = "gpt-4o"
-            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
+            #st.session_state.gpt_model = "gpt-4o"
+            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
 
-        else:
+        #else:
             
-            st.session_state.gpt_model = 'gpt-4o-mini'
-            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+            #st.session_state.gpt_model = 'gpt-4o-mini'
+            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
         st.write(f'**:green[You can change the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
 
@@ -568,7 +579,7 @@ if own_account_allowed() > 0:
 
         #if file_counter_bound_entry:
             
-        st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
+        #st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
         
         if file_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
@@ -580,23 +591,23 @@ if own_account_allowed() > 0:
 
         #if page_bound_entry:
             
-        st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = page_bound_entry
+        #st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = page_bound_entry
         
-        st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {int(round(tokens_cap(st.session_state.gpt_model)*3/4))} words from the first  {int(st.session_state['df_master'].loc[0,'Maximum number of pages per file'])} page(s) of each file, for up to {int(st.session_state['df_master'].loc[0, 'Maximum number of files'])} file(s).*")
+        #st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {int(round(tokens_cap(st.session_state.gpt_model)*3/4))} words from the first  {int(st.session_state['df_master'].loc[0,'Maximum number of pages per file'])} page(s) of each file, for up to {int(st.session_state['df_master'].loc[0, 'Maximum number of files'])} file(s).*")
     
-    else:
+    #else:
         
-        st.session_state["own_account"] = False
+        #st.session_state["own_account"] = False
 
-        st.session_state['df_master'].loc[0, 'Use own account'] = False
+        #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = "gpt-4o-mini"
 
-        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
-        st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
+        #st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
 
-        st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+        #st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
 
 
 # %% [markdown]
@@ -606,6 +617,7 @@ if own_account_allowed() > 0:
 keep_button = st.button(label = 'DOWNLOAD entries')
 
 if keep_button:
+    
     st.success('Scroll down to download your entries.')
 
 # %% [markdown]
@@ -632,24 +644,13 @@ st.header("Next steps")
 
 #Calculate estimating waiting time
 
-estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])))*30
-
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])} files. The estimated waiting time is **{estimated_waiting_secs/60} minute(s)**.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {st.session_state["judgment_batch_cutoff"]} files. The estimated waiting time is **{st.session_state["judgment_batch_cutoff"]*30/60} minute(s)**.
 """)
 
 if batch_mode_allowed() > 0:
     st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} files. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
-
-#Warning
-if gpt_activation_entry:
-    if st.session_state.gpt_model == 'gpt-4o-mini':
-        st.warning('A low-cost GPT model will process your files. Please be cautious.')
-        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
-    
-    if st.session_state.gpt_model == "gpt-4o":
-        st.warning('An expensive GPT model will process your files. Please be cautious.')
 
 reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
@@ -662,7 +663,10 @@ if batch_mode_allowed() > 0:
             color: black;
         }""",
     ):
-        batch_button = st.button(label = 'REQUEST data', disabled = bool((st.session_state.batch_submitted)) or (st.session_state.disable_input))#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
+        batch_button = st.button(label = 'REQUEST data', 
+                                  help = 'You can only :orange[REQUEST] data once per session.', 
+                                 disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
+                                )#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
 
 with stylable_container(
     "green",
@@ -673,9 +677,12 @@ with stylable_container(
     }""",
 ):
 
-    run_button = st.button(label = 'PRODUCE data', disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"]))))
+    run_button = st.button(label = 'PRODUCE data', 
+                          help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
+                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"])))
+                          )
 
-if ((st.session_state.own_account == True) and (uploaded_images)):
+if ((own_account_entry == True) and (uploaded_images)):
 
     if immediate_b64() > 0:
     
@@ -684,7 +691,10 @@ if ((st.session_state.own_account == True) and (uploaded_images)):
 Alternatively, you can send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach.
 """)
     
-        run_button_b64 = st.button(label = 'SEND images to GPT directly')
+        run_button_b64 = st.button(label = 'SEND images to GPT directly', 
+                                  help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
+                                   disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"])))
+                                  )
     
     else:
 
@@ -693,290 +703,44 @@ Alternatively, you can send images directly to GPT. This alternative approach ma
 Alternatively, you can request to send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach. Your request data will be sent to your nominated email address in about **2 business days**.
 """)
         
-        batch_button_b64 = st.button(label = 'REQUEST to send images to GPT directly', disabled = bool((st.session_state.batch_submitted)) or (st.session_state.disable_input))
+        batch_button_b64 = st.button(label = 'REQUEST to send images to GPT directly', 
+                                       help = 'You can only :orange[REQUEST] data once per session.', 
+                                 disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
+                                    )
 
 #test_button = st.button('Test')
 
 #Display need resetting message if necessary
-if st.session_state.need_resetting == 1:
-    if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual) > 0)):
-        st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
+#if st.session_state.need_resetting == 1:
+    #if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual) > 0)):
+        #st.warning('You must :red[REMOVE] the data previously produced before producing new data.')
         #st.warning('You must :red[RESET] the app before producing new data. Please press the :red[RESET] button above.')
 
 # %% [markdown]
-# ## Previous responses and outputs
+# ## Download entries and and outputs
 
 # %%
 #Create placeholder download buttons if previous entries and output in st.session_state:
 
-#if ((len(st.session_state.df_master) > 0) and (len(st.session_state.df_individual)>0)):
+if len(st.session_state.df_individual) > 0:
 
-if len(st.session_state.df_individual) >0:
+    #Current output
+    if st.session_state["page_from"] == 'pages/OWN.py':
 
-    download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
+        download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
+
+    #Previous entries and output
+    else:
+
+        download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
 
 
 # %% [markdown]
-# # Save and run
-
-# %%
-if run_button:
-
-    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
-
-        st.warning('You must upload some file(s).')
-
-    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
-
-        st.warning("You must tick 'Use GPT' and enter some questions.")
-        
-    elif int(consent_entry) == 0:
-        
-        st.warning("You must tick 'Yes, I agree.' to use the app.")
-    
-    elif len(st.session_state.df_individual)>0:
-        
-        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
-
-    else:
-
-        if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                
-            if is_api_key_valid(gpt_api_key_entry) == False:
-                st.error('Your API key is not valid.')
-                st.stop()
-                
-        with st.spinner(spinner_text):
-
-            try:
-                #Create spreadsheet of responses
-                df_master = own_create_df()
-                
-                #Activate user's own key or mine
-                if st.session_state.own_account == True:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
-    
-                else:
-                    
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-    
-                openai.api_key = API_key
-                
-                df_individual = run_own(df_master, uploaded_docs, uploaded_images)
-        
-                #Keep entries in session state
-                st.session_state["df_master"] = df_master
-    
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                st.session_state["page_from"] = 'pages/OWN.py'
-                
-                #Keep data in session state
-                st.session_state["df_individual"] = df_individual
-
-                #Download data
-                download_buttons(df_master, df_individual)
-            
-            except Exception as e:
-
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                st.error(traceback.format_exc())
-
-                print(e)
-
-                print(traceback.format_exc())
-
-
-# %%
-#NOT IN USE
-
-if immediate_b64() > 0:
-    
-    if ((st.session_state.own_account == True) and (uploaded_images)):
-        
-        if run_button_b64:
-        
-            if len(uploaded_images) == 0:
-        
-                st.warning('You must upload some image(s).')
-        
-            elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
-        
-                st.warning("You must tick 'Use GPT' and enter some questions.")
-        
-            elif int(consent_entry) == 0:
-                st.warning("You must tick 'Yes, I agree.' to use the app.")
-            
-            elif len(st.session_state.df_individual)>0:
-                st.warning('You must :red[REMOVE] the data already produced before producing new data.')
-        
-            else:
-        
-                if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                        
-                    if is_api_key_valid(gpt_api_key_entry) == False:
-                        st.error('Your API key is not valid.')
-                        st.stop()
-                        
-                #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
-                #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-    
-                with st.spinner(spinner_text):
-        
-                    try:                    
-                        #Create spreadsheet of responses
-                        df_master = own_create_df()
-        
-                        #Check for non-supported file types
-                        if '.bmp' in str(df_master['Your uploaded files']).lower():
-                            st.error('Sorry, this app does not support BMP images.')
-                            st.stop()
-                            
-                        if '.tiff' in str(df_master['Your uploaded files']).lower():
-                            st.error('Sorry, this app does not support TIFF images.')
-                            st.stop()
-                        
-                        #Activate user's own key or mine
-                        if st.session_state.own_account == True:
-                            
-                            API_key = df_master.loc[0, 'Your GPT API key']
-            
-                        else:
-                            
-                            API_key = st.secrets["openai"]["gpt_api_key"]
-            
-                        openai.api_key = API_key
-                        
-                        df_individual = run_b64_own(df_master, uploaded_images)
-    
-                        #Keep entries in session state    
-                        st.session_state["df_master"] = df_master
-                    
-                        #Change session states
-                        st.session_state['need_resetting'] = 1
-                        st.session_state["page_from"] = 'pages/OWN.py'
-                        
-                        #Keep data in session state
-                        st.session_state["df_individual"] = df_individual
-        
-                        #Download data
-                        download_buttons(df_master, df_individual)
-                        
-                        if df_master.loc[0, 'Language choice'] != 'English':
-                
-                            st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
-                    
-                    except Exception as e:
-            
-                        st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                        
-                        st.error(e)
-                        
-                        st.error(traceback.format_exc())
-        
-                        print(e)
-        
-                        print(traceback.format_exc())
-
-
-# %%
-if keep_button:
-
-    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
-
-        st.warning('You must upload some file(s).')
-
-    elif len(gpt_questions_entry) < 5:
-
-        st.warning('You must enter some questions for GPT.')
-            
-    else:
-
-        df_master = own_create_df()
-
-        #st.session_state["df_master"] = df_master.copy(deep=True)
-
-        st.session_state["df_master"] = df_master
-
-        download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
-
-
-
-# %%
-if return_button:
-
-    try:
-
-        df_master = own_create_df()
-    
-        save_input(df_master)
-        
-    except:
-        print('df_master not created.')
-
-    st.session_state["page_from"] = 'pages/OWN.py'
-
-    st.switch_page("Home.py")
-
-
-# %%
-if reset_button:
-
-    st.session_state['df_individual'] = pd.DataFrame([])
-    
-    st.session_state['need_resetting'] = 0
-    
-    st.rerun()
-
-# %% [markdown]
-# # Batch
-
-# %%
-#Regular batch
-if batch_mode_allowed() > 0:
-    
-    if batch_button:
-
-        if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
-    
-            st.warning('You must upload some file(s).')
-    
-        elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
-    
-            st.warning("You must tick 'Use GPT' and enter some questions.")
-            
-        elif int(consent_entry) == 0:
-            
-            st.warning("You must tick 'Yes, I agree.' to use the app.")
-        
-        elif len(st.session_state.df_individual)>0:
-            
-            st.warning('You must :red[REMOVE] the last produced data before producing new data.')
-
-        else:
-
-            #Create spreadsheet of responses
-            df_master = own_create_df()
-
-            #Ensure b64 is turned off
-            df_master.loc[0, 'b64_enabled'] = False
-            
-            #Keep entries in session state    
-            st.session_state["df_master"] = df_master
-            
-            own_batch_request_function(df_master, uploaded_docs, uploaded_images)
-
-    if st.session_state.batch_submitted == True:
-        
-        st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
+# # Buttons
 
 # %%
 #b64 batch
-if (batch_mode_allowed() > 0) and ((st.session_state.own_account == True) and (uploaded_images)):
+if (batch_mode_allowed() > 0) and ((own_account_entry) and (uploaded_images)):
 
     if batch_button_b64:
     
@@ -1021,3 +785,282 @@ if (batch_mode_allowed() > 0) and ((st.session_state.own_account == True) and (u
     #if st.session_state.batch_submitted == True:
         
         #st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
+
+# %% [markdown]
+# ## Save and run etc
+
+# %%
+if run_button:
+
+    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
+
+        st.warning('You must upload some file(s).')
+
+    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+
+        st.warning("You must tick 'Use GPT' and enter some questions.")
+        
+    elif int(consent_entry) == 0:
+        
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
+    
+    elif len(st.session_state.df_individual)>0:
+        
+        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
+
+    else:
+
+        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                st.error('Your API key is not valid.')
+                st.stop()
+
+        #Warning
+        if gpt_activation_entry:
+            if st.session_state.gpt_model == 'gpt-4o-mini':
+                st.warning('A low-cost GPT model will process your files. Please be cautious.')
+                st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
+            
+            #if st.session_state.gpt_model == "gpt-4o":
+                #st.warning('An expensive GPT model will process your files. Please be cautious.')
+        
+        with st.spinner(spinner_text):
+
+            try:
+                #Create spreadsheet of responses
+                df_master = own_create_df()
+                
+                #Activate user's own key or mine
+                if own_account_entry:
+                    
+                    API_key = df_master.loc[0, 'Your GPT API key']
+    
+                else:
+                    
+                    API_key = st.secrets["openai"]["gpt_api_key"]
+    
+                openai.api_key = API_key
+                
+                df_individual = run_own(df_master, uploaded_docs, uploaded_images)
+        
+                #Keep entries in session state
+                st.session_state["df_master"] = df_master
+    
+                #Change session states
+                st.session_state['need_resetting'] = 1
+                st.session_state["page_from"] = 'pages/OWN.py'
+                
+                #Keep data in session state
+                st.session_state["df_individual"] = df_individual
+
+                #Download data
+                #download_buttons(df_master, df_individual)
+
+                st.rerun()
+                
+            except Exception as e:
+
+                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                
+                st.error(e)
+                
+                st.error(traceback.format_exc())
+
+                print(e)
+
+                print(traceback.format_exc())
+
+
+# %%
+#NOT IN USE
+
+if immediate_b64() > 0:
+    
+    if ((own_account_entry) and (uploaded_images)):
+        
+        if run_button_b64:
+        
+            if len(uploaded_images) == 0:
+        
+                st.warning('You must upload some image(s).')
+        
+            elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+        
+                st.warning("You must tick 'Use GPT' and enter some questions.")
+        
+            elif int(consent_entry) == 0:
+                st.warning("You must tick 'Yes, I agree.' to use the app.")
+            
+            elif len(st.session_state.df_individual)>0:
+                st.warning('You must :red[REMOVE] the data already produced before producing new data.')
+        
+            else:
+        
+                if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                        
+                    if is_api_key_valid(gpt_api_key_entry) == False:
+                        st.error('Your API key is not valid.')
+                        st.stop()
+                        
+                #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
+                #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
+    
+                with st.spinner(spinner_text):
+        
+                    try:                    
+                        #Create spreadsheet of responses
+                        df_master = own_create_df()
+        
+                        #Check for non-supported file types
+                        if '.bmp' in str(df_master['Your uploaded files']).lower():
+                            st.error('Sorry, this app does not support BMP images.')
+                            st.stop()
+                            
+                        if '.tiff' in str(df_master['Your uploaded files']).lower():
+                            st.error('Sorry, this app does not support TIFF images.')
+                            st.stop()
+                        
+                        #Activate user's own key or mine
+                        if own_account_entry:
+                            
+                            API_key = df_master.loc[0, 'Your GPT API key']
+            
+                        else:
+                            
+                            API_key = st.secrets["openai"]["gpt_api_key"]
+            
+                        openai.api_key = API_key
+                        
+                        df_individual = run_b64_own(df_master, uploaded_images)
+    
+                        #Keep entries in session state    
+                        st.session_state["df_master"] = df_master
+                    
+                        #Change session states
+                        st.session_state['need_resetting'] = 1
+                        st.session_state["page_from"] = 'pages/OWN.py'
+                        
+                        #Keep data in session state
+                        st.session_state["df_individual"] = df_individual
+        
+                        #Download data
+                        #download_buttons(df_master, df_individual)
+                        
+                        #if df_master.loc[0, 'Language choice'] != 'English':
+                
+                            #st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
+        
+                        st.rerun()
+                    
+                    except Exception as e:
+            
+                        st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                        
+                        st.error(e)
+                        
+                        st.error(traceback.format_exc())
+        
+                        print(e)
+        
+                        print(traceback.format_exc())
+                        
+
+
+# %%
+if keep_button:
+
+    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
+
+        st.warning('You must upload some file(s).')
+
+    elif len(gpt_questions_entry) < 5:
+
+        st.warning('You must enter some questions for GPT.')
+            
+    else:
+
+        df_master = own_create_df()
+    
+        st.session_state["df_master"] = df_master
+
+        download_buttons(df_master = st.session_state.df_master, df_individual = [], saving = True, previous = False)
+
+
+# %%
+if return_button:
+
+    try:
+
+        df_master = own_create_df()
+    
+        save_input(df_master)
+        
+    except:
+        print('df_master not created.')
+
+    st.session_state["page_from"] = 'pages/OWN.py'
+
+    st.switch_page("Home.py")
+    
+
+
+# %%
+if reset_button:
+
+    st.session_state['df_individual'] = pd.DataFrame([])
+    
+    st.session_state['need_resetting'] = 0
+    
+    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    
+    st.rerun()
+
+# %% [markdown]
+# ## Batch
+
+# %%
+#Regular batch
+if batch_mode_allowed() > 0:
+    
+    if batch_button:
+
+        if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
+    
+            st.warning('You must upload some file(s).')
+    
+        elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+    
+            st.warning("You must tick 'Use GPT' and enter some questions.")
+            
+        elif int(consent_entry) == 0:
+            
+            st.warning("You must tick 'Yes, I agree.' to use the app.")
+        
+        elif len(st.session_state.df_individual)>0:
+            
+            st.warning('You must :red[REMOVE] the last produced data before producing new data.')
+
+        else:
+
+            #Create spreadsheet of responses
+            df_master = own_create_df()
+
+            #Ensure b64 is turned off
+            df_master.loc[0, 'b64_enabled'] = False
+            
+            #Keep entries in session state    
+            st.session_state["df_master"] = df_master
+            
+            own_batch_request_function(df_master, uploaded_docs, uploaded_images)
+
+    if st.session_state.batch_submitted and st.session_state.need_resetting:
+        
+        st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
+
+        #Warning
+        if gpt_activation_entry:
+            if st.session_state.gpt_model == 'gpt-4o-mini':
+                st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+

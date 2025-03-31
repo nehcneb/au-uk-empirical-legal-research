@@ -137,6 +137,7 @@ def GPT_label_dict(x_list):
 
 @st.cache_data(show_spinner = False)
 def is_api_key_valid(key_to_check):
+    
     openai.api_key = key_to_check
     
     try:
@@ -1590,13 +1591,18 @@ def batch_request_function():
         st.warning('You must :red[REMOVE] the data already produced before producing new data.')
 
     elif st.session_state['df_master'].loc[0, 'Use GPT'] == False:
+        
         st.error("You must tick 'Use GPT'.")
         
     else:
- 
-        if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+
+        #st.write(f"st.session_state['df_master'].loc[0, 'Use own account'] == {st.session_state['df_master'].loc[0, 'Use own account']}, st.session_state['df_master'].loc[0, 'Use GPT'] == {st.session_state['df_master'].loc[0, 'Use GPT']}")
+        
+        if ((st.session_state['df_master'].loc[0, 'Use own account'] == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+        #if ((st.session_state.own_account == True) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
                                 
             if is_api_key_valid(st.session_state.df_master.loc[0, 'Your GPT API key']) == False:
+                
                 st.error('Your API key is not valid.')
                 
                 st.session_state["batch_ready_for_submission"] = False
@@ -1606,6 +1612,10 @@ def batch_request_function():
             else:
                 
                 st.session_state["batch_ready_for_submission"] = True
+
+        else:
+            
+            st.session_state["batch_ready_for_submission"] = True
 
         if st.session_state.jurisdiction_page == 'pages/US.py':
             
@@ -1648,6 +1658,8 @@ def batch_request_function():
                 else:
                     st.session_state["batch_ready_for_submission"] = True
 
+        #st.write(f'st.session_state["batch_ready_for_submission"] == {st.session_state["batch_ready_for_submission"]}')
+        
         if st.session_state["batch_ready_for_submission"] == True:
         
             with st.spinner(spinner_text):
@@ -1666,7 +1678,8 @@ def batch_request_function():
                     df_master['submission_time'] = str(datetime.now())
 
                     #Activate user's own key or mine
-                    if st.session_state.own_account == True:
+                    if st.session_state['df_master'].loc[0, 'Use own account'] == True:
+                    #if st.session_state.own_account == True:
                         
                         API_key = st.session_state.df_master.loc[0, 'Your GPT API key']
         
@@ -1721,8 +1734,10 @@ def batch_request_function():
                                             jurisdiction_page = st.session_state['df_master'].loc[0, 'jurisdiction_page']
                                            )
 
+                    #Change session states
                     st.session_state["batch_submitted"] = True
-                                        
+                    st.session_state['need_resetting'] = 1
+
                     st.rerun()
                 
                 except Exception as e:

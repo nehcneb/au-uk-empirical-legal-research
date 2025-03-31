@@ -1162,7 +1162,7 @@ if own_account_allowed() > 0:
     
         st.markdown("""**:green[You can use the flagship version of GPT (model gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
         
-        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = False)
+        gpt_enhancement_entry = st.checkbox(label = 'Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
         
         if gpt_enhancement_entry == True:
@@ -1200,7 +1200,6 @@ if own_account_allowed() > 0:
         st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
         
         print('User GPT API key not entered. Using own API key instead.')
-
 
 
 # %% [markdown]
@@ -1250,8 +1249,8 @@ if st.session_state.ai_choice == 'GPT':
     if st.session_state.gpt_model == 'gpt-4o-mini':
         st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
 
-    if st.session_state.gpt_model == "gpt-4o":
-        st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
+    #if st.session_state.gpt_model == "gpt-4o":
+        #st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
     
 #else:
     #st.warning('An experimental AI model will process your spreadsheet and instructions. Please be cautious.')

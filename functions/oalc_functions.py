@@ -180,15 +180,16 @@ def get_judgment_from_oalc(mnc_list):
 
     #Figure out jurisdiction
     subset = 'default'
-    #ENABLE after splitting corpus into jurisdiction subsets
-    if 'nsw' in mnc_list[0].lower():
-        subset = 'nsw_caselaw'
+    if len(mnc_list) > 0:
     
-    if 'fca' in mnc_list[0].lower():
-        subset = 'federal_court_of_australia'
-    
-    if 'hca' in mnc_list[0].lower():
-        subset = 'high_court_of_australia'
+        if 'nsw' in mnc_list[0].lower():
+            subset = 'nsw_caselaw'
+        
+        if 'fca' in mnc_list[0].lower():
+            subset = 'federal_court_of_australia'
+        
+        if 'hca' in mnc_list[0].lower():
+            subset = 'high_court_of_australia'
     
     #Create list of mncs for use in the where argument of oalc_filter
     where_list = []
