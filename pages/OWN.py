@@ -513,7 +513,7 @@ if len(st.session_state.df_example_to_show) > 0:
 # %%
 if own_account_allowed() == 0:
     
-    own_account_entry == False
+    own_account_entry = False
 
 else:
     
