@@ -599,7 +599,10 @@ Alternatively, you can send the relevant PDFs to GPT as images. This alternative
     
     #st.write('Not getting the best responses for your images? You can try a more costly')
     #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
-    er_run_button_b64 = st.button(label = 'SEND PDFs to GPT as images')
+    er_run_button_b64 = st.button(label = 'SEND PDFs to GPT as images',
+                             help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
+                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"])))
+                                 )
 
 
 # %% [markdown]
@@ -618,7 +621,6 @@ if len(st.session_state.df_individual) > 0:
     #Previous entries and output
     else:
         download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual, saving = False, previous = True)
-
 
 
 # %% [markdown]
@@ -773,7 +775,6 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
                 #if st.session_state.gpt_model == "gpt-4o":
                     #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
     
-            
             #Increase waiting time
             st.session_state.estimated_waiting_secs = st.session_state.estimated_waiting_secs*10
             
