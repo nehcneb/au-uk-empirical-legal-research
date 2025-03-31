@@ -147,7 +147,7 @@ all_df_masters_current = get_aws_df(s3_resource, 'all_df_masters.csv')
 #Convert judgment number col to int
 
 for col in all_df_masters_current.columns:
-    if 'number' in col:
+    if 'Maximum number' in col:
         all_df_masters_current[col] = all_df_masters_current[col].apply(str_to_int)
 
 #Work on new copy of all_df_masters, which enables comparison with current version on aws

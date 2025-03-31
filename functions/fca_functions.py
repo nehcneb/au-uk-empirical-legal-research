@@ -116,7 +116,6 @@ def fca_search(court = '',
     #If allowing users to search which court
     base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2F" + fca_courts[court]
 
-
     #Tidy up dates for batch mode
     if '-' in str(after_date):
         after_date = str(after_date).replace('-', '')
@@ -155,18 +154,34 @@ def fca_search(court = '',
     #Get search url
     results_url = response.url
 
+    #print(f"results_url == {results_url}")
+    
     #Get the number of search results
     results_count = int(0)
 
     try:
         soup = BeautifulSoup(response.content, "lxml")
+
+        #print(f"soup == {soup}")
+        
         results_num_raw = soup.find('p', {'class': 'txarial'})
+
+        #print(f"results_num_raw == {results_num_raw}")
+
         results_num_raw_text = results_num_raw.get_text(strip = True)
+
+        #print(f"results_num_raw_text == {results_num_raw_text}")
+        
         results_count = results_num_raw_text.split('\r\n')[0].split(' ')[-1]
+        
         results_count = results_count.replace(',', '').replace('.', '')
+
+        #print(f"results_count == {results_count}")
+
         results_count = int(float(results_count))
 
     except:
+        
         print("Can't get the number of search results")
 
     #Get soup
@@ -397,7 +412,8 @@ def fca_meta_judgment_dict(case_info):
                  'Reported' : '',  
                  'Summary' : '',  
                  'Corrigenda' : '',  
-                 'Parties' : '',  'FileName' : '',  
+                 'Parties' : '',  
+                'FileName' : '',  
                  'Asset_ID' : '',  
                  'Date.published' : '', 
                 'Appeal_to' : '', 

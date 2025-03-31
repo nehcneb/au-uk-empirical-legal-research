@@ -831,7 +831,7 @@ def nsw_run(df_master):
             #Append judgments from oalc first
             if decision['mnc'] in mnc_judgment_dict.keys():
                 decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
-                print(f"{decision['title']} got judgment from huggingface.")
+                print(f"{decision['title']} got judgment from OALC.")
                 
             else: #Get case from Caselaw NSW if can't get from oalc
                 
@@ -1044,7 +1044,7 @@ def nsw_batch(df_master):
             #Append judgments from oalc first
             if decision['mnc'] in mnc_judgment_dict.keys():
                 decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
-                print(f"{decision['title']} got judgment from huggingface.")
+                print(f"{decision['title']} got judgment from OALC.")
                 
             else: #Get case from Caselaw NSW if can't get from oalc
                 

@@ -178,10 +178,15 @@ def get_judgment_from_oalc(mnc_list):
 
     print(f"To obtain from {corpus_dir}: mnc_list == {mnc_list}")
 
-    #Figure out jurisdiction
-    subset = 'default'
+
+    #Initialise return value
+    mnc_judgment_dict = {}
+
     if len(mnc_list) > 0:
-    
+        
+        #Figure out jurisdiction
+        subset = 'default'
+        
         if 'nsw' in mnc_list[0].lower():
             subset = 'nsw_caselaw'
         
@@ -190,61 +195,60 @@ def get_judgment_from_oalc(mnc_list):
         
         if 'hca' in mnc_list[0].lower():
             subset = 'high_court_of_australia'
-    
-    #Create list of mncs for use in the where argument of oalc_filter
-    where_list = []
-
-    for mnc in mnc_list:
-        search_str = f"""
-        "citation" ILIKE '%{mnc}'
-        """
-        where_list.append(search_str)
-
-    where_str = ' OR '.join(where_list)
-
-    #Get judgments from corpus online
-    data = oalc_filter(dataset = corpus_dir, 
-                 #split = 'train', 
-               config = subset, 
-                where = where_str, 
-                 #where = """
-                 #("citation" ILIKE '%[1995] FCA 23' OR "citation" ILIKE '%[1995] HCA 1')
-                 #""", 
-                 #orderby = '"date" DESC NULLS LAST', 
-                 length = len(mnc_list))
-
-    #print(data)
-    
-    #Create dict of mncs and judgments
-
-    mnc_judgment_dict = {}
-    for mnc in mnc_list:
-        mnc_judgment_dict.update({mnc: ''})
-
-    try:
-        for case in data["rows"]:
-            citation = case['row']['citation']
-            mnc = split_title_mnc(citation)[1]
-            if mnc in mnc_judgment_dict.keys():
-                judgment = case['row']['text']
-                mnc_judgment_dict[mnc] = judgment
-
-    except Exception as e:
         
-        print(f"Can't get case from oalc due to error: {e}")
+        #Create list of mncs for use in the where argument of oalc_filter
+        where_list = []
     
-    #Remove any blank or very short judgments
-    mncs_to_pop = []
+        for mnc in mnc_list:
+            search_str = f"""
+            "citation" ILIKE '%{mnc}'
+            """
+            where_list.append(search_str)
     
-    for mnc in mnc_judgment_dict.keys():
-        if len(mnc_judgment_dict[mnc]) < judgment_text_lower_bound*4: #judgment_text_lower_bound is in tokens, each token ~= 4 characters
-            mncs_to_pop.append(mnc)
-
-    for mnc in mncs_to_pop:
-        mnc_judgment_dict.pop(mnc)
+        where_str = ' OR '.join(where_list)
+    
+        #Get judgments from corpus online
+        data = oalc_filter(dataset = corpus_dir, 
+                     #split = 'train', 
+                   config = subset, 
+                    where = where_str, 
+                     #where = """
+                     #("citation" ILIKE '%[1995] FCA 23' OR "citation" ILIKE '%[1995] HCA 1')
+                     #""", 
+                     #orderby = '"date" DESC NULLS LAST', 
+                     length = len(mnc_list))
+    
+        #print(data)
+        
+        #Create dict of mncs and judgments
+        for mnc in mnc_list:
+            mnc_judgment_dict.update({mnc: ''})
+    
+        try:
+            
+            for case in data["rows"]:
+                citation = case['row']['citation']
+                mnc = split_title_mnc(citation)[1]
+                if mnc in mnc_judgment_dict.keys():
+                    judgment = case['row']['text']
+                    mnc_judgment_dict[mnc] = judgment
+    
+        except Exception as e:
+            
+            print(f"Can't get case from OALC due to error: {e}")
+        
+        #Remove any blank or very short judgments
+        mncs_to_pop = []
+        
+        for mnc in mnc_judgment_dict.keys():
+            if len(mnc_judgment_dict[mnc]) < judgment_text_lower_bound*4: #judgment_text_lower_bound is in tokens, each token ~= 4 characters
+                mncs_to_pop.append(mnc)
+    
+        for mnc in mncs_to_pop:
+            mnc_judgment_dict.pop(mnc)
     
     return mnc_judgment_dict
-
+    
 
 # %%
 #mnc_list = ['[2015] NSWSC 52', '[2015] NSWSC 186', '[2015] NSWSC 172', '[2021] NSWSC 1406', '[1999] NSWSC 1028']
