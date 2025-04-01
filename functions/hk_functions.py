@@ -115,11 +115,6 @@ except Exception as e:
     print(e)
     quit()
 
-# %%
-#judgment_url = 'https://legalref.judiciary.hk/lrs/common/search/search_result_detail_frame.jsp?DIS=137279&QS=%24%28murder%29&TP=JU'
-
-#browser.get(judgment_url)
-
 # %% [markdown]
 # ## Definitions
 
@@ -290,6 +285,8 @@ def month_year_to_str(x):
 # %%
 from functions.common_functions import link
 
+
+# %%
 
 # %%
 class hk_search_tool:
@@ -784,7 +781,9 @@ class hk_search_tool:
             
                 if 'pdf' in key:
                     pdf_url = top_buttons_dict[key]
-            
+
+                    pdf_url = re.sub(r'lan\=\w{1,2}\&', '', pdf_url.replace('gotoPdf', 'loadPdf')) + '&mobile=N'
+                
                 if 'chinese' in key:
                     chinese_url = top_buttons_dict[key]
                     
@@ -833,7 +832,9 @@ class hk_search_tool:
                 
                     if 'pdf' in key:
                         pdf_url = english_top_buttons_dict[key]
-                
+
+                        pdf_url = re.sub(r'lan\=\w{1,2}\&', '', pdf_url.replace('gotoPdf', 'loadPdf')) + '&mobile=N'
+                    
                     if 'chinese' in key:
                         chinese_url = english_top_buttons_dict[key]
 
