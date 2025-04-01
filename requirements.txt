@@ -28,7 +28,7 @@ selenium==4.30.0
 #st-gsheets-connection==0.1.0
 #st-files-connection==0.1.0
 #statsmodels==0.14.4
-streamlit==1.44.0
+streamlit==1.40.2
 #streamlit-ext==0.1.14
 streamlit-extras==0.5.0
 #streamlit-gsheets

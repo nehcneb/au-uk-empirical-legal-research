@@ -98,8 +98,8 @@ def get_driver():
 try:
     browser = get_driver()
     
-    browser.implicitly_wait(30)
-    browser.set_page_load_timeout(30)
+    #browser.implicitly_wait(5)
+    #browser.set_page_load_timeout(30)
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -757,7 +757,7 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     
     #elements = browser.find_elements(By.CLASS_NAME, "result ")
 
-    elements = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+    elements = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
     
     #Get number of results
     case_num = len(elements)
@@ -772,7 +772,7 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
     
             #load_more = browser.find_element(By.ID, "loadMoreResults")
 
-            load_more = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
+            load_more = Wait(browser, 5).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
             
             #pause.seconds(np.random.randint(10, 20))
             
@@ -780,7 +780,7 @@ def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bou
             
             #elements = browser.find_elements(By.CLASS_NAME, "result ")
             
-            elements = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+            elements = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
 
             case_num = len(elements)
     

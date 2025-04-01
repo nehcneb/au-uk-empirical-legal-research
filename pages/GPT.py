@@ -657,21 +657,21 @@ if run_button:
                 st.error('Your API key is not valid.')
                 st.stop()
                 
-        #Warning
-        if gpt_activation_entry:
-            if st.session_state.gpt_model == 'gpt-4o-mini':
-                st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
-                st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
-            
-            #if st.session_state.gpt_model == "gpt-4o":
-                #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
-    
         spinner_text += f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
 
         with st.spinner(spinner_text):
 
             try:
-    
+                
+                #Warning
+                if gpt_activation_entry:
+                    if st.session_state.gpt_model == 'gpt-4o-mini':
+                        st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+                    
+                    #if st.session_state.gpt_model == "gpt-4o":
+                        #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+                            
                 #Create spreadsheet of responses
                 df_master = st.session_state.df_master
 
@@ -765,16 +765,6 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
                 if is_api_key_valid(gpt_api_key_entry) == False:
                     st.error('Your API key is not valid.')
                     st.stop()
-
-            #Warning
-            if gpt_activation_entry:
-                if st.session_state.gpt_model == 'gpt-4o-mini':
-                    st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
-                    st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
-                
-                #if st.session_state.gpt_model == "gpt-4o":
-                    #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
-    
             #Increase waiting time
             st.session_state.estimated_waiting_secs = st.session_state.estimated_waiting_secs*10
             
@@ -784,6 +774,15 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
 
                 try:
 
+                    #Warning
+                    if gpt_activation_entry:
+                        if st.session_state.gpt_model == 'gpt-4o-mini':
+                            st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                            st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+                        
+                        #if st.session_state.gpt_model == "gpt-4o":
+                            #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+                    
                     #Definitions and functions for ER
                     from functions.er_functions import er_run_b64, role_content_er#, er_run, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
 

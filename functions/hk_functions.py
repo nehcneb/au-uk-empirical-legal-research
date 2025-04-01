@@ -105,8 +105,8 @@ def get_driver():
 try:
     browser = get_driver()
     
-    browser.implicitly_wait(15)
-    browser.set_page_load_timeout(15)
+    #browser.implicitly_wait(5)
+    #browser.set_page_load_timeout(15)
 
     #browser.quit()
     
@@ -285,8 +285,6 @@ def month_year_to_str(x):
 # %%
 from functions.common_functions import link
 
-
-# %%
 
 # %%
 class hk_search_tool:
@@ -584,11 +582,11 @@ class hk_search_tool:
         
                 #self.soup = BeautifulSoup(browser.page_source, "lxml")
                 
-                results_count_list = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
+                results_count_list = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
                 
                 self.results_count = int(results_count_list[0].text)
         
-                page_count_list = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
+                page_count_list = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
         
                 self.total_pages = int(page_count_list[0].text)
                                 

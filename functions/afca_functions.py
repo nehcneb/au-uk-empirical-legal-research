@@ -101,8 +101,8 @@ def get_driver():
 
 try:
     browser = get_driver()
-    browser.implicitly_wait(30)
-    browser.set_page_load_timeout(30)
+    #browser.implicitly_wait(5)
+    #browser.set_page_load_timeout(30)
 
     browser.minimize_window()#set_window_position(-2000,0)
     
@@ -134,8 +134,8 @@ if streamlit_timezone() == True:
         
         browser_old = get_driver_old()
         
-        browser_old.implicitly_wait(60)
-        browser_old.set_page_load_timeout(60)
+        #browser_old.implicitly_wait(5)
+        #browser_old.set_page_load_timeout(60)
         
         browser_old.minimize_window()#set_window_position(-2000,0)
     

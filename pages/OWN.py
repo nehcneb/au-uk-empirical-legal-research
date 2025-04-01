@@ -819,18 +819,18 @@ if run_button:
                 st.error('Your API key is not valid.')
                 st.stop()
 
-        #Warning
-        if gpt_activation_entry:
-            if st.session_state.gpt_model == 'gpt-4o-mini':
-                st.warning('A low-cost GPT model will process your files. Please be cautious.')
-                st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
-            
-            #if st.session_state.gpt_model == "gpt-4o":
-                #st.warning('An expensive GPT model will process your files. Please be cautious.')
-        
         with st.spinner(spinner_text):
 
             try:
+                #Warning
+                if gpt_activation_entry:
+                    if st.session_state.gpt_model == 'gpt-4o-mini':
+                        st.warning('A low-cost GPT model will process your files. Please be cautious.')
+                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
+                    
+                    #if st.session_state.gpt_model == "gpt-4o":
+                        #st.warning('An expensive GPT model will process your files. Please be cautious.')
+                      
                 #Create spreadsheet of responses
                 df_master = own_create_df()
                 
