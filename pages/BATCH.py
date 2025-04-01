@@ -186,10 +186,10 @@ def delete_all():
                             if col not in ['submission_time', 'batch_id', 'input_file_id', 'output_file_id', 'sent_to_user']:
                                 st.session_state.all_df_masters.loc[batch_index, col] = ''
                         
-                        st.session_state.df_master.loc[batch_index, 'status'] = 'deleted'
+                        st.session_state.all_df_masters.loc[batch_index, 'status'] = 'deleted'
                         
                         #Update df_master on aws
-                        aws_df_put(s3_resource, all_df_masters, f'all_df_masters.csv')
+                        aws_df_put(s3_resource, st.session_state.all_df_masters, f'all_df_masters.csv')
 
                         #csv_buffer = StringIO()
                         #st.session_state.all_df_masters.to_csv(csv_buffer)

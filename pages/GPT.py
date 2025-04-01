@@ -161,22 +161,22 @@ def own_account_entries_function():
         else:
             
             st.session_state['df_master'].loc[0, 'Use own account'] = False
-        
-            st.session_state.gpt_model = "gpt-4o-mini"
-    
+            
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-        
-            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-    
-    else:
 
-        st.session_state['df_master'].loc[0, 'Use own account'] = False
-    
-        st.session_state.gpt_model = "gpt-4o-mini"
+            st.session_state.gpt_model = "gpt-4o-mini"
 
-        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = st.session_state["judgment_batch_cutoff"]
     
-        st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    #else:
+
+        #st.session_state['df_master'].loc[0, 'Use own account'] = False
+    
+        #st.session_state.gpt_model = "gpt-4o-mini"
+
+        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+    
+        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
     st.session_state.estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
 
@@ -462,7 +462,7 @@ else:
             #st.session_state.gpt_model = 'gpt-4o-mini'
             #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
-        st.write(f'**:green[You can change the maximum number of cases to process.]** The default maximum is {default_judgment_counter_bound}.')
+        st.write(f'**:green[You can change the maximum number of cases to process.]**')
         
         judgments_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
         

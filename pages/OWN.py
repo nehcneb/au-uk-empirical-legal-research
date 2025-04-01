@@ -153,12 +153,15 @@ def own_create_df():
     #GPT enhancement
     try:
         gpt_enhancement = gpt_enhancement_entry
-        st.session_state.gpt_model = "gpt-4o"
     except:
         print('GPT enhancement not entered')
         gpt_enhancement = False
-        st.session_state.gpt_model = "gpt-4o-mini"
 
+    if gpt_enhancement:
+        st.session_state.gpt_model = "gpt-4o"
+    else:
+        st.session_state.gpt_model = "gpt-4o-mini"
+        
     #GPT choice and entry
     try:
         gpt_activation_status = gpt_activation_entry
@@ -573,7 +576,7 @@ else:
             #st.session_state.gpt_model = 'gpt-4o-mini'
             #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
-        st.write(f'**:green[You can change the maximum number of files to process.]** The default maximum is {default_file_counter_bound}.')
+        st.write(f'**:green[You can change the maximum number of files to process.]**')
 
         file_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]} files', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
 
@@ -585,7 +588,7 @@ else:
     
             st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} files may need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
 
-        st.write(f'**:orange[You can change the maximum number of pages per file to process.]** The default maximum is {default_page_bound}.')
+        st.write(f'**:orange[You can change the maximum number of pages per file to process.]**')
         
         page_bound_entry = st.slider(label = f'Up to {default_page_bound} pages', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
 
@@ -595,19 +598,19 @@ else:
         
         #st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {int(round(tokens_cap(st.session_state.gpt_model)*3/4))} words from the first  {int(st.session_state['df_master'].loc[0,'Maximum number of pages per file'])} page(s) of each file, for up to {int(st.session_state['df_master'].loc[0, 'Maximum number of files'])} file(s).*")
     
-    #else:
+    else:
         
         #st.session_state["own_account"] = False
 
-        #st.session_state['df_master'].loc[0, 'Use own account'] = False
+        st.session_state['df_master'].loc[0, 'Use own account'] = False
+    
+        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
         #st.session_state.gpt_model = "gpt-4o-mini"
 
-        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    
-        #st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_file_counter_bound
+        st.session_state['df_master'].loc[0, 'Maximum number of files'] = st.session_state["judgment_batch_cutoff"]
 
-        #st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+        st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
 
 
 # %% [markdown]
