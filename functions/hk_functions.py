@@ -800,6 +800,15 @@ class hk_search_tool:
                 
                 browser.get(judgment_url)
 
+                #Click away any altert
+                try:
+                    Wait(browser, 5).until(EC.alert_is_present())
+                    browser.switch_to.alert.accept()
+                    print(f'{case_number}: clicked away alert.')
+                
+                except:
+                    print(f'{case_number}: no alert or failed to click away any altert.')
+
                 #Get urls for docx, pdf, and Chinese translation for the English original
                 browser.switch_to.frame("topFrame")
                 

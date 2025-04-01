@@ -172,7 +172,6 @@ def delete_all():
                         #st.session_state.df_individual.to_csv(csv_buffer)
                         #s3_resource.Object('lawtodata', f'{batch_id_entry}.csv').put(Body=csv_buffer.getvalue())
                         
-                        
                         print(f"Deleted {batch_id_entry}.csv online." )
             
                         #Get latest all_df_master

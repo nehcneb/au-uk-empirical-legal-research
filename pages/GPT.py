@@ -666,7 +666,7 @@ if run_button:
             #if st.session_state.gpt_model == "gpt-4o":
                 #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
     
-        spinner_text += f'The estimated waiting time has been revised to {st.session_state.estimated_waiting_secs/60} minute(s).'
+        spinner_text += f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
 
         with st.spinner(spinner_text):
 
@@ -778,7 +778,7 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
             #Increase waiting time
             st.session_state.estimated_waiting_secs = st.session_state.estimated_waiting_secs*10
             
-            spinner_text += f'The estimated waiting time has been revised to {st.session_state.estimated_waiting_secs/60} minute(s).'
+            spinner_text += f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
     
             with st.spinner(spinner_text):
 
