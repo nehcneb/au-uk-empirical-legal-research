@@ -166,7 +166,7 @@ def own_account_entries_function():
 
             st.session_state.gpt_model = "gpt-4o-mini"
 
-            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = st.session_state["judgment_batch_cutoff"]
+            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
     
     #else:
 
@@ -178,7 +178,7 @@ def own_account_entries_function():
     
         #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
-    st.session_state.estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
+    st.session_state.estimated_waiting_secs = min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])*30
 
 
 
@@ -538,7 +538,7 @@ st.header("Next steps")
 #estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {st.session_state["judgment_batch_cutoff"]} cases. The estimated waiting time is **{st.session_state["judgment_batch_cutoff"]*30/60} minute(s)**.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])*30/60} minute(s)**.
 """)
 
 #st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{estimated_waiting_secs/60} minute(s)**.""")

@@ -608,7 +608,7 @@ else:
     
         #st.session_state.gpt_model = "gpt-4o-mini"
 
-        st.session_state['df_master'].loc[0, 'Maximum number of files'] = st.session_state["judgment_batch_cutoff"]
+        st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
 
         st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
 
@@ -648,7 +648,7 @@ st.header("Next steps")
 #Calculate estimating waiting time
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {st.session_state["judgment_batch_cutoff"]} files. The estimated waiting time is **{st.session_state["judgment_batch_cutoff"]*30/60} minute(s)**.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])*30/60} minute(s)**.
 """)
 
 if batch_mode_allowed() > 0:
@@ -669,8 +669,8 @@ if batch_mode_allowed() > 0:
         batch_button = st.button(label = 'REQUEST data', 
                                   help = 'You can only :orange[REQUEST] data once per session.', 
                                  disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
-                                )#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
-
+                                )
+        
 with stylable_container(
     "green",
     css_styles="""

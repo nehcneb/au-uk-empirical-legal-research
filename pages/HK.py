@@ -586,7 +586,7 @@ with stylable_container(
 # %%
 if preview_button:
     
-    hk_search_terms = str(any_of_these_words_entry) + str(these_words_in_any_order_entry) + str(this_phrase_entry) + str(date_of_judgment_entry).replace('/', '') + str(coram_entry) + str(parties_entry) + str(representation_entry) + str(offence_entry) + str(on_appeal_from_court_entry) 
+    hk_search_terms = str(any_of_these_words_entry) + str(these_words_in_any_order_entry) + str(this_phrase_entry) + str(date_of_judgment_entry).replace('/', '') + str(coram_entry) + str(parties_entry) + str(representation_entry) + str(offence_entry) + str(on_appeal_from_court_entry) + str(medium_neutral_citation_entry) + str(case_number_entry) + str(reported_citation_entry) 
     
     if hk_search_terms.replace('None', '') == "":
 
@@ -662,7 +662,7 @@ if keep_button:
 
     #Check whether search terms entered
 
-    hk_search_terms = str(any_of_these_words_entry) + str(these_words_in_any_order_entry) + str(this_phrase_entry) + str(date_of_judgment_entry).replace('/', '') + str(coram_entry) + str(parties_entry) + str(representation_entry) + str(offence_entry) + str(on_appeal_from_court_entry)
+    hk_search_terms = str(any_of_these_words_entry) + str(these_words_in_any_order_entry) + str(this_phrase_entry) + str(date_of_judgment_entry).replace('/', '') + str(coram_entry) + str(parties_entry) + str(representation_entry) + str(offence_entry) + str(on_appeal_from_court_entry) + str(medium_neutral_citation_entry) + str(case_number_entry) + str(reported_citation_entry)
     
     if hk_search_terms.replace('None', '') == "":
 
@@ -698,7 +698,7 @@ if reset_button:
 # %%
 if next_button:
 
-    hk_search_terms = str(any_of_these_words_entry) + str(these_words_in_any_order_entry) + str(this_phrase_entry) + str(date_of_judgment_entry).replace('/', '') + str(coram_entry) + str(parties_entry) + str(representation_entry) + str(offence_entry) + str(on_appeal_from_court_entry) 
+    hk_search_terms = str(any_of_these_words_entry) + str(these_words_in_any_order_entry) + str(this_phrase_entry) + str(date_of_judgment_entry).replace('/', '') + str(coram_entry) + str(parties_entry) + str(representation_entry) + str(offence_entry) + str(on_appeal_from_court_entry) + str(medium_neutral_citation_entry) + str(case_number_entry) + str(reported_citation_entry) 
     
     if hk_search_terms.replace('None', '') == "":
 

@@ -742,6 +742,7 @@ class hk_search_tool:
         chinese_url = ''
         english_url = ''        
         judgment_text = ''
+        alert = ''
 
         case_number = case_info['Case number']
         
@@ -754,7 +755,9 @@ class hk_search_tool:
             
             #Click away any altert
             try:
+                
                 Wait(browser, 5).until(EC.alert_is_present())
+                alert = browser.switch_to.alert.text
                 browser.switch_to.alert.accept()
                 print(f'{case_number}: clicked away alert.')
             
@@ -769,10 +772,10 @@ class hk_search_tool:
             top_buttons_dict = {}
             
             for elem in hrefs:
-                button_name = {elem.text}
+                button_name = elem.text
                 button_link = elem.get_attribute('href')
                 
-                top_buttons_dict.update({str(button_name).lower(): button_link})
+                top_buttons_dict.update({button_name.lower(): button_link})
             
             for key in top_buttons_dict.keys():
             
@@ -803,6 +806,7 @@ class hk_search_tool:
                 #Click away any altert
                 try:
                     Wait(browser, 5).until(EC.alert_is_present())
+                    alert = browser.switch_to.alert.text
                     browser.switch_to.alert.accept()
                     print(f'{case_number}: clicked away alert.')
                 
@@ -817,10 +821,10 @@ class hk_search_tool:
                 english_top_buttons_dict = {}
                 
                 for elem in hrefs:
-                    button_name = {elem.text}
+                    button_name = elem.text
                     button_link = elem.get_attribute('href')
                     
-                    english_top_buttons_dict.update({str(button_name).lower(): button_link})
+                    english_top_buttons_dict.update({button_name.lower(): button_link})
                 
                 for key in top_buttons_dict.keys():
                 
@@ -930,6 +934,7 @@ class hk_search_tool:
                                  'Reported': case_info['Reported'],
                                 'Case number': case_info['Case number'],
                                 'Date': case_info['Date'], 
+                                'Alert': alert,
                                 'judgment': judgment_text
                                 }
 
