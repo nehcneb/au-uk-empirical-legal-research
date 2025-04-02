@@ -254,14 +254,12 @@ def judgment_prompt_json(judgment_json, gpt_model):
         if key in judgment_json.keys():
             text_key = key
             break
-    
-    #st.write(f"text_key is {text_key}")
-    
+        
     #Just use original judgment_json if no long text
     if text_key not in judgment_json.keys():
         return judgment_json
 
-    else:        
+    else:
         #Turn judgment, opinions, 'recap_documents', or extracted_text to string
         if isinstance(judgment_json[text_key], list):
             try:

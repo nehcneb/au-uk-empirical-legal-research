@@ -748,7 +748,7 @@ class hk_search_tool:
 
             browser.get(judgment_url)
             
-            #Click away any altert
+            #Click away any alert
             try:
                 
                 Wait(browser, 5).until(EC.alert_is_present())
@@ -757,7 +757,7 @@ class hk_search_tool:
                 print(f'{case_number}: clicked away alert.')
             
             except:
-                print(f'{case_number}: no alert or failed to click away any altert.')
+                print(f'{case_number}: no alert or failed to click away any alert.')
             
             #Get urls for docx, pdf, and Chinese translation/English original if available
             browser.switch_to.frame("topFrame")
@@ -800,7 +800,7 @@ class hk_search_tool:
                 
                 browser.get(judgment_url)
 
-                #Click away any altert
+                #Click away any alert
                 try:
                     Wait(browser, 5).until(EC.alert_is_present())
                     alert = browser.switch_to.alert.text
@@ -808,7 +808,7 @@ class hk_search_tool:
                     print(f'{case_number}: clicked away alert.')
                 
                 except:
-                    print(f'{case_number}: no alert or failed to click away any altert.')
+                    print(f'{case_number}: no alert or failed to click away any alert.')
 
                 #Get urls for docx, pdf, and Chinese translation for the English original
                 browser.switch_to.frame("topFrame")
@@ -923,7 +923,7 @@ class hk_search_tool:
                 #except Exception as e:
                     
                     #print(f"{case_number}: Can't get judgment from pdf or docx.")
-        
+
         #Create updated case_info dict with judgment text and links to Chinese translation, English original
         case_info_w_judgment = {'Case name': case_info['Case name'],
                                 'Hyperlink to the Hong Kong Legal Reference System': case_info['Hyperlink to the Hong Kong Legal Reference System'],
@@ -936,6 +936,51 @@ class hk_search_tool:
                                 'Alert': alert,
                                 'judgment': judgment_text
                                 }
+
+        #Get appendices (eg corrigendum) if any
+        
+        browser.switch_to.default_content()
+        
+        browser.switch_to.frame("bottomFrame")
+        
+        hrefs = browser.find_elements(By.XPATH, "//a[@href]")
+        
+        appendices_dict = {}
+        
+        bottom_buttons_dict = {}
+        
+        for elem in hrefs:
+            button_name = elem.text
+            button_link = elem.get_attribute('href')
+        
+            if 'javascript' not in button_link:
+            
+                bottom_buttons_dict.update({button_name.lower(): button_link})
+        
+        for key in bottom_buttons_dict.keys():
+        
+            try:
+                #Pause to avoid getting kicked out
+                pause.seconds(5)
+                
+                app_url = bottom_buttons_dict[key]
+                browser.get(app_url)
+                
+                browser.switch_to.frame("mainFrame")
+                
+                app_text = BeautifulSoup(browser.page_source, "lxml").get_text()
+                
+                print(f"{case_number}: Got appendix {key} from html.")
+        
+                appendices_dict.update({f'{key}': app_text})
+            except:
+                print(f"{case_number}: Can't get appendix {key} from html.")
+
+        #Append any appendices to case_info_w_judgment
+        if len(appendices_dict) > 0:
+            for app_key in appendices_dict.keys():
+                app_text = appendices_dict[app_key]
+                case_info_w_judgment.update({f'appendix to judgment: {app_key}': app_text})
 
         #Make links clickable
         for key in case_info_w_judgment:
@@ -1283,3 +1328,5 @@ def hk_batch(df_master):
     return batch_record_df_individual
 
 
+
+# %%
