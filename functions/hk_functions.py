@@ -967,8 +967,11 @@ class hk_search_tool:
                 browser.get(app_url)
                 
                 browser.switch_to.frame("mainFrame")
+
+                app_text = str(BeautifulSoup(browser.page_source, "lxml"))
                 
-                app_text = BeautifulSoup(browser.page_source, "lxml").get_text()
+                #Enable to get text instead of all html
+                #app_text = BeautifulSoup(browser.page_source, "lxml").get_text()
                 
                 print(f"{case_number}: Got appendix {key} from html.")
         
@@ -1240,9 +1243,11 @@ def hk_run(df_master):
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
-    #Pop judgment
-    if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
-        df_updated.pop('judgment')
+    #Pop judgment and appendices
+    if pop_judgment() > 0:
+        for col in df_updated.columns:
+            if (col == 'judgment') or (re.search(r'^(appendix\sto\sjudgment)', col)):
+                df_updated.pop(col)
 
     #Pop empty columns (eg columns of Chinese original, English translation)
     df_updated.replace("", np.nan, inplace=True)
