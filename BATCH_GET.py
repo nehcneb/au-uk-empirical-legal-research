@@ -22,7 +22,7 @@ import json
 import pandas as pd
 #import shutil
 import numpy as np
-#import re
+import re
 import sys
 import pause
 import os
@@ -42,7 +42,6 @@ from datetime import timedelta
 import ast
 #import copy
 import traceback
-
 
 #OpenAI
 import openai
@@ -566,16 +565,11 @@ for df_batch_response in df_batch_id_response_list:
     
                     df_individual.loc[judgment_index, answer_header] = str(answers_dict[answer_index])
         
-        #Remove judgment, opinions and PACER records columns
+        #Remove judgment, appendices to judgment, opinions and PACER records columns
         if pop_judgment() > 0:
-            if 'judgment' in df_individual.columns:
-                df_individual.pop('judgment')
-                
-            if 'opinions' in df_individual.columns:
-                df_individual.pop('opinions')
-    
-            if 'recap_documents' in df_individual.columns:
-                df_individual.pop('recap_documents')
+            for col in df_individual.columns:
+                if (col in ['judgment', 'opinions', 'recap_documents']) or (re.search(r'^(appendix\sto\sjudgment)', col)):
+                    df_individual.pop(col)
 
         #Drop empty columns
         df_individual.replace("", np.nan, inplace=True)
