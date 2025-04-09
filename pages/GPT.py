@@ -76,7 +76,7 @@ st.set_page_config(
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone
+from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, report_error_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone
 
 #Import variables
 from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, spinner_text, own_gpt_headings, gpt_cost_msg
@@ -271,7 +271,9 @@ if 'estimated_waiting_secs' not in st.session_state:
     
     st.session_state['estimated_waiting_secs'] = int(float(st.session_state["judgment_batch_cutoff"]))*30
 
-
+#Initialise error reporting status
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = ''
 
 # %% [markdown]
 # ## Form for AI
@@ -704,21 +706,28 @@ if run_button:
                 #Download data
                 #download_buttons(df_master, df_individual)
 
+                #Clear any error
+                st.session_state['error_msg'] = ''
+                
                 st.rerun()
             
             except Exception as e:
-    
+
+                #Clear output
+                st.session_state["df_individual"] = pd.DataFrame([])
+                
                 st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
                 
                 st.error(e)
                 
-                st.error(traceback.format_exc())
+                #st.error(traceback.format_exc())
 
                 print(e)
 
-                print(traceback.format_exc())
+                #print(traceback.format_exc())
 
-
+                st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
+                
 
 # %%
 if return_button:
@@ -818,19 +827,28 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
                     #Download data
                     #download_buttons(df_master, df_individual)
 
-                    st.rerun()
+                    #Clear any error
+                    st.session_state['error_msg'] = ''
                     
+                    st.rerun()
+                
                 except Exception as e:
+    
+                    #Clear output
+                    st.session_state["df_individual"] = pd.DataFrame([])
                     
                     st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
                     
                     st.error(e)
                     
-                    st.error(traceback.format_exc())
+                    #st.error(traceback.format_exc())
     
                     print(e)
     
-                    print(traceback.format_exc())
+                    #print(traceback.format_exc())
+    
+                    st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
+
 
 
 # %% [markdown]
@@ -841,11 +859,33 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
     
     if batch_button:
-        
-        own_account_entries_function()
-        
-        batch_request_function()
 
+        try:
+            
+            own_account_entries_function()
+            
+            batch_request_function()
+
+            #Don't clear any error
+            #st.session_state['error_msg'] = ''
+            
+        except Exception as e:
+
+            #Clear output
+            st.session_state["df_individual"] = pd.DataFrame([])
+            
+            st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+            
+            st.error(e)
+            
+            #st.error(traceback.format_exc())
+
+            print(e)
+
+            #print(traceback.format_exc())
+
+            st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
+    
     if st.session_state.batch_submitted and st.session_state.need_resetting:
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
@@ -860,3 +900,26 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
                 #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 
+
+# %% [markdown]
+# ## Report error
+
+# %%
+if len(st.session_state.error_msg) > 0:
+    
+    report_error_button = st.button(label = 'REPORT the error', help = 'Send your entries and a report of the error to the developer.')
+
+    if report_error_button:
+
+        #Send me an email to let me know
+        report_error_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
+                                ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address'],
+                           jurisdiction_page = st.session_state.jurisdiction_page,
+                           df_master = st.session_state['df_master'], 
+                           error_msg = st.session_state.error_msg
+                               )
+
+        #Clear any error
+        st.session_state['error_msg'] = ''
+
+        st.success("Thank you for reporting the error. We will endeavour to fix it as soon as possible.")

@@ -983,6 +983,78 @@ def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, j
         #print(response['MessageId'])
 
 
+# %%
+#AWS email
+#Define report error email function
+
+def report_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, jurisdiction_page, df_master, error_msg):
+
+    #ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+    ses = get_aws_ses()
+    
+    #Based on the following upon substituting various arguments, https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
+    
+    # Replace sender@example.com with your "From" address.
+    # This address must be verified with Amazon SES.
+    SENDER = st.secrets["email_notifications"]["email_sender"]
+    
+    # Replace recipient@example.com with a "To" address. If your account 
+    # is still in the sandbox, this address must be verified.
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_personal"]
+
+    #Entries
+    entries_string = f'jurisdiction_page: {jurisdiction_page}\r\n'
+
+    for col in df_master.columns:
+        cell = df_master.loc[0, col]
+        entries_string += f'{col}:{cell}\r\n'
+    
+    # The subject line for the email.
+    SUBJECT = f"LawtoData: {ULTIMATE_RECIPIENT_NAME} has reported an error"
+    
+    BODY_TEXT = (
+    
+    f"{ULTIMATE_RECIPIENT_NAME} at {ULTIMATE_RECIPIENT_EMAIL} has reported an error for LawtoData.\r\n\r\n"
+
+    f"df_master is as follows:\r\n\r\n{entries_string}"
+
+    f"\r\n\r\nError is as follows:\r\n\r\n{error_msg}"
+
+    )
+    
+    # The character encoding for the email.
+    CHARSET = "UTF-8"
+
+    # Try to send the email.
+    try:
+        #Provide the contents of the email.
+        response = ses.send_email(
+            Destination={
+                'ToAddresses': [
+                    RECIPIENT,
+                ],
+            },
+            Message={
+                'Body': {
+                    'Text': {
+                        'Charset': CHARSET,
+                        'Data': BODY_TEXT,
+                    },
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': SUBJECT,
+                },
+            },
+            Source=SENDER,
+        )
+    # Display an error if something goes wrong.	
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+    #else:
+        #print("Email sent! Message ID:"),
+        #print(response['MessageId'])
+
 # %% [markdown]
 # # [NOT IN USE] Google Sheets
 
