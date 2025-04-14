@@ -84,7 +84,7 @@ from functions.common_functions import check_questions_answers, pop_judgment, de
 
 # %%
 #Default models to use
-basic_model = 'gpt-4.1-nano'
+basic_model = 'gpt-4.1-mini'
 flagship_model = 'gpt-4.1'
 
 # %%
