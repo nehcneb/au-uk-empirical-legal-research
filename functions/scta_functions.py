@@ -254,7 +254,7 @@ def scta_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content
+from functions.gpt_functions import question_characters_bound, role_content, basic_model, flagship_model
 
 
 # %%
@@ -319,9 +319,9 @@ def scta_run(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
             
     #apply GPT_individual to each respondent's judgment spreadsheet
     

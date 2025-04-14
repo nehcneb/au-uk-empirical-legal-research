@@ -282,7 +282,7 @@ def er_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound
+from functions.gpt_functions import question_characters_bound, basic_model, flagship_model
 
 
 # %%
@@ -354,9 +354,9 @@ def er_run(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -470,7 +470,7 @@ def er_meta_judgment_dict_b64(case_link_pair):
 
 
 # %%
-#For gpt-4o vision
+#For vision
 
 @st.cache_data(show_spinner = False, ttl=600)
 def er_run_b64(df_master):
@@ -516,9 +516,9 @@ def er_run_b64(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
         
     #apply GPT_individual to each respondent's judgment_b64 spreadsheet
     

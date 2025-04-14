@@ -219,7 +219,7 @@ def nsw_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, default_msg, default_caption
+from functions.gpt_functions import question_characters_bound, default_msg, default_caption, basic_model, flagship_model
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
@@ -238,7 +238,7 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
-    st.session_state['gpt_model'] = "gpt-4o-mini"
+    st.session_state['gpt_model'] = basic_model
 
 #Initialize API key
 if 'gpt_api_key' not in st.session_state:

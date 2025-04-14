@@ -417,7 +417,7 @@ def nsw_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content
+from functions.gpt_functions import question_characters_bound, role_content, basic_model, flagship_model
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
@@ -683,9 +683,9 @@ def nsw_run_direct(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -895,9 +895,9 @@ def nsw_run(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -1108,9 +1108,9 @@ def nsw_batch(df_master):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     

@@ -282,7 +282,7 @@ def image_to_text(uploaded_image, language, page_bound):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, gpt_batch_input, engage_GPT_json, GPT_questions_check
 #Import variables
-from functions.gpt_functions import question_characters_bound, questions_check_system_instruction
+from functions.gpt_functions import question_characters_bound, questions_check_system_instruction, basic_model, flagship_model
 
 
 # %%
@@ -348,9 +348,9 @@ def run_own(df_master, uploaded_docs, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
         
     #apply GPT_individual to each respondent's file spreadsheet
     
@@ -449,7 +449,7 @@ def image_to_b64_own(uploaded_image, language, page_bound):
 
 
 # %%
-#For gpt-4o vision
+#For vision
 
 @st.cache_data(show_spinner = False, ttl=300)
 def batch_b64_own(df_master, uploaded_images):
@@ -495,9 +495,9 @@ def batch_b64_own(df_master, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
         
     #apply GPT_individual to each respondent's judgment spreadsheet
 
@@ -519,7 +519,7 @@ def batch_b64_own(df_master, uploaded_images):
 
 
 # %%
-#For gpt-4o vision
+#For vision
 
 @st.cache_data(show_spinner = False, ttl=300)
 def run_b64_own(df_master, uploaded_images):
@@ -565,9 +565,9 @@ def run_b64_own(df_master, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
         
     #apply GPT_individual to each respondent's judgment spreadsheet
 
@@ -653,9 +653,9 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = "gpt-4o"
+        gpt_model = flagship_model
     else:        
-        gpt_model = "gpt-4o-mini"
+        gpt_model = basic_model
         
     #apply GPT_individual to each respondent's file spreadsheet
     
@@ -744,9 +744,9 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 openai.api_key = API_key
 
                 if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                    gpt_model = "gpt-4o"
+                    gpt_model = flagship_model
                 else:        
-                    gpt_model = "gpt-4o-mini"
+                    gpt_model = basic_model
 
                 questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
 

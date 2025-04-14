@@ -158,9 +158,9 @@ def own_create_df():
         gpt_enhancement = False
 
     if gpt_enhancement:
-        st.session_state.gpt_model = "gpt-4o"
+        st.session_state.gpt_model = flagship_model
     else:
-        st.session_state.gpt_model = "gpt-4o-mini"
+        st.session_state.gpt_model = basic_model
         
     #GPT choice and entry
     try:
@@ -233,14 +233,14 @@ def own_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
-from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max
+from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max, basic_model, flagship_model
 
 
 # %%
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
-    st.session_state['gpt_model'] = "gpt-4o-mini"
+    st.session_state['gpt_model'] = basic_model
     
 #Initialize API key
 if 'gpt_api_key' not in st.session_state:
@@ -366,7 +366,7 @@ st.header(f"Research :blue[your own files]")
     
 st.success(f'Please upload your documents or images.')
 
-st.caption(f'By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words from the first {default_page_bound} pages of each file. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
+st.caption(f'By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap(basic_model)*3/4)} words from the first {default_page_bound} pages of each file. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
 
 st.warning('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 
@@ -425,7 +425,7 @@ if st.toggle('Tips for using GPT'):
 
 gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-st.caption(f"By default, this app will use model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each file.")
+st.caption(f"By default, this app will use model {basic_model}. Due to a technical limitation, this model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
 
 if check_questions_answers() > 0:
     
@@ -560,7 +560,7 @@ else:
                 
                 st.warning('This key is not valid.')
                 
-        st.markdown("""**:green[You can use the flagship version of GPT (model gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
+        st.markdown(f"""**:green[You can use the flagship version of GPT ({flagship_model}),]** which is :red[significantly more expensive] than the default model ({basic_model}) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         
@@ -568,12 +568,12 @@ else:
 
         #if gpt_enhancement_entry == True:
         
-            #st.session_state.gpt_model = "gpt-4o"
+            #st.session_state.gpt_model = flagship_model
             #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
 
         #else:
             
-            #st.session_state.gpt_model = 'gpt-4o-mini'
+            #st.session_state.gpt_model = basic_model
             #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
         st.write(f'**:green[You can change the maximum number of files to process.]**')
@@ -606,7 +606,7 @@ else:
     
         st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
-        #st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = basic_model
 
         st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
 
@@ -824,11 +824,11 @@ if run_button:
             try:
                 #Warning
                 if gpt_activation_entry:
-                    if st.session_state.gpt_model == 'gpt-4o-mini':
+                    if st.session_state.gpt_model == basic_model:
                         st.warning('A low-cost GPT model will process your files. Please be cautious.')
                         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
                     
-                    #if st.session_state.gpt_model == "gpt-4o":
+                    #if st.session_state.gpt_model == flagship_model:
                         #st.warning('An expensive GPT model will process your files. Please be cautious.')
                       
                 #Create spreadsheet of responses
@@ -984,7 +984,7 @@ if immediate_b64() > 0:
                         #print(traceback.format_exc())
         
                         st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
-                        
+
 
 # %%
 if keep_button:
@@ -1100,7 +1100,7 @@ if batch_mode_allowed() > 0:
 
         #Warning
         if gpt_activation_entry:
-            if st.session_state.gpt_model == 'gpt-4o-mini':
+            if st.session_state.gpt_model == basic_model:
                 st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
                 st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
 

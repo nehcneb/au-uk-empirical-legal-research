@@ -77,10 +77,15 @@ from pyxlsb import open_workbook as open_xlsb
 from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, send_notification_email
 
 # %% [markdown]
-# # gpt-3.5, 4o-mini and 4o
+# # gpt-3.5, 4o, 4o-mini, 4.1, 4.1-mini, 4.1-nano
 
 # %% [markdown]
 # ## Common functions and variables
+
+# %%
+#Default models to use
+basic_model = 'gpt-4.1-nano'
+flagship_model = 'gpt-4.1'
 
 # %%
 #Cutoff for requiring activate batch mode
@@ -143,7 +148,7 @@ def is_api_key_valid(key_to_check):
     try:
         completion = openai.chat.completions.create(
             #model="gpt-3.5-turbo-0125",
-            model = 'gpt-4o-mini', 
+            model = basic_model, 
             messages=[{"role": "user", "content": 'Hi'}], 
             max_tokens = 1
         )
@@ -168,9 +173,18 @@ def tokens_cap(gpt_model):
     elif "gpt-4o-mini" in gpt_model:
         tokens_cap = int(128000 - 3000) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
-    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+    elif "gpt-4o" in gpt_model:
         tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
+    elif "gpt-4.1-mini" in gpt_model:
+        tokens_cap = int(1047576 - 3000) #For gpt-4o-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+
+    elif "gpt-4.1-nano" in gpt_model:
+        tokens_cap = int(1047576 - 3000) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+
+    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
+        tokens_cap = int(1047576 - 3000) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+    
     return tokens_cap
 
 def gpt_input_cost(gpt_model):
@@ -180,9 +194,19 @@ def gpt_input_cost(gpt_model):
     elif "gpt-4o-mini" in gpt_model:
         gpt_input_cost = 1/1000000*0.15
     
-    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+    elif "gpt-4o" in gpt_model:
         gpt_input_cost = 1/1000000*2.5
+
+    elif "gpt-4.1-mini" in gpt_model:
+        gpt_input_cost = 1/1000000*0.4
         
+    elif "gpt-4.1-nano" in gpt_model:
+        gpt_input_cost = 1/1000000*0.1
+    
+    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
+
+        gpt_input_cost = 1/1000000*2
+    
     return gpt_input_cost
 
 def gpt_output_cost(gpt_model):
@@ -192,9 +216,19 @@ def gpt_output_cost(gpt_model):
     elif "gpt-4o-mini" in gpt_model:
         gpt_output_cost = 1/1000000*0.6
 
-    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+    elif "gpt-4o" in gpt_model:
         gpt_output_cost = 1/1000000*10
 
+    elif "gpt-4.1-mini" in gpt_model:
+        gpt_output_cost = 1/1000000*1.6
+        
+    elif "gpt-4.1-nano" in gpt_model:
+        gpt_output_cost = 1/1000000*0.4
+    
+    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
+
+        gpt_output_cost = 1/1000000*8
+    
     return gpt_output_cost
     
 def max_output(gpt_model, messages_for_GPT):
@@ -207,9 +241,21 @@ def max_output(gpt_model, messages_for_GPT):
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
-    else: #("gpt-4o" in gpt_model) and ('mini' not in gpt_model):
+    elif "gpt-4o" in gpt_model:
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.s
+
+    elif "gpt-4.1-mini" in gpt_model:
+
+        max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+        
+    elif "gpt-4.1-nano" in gpt_model:
+
+        max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+    
+    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
+
+        max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
     
     return min(4096, abs(max_output_tokens))
     
@@ -218,7 +264,7 @@ def max_output(gpt_model, messages_for_GPT):
 # %%
 default_msg = f'Please enter your search terms.'
 
-default_caption = f'By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap("gpt-4o-mini")*3/4)} words per case. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or process more words per case.'
+default_caption = f'By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap(basic_model)*3/4)} words per case. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or process more words per case.'
 
 
 # %%
@@ -959,7 +1005,7 @@ def calculate_image_token_cost(image, detail="auto"):
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
-#For gpt-4o vision
+#For vision
 
 @st.cache_data(show_spinner = False)
 def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction):
@@ -1126,7 +1172,7 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
 
 # %%
 #Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
-#For gpt-4o vision
+#For vision
 
 #The following function DOES NOT check for existence of questions for GPT
     # To so check, active line marked as #*
@@ -1691,9 +1737,9 @@ def batch_request_function():
                     openai.api_key = API_key
 
                     if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                        gpt_model = "gpt-4o"
+                        gpt_model = flagship_model
                     else:        
-                        gpt_model = "gpt-4o-mini"
+                        gpt_model = basic_model
 
                     questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
 

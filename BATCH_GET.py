@@ -60,10 +60,10 @@ import streamlit as st
 
 
 # %%
-#Import functions
+#Import functions and variables
 from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, str_to_int, default_judgment_counter_bound
 
-from functions.gpt_functions import gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
+from functions.gpt_functions import basic_model, flagship_model, gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
 #For checking questions and answers, acknowledgment
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, GPT_answers_check
@@ -376,11 +376,11 @@ for index in all_df_masters.index:
         
             batch_id = all_df_masters.loc[index, 'batch_id']
         
-            gpt_model = "gpt-4o-mini"
+            gpt_model = basic_model
             if all_df_masters.loc[index, 'Use flagship version of GPT'] == True:
-                gpt_model = "gpt-4o"
+                gpt_model = flagship_model
             else:        
-                gpt_model = "gpt-4o-mini"
+                gpt_model = basic_model
                 
             #Get batch record
             batch_record = openai.batches.retrieve(batch_id)

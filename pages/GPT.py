@@ -95,7 +95,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, gpt_run, batch_request_function #GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption
+from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption, basic_model, flagship_model
 #, intro_for_GPT
 
 
@@ -112,7 +112,7 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
-    st.session_state['gpt_model'] = "gpt-4o-mini"
+    st.session_state['gpt_model'] = basic_model
 
 #Initialize API key
 if 'gpt_api_key' not in st.session_state:
@@ -150,11 +150,11 @@ def own_account_entries_function():
     
             if st.session_state['df_master'].loc[0, 'Use flagship version of GPT']:
             
-                st.session_state.gpt_model = "gpt-4o"
+                st.session_state.gpt_model = flagship_model
     
             else:
                 
-                st.session_state.gpt_model = 'gpt-4o-mini'
+                st.session_state.gpt_model = basic_model
     
             st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
     
@@ -164,7 +164,7 @@ def own_account_entries_function():
             
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
-            st.session_state.gpt_model = "gpt-4o-mini"
+            st.session_state.gpt_model = basic_model
 
             st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
     
@@ -172,7 +172,7 @@ def own_account_entries_function():
 
         #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        #st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = basic_model
 
         #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
@@ -312,7 +312,7 @@ gpt_questions_entry = st.text_area(label = f"You may enter at most {question_cha
     
 st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
 
-st.caption(f"By default, this app will use model gpt-4o-mini. Due to a technical limitation, this model will read up to approximately {round(tokens_cap('gpt-4o-mini')*3/4)} words from each case.")
+st.caption(f"By default, this app will use model {basic_model}. Due to a technical limitation, this model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each case.")
 
 if check_questions_answers() > 0:
     
@@ -447,7 +447,7 @@ else:
                 
                 st.warning('This key is not valid.')
  
-        st.markdown("""**:green[You can use the flagship version of GPT (model gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
+        st.markdown(f"""**:green[You can use the flagship version of GPT ({flagship_model}),]** which is :red[significantly more expensive] than the default model ({basic_model}) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         
@@ -457,11 +457,11 @@ else:
 
             #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
             
-            #st.session_state.gpt_model = "gpt-4o"
+            #st.session_state.gpt_model = flagship_model
 
         #else:
             
-            #st.session_state.gpt_model = 'gpt-4o-mini'
+            #st.session_state.gpt_model = basic_model
             #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
         st.write(f'**:green[You can change the maximum number of cases to process.]**')
@@ -484,7 +484,7 @@ else:
 
         #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        #st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = basic_model
 
         #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
@@ -495,7 +495,7 @@ else:
 
         #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        #st.session_state.gpt_model = "gpt-4o-mini"
+        #st.session_state.gpt_model = basic_model
 
         #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
@@ -591,7 +591,7 @@ with stylable_container(
 # ## ER only
 
 # %%
-#if st.session_state.gpt_model == "gpt-4o":
+#if st.session_state.gpt_model == flagship_model:
 if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py')):
     
     st.markdown("""The English Reports are available as PDFs. By default, this app will use an Optical Character Recognition (OCR) engine to extract text from the relevant PDFs, and then send such text to GPT.
@@ -667,11 +667,11 @@ if run_button:
                 
                 #Warning
                 if gpt_activation_entry:
-                    if st.session_state.gpt_model == 'gpt-4o-mini':
+                    if st.session_state.gpt_model == basic_model:
                         st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
                         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
                     
-                    #if st.session_state.gpt_model == "gpt-4o":
+                    #if st.session_state.gpt_model == flagship_model:
                         #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
                             
                 #Create spreadsheet of responses
@@ -727,7 +727,7 @@ if run_button:
                 #print(traceback.format_exc())
 
                 st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
-                
+
 
 # %%
 if return_button:
@@ -785,11 +785,11 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
 
                     #Warning
                     if gpt_activation_entry:
-                        if st.session_state.gpt_model == 'gpt-4o-mini':
+                        if st.session_state.gpt_model == basic_model:
                             st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
                             st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
                         
-                        #if st.session_state.gpt_model == "gpt-4o":
+                        #if st.session_state.gpt_model == flagship_model:
                             #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
                     
                     #Definitions and functions for ER
@@ -892,11 +892,11 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
 
         #Warning
         if gpt_activation_entry:
-            if st.session_state.gpt_model == 'gpt-4o-mini':
+            if st.session_state.gpt_model == basic_model:
                 st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
                 st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
             
-            #if st.session_state.gpt_model == "gpt-4o":
+            #if st.session_state.gpt_model == flagship_model:
                 #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 
