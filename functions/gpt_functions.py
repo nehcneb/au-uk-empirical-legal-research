@@ -59,16 +59,6 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-#PandasAI
-#from dotenv import load_dotenv
-from pandasai import SmartDataframe
-from pandasai import Agent
-#from pandasai.llm import BambooLLM
-from pandasai.llm.openai import OpenAI
-import pandasai as pai
-from pandasai.responses.streamlit_response import StreamlitResponse
-from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_openai_callback
-
 #Excel
 import openpyxl
 from pyxlsb import open_workbook as open_xlsb
@@ -361,15 +351,6 @@ For example, the question "What's the judge's name?" should be labelled "0".
 For example, the question "What's the defendant's age?" should be labelled "0".
 """
 
-#More general below
-#questions_check_system_instruction = """
-#You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
-#You will be given questions to check in JSON form. 
-#Based only on information contained in the JSON, please check each question for whether it seeks a person's birth, address, or other personally identifiable information. 
-#Where a question indeed seeks personally identifiable information, you label "1". 
-#Where a question does not seek personally identifiable information, you label "0". 
-#If you are not sure, label "unclear".
-#"""
 
 # %%
 #Check questions for potential privacy infringement
@@ -532,12 +513,10 @@ def GPT_questions_check(_questions_json_or_string, gpt_model, questions_check_sy
         print('Questions check failed.')
         print(e)
 
-
         #create placeholder input and output tokens
         questions_check_output_tokens = 0
         questions_check_input_tokens = 0
         
-    
     #Returns a stirng of questions
     questions_string = dict_to_string(questions_json)
 
