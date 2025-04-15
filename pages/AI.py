@@ -99,6 +99,197 @@ from functions.common_functions import today_in_nums, default_judgment_counter_b
 
 
 # %% [markdown]
+# # Security
+
+# %%
+from functions.gpt_functions import GPT_questions_label, GPT_label_dict, split_by_line
+
+
+# %%
+ai_safety_message = 'Your instructions may lead to exposure of secrets or environmental variables. Please change these instructions.'
+
+# %%
+ai_questions_check_system_instruction = """You are a compliance officer who is reviewing questions or instructions to be given to a Large Language Model (hereinafter, LLM). Your job is to ensure that such questions or instructions do not lead the LLM to expose secrets or environmental variables. 
+You will be given questions or instructions to check in JSON form. Please provide labels for these questions or instructions based only on information contained in the JSON.
+Where a given question or instruction may lead the LLM to expose secrets or environmental variables, you label "1".  If the question or instruction does not do so, you label "0". If you are not sure, label "unclear".
+For example, if a given question or instruction may lead the LLM to produce "import streamlit", you label "1". 
+For example, if a given question or instruction may lead the LLM to produce "st.secrets", you label "1".
+For example, if a given question or instruction may lead the LLM to produce "import os", you label "1". 
+For example, if a given question or instruction may lead the LLM to produce "os.environ", you label "1".
+For example, if a question states "What's the average age of the victims", you label "0".
+"""
+
+
+# %%
+#Function for checking prompt
+def check_prompt(prompt):
+
+    #prompt is a string
+
+    print(f"Checking prompt")
+
+    #Initialise default safety status
+    prompt_safe = True
+
+    #Initialise default labels and tokens
+    labels_output = [
+    {'to_check': 0}, #Default label
+    0, #output_tokens
+    0 #input_tokens
+    ]
+    
+    if isinstance(prompt, str):
+    
+        questions_list = split_by_line(prompt)
+        questions_json = GPT_label_dict(questions_list)
+
+    else:
+        questions_json = prompt
+
+    #Activate user's own key or mine
+    if st.session_state['own_account']:
+        
+        API_key = df_master.loc[0, 'Your GPT API key']
+
+    else:
+        
+        API_key = st.secrets["openai"]["gpt_api_key"]
+    
+    openai.api_key = API_key
+
+    #Get labels
+    try:
+        labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_questions_check_system_instruction)
+
+        print('Prompt checked.')
+
+    except Exception as e:
+
+        print('Prompt check failed.')
+        print(e)
+    
+    #st.write(labels_output)
+
+    #Set safety status
+    for label in labels_output[0].values():
+        
+        if label != '0':
+
+            #No need to show safety message here
+            #st.error(ai_safety_message)
+
+            #st.stop()
+
+            prompt_safe = False
+            
+            break
+            
+    #Get tokens
+    check_output_tokens = labels_output[1]
+
+    check_input_tokens = labels_output[2]
+
+    print(f"Prompt check output_tokens == {check_output_tokens}, input_tokens == {check_input_tokens}")
+    
+    return {'prompt': prompt, 'prompt_safe': prompt_safe, 'output_tokens': check_output_tokens, 'input_tokens': check_input_tokens}
+
+
+# %%
+ai_code_check_system_instruction = """
+You are a compliance officer who is reviewing a code to be executed. Your job is to ensure that such code does not expose secrets or environmental variables. 
+You will be given the code to check in JSON form. Please provide labels for the code based only on information contained in the JSON.
+Where a code may expose secrets or environmental variables, you label "1".  If the code does not do so, you label "0". If you are not sure, label "unclear".
+For example, if a code includes "import streamlit", you label "1". 
+For example, if a code includes "st.secrets", you label "1".
+For example, if a code includes "import os", you label "1".
+For example, if a code includes "os.environ", you label "1".
+For example, if a code states "dfs[0]['Date'] = pd.to_datetime(dfs[0]['Date']).dt.strftime('%d/%m/%Y')", you label "0".
+"""
+
+
+# %%
+#Function for checking code
+
+def check_code(code, prompt_safe):
+
+    #Code is a string
+
+    #prompt_safe is whether the prompt is safe
+
+    #Produce null return if prompt is not saffe
+    if not prompt_safe:
+
+        return {'code': code, 'code_safe': False, 'output_tokens': 0, 'input_tokens': 0}
+
+    else:
+        
+        #Default safety status
+        code_safe = True
+    
+        #Initialise default labels and tokens
+        labels_output = [
+        {'to_check': 0}, #Default label
+        0, #output_tokens
+        0 #input_tokens
+        ]
+        
+        #Produce json with code
+        questions_json = {'Code to check': str(code)}
+    
+        #st.write(questions_json)
+        
+        #Activate user's own key or mine
+        if st.session_state['own_account']:
+            
+            API_key = df_master.loc[0, 'Your GPT API key']
+    
+        else:
+            
+            API_key = st.secrets["openai"]["gpt_api_key"]
+        
+        openai.api_key = API_key
+    
+        #Get labels
+        try:
+    
+            labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_code_check_system_instruction)
+    
+            print('Code checked.')
+    
+        except Exception as e:
+    
+            print('Code check failed.')
+            print(e)
+    
+        #st.write(labels_output)
+    
+        #Set safety status
+    
+        for label in labels_output[0].values():
+            
+            if label != '0':
+    
+                #No need to show the following message here
+                #st.error(ai_safety_message)
+    
+                code_safe = False
+    
+                break
+                
+                #st.stop()
+    
+        #Get tokens
+        check_output_tokens = labels_output[1]
+    
+        check_input_tokens = labels_output[2]
+
+        print(f"Code check output_tokens == {check_output_tokens}, input_tokens == {check_input_tokens}")
+        
+        return {'code': code, 'code_safe': code_safe, 'output_tokens': check_output_tokens, 'input_tokens': check_input_tokens}
+        
+
+
+# %% [markdown]
 # # AI model and context
 
 # %% [markdown]
@@ -173,7 +364,7 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
                       config={"llm": llm, 
                               "verbose": True, 
                               "response_parser": StreamlitResponse, 
-                              "custom_whitelisted_dependencies": ["ast"], 
+                              "custom_whitelisted_dependencies": ["ast", "scikit-learn"], 
                               'enable_cache': True, 
                               'use_error_correction_framework': True, 
                               'max_retries': 5
@@ -353,191 +544,209 @@ def pandasai_ask():
     
     with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
 
-        #Proess prompt; prompt already checked 
+        #Get and check prompt
         prompt = st.session_state.prompt
+
+        check_prompt_dict = check_prompt(prompt)
+
+        prompt = check_prompt_dict['prompt']
+
+        prompt_safe = check_prompt_dict['prompt_safe']
+
+        #Produce record of prompt check cost and tokens
+        prompt_check_input_tokens = check_prompt_dict['input_tokens']
+        prompt_check_output_tokens = check_prompt_dict['output_tokens']
+
+        prompt_check_tokens = prompt_check_input_tokens + prompt_check_output_tokens
+        prompt_check_cost = prompt_check_input_tokens*gpt_input_cost(st.session_state.gpt_model) + prompt_check_output_tokens*gpt_output_cost(st.session_state.gpt_model)
+
+        #Produce/check code depending on whether the prompt is safe
+        if not prompt_safe: #Not producing or checking code if prompt is not safe
+
+            #Placeholder code
+            code = ''
+
+            #Placeholder returnd dict of check_code function
+            check_code_dict = check_code(code, prompt_safe)
+
+        else:
+
+            #Produce code
+            code = agent.generate_code(prompt)
+            
+            #Check code
+            check_code_dict = check_code(code, prompt_safe)
+
+        #Produce record of code check cost and tokens
+        code_check_input_tokens = check_code_dict['input_tokens']
+        code_check_output_tokens = check_code_dict['output_tokens']
         
-        #Check code
-        code = agent.generate_code(prompt)
+        code_check_tokens = code_check_input_tokens + code_check_output_tokens
+        code_check_cost = code_check_input_tokens*gpt_input_cost(st.session_state.gpt_model) + code_check_output_tokens*gpt_output_cost(st.session_state.gpt_model)
 
-        code_safety_dict = check_code(code)
-
-        code = code_safety_dict['code']
-
-        code_safe = code_safety_dict['code_safe']
-
-
+        #Produce record of agent-based prompt cost and tokens
+        prompt_tokens = cb.prompt_tokens #Equals 0 if no code has been produced
+        prompt_cost = prompt_tokens*gpt_input_cost(st.session_state.gpt_model)
+        
+        #Produce response depending on whether the code produced is safe
+        code = check_code_dict['code']
+        
+        code_safe = check_code_dict['code_safe']
+        
         if not code_safe:
 
-            print('LLM stopped because the code produced is not safe.')
-        
+            response = ai_safety_message
+
         else:
-            
-            prompt = f"Processe the following code:\r\n{code}"
+
+            prompt_to_process = f"Processe the following code:\r\n{code}"
     
-            #Get response and keep in session state
-            
-            response = agent.chat(prompt)
-            
-            st.session_state.response = response
-    
-            #st.write(f"type(response) = {type(response)}")
-            
-            #Keep record of prompt cost and tokens
-            prompt_tokens = cb.prompt_tokens
+            #Get response
+            response = agent.chat(prompt_to_process)
+
+            #Update record of agent-based prompt cost and tokens
+            prompt_tokens += cb.prompt_tokens
             prompt_cost = prompt_tokens*gpt_input_cost(st.session_state.gpt_model)
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": prompt_cost, "tokens": prompt_tokens,   "role": "user", "content": {"prompt": prompt}})
+
+        #Keep record of prompt cost and tokens
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": prompt_cost + prompt_check_cost + code_check_cost, "tokens": prompt_tokens + prompt_check_tokens + code_check_tokens,   "role": "user", "content": {"prompt": prompt}})
+        
+        #keep response in session state and continue to process response        
+        st.session_state.response = response
+                
+        #Obtain response cost and tokens
+        response_cost = cb.total_cost - prompt_cost
+        response_tokens = cb.completion_tokens
+
+        #Show response
+        st.subheader(f'{st.session_state.ai_choice} Response')    
+        #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
+
+        if (agent.last_error is not None) or (not code_safe):
+            st.error(response)
+
+        else:
+            st.write(response)
             
-            #Obtain response cost and tokens
-            response_cost = cb.total_cost - prompt_cost
-            response_tokens = cb.completion_tokens
-    
-            #Show response
-            st.subheader(f'{st.session_state.ai_choice} Response')    
-            #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
-    
-            if agent.last_error is not None:
-                st.error(response)
-    
-            else:
-                st.write(response)
-                
-            #Keep record of response, cost and tokens
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
-    
-            #Display caption if response is a dataframe
-            if isinstance(response, pd.DataFrame):
-                
-                st.caption(spreadsheet_caption)
-    
-            #Check if any df produced
-            #if isinstance(st.session_state.response, pd.DataFrame):
-        
-                #col1b, col2b = st.columns(2, gap = 'small')
-        
-                #with col1b:
-                    #pandasai_analyse_button = st.button('ANALYSE the spreadsheet produced only')
-                
-                #with col2b:
-                    #pandasai_merge_button = st.button('MERGE with your spreadsheet')
-        
-                #if pandasai_analyse_button:                
-                    #pandasai_analyse_df_produced()
-        
-                #if pandasai_merge_button:
+        #Keep record of response, cost and tokens
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
+
+        #Display caption if response is a dataframe
+        if isinstance(response, pd.DataFrame):
+            
+            st.caption(spreadsheet_caption)
+
+        #For all GPT models, show any figure generated
+        #st.write(f'The number of figures is {plt.get_fignums()}')
+
+        if (('.png' in str(response)[-4:]) or (plt.get_fignums())):
+            if plt.get_fignums():
+                try:
+                    #st.write('**Visualisation**')
+            
+                    fig_to_plot = plt.gcf()
+                    st.pyplot(fig = fig_to_plot)
                     
-                    #pandasai_merge_df_produced()
+                    #Keep record of response, cost and tokens
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
     
-            #For all GPT models, show any figure generated
-            #st.write(f'The number of figures is {plt.get_fignums()}')
+                    #Enable downloading
+                    pdf_to_download = io.BytesIO()
+                    png_to_download = io.BytesIO()
     
-            if (('.png' in str(response)[-4:]) or (plt.get_fignums())):
-                if plt.get_fignums():
-                    try:
-                        #st.write('**Visualisation**')
+                    col1e, col2e = st.columns(2, gap = 'small')
+                    
+                    with col1e:
                 
-                        fig_to_plot = plt.gcf()
-                        st.pyplot(fig = fig_to_plot)
+                        plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
                         
-                        #Keep record of response, cost and tokens
-                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
-        
-                        #Enable downloading
-                        pdf_to_download = io.BytesIO()
-                        png_to_download = io.BytesIO()
-        
-                        col1e, col2e = st.columns(2, gap = 'small')
+                        pdf_button = st.download_button(
+                           label="DOWNLOAD as a PDF",
+                           data=pdf_to_download,
+                           file_name='chart.pdf',
+                           mime="image/pdf"
+                        )
+                    with col2e:
+                        plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
                         
-                        with col1e:
+                        png_button = st.download_button(
+                           label="DOWNLOAD as a PNG",
+                           data=png_to_download,
+                           file_name='chart.png',
+                           mime="image/png"
+                        )
                     
-                            plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
-                            
-                            pdf_button = st.download_button(
-                               label="DOWNLOAD as a PDF",
-                               data=pdf_to_download,
-                               file_name='chart.pdf',
-                               mime="image/pdf"
-                            )
-                        with col2e:
-                            plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
-                            
-                            png_button = st.download_button(
-                               label="DOWNLOAD as a PNG",
-                               data=png_to_download,
-                               file_name='chart.png',
-                               mime="image/png"
-                            )
+                    #Keep record of response, cost and tokens
+                    #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
+        
+                except Exception as e:
                         
-                        #Keep record of response, cost and tokens
-                        #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
-            
-                    except Exception as e:
-                            
-                        print(e)     
+                    print(e)     
+
+
+            else: #If st.pyplot doesn't work
+                #st.write('image')
+                st.warning('The image produced may not visualise properly.')
+                
+                st.image(image = response) #, use_column_width = 'never', output_format='png')                
+                
+                st.caption('Right click to save this image.')
     
+        #For displaying logs
+        #st.subheader('Logs')
+        #df_logs = agent.logs
+        #st.dataframe(df_logs)
+        
+        #default explanation/cost cost and tokens
+        explanation_cost = float(0)
+        explanation_tokens = float(0)
+        #code_cost = float(0)
+        #code_tokens = float(0)
+        
+        #Explanations
+        #if st.session_state.explain_status is True:
+        if explain_toggle:
     
-                else: #If st.pyplot doesn't work
-                    #st.write('image')
-                    st.warning('Image produced but may not visualise properly.')
-                    
-                    st.image(image = response) #, use_column_width = 'never', output_format='png')                
-                    
-                    st.caption('Right click to save this image.')
-        
-            #For displaying logs
-            #st.subheader('Logs')
-            #df_logs = agent.logs
-            #st.dataframe(df_logs)
+            explanation = agent.explain()
+            st.write('**Explanation**')
+            st.write(explanation)
+
+            #Display agent-based cost and tokens
+            explanation_cost = cb.total_cost - response_cost - prompt_cost
+            explanation_tokens = cb.total_tokens - response_tokens - prompt_tokens
             
-            #default explanation/cost cost and tokens
-            explanation_cost = float(0)
-            explanation_tokens = float(0)
-            code_cost = float(0)
-            code_tokens = float(0)
-            
-            #Explanations
-            #if st.session_state.explain_status is True:
-            if explain_toggle:
-        
-                explanation = agent.explain()
-                st.write('**Explanation**')
-                st.write(explanation)
+            #Keep record of explanation
+            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": explanation_cost, "tokens": explanation_tokens,   "role": "assistant", "content": {'answer': explanation}})
+
+        #Code
+        #if st.session_state.code_status is True:
+        if code_toggle:
+            try:
+                #code = agent.generate_code(prompt)
+                
+                st.write('**Code**')
+                st.code(code)
     
                 #Display cost and tokens
-                explanation_cost = cb.total_cost - response_cost - prompt_cost
-                explanation_tokens = cb.total_tokens - response_tokens - prompt_tokens
-                
-                #Keep record of explanation
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": explanation_cost, "tokens": explanation_tokens,   "role": "assistant", "content": {'answer': explanation}})
+                #code_cost = cb.total_cost - explanation_cost - response_cost - prompt_cost
+                #code_tokens = cb.total_tokens -  explanation_tokens  - response_tokens - prompt_tokens
     
-            #Code
-            #if st.session_state.code_status is True:
-            if code_toggle:
-                try:
-                    #code = agent.generate_code(prompt)
-                    
-                    st.write('**Code**')
-                    st.code(code)
-        
-                    #Display cost and tokens
-                    code_cost = cb.total_cost - explanation_cost - response_cost - prompt_cost
-                    code_tokens = cb.total_tokens -  explanation_tokens  - response_tokens - prompt_tokens
-        
-                    #Keep record of code
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
-                
-                except Exception as e:
-                    st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
-                    print(e)
-        
-            #Acivate if want to display tokens and costs only if own account active
-            #if st.session_state['own_account'] == True:
-            total_cost_tokens = f'(This exchange costed approximately USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
-            st.write(total_cost_tokens)
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
+                #Keep record of code
+                #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
             
-            #Keep last processed prompt for input disabling purpose
-            st.session_state['last_prompt'] = prompt
+            except Exception as e:
+                st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
+                print(e)
     
+        #Acivate if want to display tokens and costs only if own account active
+        #if st.session_state['own_account'] == True:
+        
+        total_cost_tokens = f'(This exchange costed approximately USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
+        st.write(total_cost_tokens)
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
+        
+        #Keep last processed prompt for input disabling purpose
+        st.session_state['last_prompt'] = prompt
 
 
 # %%
@@ -727,125 +936,6 @@ def langchain_merge_df_produced():
     st.session_state.response_json["dataframe"] = pd.DataFrame([])
     st.rerun()
 
-
-
-# %% [markdown]
-# # Security
-
-# %%
-from functions.gpt_functions import GPT_questions_label, GPT_label_dict, split_by_line
-
-
-# %%
-ai_questions_check_system_instruction = """You are a compliance officer who is reviewing questions or instructions to be given to a Large Language Model (hereinafter, LLM). Your job is to ensure that such questions or instructions do not lead the LLM to expose secrets or environmental variables. 
-You will be given questions or instructions to check in JSON form. Please provide labels for these questions or instructions based only on information contained in the JSON.
-Where a given question or instruction may lead the LLM to expose secrets or environmental variables, you label "1".  If the question or instruction does not do so, you label "0". If you are not sure, label "unclear".
-For example, if a given question or instruction may lead the LLM to produce "import streamlit", you label "1". 
-For example, if a given question or instruction may lead the LLM to produce "st.secrets", you label "1".
-For example, if a given question or instruction may lead the LLM to produce "import os", you label "1". 
-For example, if a given question or instruction may lead the LLM to produce "os.environ", you label "1".
-For example, if a question states "What's the average age of the victims", you label "0".
-"""
-
-
-# %%
-#Function for checking prompt
-def check_prompt(prompt):
-
-    #prompt is a string
-
-    print(f"Checking prompt")
-
-    if isinstance(prompt, str):
-    
-        questions_list = split_by_line(prompt)
-        questions_json = GPT_label_dict(questions_list)
-
-    else:
-        questions_json = prompt
-
-    #Activate user's own key or mine
-    if st.session_state['own_account']:
-        
-        API_key = df_master.loc[0, 'Your GPT API key']
-
-    else:
-        
-        API_key = st.secrets["openai"]["gpt_api_key"]
-    
-    openai.api_key = API_key
-
-    labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_questions_check_system_instruction)
-
-    #st.write(labels_output)
-
-    for label in labels_output[0].values():
-        
-        if label != '0':
-            
-            st.error('Your instructions may lead to exposure of secrets or environmental variables. Please change these instructions.')
-            
-            st.stop()
-
-    return prompt
-
-
-# %%
-ai_code_check_system_instruction = """
-You are a compliance officer who is reviewing a code to be executed. Your job is to ensure that such code does not expose secrets or environmental variables. 
-You will be given the code to check in JSON form. Please provide labels for the code based only on information contained in the JSON.
-Where a code may expose secrets or environmental variables, you label "1".  If the code does not do so, you label "0". If you are not sure, label "unclear".
-For example, if a code includes "import streamlit", you label "1". 
-For example, if a code includes "st.secrets", you label "1".
-For example, if a code includes "import os", you label "1".
-For example, if a code includes "os.environ", you label "1".
-For example, if a code states "dfs[0]['Date'] = pd.to_datetime(dfs[0]['Date']).dt.strftime('%d/%m/%Y')", you label "0".
-"""
-
-
-# %%
-#Function for checking code
-
-def check_code(code):
-
-    #Code is a string
-
-    #Default safety status
-    code_safe = True
-    
-    questions_json = {'Code to check': str(code)}
-
-    #st.write(questions_json)
-    
-    #Activate user's own key or mine
-    if st.session_state['own_account']:
-        
-        API_key = df_master.loc[0, 'Your GPT API key']
-
-    else:
-        
-        API_key = st.secrets["openai"]["gpt_api_key"]
-    
-    openai.api_key = API_key
-
-    labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_code_check_system_instruction)
-
-    #st.write(labels_output)
-
-    for label in labels_output[0].values():
-        
-        if label != '0':
-            
-            st.error('The GPT response may expose secrets or environmental variables. Please change your instructions.')
-
-            code_safe = False
-
-            break
-            
-            #st.stop()
-
-    return {'code': code, 'code_safe': code_safe}
-    
 
 
 # %% [markdown]
@@ -1611,7 +1701,7 @@ if ask_button:
                 st.session_state['gpt_api_key_validity'] = True
 
         #Check prompt
-        st.session_state.prompt = check_prompt(st.session_state.prompt)
+        #st.session_state.prompt = check_prompt(st.session_state.prompt)
         
         #Change q_and_a_provided status
         st.session_state['q_and_a_provided'] = False
