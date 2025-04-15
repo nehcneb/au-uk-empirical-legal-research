@@ -102,7 +102,7 @@ from functions.common_functions import today_in_nums, default_judgment_counter_b
 # # Security
 
 # %%
-from functions.gpt_functions import GPT_questions_label, GPT_label_dict, split_by_line
+from functions.gpt_functions import GPT_questions_label
 
 
 # %%
@@ -140,13 +140,8 @@ def check_prompt(prompt):
     0 #input_tokens
     ]
     
-    if isinstance(prompt, str):
-    
-        questions_list = split_by_line(prompt)
-        questions_json = GPT_label_dict(questions_list)
-
-    else:
-        questions_json = prompt
+    #Produce json with prompt
+    questions_json = {'Questions to check': str(prompt)}
 
     #Activate user's own key or mine
     if st.session_state['own_account']:
