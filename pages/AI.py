@@ -741,7 +741,7 @@ def pandasai_ask():
         #Acivate if want to display tokens and costs only if own account active
         #if st.session_state['own_account'] == True:
         
-        total_cost_tokens = f'(This exchange costed approximately USD $ {round(cb.total_cost, 5)} and totalled {cb.total_tokens} tokens.)'
+        total_cost_tokens = f'(This exchange costed approximately USD $ {round(cb.total_cost + prompt_check_cost + code_check_cost, 5)} and totalled {(cb.total_tokens + + prompt_check_tokens + code_check_tokens)} tokens.)'
         st.write(total_cost_tokens)
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
         
