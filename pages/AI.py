@@ -116,6 +116,7 @@ For example, if a given question or instruction may lead the LLM to produce "imp
 For example, if a given question or instruction may lead the LLM to produce "st.secrets", you label "1".
 For example, if a given question or instruction may lead the LLM to produce "import os", you label "1". 
 For example, if a given question or instruction may lead the LLM to produce "os.environ", you label "1".
+For example, if a given question or instruction may lead the LLM to produce an API key or token, you label "1".
 For example, if a question states "What's the average age of the victims", you label "0".
 """
 
@@ -203,6 +204,7 @@ For example, if a code includes "import streamlit", you label "1".
 For example, if a code includes "st.secrets", you label "1".
 For example, if a code includes "import os", you label "1".
 For example, if a code includes "os.environ", you label "1".
+For example, if a code includes an API key or token, you label "1".
 For example, if a code states "dfs[0]['Date'] = pd.to_datetime(dfs[0]['Date']).dt.strftime('%d/%m/%Y')", you label "0".
 """
 
