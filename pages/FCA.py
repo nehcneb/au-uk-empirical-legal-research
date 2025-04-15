@@ -68,7 +68,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # Federal Courts search engine
 
 # %%
-from functions.fca_functions import fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+from functions.fca_functions import fca_courts, fca_courts_list, npa_dict, npa_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
 #fca_link_to_doc
 
 
@@ -307,7 +307,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Judge'] = None
     st.session_state['df_master'].loc[0, 'Reported citation'] = None
     st.session_state['df_master'].loc[0, 'File number'] = None
-    st.session_state['df_master'].loc[0, 'National practice area'] = None
+    st.session_state['df_master'].loc[0, 'National practice area'] = 'All'
     st.session_state['df_master'].loc[0, 'With all the words'] = None
     st.session_state['df_master'].loc[0, 'With at least one of the words'] = None
     st.session_state['df_master'].loc[0, 'Without the words'] = None
@@ -381,7 +381,7 @@ reported_citation_entry = st.text_input(label = 'Reported citation', value = st.
 
 file_number_entry = st.text_input(label = 'File number', value = st.session_state.df_master.loc[0, 'File number'])
 
-npa_entry = st.text_input(label = 'National practice area', value = st.session_state.df_master.loc[0, 'National practice area'] )
+npa_entry = st.selectbox(label = 'National practice area (FCA2016-)', options = npa_list, index = npa_list.index(st.session_state.df_master.loc[0, 'National practice area']), help = 'NPAs (National Practice Areas) are searchable only for judgments from 2016 onwards.')
 
 with_all_the_words_entry = st.text_input(label = 'With ALL the words', value = st.session_state.df_master.loc[0, 'With all the words'] )
 

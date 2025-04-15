@@ -34,7 +34,6 @@ import pause
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
-from urllib.request import urlretrieve
 import os
 #import pypdf
 import io
@@ -75,17 +74,32 @@ from functions.common_functions import link, split_title_mnc
 
 #auxiliary lists and variables
 
-fca_courts = {'Federal Court': 'fca', 
-              'Industrial Relations Court of Australia': 'irc', 
-              'Australian Competition Tribunal': 'tribunals%2Facompt', 
-              'Copyright Tribunal': 'tribunals%2Facopyt', 
-              'Defence Force Discipline Appeal Tribunal': 'tribunals%2Fadfdat', 
-              'Federal Police Discipline Tribunal': 'tribunals%2Ffpdt', 
-              'Trade Practices Tribunal': 'tribunals%2Fatpt', 
-              'Supreme Court of Norfolk Island': 'nfsc',
-             'All': ''}
+fca_courts = {'Federal Court': 'FCA+FCAFC', 
+              'Industrial Relations Court of Australia': 'IRCA', 
+              'Australian Competition Tribunal': 'ACOMPT', 
+              'Copyright Tribunal': 'ACOPYT', 
+              'Defence Force Discipline Appeal Tribunal': 'ADFDAT', 
+              'Federal Police Discipline Tribunal': 'FPDT', 
+              'Trade Practices Tribunal': 'ATPT', 
+              'Supreme Court of Norfolk Island': 'NFSC',
+             'All': 'FCA+FCAFC+IRCA+ACOMPT+ACOPYT+ADFDAT+FPDT+ATPT+NFSC'}
 
 fca_courts_list = list(fca_courts.keys())
+
+# %%
+npa_dict = {'All': '', 
+    'Admin., Constitutional, Human Rights': 'administrative', 
+  'Admiralty and Maritime': 'admiralty', 
+  'Commercial and Corporations': 'commercial', 
+  'Employment and Industrial Relations': 'employment', 
+  'Federal Crime and Related Proceedings': 'crime', 
+  'Intellectual Property': 'intellectual', 
+  'Native Title': 'native', 
+  'Taxation': 'taxation',
+      'Other Federal Jurisdiction': 'other',
+    }
+
+npa_list = list(npa_dict.keys())
 
 
 # %%
@@ -114,8 +128,13 @@ def fca_search(court = '',
     #base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2Ffca"
 
     #If allowing users to search which court
-    base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2F" + fca_courts[court]
+    #base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2F" + fca_courts[court]
 
+    #New base_url as of 20250415
+    #base_url = "https://search.judgments.fedcourt.gov.au/s/search.html"
+
+    base_url = 'https://search.judgments.fedcourt.gov.au/s/search.html?collection=fca~sp-judgments-internet&profile=judgments-internet&sort=date&meta_CourtID_orsand=' + fca_courts[court] 
+    
     #Tidy up dates for batch mode
     if '-' in str(after_date):
         after_date = str(after_date).replace('-', '')
@@ -129,11 +148,16 @@ def fca_search(court = '',
     if '/' in str(after_date):
         before_date = str(before_date).replace('/', '')
     
-    params = {'meta_2' : case_name_mnc, 
-              'meta_A' : judge, 
-              'meta_z' : reported_citation, 
-              'meta_3' : file_number, 
-              'meta_n_phrase_orsand' : npa, 
+    params = {
+        #'collection': 'fca~sp-judgments-internet', 
+        #'profile': 'judgments-internet',
+        #'sort': 'date', 
+        #'meta_CourtID_orsand': fca_courts[court], 
+        'meta_MNC' : case_name_mnc, 
+              'meta_Judge' : judge, 
+              'meta_Reported' : reported_citation, 
+              'meta_FileNumber' : file_number, 
+              'meta_NPA_phrase_orsand' : npa_dict[npa], 
               'query_sand' : with_all_the_words, 
               'query_or' : with_at_least_one_of_the_words, 
               'query_not' : without_the_words, 
@@ -142,10 +166,10 @@ def fca_search(court = '',
               'meta_d' : on_this_date, 
               'meta_d1' : after_date, 
               'meta_d2' : before_date, 
-              'meta_7' : legislation, 
-              'meta_4' : cases_cited, 
-              'meta_B' : catchwords}
-
+              'meta_Legislation' : legislation, 
+              'meta_CasesCited' : cases_cited, 
+              'meta_Catchwords' : catchwords}
+    
     response = requests.get(base_url, params=params)
     response.raise_for_status()
     # Process the response (e.g., extract relevant information)
@@ -154,7 +178,7 @@ def fca_search(court = '',
     #Get search url
     results_url = response.url
 
-    #print(f"results_url == {results_url}")
+    #st.write(f"results_url == {results_url}")
     
     #Get the number of search results
     results_count = int(0)
@@ -172,7 +196,7 @@ def fca_search(court = '',
 
         #print(f"results_num_raw_text == {results_num_raw_text}")
         
-        results_count = results_num_raw_text.split('\r\n')[0].split(' ')[-1]
+        results_count = results_num_raw_text.split('\n')[0].split(' ')[-1]
         
         results_count = results_count.replace(',', '').replace('.', '')
 
