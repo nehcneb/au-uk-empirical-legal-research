@@ -427,7 +427,7 @@ if st.toggle('Tips for using GPT'):
 
 gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-st.caption(f"By default, this app will use model {basic_model}. This model will process up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
+st.caption(f"By default, this app will use model {basic_model}. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
 
 if check_questions_answers() > 0:
     
