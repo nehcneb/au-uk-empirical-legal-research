@@ -578,7 +578,7 @@ pandasai_agent_description = default_agent_description + pandasai_further_instru
 # %%
 def pandasai_ask():
     
-    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
+    with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize In progress...}$"):
 
         #Get and check prompt
         prompt = st.session_state.prompt
@@ -891,7 +891,7 @@ def langchain_write(response_json):
 #Langchain ask function
 
 def langchain_ask():
-    with langchain_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
+    with langchain_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize In progress...}$"):
 
         #Process prompt
 
@@ -1828,7 +1828,7 @@ if st.session_state.ai_choice == 'GPT':
         if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
         #if clarification_questions_toggle:
         
-            with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize Running...}$"):
+            with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize In progress...}$"):
                 
                 prompt = st.session_state.prompt
     
