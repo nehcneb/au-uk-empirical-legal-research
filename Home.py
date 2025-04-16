@@ -12,9 +12,6 @@
 #     name: python3
 # ---
 
-# %% editable=true slideshow={"slide_type": ""}
-#streamlit run Dropbox/Python/GitHub/lawtodata/Home.py
-
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Preliminaries
 

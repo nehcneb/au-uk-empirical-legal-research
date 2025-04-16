@@ -427,7 +427,7 @@ if st.toggle('Tips for using GPT'):
 
 gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-st.caption(f"By default, this app will use model {basic_model}. Due to a technical limitation, this model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
+st.caption(f"By default, this app will use model {basic_model}. This model will process up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
 
 if check_questions_answers() > 0:
     
@@ -827,7 +827,7 @@ if run_button:
                 #Warning
                 if gpt_activation_entry:
                     if st.session_state.gpt_model == basic_model:
-                        st.warning('A low-cost GPT model will process your files. Please be cautious.')
+                        st.warning('A low-cost GPT model is in use. Please be cautious.')
                         st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
                     
                     #if st.session_state.gpt_model == flagship_model:
@@ -1103,7 +1103,7 @@ if batch_mode_allowed() > 0:
         #Warning
         if gpt_activation_entry:
             if st.session_state.gpt_model == basic_model:
-                st.warning('A low-cost GPT model will process the cases found. Please be cautious.')
+                st.warning('A low-cost GPT model is in use. Please be cautious.')
                 st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
 
 

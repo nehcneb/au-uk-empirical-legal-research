@@ -17,7 +17,7 @@
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
@@ -719,6 +719,8 @@ def display_df(df):
 
         #If want to display "click" instead of the whole link. Problem with this: if there is an empty cell, 'click' will still be dipslayed.
         #link_heading_config[link_heading] = st.column_config.LinkColumn(display_text = 'Click')
+        
+        link_heading_config[link_heading] = st.column_config.LinkColumn()
 
     #Reverse columns with clickable links to raw uri
     df = clean_link_columns(df)
