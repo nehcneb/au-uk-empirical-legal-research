@@ -139,8 +139,17 @@ def check_prompt(prompt):
     0, #output_tokens
     0 #input_tokens
     ]
+
+    #Programmatic check
+    for bad_word in ['.secrets', '.session_state', '.environ']:
+
+        if bad_word in str(prompt).lower:
+
+            prompt_safe = False
+
+            break
     
-    #Produce json with prompt
+    #Produce json with prompt for GPT check
     questions_json = {'Questions to check': str(prompt)}
 
     #Activate user's own key or mine
@@ -232,7 +241,16 @@ def check_code(code, prompt_safe):
         0 #input_tokens
         ]
         
-        #Produce json with code
+        #Programmatic check
+        for bad_word in ['.secrets', '.session_state', '.environ']:
+    
+            if bad_word in str(code).lower:
+    
+                code_safe = False
+    
+                break
+        
+        #Produce json with prompt for GPT check
         questions_json = {'Code to check': str(code)}
     
         #st.write(questions_json)
