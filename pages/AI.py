@@ -710,7 +710,7 @@ def pandasai_ask():
         
         #Explanations
         #if st.session_state.explain_status is True:
-        if explain_toggle:
+        if explain_toggle and code_safe:
     
             explanation = agent.explain()
             st.write('**Explanation**')
@@ -725,12 +725,12 @@ def pandasai_ask():
 
         #Code
         #if st.session_state.code_status is True:
-        if code_toggle:
-            try:
+        if code_toggle and code_safe:
+            #try:
                 #code = agent.generate_code(prompt)
                 
-                st.write('**Code**')
-                st.code(code)
+            st.write('**Code**')
+            st.code(code)
     
                 #Display cost and tokens
                 #code_cost = cb.total_cost - explanation_cost - response_cost - prompt_cost
@@ -739,9 +739,9 @@ def pandasai_ask():
                 #Keep record of code
                 #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
             
-            except Exception as e:
-                st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
-                print(e)
+            #except Exception as e:
+                #st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
+                #print(e)
     
         #Acivate if want to display tokens and costs only if own account active
         #if st.session_state['own_account'] == True:
