@@ -1370,8 +1370,12 @@ if len(ai_list_raw) > 1:
 else:
     st.session_state.ai_choice = 'GPT'
 
-if own_account_allowed() > 0:
+if own_account_allowed() == 0:
     
+    own_account_entry = False
+
+else:
+
     st.subheader(':orange[Enhance app capabilities]')
     
     st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum number of instructions to process? You can do so with your own GPT account.
