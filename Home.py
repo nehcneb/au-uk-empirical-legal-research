@@ -99,7 +99,7 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 
 (2) extract and code **your** choice of case data or information, partially using GPT.
 
-This app can also process your own files or spreadsheet of data.
+This app can also process your own files or spreadsheets of data.
 """)
 
 #(1) collect cases of select courts and tribunals from Australia, Canada, the United Kingdom and the United States; and
@@ -114,7 +114,7 @@ else:
     st.markdown("""**Get started below :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
 
-st.caption('The developer [Ben Chen](https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html) acknowledges and greatly appreciates the exemplary technical assistance of Mike Lynch and Xinwei Luo of Sydney Informatics Hub, a Core Research Facility of the University of Sydney. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
+st.caption('The developer [Ben Chen of Sydney Law School](https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html) acknowledges and greatly appreciates the exemplary technical assistance of Mike Lynch and Xinwei Luo of Sydney Informatics Hub, a Core Research Facility of the University of Sydney. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
 
 #, as well as the financial support provided by a University of Sydney Research Accelerator (SOAR) Prize. 
 

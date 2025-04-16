@@ -586,7 +586,7 @@ def pandasai_ask():
         #Get and check prompt
         prompt = st.session_state.prompt
 
-        check_prompt_dict = check_prompt(prompt = prompt, own_account_entry = st.session_state['df_master'].loc[0, 'Use own account'], check = True)
+        check_prompt_dict = check_prompt(prompt = prompt, own_account_entry = own_account_entry, check = True)
 
         prompt = check_prompt_dict['prompt']
 
@@ -614,7 +614,7 @@ def pandasai_ask():
             code = agent.generate_code(prompt)
             
             #Check code
-            check_code_dict = check_code(code = code, own_account_entry = st.session_state['df_master'].loc[0, 'Use own account'], prompt_safe = prompt_safe)
+            check_code_dict = check_code(code = code, own_account_entry = own_account_entry, prompt_safe = prompt_safe)
 
         #Produce record of code check cost and tokens
         code_check_input_tokens = check_code_dict['input_tokens']
@@ -1731,7 +1731,7 @@ if ask_button:
                 
         #Check GPT API key validity if activated
         
-        if (st.session_state['df_master'].loc[0, 'Use own account']) and (st.session_state.gpt_api_key_validity == False):
+        if (own_account_entry) and (st.session_state.gpt_api_key_validity == False):
                     
             if is_api_key_valid(gpt_api_key_entry) == False:
                 
