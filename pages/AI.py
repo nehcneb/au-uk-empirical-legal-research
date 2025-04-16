@@ -295,6 +295,12 @@ def check_code(code, prompt_safe):
 # ## Applicable to all AIs
 
 # %%
+#Specify AI-page specific models
+
+ai_basic_model = 'gpt-4o-mini'
+ai_flagship_model = 'gpt-4o'
+
+# %%
 #Import functions
 from functions.gpt_functions import is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, num_tokens_from_string
 
@@ -357,7 +363,7 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
     
     if ai_choice == 'GPT':            
 
-        #if gpt_model_choice == 'gpt-4o-mini':
+        #if gpt_model_choice == ai_basic_model:
             
         agent = Agent(df, 
                       config={"llm": llm, 
@@ -394,7 +400,7 @@ def ai_model_description(ai_choice):
     
     if ai_choice == 'GPT': #llm.type == 'GPT':
     
-        model_description = "GPT model gpt-4o-mini is selected by default. This model can explain its reasoning."
+        model_description = f"GPT model {ai_basic_model} is selected by default. This model can explain its reasoning."
     
     return model_description
 
@@ -1142,8 +1148,8 @@ if 'own_account' not in st.session_state:
 
 #Initilize default gpt model
 
-if 'gpt_model' not in st.session_state:
-    st.session_state['gpt_model'] = "gpt-4o-mini"
+#if 'gpt_model' not in st.session_state:
+st.session_state['gpt_model'] = ai_basic_model
 
 #Initialize responses
 
@@ -1318,7 +1324,7 @@ if own_account_allowed() > 0:
                 
                 st.warning('This key is not valid.')
     
-        st.markdown("""**:green[You can use the flagship version of GPT (model gpt-4o),]** which is :red[significantly more expensive] than the default model (gpt-4o-mini) which you can use for free.""")  
+        st.markdown(f"""**:green[You can use the flagship version of GPT ({ai_flagship_model}),]** which is :red[significantly more expensive] than the default model ({ai_basic_model}) which you can use for free.""")  
         
         gpt_enhancement_entry = st.checkbox(label = 'Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
@@ -1327,14 +1333,14 @@ if own_account_allowed() > 0:
             #Reset AI first
             pai.clear_cache()
         
-            st.session_state.gpt_model = "gpt-4o"
+            st.session_state.gpt_model = ai_flagship_model
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
 
         else:
             #Reset AI first
             pai.clear_cache()
             
-            st.session_state.gpt_model = "gpt-4o-mini"
+            st.session_state.gpt_model = ai_basic_model
             st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
         
         st.write(f'**:green[You can remove the cap on the number of instructions to process.]** The default cap is {default_instructions_bound}.')
@@ -1349,7 +1355,7 @@ if own_account_allowed() > 0:
     else:
         st.session_state['own_account'] = False
     
-        st.session_state.gpt_model = "gpt-4o-mini"
+        st.session_state.gpt_model = ai_basic_model
         
         st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
 
@@ -1404,10 +1410,10 @@ st.subheader('Your spreadsheet')
 #AI warning
 if st.session_state.ai_choice == 'GPT':
 
-    if st.session_state.gpt_model == 'gpt-4o-mini':
+    if st.session_state.gpt_model == ai_basic_model:
         st.warning("A low-cost GPT model will process your spreadsheet and instructions. This model is *not* optimised for data analysis. Please email Ben Chen at ben.chen@sydney.edu.au if you'd like to use a better model.")
 
-    #if st.session_state.gpt_model == "gpt-4o":
+    #if st.session_state.gpt_model == ai_flagship_model:
         #st.warning(f'An expensive GPT model will process your spreadsheet and instructions.')
     
 #else:
@@ -1597,7 +1603,7 @@ try:
                  )
 
 except Exception as e:
-    st.error('Please double-check your API key.')
+    #st.error('Please double-check your API key.')
     st.exception(e)
     #quit()
     st.stop()
