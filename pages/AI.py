@@ -148,47 +148,51 @@ def check_prompt(prompt):
             prompt_safe = False
 
             break
-    
-    #Produce json with prompt for GPT check
-    questions_json = {'Questions to check': str(prompt)}
 
-    #Activate user's own key or mine
-    if st.session_state['own_account']:
+    #If still safe after programmatic check
+
+    if prompt_safe:
         
-        API_key = df_master.loc[0, 'Your GPT API key']
-
-    else:
-        
-        API_key = st.secrets["openai"]["gpt_api_key"]
+        #Produce json with prompt for GPT check
+        questions_json = {'Questions to check': str(prompt)}
     
-    openai.api_key = API_key
-
-    #Get labels
-    try:
-        labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_questions_check_system_instruction)
-
-        print('Prompt checked.')
-
-    except Exception as e:
-
-        print('Prompt check failed.')
-        print(e)
-    
-    #st.write(labels_output)
-
-    #Set safety status
-    for label in labels_output[0].values():
-        
-        if label != '0':
-
-            #No need to show safety message here
-            #st.error(ai_safety_message)
-
-            #st.stop()
-
-            prompt_safe = False
+        #Activate user's own key or mine
+        if st.session_state['own_account']:
             
-            break
+            API_key = df_master.loc[0, 'Your GPT API key']
+    
+        else:
+            
+            API_key = st.secrets["openai"]["gpt_api_key"]
+        
+        openai.api_key = API_key
+    
+        #Get labels
+        try:
+            labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_questions_check_system_instruction)
+    
+            print('Prompt checked.')
+    
+        except Exception as e:
+    
+            print('Prompt check failed.')
+            print(e)
+        
+        #st.write(labels_output)
+    
+        #Set safety status
+        for label in labels_output[0].values():
+            
+            if label != '0':
+    
+                #No need to show safety message here
+                #st.error(ai_safety_message)
+    
+                #st.stop()
+    
+                prompt_safe = False
+                
+                break
             
     #Get tokens
     check_output_tokens = labels_output[1]
@@ -249,51 +253,54 @@ def check_code(code, prompt_safe):
                 code_safe = False
     
                 break
-        
-        #Produce json with prompt for GPT check
-        questions_json = {'Code to check': str(code)}
-    
-        #st.write(questions_json)
-        
-        #Activate user's own key or mine
-        if st.session_state['own_account']:
+
+        #If still safe after programmatic check
+        if code_safe:
             
-            API_key = df_master.loc[0, 'Your GPT API key']
-    
-        else:
-            
-            API_key = st.secrets["openai"]["gpt_api_key"]
+            #Produce json with prompt for GPT check
+            questions_json = {'Code to check': str(code)}
         
-        openai.api_key = API_key
-    
-        #Get labels
-        try:
-    
-            labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_code_check_system_instruction)
-    
-            print('Code checked.')
-    
-        except Exception as e:
-    
-            print('Code check failed.')
-            print(e)
-    
-        #st.write(labels_output)
-    
-        #Set safety status
-    
-        for label in labels_output[0].values():
+            #st.write(questions_json)
             
-            if label != '0':
-    
-                #No need to show the following message here
-                #st.error(ai_safety_message)
-    
-                code_safe = False
-    
-                break
+            #Activate user's own key or mine
+            if st.session_state['own_account']:
                 
-                #st.stop()
+                API_key = df_master.loc[0, 'Your GPT API key']
+        
+            else:
+                
+                API_key = st.secrets["openai"]["gpt_api_key"]
+            
+            openai.api_key = API_key
+        
+            #Get labels
+            try:
+        
+                labels_output = GPT_questions_label(questions_json, st.session_state.gpt_model, ai_code_check_system_instruction)
+        
+                print('Code checked.')
+        
+            except Exception as e:
+        
+                print('Code check failed.')
+                print(e)
+        
+            #st.write(labels_output)
+        
+            #Set safety status
+        
+            for label in labels_output[0].values():
+                
+                if label != '0':
+        
+                    #No need to show the following message here
+                    #st.error(ai_safety_message)
+        
+                    code_safe = False
+        
+                    break
+                    
+                    #st.stop()
     
         #Get tokens
         check_output_tokens = labels_output[1]
