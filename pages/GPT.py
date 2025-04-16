@@ -298,7 +298,7 @@ st.subheader("Tell GPT what to get from each case")
 
 st.success("""In question form, please tell GPT what to get from each case. **Enter one question per paragraph**. """)
 
-st.markdown("""For each case, GPT will be instructed to respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+st.markdown("""For each case, GPT will respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
 
 #if st.toggle('See the instruction given to GPT'):
     #st.write(f"{intro_for_GPT[0]['content']}")
