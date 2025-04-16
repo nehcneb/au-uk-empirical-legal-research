@@ -352,7 +352,9 @@ if 'estimated_waiting_secs' not in st.session_state:
     
     st.session_state['estimated_waiting_secs'] = int(float(st.session_state["judgment_batch_cutoff"]))*30
 
-
+#Initialise error reporting status
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = ''
 
 # %% [markdown]
 # ## Form before AI
