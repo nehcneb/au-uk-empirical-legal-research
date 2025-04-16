@@ -143,7 +143,7 @@ def check_prompt(prompt):
     #Programmatic check
     for bad_word in ['.secrets', '.session_state', '.environ']:
 
-        if bad_word in str(prompt).lower:
+        if bad_word in str(prompt).lower():
 
             prompt_safe = False
 
@@ -248,7 +248,7 @@ def check_code(code, prompt_safe):
         #Programmatic check
         for bad_word in ['.secrets', '.session_state', '.environ']:
     
-            if bad_word in str(code).lower:
+            if bad_word in str(code).lower():
     
                 code_safe = False
     
