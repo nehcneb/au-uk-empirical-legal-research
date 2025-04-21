@@ -413,8 +413,7 @@ def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instr
     
     #Create messages in one prompt for GPT
     
-    intro_for_GPT = [{"role": "system", "content": questions_check_system_instruction}]
-    #messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_to_check
+    intro_for_GPT = [{"role": "developer", "content": questions_check_system_instruction}]
     messages_for_GPT = intro_for_GPT + json_direction + question_to_check
     
 #   return messages_for_GPT
@@ -718,7 +717,7 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
     
     #Create messages in one prompt for GPT
     
-    intro_for_GPT = [{"role": "system", "content": answers_check_system_instruction}]
+    intro_for_GPT = [{"role": "developer", "content": answers_check_system_instruction}]
     messages_for_GPT = intro_for_GPT + json_direction + question_to_check
 
     #os.environ["OPENAI_API_KEY"] = API_key
@@ -819,7 +818,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
     
     #Create messages in one prompt for GPT
-    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+    intro_for_GPT = [{"role": "developer", "content": system_instruction}]
     messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_for_GPT
     
 #   return messages_for_GPT
@@ -1224,8 +1223,7 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
     else:
         language_content = ''
 
-    intro_for_GPT = [{"role": "system", "content": system_instruction + language_content}] 
-
+    intro_for_GPT = [{"role": "developer", "content": system_instruction + language_content}] 
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
     
 #   return messages_for_GPT
@@ -1629,7 +1627,7 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
     question_for_GPT = [{"role": "user", "content": json.dumps(questions_json, default = str) + answers_json_instruction}]
     
     #Create messages in one prompt for GPT
-    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+    intro_for_GPT = [{"role": "developer", "content": system_instruction}]
     messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_for_GPT
 
     #Create one line in batch input
@@ -2065,8 +2063,6 @@ def gpt_run(jurisdiction_page, df_master):
                 
         run = copy.copy(ukpo_run)
     
-    #intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
     df_individual = run(df_master)
 
     return df_individual
@@ -2123,8 +2119,6 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         from functions.us_functions import us_batch#, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
             
         batch = copy.copy(us_batch)
-
-    #intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
     batch_record_df_individual = batch(df_master)
     

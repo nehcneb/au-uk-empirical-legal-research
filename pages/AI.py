@@ -668,7 +668,28 @@ def pandasai_ask():
             st.error(response)
 
         else:
-            st.write(response)
+
+            if isinstance(response, pd.DataFrame):
+
+                try:
+    
+                    display_df_dict = display_df(response)
+                    
+                    response = display_df_dict['df']
+                    
+                    link_heading_config = display_df_dict['link_heading_config']
+                    
+                    st.dataframe(response, column_config=link_heading_config)
+
+                except Exception as e:
+
+                    print(f"Can't make response in df clickable due to error: {e}")
+
+                    st.write(response)
+
+            else:
+                
+                st.write(response)
             
         #Keep record of response, cost and tokens
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})

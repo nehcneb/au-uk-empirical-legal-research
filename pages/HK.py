@@ -439,7 +439,7 @@ st.header(f"Search :blue[cases of the Hong Kong courts and tribunals]")
 
 st.success(default_msg)
 
-st.write(f'This app sources cases from [the Hong Kong Legal Reference System](https://legalref.judiciary.hk/lrs/common/search/search.jsp).')
+st.write(f'This app sources cases from the [Hong Kong Legal Reference System](https://legalref.judiciary.hk/lrs/common/search/search.jsp).')
 
 st.caption(default_caption)
 
@@ -447,7 +447,7 @@ reset_button = st.button(label='RESET', type = 'primary')
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit [the Hong Kong Legal Reference System](https://legalref.judiciary.hk/lrs/common/search/search.jsp). This section mimics their search function.
+st.markdown("""For search tips, please visit the [Hong Kong Legal Reference System](https://legalref.judiciary.hk/lrs/common/search/search.jsp). This section mimics their judgments search function.
 """)
 
 any_of_these_words_entry = st.text_input(label = 'Any of these words', value = st.session_state['df_master'].loc[0, 'Any of these words'])

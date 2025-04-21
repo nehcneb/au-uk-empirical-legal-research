@@ -748,7 +748,7 @@ if run_button:
                 
                 st.error(e)
                 
-                #st.error(traceback.format_exc())
+                st.error(traceback.format_exc())
 
                 print(e)
 

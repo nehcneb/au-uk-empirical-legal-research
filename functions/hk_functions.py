@@ -91,6 +91,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 options = Options()
 options.add_argument("--disable-gpu")
@@ -117,6 +118,10 @@ except Exception as e:
 
 # %% [markdown]
 # ## Definitions
+
+# %%
+#Number of times to click away alerts
+alert_bound = 5
 
 # %%
 hk_sortby_dict = {'Relevance': '1', 'Date': '0', 'Title': '2'}
@@ -582,11 +587,11 @@ class hk_search_tool:
         
                 #self.soup = BeautifulSoup(browser.page_source, "lxml")
                 
-                results_count_list = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
+                results_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
                 
                 self.results_count = int(results_count_list[0].text)
         
-                page_count_list = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
+                page_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
         
                 self.total_pages = int(page_count_list[0].text)
                                 
@@ -748,16 +753,28 @@ class hk_search_tool:
 
             browser.get(judgment_url)
             
-            #Click away any alert
-            try:
-                
-                Wait(browser, 5).until(EC.alert_is_present())
-                alert = browser.switch_to.alert.text
-                browser.switch_to.alert.accept()
-                print(f'{case_number}: clicked away alert.')
-            
-            except:
-                print(f'{case_number}: no alert or failed to click away any alert.')
+            #Click away potentially multiple alerts
+            alert_counter = 1
+            while alert_counter <= alert_bound:
+                try:
+                    Wait(browser, 5).until(EC.alert_is_present())
+                    alert += f"{browser.switch_to.alert.text}\n\n"
+                    
+                    try:
+                        browser.switch_to.alert.accept()
+                    except:
+                        browser.switch_to.alert.dismiss()
+                        
+                    print(f'{case_number}: clicked away alert {alert_counter}.')
+
+                except TimeoutException:
+                    print(f'{case_number}: no more alert.')
+                    alert_counter += alert_bound
+
+                except Exception as e:
+                    print(f'{case_number}: failed to click away alert {alert_counter} due to error {e}.')
+
+                alert_counter += 1
             
             #Get urls for docx, pdf, and Chinese translation/English original if available
             browser.switch_to.frame("topFrame")
@@ -800,15 +817,28 @@ class hk_search_tool:
                 
                 browser.get(judgment_url)
 
-                #Click away any alert
-                try:
-                    Wait(browser, 5).until(EC.alert_is_present())
-                    alert = browser.switch_to.alert.text
-                    browser.switch_to.alert.accept()
-                    print(f'{case_number}: clicked away alert.')
-                
-                except:
-                    print(f'{case_number}: no alert or failed to click away any alert.')
+                #Click away potentially multiple alerts
+                alert_counter = 1
+                while alert_counter <= alert_bound:
+                    try:
+                        Wait(browser, 5).until(EC.alert_is_present())
+                        alert += f"{browser.switch_to.alert.text}\n\n"
+                        
+                        try:
+                            browser.switch_to.alert.accept()
+                        except:
+                            browser.switch_to.alert.dismiss()
+                            
+                        print(f'{case_number}: clicked away alert {alert_counter}.')
+
+                    except TimeoutException:
+                        print(f'{case_number}: no more alert.')
+                        alert_counter += alert_bound
+
+                    except Exception as e:
+                        print(f'{case_number}: failed to click away alert {alert_counter} due to error {e}.')
+
+                    alert_counter += 1
 
                 #Get urls for docx, pdf, and Chinese translation for the English original
                 browser.switch_to.frame("topFrame")
@@ -1017,7 +1047,7 @@ class hk_search_tool:
         
                 self.case_infos_w_judgments.append(case_info_w_judgment)
                 
-                print(f"Processed {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
+                print(f"Scraped judgment {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
 
         #Scrape the next page if necessary and available
         while (len(self.case_infos_w_judgments) < min(self.results_count, self.judgment_counter_bound)) and (self.page < self.total_pages):
@@ -1043,7 +1073,7 @@ class hk_search_tool:
 
                     self.case_infos_w_judgments.append(case_info_w_judgment)
                     
-                    print(f"Processed {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
+                    print(f"Scraped judgment {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
     
         #browser.delete_all_cookies()
         #browser.close()
