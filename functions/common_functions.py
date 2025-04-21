@@ -1015,8 +1015,9 @@ def report_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, jurisd
     entries_string = f'jurisdiction_page: {jurisdiction_page}\r\n'
 
     for col in df_master.columns:
-        cell = df_master.loc[0, col]
-        entries_string += f'{col}:{cell}\r\n'
+        if ('API key' not in col) and ('token' not in col):
+            cell = df_master.loc[0, col]
+            entries_string += f'{col}:{cell}\r\n'
     
     # The subject line for the email.
     SUBJECT = f"LawtoData: {ULTIMATE_RECIPIENT_NAME} has reported an error"
