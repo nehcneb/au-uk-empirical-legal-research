@@ -259,7 +259,8 @@ def kr_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content, basic_model, flagship_model
+from functions.gpt_functions import question_characters_bound, basic_model, flagship_model#, role_content
+
 
 
 # %%
@@ -274,10 +275,9 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 #Jurisdiction specific instruction
 #role_content_kr = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
-system_instruction = role_content#_kr
+#system_instruction = role_content#_kr
 
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
+#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain parameters
@@ -335,7 +335,9 @@ def kr_run(df_master):
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
-            
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 

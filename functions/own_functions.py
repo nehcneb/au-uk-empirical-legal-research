@@ -294,10 +294,9 @@ If you cannot answer the questions based on the file, do not make up information
 
 #Respond in JSON form. In your response, produce as many keys as you need. 
 
-system_instruction = role_content_own
+#system_instruction = role_content_own
 
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
+#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain GPT output
@@ -357,7 +356,9 @@ def run_own(df_master, uploaded_docs, uploaded_images):
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
-        
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Engage GPT    
     #df_updated = engage_GPT_json_own(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
@@ -503,6 +504,8 @@ def batch_b64_own(df_master, uploaded_images):
 
     questions_json = df_master.loc[0, 'questions_json']
 
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #apply GPT_individual to each respondent's file spreadsheet    
     df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     
@@ -560,8 +563,6 @@ def run_b64_own(df_master, uploaded_images):
 
     #Instruct GPT
 
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
-    
     #GPT model
 
     if df_master.loc[0, 'Use flagship version of GPT'] == True:
@@ -569,9 +570,13 @@ def run_b64_own(df_master, uploaded_images):
     else:        
         gpt_model = basic_model
         
-    #apply GPT_individual to each respondent's judgment spreadsheet
+    #apply GPT_individual to each respondent's file spreadsheet
+    
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
+
+    system_instruction = df_master.loc[0, 'System instruction']
 
     #apply GPT_individual to each respondent's file spreadsheet    
     df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
@@ -662,6 +667,8 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
+
+    system_instruction = df_master.loc[0, 'System instruction']
         
     #Engage GPT
     batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)

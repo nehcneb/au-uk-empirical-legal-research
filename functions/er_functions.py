@@ -303,10 +303,9 @@ The "judgment" field of the JSON given to you sometimes contains judgments for m
 
 #Respond in JSON form. In your response, produce as many keys as you need. 
 
-system_instruction = role_content_er
+#system_instruction = role_content_er
 
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
+#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain parameters
@@ -348,8 +347,6 @@ def er_run(df_master):
     df_individual = pd.read_json(json_individual)
     
     #Instruct GPT
-
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
     
     #GPT model
 
@@ -357,12 +354,15 @@ def er_run(df_master):
         gpt_model = flagship_model
     else:        
         gpt_model = basic_model
-        
+    
     #apply GPT_individual to each respondent's judgment spreadsheet
     
-
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+    
     questions_json = df_master.loc[0, 'questions_json']
-            
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
@@ -370,6 +370,7 @@ def er_run(df_master):
         df_updated.pop('judgment')
     
     return df_updated
+
 
 # %% [markdown]
 # # For vision
@@ -510,8 +511,6 @@ def er_run_b64(df_master):
     df_individual = pd.read_json(json_individual)
     
     #Instruct GPT
-
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
     
     #GPT model
 
@@ -519,10 +518,14 @@ def er_run_b64(df_master):
         gpt_model = flagship_model
     else:        
         gpt_model = basic_model
-        
-    #apply GPT_individual to each respondent's judgment_b64 spreadsheet
+    
+    #apply GPT_individual to each respondent's judgment spreadsheet
+    
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
     
     questions_json = df_master.loc[0, 'questions_json']
+
+    system_instruction = df_master.loc[0, 'System instruction']
             
     #apply GPT_individual to each respondent's judgment_b64 spreadsheet
 

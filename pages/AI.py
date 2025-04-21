@@ -1466,7 +1466,6 @@ spreadsheet_caption = 'To download, search within or maximise any spreadsheet, h
 st.caption(spreadsheet_caption)
 
 #Errors to show later
-
 conversion_msg_to_show = ''
 
 #Last resort error, unlikely displayed
@@ -1488,8 +1487,6 @@ try:
     
     st.session_state.df_to_analyse = list_col_to_str(st.session_state.df_to_analyse)
 
-    #st.session_state["edited_df"] = st.data_editor(st.session_state.df_to_analyse,  column_config=link_heading_config)
-
     if len(list_cols) > 0:
 
         list_cols_error_msg = 'Lists have been converted to string (ie plain text). '
@@ -1497,8 +1494,6 @@ try:
         conversion_msg_to_show += list_cols_error_msg
         
 except Exception as e_list:
-
-    #print('Cannot display df without converting non-numeric data to string.' )
 
     print('Cannot convert list columns to string.' )
 
@@ -1572,13 +1567,6 @@ if everything_error_to_show not in conversion_msg_to_show:
 
     st.write('You can directly edit this spreadsheet.')
 
-#New spreadsheet button
-
-#if st.button('UPLOAD a new spreadsheet'):
-    #st.session_state.df_uploaded_key += 1
-    #clear_most_cache()
-    #st.rerun()
-
 #Show remove button
 if st.button('REMOVE this spreadsheet', type = 'primary'):
     
@@ -1589,13 +1577,8 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
         if isinstance(st.session_state[df_key], pd.DataFrame):
 
             if st.session_state[df_key].sort_index(inplace=True) == (st.session_state.edited_df.sort_index(inplace=True)):
-            #(
-                #st.session_state[df_key].equals(st.session_state.edited_df) or
-                #(st.session_state[df_key].sort_index(inplace=True) == (st.session_state.edited_df.sort_index(inplace=True)))
-               #):
                 st.session_state.pop(df_key)
                 st.write(f'{df_key} removed.')
-                #pause.seconds(5)
 
     #Disable unnecessary buttons and pre-filled prompt
     conversion_msg_to_show = ''

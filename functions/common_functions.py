@@ -17,7 +17,7 @@
 
 # %%
 def own_account_allowed():
-    return 0
+    return 1
 
 
 # %%
@@ -100,7 +100,7 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 # %% [markdown]
-# # Scraper, GPT etc
+# # Scraper etc
 
 # %%
 #Default judgment counter bound
@@ -379,10 +379,11 @@ keys_to_carry_over = ['Your name',
                     'Use GPT', 
                     'Use own account', 
                     'Use flagship version of GPT', 
+                    'System',
+                    'Consent', 
                      'submission_time', 
                      'status', 
                       'jurisdiction_page', 
-                      'Consent',
                       #'CourtListener API token' #US specific
                      ]
 
@@ -940,7 +941,7 @@ def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, j
     
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = st.secrets["email_notifications"]["email_receiver_personal"]
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
     
     # The subject line for the email.
     SUBJECT = f"LawtoData: {ULTIMATE_RECIPIENT_NAME} has requested data"
@@ -1002,7 +1003,7 @@ def report_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, jurisd
     
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = st.secrets["email_notifications"]["email_receiver_personal"]
+    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
 
     #Entries
     entries_string = f'jurisdiction_page: {jurisdiction_page}\r\n'

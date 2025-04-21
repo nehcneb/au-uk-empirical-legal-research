@@ -88,9 +88,14 @@ judgment_batch_max = 100
 # %%
 #Upperbound on the length of questions for GPT
 
-question_characters_bound = 2000
+question_characters_bound = 5120
 
-#Upperbound on number of judgments to scrape
+
+
+# %%
+#Upperbound on the length of system instruction for GPT
+
+system_characters_bound = 5120
 
 
 # %%
@@ -111,7 +116,7 @@ def dict_to_string(questions_dict):
     questions_str = '\n'.join(questions_list)
 
     return questions_str
-    
+
 
 
 # %%
@@ -122,7 +127,7 @@ def GPT_label_dict(x_list):
     for i in x_list:
         if len(i) > 10:
             GPT_index = x_list.index(i) + 1
-            i_label = 'GPT question ' + f'{GPT_index}'
+            i_label = f'GPT question {GPT_index}'
             GPT_dict.update({i_label: i})
     return GPT_dict
 
@@ -158,22 +163,22 @@ def tokens_cap(gpt_model):
     
     if gpt_model == "gpt-3.5-turbo-0125":
         
-        tokens_cap = int(16385 - 3000) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
+        tokens_cap = int(16385 - (question_characters_bound + system_characters_bound)/4) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
     
     elif "gpt-4o-mini" in gpt_model:
-        tokens_cap = int(128000 - 3000) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
+        tokens_cap = int(128000 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
     elif "gpt-4o" in gpt_model:
-        tokens_cap = int(128000 - 3000) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
+        tokens_cap = int(128000 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
     elif "gpt-4.1-mini" in gpt_model:
-        tokens_cap = int(1047576 - 3000) #For gpt-4o-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+        tokens_cap = int(1047576 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
 
     elif "gpt-4.1-nano" in gpt_model:
-        tokens_cap = int(1047576 - 3000) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+        tokens_cap = int(1047576 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
 
     else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
-        tokens_cap = int(1047576 - 3000) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+        tokens_cap = int(1047576 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
     
     return tokens_cap
 
@@ -227,28 +232,40 @@ def max_output(gpt_model, messages_for_GPT):
         
         max_output_tokens = int(16385 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
 
+        output_limit = 4096
+    
     elif gpt_model == "gpt-4o-mini":
         
         max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
+        output_limit = 16384
+    
     elif "gpt-4o" in gpt_model:
         
-        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.s
+        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
 
+        output_limit = 16384
+    
     elif "gpt-4.1-mini" in gpt_model:
 
         max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+
+        output_limit = 32768
         
     elif "gpt-4.1-nano" in gpt_model:
 
         max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+
+        output_limit = 32768
     
     else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
 
         max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+
+        output_limit = 32768
     
-    return min(4096, abs(max_output_tokens))
-    
+    return min(output_limit, abs(max_output_tokens))
+
 
 
 # %%
@@ -338,6 +355,22 @@ def judgment_prompt_json(judgment_json, gpt_model):
 
 
 # %%
+#For modern judgments, define system role content for GPT
+role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and the associated metadata in JSON form. 
+Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
+If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'. 
+"""
+#Respond in JSON form. In your response, produce as many keys as you need. 
+
+
+# %%
+#Guidance on system role
+gpt_system_msg = "The following system instruction provides context, rules and logic for GPT. [It takes priority over your questions.](https://model-spec.openai.com/) **Do not edit this** unless you know what you are doing."
+
+# %% [markdown]
+# ## Privacy
+
+# %%
 #Check questions for potential privacy infringement
 
 questions_check_system_instruction = """
@@ -363,7 +396,7 @@ def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instr
     #'jugdment' variable is a judgment_json   
     #Returns a json of checked questions
 
-    json_direction = [{"role": "user", "content": 'Label the following questions in JSON form.'}]
+    json_direction = [{"role": "user", "content": 'Label the following questions or instructions in JSON form.'}]
 
     #Create answer format
     
@@ -372,7 +405,7 @@ def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instr
     labels_json = {}
     
     for q_index in q_keys:
-        labels_json.update({q_index: 'Your label for the question with index ' + q_index})
+        labels_json.update({q_index: 'Your label for the question or instruction with index ' + q_index})
     
     #Create questions, which include the answer format
     
@@ -430,7 +463,7 @@ def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instr
 def unanswered_questions(unchecked_questions_json, checked_questions_json):
 
     #Reset unanswered questions text for batch get email
-    st.session_state['unanswered_questions'] = ''
+    #st.session_state['unanswered_questions'] = ''
 
     #Produce unanswered questions
     unanswered_questions_list = []
@@ -443,16 +476,16 @@ def unanswered_questions(unchecked_questions_json, checked_questions_json):
                 
         if len(unanswered_questions_list) == 1:
 
-            witheld_text = 'To avoid exposing personally identifiable information, the following question was witheld:\n\n'
+            withheld_text = 'To avoid exposing personally identifiable information, the following question/instruction was withheld:\n\n'
         
         if len(unanswered_questions_list) > 1: 
             
-            witheld_text = 'To avoid exposing personally identifiable information, the following questions were witheld:\n\n'
+            withheld_text = 'To avoid exposing personally identifiable information, the following questions/instructions were withheld:\n\n'
 
-        witheld_text += '\n\n'.join(unanswered_questions_list)
+        withheld_text += '\n\n'.join(unanswered_questions_list)
     
         #Display unanswered questions
-        st.warning(witheld_text)
+        st.warning(withheld_text)
 
 
 
@@ -478,7 +511,7 @@ def checked_questions_json(questions_json, gpt_labels_output):
 
 def GPT_questions_check(_questions_json_or_string, gpt_model, questions_check_system_instruction):
     #'questions_str' variable is a string of questions to GPT
-    #Returns both a string and a json of checked questions, together with costs, and displays any witheld questions
+    #Returns both a string and a json of checked questions, together with costs, and displays any withheld questions
     
     #Create dict of questions for GPT
 
@@ -508,6 +541,23 @@ def GPT_questions_check(_questions_json_or_string, gpt_model, questions_check_sy
 
         print('Questions checked.')
 
+        #Reorganise checked questions
+        #st.write(questions_json)
+        
+        questions_json = GPT_label_dict(list(questions_json.values()))
+    
+        #st.write(questions_json)
+        
+        #Stop if all questions are problematic
+    
+        #if len(questions_json) == 0:
+
+            #st.error('All your questions may lead to expsure of personally identifiable information. As a precautionary measure, GPT has been instructed to stop responding.')
+
+            #st.stop()
+
+            #quit()
+
     except Exception as e:
 
         print('Questions check failed.')
@@ -525,6 +575,99 @@ def GPT_questions_check(_questions_json_or_string, gpt_model, questions_check_sy
             'questions_check_output_tokens': questions_check_output_tokens, 
             'questions_check_input_tokens': questions_check_input_tokens
            }
+    
+
+
+# %%
+#Check system instruction for potential privacy infringement
+
+system_instruction_check_system_instruction = """
+You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
+You will be given instructions to check in JSON form. Please provide labels for these instructions based only on information contained in the JSON.
+Where an instruction seeks information about a person's birth or address, you label "1". If an instruction does not seek such information, you label "0". If you are not sure, label "unclear".
+For example, the instruction "Get each party's date of birth" should be labelled "1".
+For example, the instruction "Get each party's address" should be labelled "1".
+For example, the instruction "Get each party's date of death" should be labelled "0".
+For example, the instruction "Get the judge's name" should be labelled "0".
+For example, the instruction "Get each party's age" should be labelled "0".
+"""
+
+
+# %%
+#Create function to split a list into a dictionary for list items longer than 10 characters
+#Apply split_by_line() before the following function
+def GPT_instruction_dict(x_list):
+    GPT_dict = {}
+    for i in x_list:
+        if len(i) > 10:
+            GPT_index = x_list.index(i) + 1
+            i_label = f'Instruction {GPT_index}'
+            GPT_dict.update({i_label: i})
+    return GPT_dict
+
+
+# %%
+#Check questions for potential privacy infringement
+#Don't add @st.cache_data
+
+def GPT_system_check(_system_instruction, gpt_model, system_instruction_check_system_instruction):
+    #'system_instruction' variable is the system_instruction given to GPT
+    #Returns both a string and a json of checked system_instruction, together with costs, and displays any withheld instructions
+    
+    #Create dict of system_instruction for GPT
+
+    #system_instruction_json = {'Instructions to check': _system_instruction}
+        
+    system_instruction_list = split_by_line(_system_instruction[0: system_characters_bound])
+    system_instruction_json = GPT_instruction_dict(system_instruction_list)
+    
+    #Check questions for privacy violation
+    
+    try:
+
+        unchecked_system_instruction_json = system_instruction_json.copy()
+        
+        labels_output = GPT_questions_label(system_instruction_json, gpt_model, system_instruction_check_system_instruction)
+
+        system_instruction_check_output_tokens = labels_output[1]
+
+        system_instruction_check_input_tokens = labels_output[2]
+
+        print('system_instruction checked.')
+        
+        #Stop if system instruction is problematic
+    
+        system_instruction_json = checked_questions_json(system_instruction_json, labels_output)
+
+        unanswered_questions(unchecked_system_instruction_json, system_instruction_json)
+
+        #if len(system_instruction_json) == 0:
+
+            #st.error('Your system instruction may lead to expsure of personally identifiable information. As a precautionary measure, GPT has been instructed to stop responding.')
+
+            #st.stop()
+
+            #quit()
+
+    except Exception as e:
+
+        print('system_instruction failed.')
+        print(e)
+
+        #create placeholder input and output tokens
+        system_instruction_check_output_tokens = 0
+        system_instruction_check_input_tokens = 0
+        
+    #Returns a stirng of questions
+    system_instruction_string = dict_to_string(system_instruction_json)
+
+    return {'system_instruction_json': system_instruction_json, 
+            'system_instruction': system_instruction_string, 
+            'system_instruction': _system_instruction, 
+            'system_instruction_check_output_tokens': system_instruction_check_output_tokens, 
+            'system_instruction_check_input_tokens': system_instruction_check_input_tokens
+           }
+    
 
 
 # %%
@@ -623,14 +766,6 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
     return [redacted_answers_dict, redacted_answers_output_tokens, redacted_answers_prompt_tokens]
 
 
-
-# %%
-#For modern judgments, define system role content for GPT
-role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and the associated metadata in JSON form. 
-Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
-If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'. 
-"""
-#Respond in JSON form. In your response, produce as many keys as you need. 
 
 # %% [markdown]
 # ## GPT instant response
@@ -758,7 +893,17 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
     #Check questions for privacy violation
 
     if check_questions_answers() > 0:
+
+        #Check system instruction
+        system_instruction_checked_dict = GPT_system_check(system_instruction, gpt_model, system_instruction_check_system_instruction)
+
+        system_instruction = system_instruction_checked_dict['system_instruction']
+
+        system_instruction_check_output_tokens = system_instruction_checked_dict['system_instruction_check_output_tokens']
     
+        system_instruction_check_input_tokens = system_instruction_checked_dict['system_instruction_check_input_tokens']
+        
+        #Check questions
         questions_checked_dict = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
 
         questions_json = questions_checked_dict['questions_json']
@@ -767,6 +912,12 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
     
         questions_check_input_tokens = questions_checked_dict['questions_check_input_tokens']
 
+        #Add tokens
+
+        questions_check_output_tokens += system_instruction_check_output_tokens
+        
+        questions_check_input_tokens +=system_instruction_check_input_tokens
+    
     else:
 
         print('Questions not checked.')
@@ -1175,7 +1326,17 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
 
     #Check questions for privacy violation
     if check_questions_answers() > 0:
+
+        #Check system instruction
+        system_instruction_checked_dict = GPT_system_check(system_instruction, gpt_model, system_instruction_check_system_instruction)
+
+        system_instruction = system_instruction_checked_dict['system_instruction']
+
+        system_instruction_check_output_tokens = system_instruction_checked_dict['system_instruction_check_output_tokens']
     
+        system_instruction_check_input_tokens = system_instruction_checked_dict['system_instruction_check_input_tokens']
+        
+        #Check questions
         questions_checked_dict = GPT_questions_check(questions_json, gpt_model, questions_check_system_instruction)
 
         questions_json = questions_checked_dict['questions_json']
@@ -1184,6 +1345,12 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
     
         questions_check_input_tokens = questions_checked_dict['questions_check_input_tokens']
 
+        #Add tokens
+
+        questions_check_output_tokens += system_instruction_check_output_tokens
+        
+        questions_check_input_tokens +=system_instruction_check_input_tokens
+        
     else:
 
         print('Questions not checked.')
@@ -1720,10 +1887,18 @@ def batch_request_function():
                     else:        
                         gpt_model = basic_model
 
-                    questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
+                    #Check system instruction and questions for privacy violation
+                    if check_questions_answers() > 0:
 
-                    #Use checked questions
-                    df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
+                        #Check system instruction
+                        system_instruction_checked_dict = GPT_system_check(df_master.loc[0, 'System instruction'], gpt_model, system_instruction_check_system_instruction)
+                
+                        df_master.loc[0, 'System instruction'] = system_instruction_checked_dict['system_instruction']
+
+                        #Check questions
+                        questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
+    
+                        df_master.loc[0, 'Enter your questions for GPT'] = questions_checked_dict['questions_string']
                     
                     #Initiate aws s3
                     #s3_resource = boto3.resource('s3',region_name=st.secrets["aws"]["AWS_DEFAULT_REGION"], aws_access_key_id=st.secrets["aws"]["AWS_ACCESS_KEY_ID"], aws_secret_access_key=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"])
@@ -1787,7 +1962,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/HCA.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.hca_functions import hca_run#, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
         #hca_search_results_to_judgment_links
@@ -1796,7 +1971,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/NSW.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
 
         from nswcaselaw.search import Search
         
@@ -1806,7 +1981,7 @@ def gpt_run(jurisdiction_page, df_master):
     
     if jurisdiction_page == 'pages/FCA.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.fca_functions import fca_run#, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
         #fca_link_to_doc
@@ -1817,13 +1992,13 @@ def gpt_run(jurisdiction_page, df_master):
                 
         from functions.hk_functions import hk_run, role_content_hk
 
-        system_instruction = role_content_hk
+        #system_instruction = role_content_hk
         
         run = copy.copy(hk_run)
     
     if jurisdiction_page == 'pages/US.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.us_functions import us_run#, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
         #us_court_choice_to_list
@@ -1832,7 +2007,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/CA.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.ca_functions import ca_run#, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_date, ca_meta_judgment_dict
         
@@ -1840,7 +2015,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/UK.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.uk_functions import uk_run#, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
         
@@ -1848,7 +2023,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/AFCA.py':
 
-        system_instruction = role_content
+        #system_instruction = role_content
                 
         from functions.afca_functions import afca_run#, afca_old_run, afca_new_run, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable, streamlit_timezone
                 
@@ -1862,7 +2037,7 @@ def gpt_run(jurisdiction_page, df_master):
 
         from functions.er_functions import er_run, role_content_er#, er_run_b64, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64
 
-        system_instruction = role_content_er
+        #system_instruction = role_content_er
 
         run = copy.copy(er_run)
 
@@ -1876,7 +2051,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/SCTA.py':
 
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.scta_functions import scta_run#, scta_methods_list, scta_method_types, scta_search, scta_search_results_to_case_link_pairs, scta_judgment_text, scta_meta_judgment_dict
         
@@ -1884,13 +2059,13 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/UKPO.py':
 
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.ukpo_functions import ukpo_run
                 
         run = copy.copy(ukpo_run)
     
-    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+    #intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
     df_individual = run(df_master)
 
@@ -1908,7 +2083,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/HCA.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.hca_functions import hca_batch#, hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
         #hca_search_results_to_judgment_links
@@ -1917,7 +2092,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/NSW.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
 
         from nswcaselaw.search import Search
 
@@ -1927,7 +2102,7 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
     
     if jurisdiction_page == 'pages/FCA.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.fca_functions import fca_batch#, fca_courts, fca_courts_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
         #fca_link_to_doc
@@ -1937,19 +2112,19 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
                 
         from functions.hk_functions import hk_batch, role_content_hk
 
-        system_instruction = role_content_hk
+        #system_instruction = role_content_hk
         
         batch = copy.copy(hk_batch)
     
     if jurisdiction_page == 'pages/US.py':
         
-        system_instruction = role_content
+        #system_instruction = role_content
         
         from functions.us_functions import us_batch#, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
             
         batch = copy.copy(us_batch)
 
-    intro_for_GPT = [{"role": "system", "content": system_instruction}]
+    #intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
     batch_record_df_individual = batch(df_master)
     

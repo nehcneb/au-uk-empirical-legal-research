@@ -469,7 +469,8 @@ def uk_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content, basic_model, flagship_model
+from functions.gpt_functions import question_characters_bound, basic_model, flagship_model#, role_content
+
 
 
 # %%
@@ -482,10 +483,9 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 
 # %%
 #Jurisdiction specific instruction
-system_instruction = role_content
+#system_instruction = role_content
 
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
+#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain parameters
@@ -553,7 +553,9 @@ def uk_run(df_master):
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
-            
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 

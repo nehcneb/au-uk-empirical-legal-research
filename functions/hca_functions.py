@@ -1492,7 +1492,8 @@ def hca_search_url(df_master):
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_batch_input
 #Import variables
-from functions.gpt_functions import question_characters_bound, role_content, basic_model, flagship_model
+from functions.gpt_functions import question_characters_bound, basic_model, flagship_model#, role_content
+
 
 
 # %%
@@ -1507,10 +1508,9 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 #Jurisdiction specific instruction
 #hca_role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections, provide the paragraph or page numbers or section names as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
-system_instruction = role_content #hca_role_content
+#system_instruction = role_content #hca_role_content
 
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
+#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #For getting judgments directly from the High Court if not available in OALC
@@ -1668,7 +1668,9 @@ def hca_run(df_master):
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
-            
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
@@ -1822,7 +1824,13 @@ def hca_batch(df_master):
             except Exception as e:
                 print(f'{meta_label} not popped.')
                 print(e)
-    
+
+    #Need to convert date column to string
+
+    if 'Date' in df_individual.columns:
+
+        df_individual['Date'] = df_individual['Date'].astype(str)
+        
     #Instruct GPT
     
     #GPT model
@@ -1833,16 +1841,12 @@ def hca_batch(df_master):
         gpt_model = basic_model
         
     #apply GPT_individual to each respondent's judgment spreadsheet
-
-    #Need to convert date column to string
-
-    if 'Date' in df_individual.columns:
-
-        df_individual['Date'] = df_individual['Date'].astype(str)
     
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
+
+    system_instruction = df_master.loc[0, 'System instruction']
 
     #Send batch input to gpt
     batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)

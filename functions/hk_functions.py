@@ -1171,10 +1171,9 @@ The "judgment" field of the JSON given to you is in English or Chinese or both. 
 
 #Respond in JSON form. In your response, produce as many keys as you need. 
 
-system_instruction = role_content_hk
+#system_instruction = role_content_hk
 
-intro_for_GPT = [{"role": "system", "content": system_instruction}]
-
+#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain parameters
@@ -1239,7 +1238,9 @@ def hk_run(df_master):
     GPT_activation = int(df_master.loc[0, 'Use GPT'])
 
     questions_json = df_master.loc[0, 'questions_json']
-            
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Engage GPT
     df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
 
@@ -1327,11 +1328,12 @@ def hk_batch(df_master):
 
     questions_json = df_master.loc[0, 'questions_json']
 
+    system_instruction = df_master.loc[0, 'System instruction']
+    
     #Send batch input to gpt
     batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
     
     return batch_record_df_individual
-
 
 
 # %%

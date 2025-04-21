@@ -95,7 +95,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, gpt_run, batch_request_function #GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption, basic_model, flagship_model
+from functions.gpt_functions import question_characters_bound, system_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption, basic_model, flagship_model, role_content, gpt_system_msg
 #, intro_for_GPT
 
 
@@ -218,6 +218,24 @@ if 'df_master' not in st.session_state:
     
     st.session_state['df_master'] = pd.DataFrame([df_master_dict])
 
+if 'System instruction' not in st.session_state.df_master.columns:
+
+    if st.session_state.jurisdiction_page == 'pages/HK.py':
+
+        from functions.hk_functions import role_content_hk
+    
+        st.session_state['df_master'].loc[0, 'System instruction'] = role_content_hk
+    
+    elif st.session_state.jurisdiction_page == 'pages/ER.py':
+
+        from functions.er_functions import role_content_er
+    
+        st.session_state['df_master'].loc[0, 'System instruction'] = role_content_er
+
+    else:
+        
+        st.session_state['df_master'].loc[0, 'System instruction'] = role_content
+
 if 'Example' not in st.session_state.df_master.columns:
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
@@ -246,8 +264,6 @@ if "judgment_counter_max" not in st.session_state:
     st.session_state["judgment_counter_max"] = judgment_batch_cutoff
 
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
-
-    #if own_account_allowed() > 0:
         
     st.session_state["judgment_counter_max"] = judgment_batch_max
 
@@ -298,25 +314,38 @@ st.subheader("Tell GPT what to get from each case")
 
 st.success("""In question form, please tell GPT what to get from each case. **Enter one question per paragraph**. """)
 
-st.markdown("""For each case, GPT will respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).""")
+st.markdown("""For each case, GPT will respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).
+GPT will also provide references for its responses.
+""")
 
-#if st.toggle('See the instruction given to GPT'):
-    #st.write(f"{intro_for_GPT[0]['content']}")
-
-if st.toggle('Tips for using GPT'):
+if st.toggle('See tips for using GPT'):
     tips()
 
-gpt_questions_entry = st.text_area(label = f"You may enter at most {question_characters_bound} characters.", height= 200, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
+gpt_questions_entry = st.text_area(label = f"Your questions (up to {question_characters_bound} characters)", height= 250, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-#if gpt_questions_entry:
-    
 st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_questions_entry
 
-st.caption(f"By default, this app will use model {basic_model}. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each case.")
+st.caption(f"This app uses model {basic_model} by default. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each case.")
+
+if st.toggle('See/edit the system instruction for GPT (advanced users only)'):
+
+    st.warning(gpt_system_msg)
+
+    if st.button(label = 'RESET the system instruction', type="primary"):
+
+        if 'System instruction' in st.session_state.df_master.columns:
+    
+            st.session_state.df_master.pop('System instruction')
+    
+        st.rerun()
+    
+    gpt_system_entry = st.text_area(label = f"System instruction (up to {system_characters_bound} characters)", height= 250, max_chars=system_characters_bound, value = st.session_state['df_master'].loc[0, 'System instruction']) 
+
+    st.session_state['df_master'].loc[0, 'System instruction'] = gpt_system_entry
 
 if check_questions_answers() > 0:
     
-    st.write("Please do not try to obtain personally identifiable information. Your questions and GPT's answers will be checked for potential privacy violation.")
+    st.warning("Please do not try to obtain personally identifiable information. Your questions/instructions and GPT's answers will be checked for potential privacy violation.")
 
 #Disable toggles while prompt is not entered or the same as the last processed prompt
 if gpt_activation_entry:
@@ -394,7 +423,6 @@ if len(st.session_state.df_example_to_show) > 0:
         st.session_state.df_master.loc[0, 'Example'] = ''
     
         st.rerun()
-    
 
 
 # %% [markdown]
@@ -424,7 +452,7 @@ else:
     
         st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
 """)
-            
+        
         name_entry = st.text_input(label = "Your name", value = st.session_state['df_master'].loc[0, 'Your name'])
 
         #if name_entry:
@@ -447,7 +475,7 @@ else:
                 
                 st.warning('This key is not valid.')
  
-        st.markdown(f"""**:green[You can use the flagship version of GPT ({flagship_model}),]** which is :red[significantly more expensive] than the default model ({basic_model}) which you can use for free.""")  
+        st.markdown(f"""**:green[You can use the flagship GPT model ({flagship_model}),]** which is :red[significantly more expensive] than the default model ({basic_model}).""")  
         
         gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         
@@ -793,11 +821,11 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
                             #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
                     
                     #Definitions and functions for ER
-                    from functions.er_functions import er_run_b64, role_content_er#, er_run, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+                    from functions.er_functions import er_run_b64#, role_content_er#, er_run, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
 
                     #from functions.gpt_functions import get_image_dims, calculate_image_token_cost
                     
-                    system_instruction = role_content_er
+                    #system_instruction = role_content_er
 
                     #Create spreadsheet of responses
                     df_master = st.session_state.df_master
