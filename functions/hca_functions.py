@@ -36,7 +36,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
 from urllib.request import urlretrieve
 import os
-import pypdf
+#import pypdf
 import io
 from io import BytesIO
 from io import StringIO
@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, pdf_judgment
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -262,19 +262,19 @@ def hca_search_results_to_judgment_links(url_search_results, judgment_counter_bo
 # %%
 #Define function for judgment link containing PDF
 
-@st.cache_data(show_spinner = False, ttl=600)
-def hca_pdf_judgment(url):
-    pdf_url = url.replace('showCase', 'downloadPdf')
-    headers = {'User-Agent': 'whatever'}
-    r = requests.get(pdf_url, headers=headers)
-    remote_file_bytes = io.BytesIO(r.content)
-    pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
-    text_list = []
+#@st.cache_data(show_spinner = False, ttl=600)
+#def hca_pdf_judgment(url):
+    #pdf_url = url.replace('showCase', 'downloadPdf')
+    #headers = {'User-Agent': 'whatever'}
+    #r = requests.get(pdf_url, headers=headers)
+    #remote_file_bytes = io.BytesIO(r.content)
+    #pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
+    #text_list = []
 
-    for page in pdfdoc_remote.pages:
-        text_list.append(page.extract_text())
+    #for page in pdfdoc_remote.pages:
+        #text_list.append(page.extract_text())
     
-    return str(text_list)
+    #return str(text_list)
 
 
 
@@ -407,7 +407,8 @@ def hca_meta_judgment_dict(judgment_url):
             judgment_dict['Catchwords'] = catchwords_list[0].text
     
         #Judgment text
-        judgment_dict['judgment'] = hca_pdf_judgment(judgment_url)
+        judgment_url = judgment_url.replace('showCase', 'downloadPdf')
+        judgment_dict['judgment'] = pdf_judgment(judgment_url)
 
     except Exception as e:
         print(f"{judgment_dict['Case name']}: judgment not scrapped")
@@ -458,7 +459,8 @@ def hca_meta_judgment_dict_alt(judgment_url):
         elif len(judgment_pdfs_list) > 0:
             raw_link = judgment_pdfs_list[0]['href']
             pdf_link = 'https://eresources.hcourt.gov.au' + raw_link
-            judgment_dict['judgment'] = hca_pdf_judgment(pdf_link)
+            pdf_link = pdf_link.replace('showCase', 'downloadPdf')
+            judgment_dict['judgment'] = pdf_judgment(pdf_link)
     
         else:
             judgment_dict['judgment'] = ''
@@ -716,7 +718,7 @@ def hca_citation_to_link(collection, citation):
     
             judgment_url = f'https://eresources.hcourt.gov.au/showCase/{year_int}/HCA/{num_int}'
             
-            return judgment_url
+            #return judgment_url
         
         except Exception as e:
             print('Citation entered but error.')
@@ -724,6 +726,7 @@ def hca_citation_to_link(collection, citation):
 
 
     #Check if judgment_url works
+    #st.write(f"judgment_url == {judgment_url}")
     page = requests.get(judgment_url)
     soup = BeautifulSoup(page.content, "lxml")
 
@@ -746,10 +749,13 @@ def hca_citation_to_link(collection, citation):
     
             else:
                 #Try to use HCA's browse function to get link to case
-                judgment_url = hca_mnc_to_link_browse(collection, year, num)
+                #judgment_url = hca_mnc_to_link_browse(collection, year, num)
     
-                return judgment_url
-    
+                #return judgment_url
+                print("Can't get case url for citation")
+                
+                return ''
+                
         except Exception as e:
             print("Can't get case url for citation")
             print(e)
@@ -1473,6 +1479,8 @@ def hca_search_url(df_master):
         #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
         direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
 
+        #st.write(direct_link)
+        
         if len(direct_link) > 0:
             
             url = direct_link
@@ -1480,6 +1488,44 @@ def hca_search_url(df_master):
             results_count = '1'
     
     search_results_soup = results_url_count['soup']
+
+    #st.write(results_count)
+    
+    return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
+    
+
+
+# %%
+#Function to get link to search results and number of results
+
+def hca_search_url_hold(df_master):
+    df_master = df_master.fillna('')
+    
+    #Conduct search
+    
+    results_url_count = hca_search(collection = df_master.loc[0, 'Collection'], 
+                        quick_search = df_master.loc[0, 'Quick search'], 
+                        full_text = df_master.loc[0, 'Full text search']
+                        )
+    results_url = results_url_count['results_url']
+    results_count = results_url_count['results_count']
+    
+    #If mnc entered
+    if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
+        #direct_link = hca_mnc_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+        direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+
+        #st.write(direct_link)
+        
+        if len(direct_link) > 0:
+            
+            url = direct_link
+
+            results_count = '1'
+    
+    search_results_soup = results_url_count['soup']
+
+    #st.write(results_count)
     
     return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
     
@@ -1501,7 +1547,6 @@ from functions.gpt_functions import question_characters_bound, basic_model, flag
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
 
 
 # %%
@@ -1569,8 +1614,7 @@ def hca_run(df_master):
             pause.seconds(np.random.randint(5, 15))
     
         #Add judgment if mnc entered
-    
-        if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
+        if (len(df_master.loc[0, 'Search for medium neutral citation']) > 0) and (len(judgment_dict_direct) < judgments_counter_bound):
             
             direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
     
@@ -1591,7 +1635,7 @@ def hca_run(df_master):
         for case in case_infos:
 
             #add search results to json
-            judgments_file.append(case)
+            #judgments_file.append(case)
 
             #Add mnc to list for HuggingFace
             mnc_list.append(case['Medium neutral citation'])
@@ -1599,31 +1643,51 @@ def hca_run(df_master):
         #Get judgments from oalc first
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
     
-        #Append judgment to judgments_file 
-        for decision in judgments_file:
+        #Append OALC judgment to judgments_file 
+        for case in case_infos:
             
             #Append judgments from oalc first
-            if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
+            if case['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
-                decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
+                case.update({'judgment': mnc_judgment_dict[case['Medium neutral citation']]})
 
-                print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from OALC")
+                judgments_file.append(case)
+
+                print(f"{case['Case name']} {case['Medium neutral citation']}: got judgment from OALC")
+
+            else:
+            #Get remaining judgments from HCA database
+    
+                judgment_link = case['Hyperlink to High Court Judgments Database']
                 
-            else: #Get judgment from HCA if can't get from oalc
-                
-                direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], decision['Medium neutral citation'])
+                if 'showbyHandle' in judgment_link:
+                    
+                    judgment_dict = hca_meta_judgment_dict_alt(judgment_link)
         
-                if len(direct_link) > 0:
-                    
-                    judgment_dict_direct = hca_meta_judgment_dict(direct_link)
+                else: #If 'showCase' in judgment_link:
+        
+                    judgment_dict = hca_meta_judgment_dict(judgment_link)
+        
+                for key in judgment_dict.keys():
+                    if key not in case.keys():
+                        case.update({key: judgment_dict[key]}) 
+                
+                judgments_file.append(case)
 
-                    for key in judgment_dict_direct.keys():
-                        if key not in decision.keys():
-                            decision.update({key: judgment_dict_direct[key]})
-
-                    print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from the High Court directly")
-                    
-                    pause.seconds(np.random.randint(5, 15))
+                print(f"{case['Case name']} {case['Medium neutral citation']}: got judgment from HCA directly.")
+                
+                pause.seconds(np.random.randint(5, 15))
+    
+        #Add judgment if mnc entered
+        if (len(df_master.loc[0, 'Search for medium neutral citation']) > 0) and (len(judgment_dict_direct) < judgments_counter_bound):
+            
+            direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
+    
+            if len(direct_link) > 0:
+                
+                judgment_dict_direct = hca_meta_judgment_dict(direct_link)
+                
+                judgments_file.append(judgment_dict_direct)
 
     #Make judgment_link clickable
     for decision in judgments_file:
@@ -1746,8 +1810,7 @@ def hca_batch(df_master):
             pause.seconds(np.random.randint(5, 15))
     
         #Add judgment if mnc entered
-    
-        if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
+        if (len(df_master.loc[0, 'Search for medium neutral citation']) > 0) and (len(judgment_dict_direct) < judgments_counter_bound):
             
             direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
     
@@ -1768,7 +1831,7 @@ def hca_batch(df_master):
         for case in case_infos:
 
             #add search results to json
-            judgments_file.append(case)
+            #judgments_file.append(case)
 
             #Add mnc to list for HuggingFace
             mnc_list.append(case['Medium neutral citation'])
@@ -1777,30 +1840,50 @@ def hca_batch(df_master):
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
     
         #Append judgment to judgments_file 
-        for decision in judgments_file:
+        for case in case_infos: #judgments_file:
             
-            #Append judgments from oalc first
-            if decision['Medium neutral citation'] in mnc_judgment_dict.keys():
+            #Append judgment from oalc first
+            if case['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
-                decision.update({'judgment': mnc_judgment_dict[decision['Medium neutral citation']]})
-                
-                print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from OALC")
+                case.update({'judgment': mnc_judgment_dict[case['Medium neutral citation']]})
 
-            else: #Get judgment from HCA if can't get from oalc
+                judgments_file.append(case)
                 
-                direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], decision['Medium neutral citation'])
+                print(f"{case['Case name']} {case['Medium neutral citation']}: got judgment from OALC")
+
+            else:
+            #Get remaining judgment from HCA database
+        
+                judgment_link = case['Hyperlink to High Court Judgments Database']
+                
+                if 'showbyHandle' in judgment_link:
+                    
+                    judgment_dict = hca_meta_judgment_dict_alt(judgment_link)
+        
+                else: #If 'showCase' in judgment_link:
+        
+                    judgment_dict = hca_meta_judgment_dict(judgment_link)
+        
+                for key in judgment_dict.keys():
+                    if key not in case.keys():
+                        case.update({key: judgment_dict[key]}) 
+                
+                judgments_file.append(case)
+
+                print(f"{case['Case name']} {case['Medium neutral citation']}: got judgment from HCA directly.")
+                
+                pause.seconds(np.random.randint(5, 15))
+    
+            #Add judgment if mnc entered
+            if (len(df_master.loc[0, 'Search for medium neutral citation']) > 0) and (len(judgment_dict_direct) < judgments_counter_bound):
+                
+                direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
         
                 if len(direct_link) > 0:
                     
                     judgment_dict_direct = hca_meta_judgment_dict(direct_link)
-
-                    for key in judgment_dict_direct.keys():
-                        if key not in decision.keys():
-                            decision.update({key: judgment_dict_direct[key]})
-
-                    print(f"{decision['Case name']} {decision['Medium neutral citation']}: got judgment from the High Court directly")
-
-                    pause.seconds(np.random.randint(5, 15))
+                    
+                    judgments_file.append(judgment_dict_direct)
 
     #Make judgment_link clickable
     for decision in judgments_file:

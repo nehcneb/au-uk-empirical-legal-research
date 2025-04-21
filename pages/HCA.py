@@ -71,8 +71,8 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # High Court of Australia search engine
 
 # %%
-from functions.hca_functions import hca_collections, hca_search, hca_pdf_judgment, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_search_url, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
-#hca_search_results_to_judgment_links
+from functions.hca_functions import hca_collections, hca_search, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_search_url, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
+#hca_search_results_to_judgment_links, hca_pdf_judgment
 
 
 # %%
@@ -567,33 +567,44 @@ if preview_button:
                         own_judges_exclude = df_master.loc[0, 'Judges do not include']
                         )
     
-        results_count = min(len(case_infos), results_count)
+        results_count += min(len(case_infos), results_count)
     
         if results_count > 0:
-            
-            df_preview = pd.DataFrame(case_infos)
-    
-            #Get display settings
-            display_df_dict = display_df(df_preview)
-    
-            df_preview = display_df_dict['df']
-    
-            link_heading_config = display_df_dict['link_heading_config']
-    
-            #Update results count for display
-            if len(case_infos) < judgments_counter_bound:
+
+            #If non-mnc search terms entered
+            if len(case_infos) > 0:
+        
+                df_preview = pd.DataFrame(case_infos)
+        
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+        
+                df_preview = display_df_dict['df']
+        
+                link_heading_config = display_df_dict['link_heading_config']
+        
+                #Update results count for display
+                #if len(case_infos) < judgments_counter_bound:
                 results_count_to_display = len(case_infos)
-            
-            #Display search results
-            st.success(f'Your search terms returned up to {results_count_to_display} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                        
-            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+                
+                #Display search results
+                st.success(f'Please see below for the top {min(results_count_to_display, default_judgment_counter_bound)} search result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+        
+                #The HCA's search page does not reflect filters
+                if not filter_toggle:
+                    st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+
+            #If mnc entered
+            if len(df_master.loc[0, 'Search for medium neutral citation']) > 0:
+                direct_link = hca_citation_to_link(df_master.loc[0, 'Collection'], df_master.loc[0, 'Search for medium neutral citation'])
     
-            #The HCA's search page does not reflect filters
-            #st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-    
+                if len(direct_link) > 0:
+                    st.page_link(direct_link, label=f"SEE the search result for {df_master.loc[0, 'Search for medium neutral citation']} (in a popped up window)", icon = "🌎")
+                
         else:
-            
+
             st.error(no_results_msg)
 
 # %% [markdown]
@@ -704,7 +715,7 @@ if next_button:
                                     own_judges_exclude = df_master.loc[0, 'Judges do not include']
                                     )
 
-                    results_count = min(len(case_infos), results_count)
+                    results_count += min(len(case_infos), results_count)
                     
                 if  results_count == 0:
                     
