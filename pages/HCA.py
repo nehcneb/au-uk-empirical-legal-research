@@ -173,12 +173,12 @@ def hca_create_df():
     except:
         print('case_number not entered.')
 
-    judge_is = list(judge_includes_categories.keys())[0]
+    judge_includes = list(judge_includes_categories.keys())[0]
     try:
-        judge_is = judge_is_entry
+        judge_includes = judge_includes_entry
 
     except:
-        print('judge_is not entered.')
+        print('judge_includes not entered.')
 
     judge = ''
     try:
@@ -229,7 +229,7 @@ def hca_create_df():
                'Year is/is not': year_is,
                'Year': year,
                'Case number': case_number,
-               'Judge includes/does not include': judge_is,
+               'Judge includes/does not include': judge_includes,
                'Judge': judge,
                #The following are common to all pages
             'Metadata inclusion' : meta_data_choice,
@@ -378,9 +378,24 @@ st.subheader("Your search terms")
 st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section mimics their judgments search function.
 """)
 
-quick_search_entry = st.text_input(label = 'Quick search (searches searches party names and the catchwords of the judgments)', 
-                                   value = st.session_state.df_master.loc[0, 'Quick search']
+quick_search_entry = st.text_input(label = 'Quick search', 
+                                   value = st.session_state.df_master.loc[0, 'Quick search'],
+                                  help = """**Quick search** searches party names and the catchwords of the judgments.
+There are various ways you can search
+
+* To search for a phrase enclose the phrase in "double quotation" marks. The phrase will be looked for in the main body of the judgment. Each of the words will need to appear in the catchwords or parties.
+
+* Words are not case-sensitive. Small words (such as "the","to","of" etc) are ignored unless they are part of a phrase.
+
+* Type in a party's name. If the name you typed is a party, these cases will be found.
+
+* Typing in catchwords will find cases where these catchwords appear. All the words you type must appear.
+
+* Two catchwords (or multiple phrases and catchwords) can be searched for together e.g. **"industrial law" repudiation**.
+"""
+#* Clicking on "show more options" will give you more search options e.g. full-text or searching over a date range. #Doesn't exist on HCA's search engine
                                   )
+st.caption('Quick search searches party names and catchwords of the judgments.')
 
 citation_entry = st.text_input(label = 'Search for citation', 
                                value = st.session_state.df_master.loc[0, 'Search for citation'],
@@ -413,12 +428,15 @@ with year_col1:
 with year_col2:
     year_entry = st.text_input(label = 'Year', 
                                value = st.session_state.df_master.loc[0, 'Year'],
-                              help = 'You can search a range e.g. 2003 TO 2004'
+                              help = 'You can search a range eg 2003 TO 2004'
                               )
 
 if collection_entry != hca_collections[-1]:
 
-    case_number_entry = st.text_input(label = 'Case number', value = st.session_state.df_master.loc[0, 'Case number']) 
+    case_number_entry = st.text_input(label = 'Case number', 
+                                      value = st.session_state.df_master.loc[0, 'Case number'],
+                                     help = 'Enter eg S30/2008'
+                                     ) 
 
     judge_col1, judge_col2 = st.columns(2)
     
@@ -482,7 +500,7 @@ if preview_button:
                             year_is = df_master.loc[0, 'Year is/is not'],
                             year = df_master.loc[0, 'Year'], 
                             case_number = df_master.loc[0, 'Case number'], 
-                            judge_is = df_master.loc[0, 'Judge includes/does not include'],
+                            judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                             judge = df_master.loc[0, 'Judge'],
                             judgment_counter_bound = default_judgment_counter_bound
                             )
@@ -604,7 +622,7 @@ if next_button:
                                 year_is = df_master.loc[0, 'Year is/is not'],
                                 year = df_master.loc[0, 'Year'], 
                                 case_number = df_master.loc[0, 'Case number'], 
-                                judge_is = df_master.loc[0, 'Judge includes/does not include'],
+                                judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                                 judge = df_master.loc[0, 'Judge'],
                                 judgment_counter_bound = default_judgment_counter_bound
                                 )

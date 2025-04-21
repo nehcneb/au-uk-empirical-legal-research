@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, pdf_judgment, link, is_date, split_title_mnc
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -69,7 +69,23 @@ from functions.common_functions import huggingface, today_in_nums, errors_list, 
 # # High Court of Australia search engine
 
 # %%
-from functions.common_functions import link, is_date, list_value_check, date_parser, split_title_mnc
+#Load hca_data
+
+@st.cache_resource(show_spinner = False)
+def hca_load_data(url):
+    df = pd.read_csv(url)
+    return df
+
+hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/hca_data.csv'
+
+#response = requests.get(hca_data_url)
+
+#hca_df = pd.read_csv(StringIO(response.text))
+
+hca_df = hca_load_data(hca_data_url)
+
+# %% [markdown]
+# ## Definitions
 
 # %%
 #Collections available
@@ -89,6 +105,9 @@ year_is_categories = {'is': 'contains',
 #Judges include categories
 judge_includes_categories = {'includes': 'contains', 
                              'does not include': 'notcontains'}
+
+# %% [markdown]
+# ## Search engine
 
 # %%
 #Scrape javascript
@@ -176,7 +195,6 @@ def hca_soup_to_judgments(_soup,
                              'Catchwords': catchwords
                             }
 
-                
                 #Try to get case info from hca_df
                 try:
                     index_list = hca_df.index[hca_df['mnc'].str.contains(mnc, case=False, na=False, regex=False)].tolist()
@@ -187,7 +205,6 @@ def hca_soup_to_judgments(_soup,
                     case_info.update({'Before': hca_df.loc[int(index), 'before']})
 
                     case_info.update({'Date': hca_df.loc[index, 'date']})
-                    
                                         
                 except Exception as e:
                     print(f"{mnc}: can't get case info from hca_df.")
@@ -215,7 +232,7 @@ def hca_search(collection = hca_collections[0],
                 year_is = list(year_is_categories.keys())[0],
                 year = '', 
                 case_number = '', 
-                judge_is = list(judge_includes_categories.keys())[0],
+                judge_includes = list(judge_includes_categories.keys())[0],
                 judge = '',
                 judgment_counter_bound = default_judgment_counter_bound
                 ):
@@ -252,12 +269,10 @@ def hca_search(collection = hca_collections[0],
 
     #Quick search
     #quick_search = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'qsrch-term')))
-    
     quick_search_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='qsrch-term']")))
     
     #Search for citation
     #citation = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'id_filter_type_13')))
-    
     citation_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_type_13']")))
 
     #Parties include/not include
@@ -320,7 +335,6 @@ def hca_search(collection = hca_collections[0],
         
         year_input.send_keys(year)
 
-
     if collection != hca_collections[-1]:
     
         #Full text
@@ -334,7 +348,7 @@ def hca_search(collection = hca_collections[0],
             case_number_input.send_keys(case_number)
     
         #Judge
-        judge_includes_category_value = judge_includes_categories[judge_is]
+        judge_includes_category_value = judge_includes_categories[judge_includes]
         judge_includes_category.select_by_value(judge_includes_category_value)
     
         if ((judge != None) and (judge != '')):
@@ -355,44 +369,47 @@ def hca_search(collection = hca_collections[0],
     #Set page counter
     page_counter = 1
     
-    print(f'Searching page {page_counter}')
+    #print(f'Searching page {page_counter}')
 
     #Report on search terms
-    print(results_count_text.text)
+    print(results_count_text.text.strip())
 
     #Get case_infos from first page
-    
     soup = BeautifulSoup(browser.page_source, "lxml")
     case_infos = hca_soup_to_judgments(soup, collection, judgment_counter_bound)
 
-    #Next page if needed
-    while (page_counter <= page_bound) and (len(case_infos) < min(judgment_counter_bound, results_count)):
+    #Next page if available and needed
+    while (page_counter < page_bound) and (len(case_infos) < min(judgment_counter_bound, results_count)):
 
+        #Pause to avoid getting kicked out
+        pause.seconds(np.random.randint(5, 10))
+        
         #Increase page count
         page_counter += 1
 
-        print(f'Searching page {page_counter}')
-        
+        #print(f'Searching page {page_counter}')
+
+        #Get and click button for next page
         next_page_button = Wait(browser, 20).until(EC.element_to_be_clickable((By.XPATH, "//a[@href='javascript:newPage(2)']")))
     
         browser.execute_script("arguments[0].click();",next_page_button)
 
         #Wait for next page to load
-        pause.seconds(np.random.randint(5, 15))
-
+        pause.seconds(np.random.randint(5, 10))
+        
         Wait(browser, 20).until(EC.text_to_be_present_in_element((By.XPATH, "//div[@id='postsearch']"), f'{str(page_counter)[-1]} (of'))
-                
-        results_count_text = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//div[@id='postsearch']")))
 
         #Report on search terms
-        print(results_count_text.text)
+        results_count_text = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//div[@id='postsearch']")))
+        print(results_count_text.text.strip())
 
-        #Soup
+        #Get soup for next page
         soup_next_page = BeautifulSoup(browser.page_source, "lxml")
 
-        #Get case_infos from first page
+        #Get case_infos from next page
         case_infos_next_page = hca_soup_to_judgments(soup_next_page, collection, judgment_counter_bound)
 
+        #Add case_infos from next page to all case_infos
         for case_info in case_infos_next_page:
             if len(case_infos) < min(judgment_counter_bound, results_count):
                 case_infos.append(case_info)
@@ -402,7 +419,6 @@ def hca_search(collection = hca_collections[0],
 
 # %%
 #Meta labels and judgment combined
-#IN USE
 hca_meta_labels_droppable = ['Reported', 'Date', 'Case number', 'Before', 'Catchwords', 'Order']
 
 
@@ -706,23 +722,6 @@ def hca_meta_judgment_dict_alt(judgment_url):
     
     return judgment_dict
 
-
-# %%
-#Load hca_data
-
-@st.cache_resource(show_spinner = False)
-def hca_load_data(url):
-    df = pd.read_csv(url)
-    return df
-
-hca_data_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/hca_data.csv'
-
-#response = requests.get(hca_data_url)
-
-#hca_df = pd.read_csv(StringIO(response.text))
-
-hca_df = hca_load_data(hca_data_url)
-
 # %% [markdown]
 # # GPT functions and parameters
 
@@ -775,7 +774,7 @@ def hca_run(df_master):
                     year_is = df_master.loc[0, 'Year is/is not'],
                     year = df_master.loc[0, 'Year'], 
                     case_number = df_master.loc[0, 'Case number'], 
-                    judge_is = df_master.loc[0, 'Judge includes/does not include'],
+                    judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                     judge = df_master.loc[0, 'Judge'],
                     judgment_counter_bound = judgments_counter_bound
                     )['case_infos']
@@ -944,7 +943,7 @@ def hca_batch(df_master):
                     year_is = df_master.loc[0, 'Year is/is not'],
                     year = df_master.loc[0, 'Year'], 
                     case_number = df_master.loc[0, 'Case number'], 
-                    judge_is = df_master.loc[0, 'Judge includes/does not include'],
+                    judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                     judge = df_master.loc[0, 'Judge'],
                     judgment_counter_bound = judgments_counter_bound
                     )['case_infos']

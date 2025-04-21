@@ -796,7 +796,7 @@ class hk_search_tool:
                 print(f"{case_number}: redirecting to Englsh original")
 
                 #Pause to avoid getting kicked out
-                pause.seconds(5)
+                pause.seconds(np.random.randint(5, 10))
                 
                 browser.get(judgment_url)
 
@@ -961,7 +961,7 @@ class hk_search_tool:
         
             try:
                 #Pause to avoid getting kicked out
-                pause.seconds(5)
+                pause.seconds(np.random.randint(5, 10))
                 
                 app_url = bottom_buttons_dict[key]
                 browser.get(app_url)
