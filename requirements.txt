@@ -16,7 +16,8 @@ pause==0.3
 pdf2image==1.17.0
 pillow==10.4.0
 pycryptodome==3.22.0
-PyMuPDF==1.24.1
+PyMuPDF==1.25.5
+#pymupdf4llm=0.0.21
 #PyPDF2==3.0.1
 pypdf==5.0.0
 PyYAML==6.0.1

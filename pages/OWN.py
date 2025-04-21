@@ -39,7 +39,7 @@ from math import ceil
 import traceback
 
 #Conversion to text
-import fitz
+#import fitz
 from io import StringIO
 from io import BytesIO
 import pdf2image

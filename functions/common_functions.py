@@ -263,7 +263,13 @@ def link(x):
 #Define function for judgment link containing PDF
 def pdf_judgment(url):
     headers = {'User-Agent': 'whatever'}
-    r = requests.get(url, headers=headers)
+
+    #print(url)
+    
+    r = requests.get(url, headers=headers, allow_redirects = True)
+
+    #print('Got judgment bytes data')
+    
     remote_file_bytes = io.BytesIO(r.content)
     pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
     text_list = []

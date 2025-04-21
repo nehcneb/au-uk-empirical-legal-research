@@ -252,6 +252,13 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
             
             title = result.h3.get_text(strip = True)
 
+            #Get PDF status
+            pdf_status = False
+            
+            if '(pdf' in title.lower():
+                
+                pdf_status = True
+            
             #Get case name and mnc
             case_name_mnc = split_title_mnc(title)
             
@@ -296,7 +303,8 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
                 'Judge': judge,
                  'Judgment_Dated' : date,  
                  'Catchwords' : catchwords,  
-                 'Subject' : subject,  
+                 'Subject' : subject,
+                'Judgment in PDF': pdf_status
                         }
             case_infos.append(case_info)
             counter = counter + 1
@@ -459,26 +467,27 @@ def fca_meta_judgment_dict(case_info):
         
         judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
         
-        page = requests.get(judgment_url)
-        soup = BeautifulSoup(page.content, "lxml")
-        meta_tags = soup.find_all("meta")
-    
-        #Attach meta tags
-        if len(meta_tags)>0:
-            for tag_index in range(len(meta_tags)):
-                meta_name = meta_tags[tag_index].get("name")
-                if meta_name in fca_metalabels:
-                    meta_content = meta_tags[tag_index].get("content")
-                    judgment_dict[meta_name] = meta_content
-    
         #Check if not gets taken to a PDF
     
-        if '.pdf' not in judgment_url.lower():
-        
+        #if '.pdf' not in judgment_url.lower():
+        if not bool(case_info['Judgment in PDF']):
+            
             judgment_text = ''
             order_text = ''
         
             try:
+                page = requests.get(judgment_url)
+                soup = BeautifulSoup(page.content, "lxml")
+                meta_tags = soup.find_all("meta")
+            
+                #Attach meta tags
+                if len(meta_tags)>0:
+                    for tag_index in range(len(meta_tags)):
+                        meta_name = meta_tags[tag_index].get("name")
+                        if meta_name in fca_metalabels:
+                            meta_content = meta_tags[tag_index].get("content")
+                            judgment_dict[meta_name] = meta_content
+                            
                 judgment_raw = ''
                 judgment_raw = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
         
@@ -500,9 +509,9 @@ def fca_meta_judgment_dict(case_info):
             judgment_dict['Order'] = order_text
     
         #Check if gets taken to a PDF
-    
         else:
-
+            print(f"{judgment_dict['Case name']}: getting pdf judgment.")
+            
             #Attach judgment pdf text
             try:
                 judgment_pdf_raw = pdf_judgment(judgment_url)

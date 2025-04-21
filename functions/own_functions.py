@@ -39,7 +39,8 @@ from math import ceil
 import traceback
 
 #Conversion to text
-import fitz
+import pymupdf
+#import pymupdf4llm
 from io import StringIO
 from io import BytesIO
 import pdf2image
@@ -172,7 +173,7 @@ def GPT_label_dict(x_list):
 
 #@st.cache_data(show_spinner = False)
 def doc_to_text(uploaded_doc, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'extracted_text': ''}
+    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'extracted_text': ''} #
 
     try:
         #Get file name
@@ -192,16 +193,32 @@ def doc_to_text(uploaded_doc, language, page_bound):
             doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
             text_list.append(doc_string)
     
-            file_triple['Page length'] = 1
+            #file_triple['Page length'] = 1
+
+            file_triple['extracted_text'] = str(text_list)
             
         else:
+             
+            #pdf formats #If want to enable pymupdf4llm. Not useful in my experience.
+            #if extension == 'pdf':
+                #doc = pymupdf.open(stream=bytes_data)
+
+                #max_doc_number=min(len(doc), page_bound)
+
+                #md_text = pymupdf4llm.to_markdown(doc = doc, pages = range(0, max_doc_number), embed_images = True) #Add embed_images = True if want to include images
+                
+                #file_triple['extracted_text'] = str(md_text)
+
+            #Other formats
+            #else:
+                
             #text formats
             if extension in ['txt', 'cs', 'xml', 'html', 'json']:
-                doc = fitz.open(stream=bytes_data, filetype="txt")
+                doc = pymupdf.open(stream=bytes_data, filetype="txt")
     
             #Other formats
             else:
-                doc = fitz.open(stream=bytes_data)
+                doc = pymupdf.open(stream=bytes_data)
     
             max_doc_number=min(len(doc), page_bound)
             
@@ -210,10 +227,11 @@ def doc_to_text(uploaded_doc, language, page_bound):
                 text_page = page.get_text() 
                 text_list.append(text_page)
     
+            file_triple['extracted_text'] = str(text_list)
+
             #Length of pages
             file_triple['Page length'] = len(doc)
-    
-        file_triple['extracted_text'] = str(text_list)
+        
     except Exception as e:
         print(f"{file_triple['File name']}: failed to get text")
         print(e)
@@ -382,7 +400,8 @@ from functions.gpt_functions import get_image_dims, calculate_image_token_cost, 
 #@st.cache_data(show_spinner = False)
 def image_to_b64_own(uploaded_image, language, page_bound):
     file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : [],
-                   'Page length': '', 'tokens_raw': 0
+                   'Page length': '', 
+                   'tokens_raw': 0
                   }
 
     try:
@@ -423,7 +442,7 @@ def image_to_b64_own(uploaded_image, language, page_bound):
 
         else:
     
-            file_triple['Page length'] = 1
+            #file_triple['Page length'] = 1
         
             b64 = base64.b64encode(bytes_data).decode('utf-8')
         
