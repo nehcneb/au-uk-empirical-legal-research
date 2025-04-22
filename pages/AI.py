@@ -1657,9 +1657,9 @@ except Exception as e:
 #Area for entering instructions
 st.subheader(f'Give instructions to {st.session_state.ai_choice}')
 
-st.write(f':green[Please give instructions in sequence.] {st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions. It will **only** use the data and/or information from your spreadsheet.')
+st.write(f':green[Please give your instructions in sequence.] {st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions. It will **only** use the data and/or information from your spreadsheet.')
 
-prompt = st.text_area(label = f'You may enter at most {question_characters_bound} characters.', 
+prompt = st.text_area(label = "For machine learning or statistical inference, please instruct GPT to use either [scikit-learn](https://scikit-learn.org/stable/index.html) or [SciPy](https://scipy.org/).",
                       value = st.session_state.prompt_prefill, 
                       height= 250, 
                       max_chars=question_characters_bound,
@@ -1679,7 +1679,7 @@ if prompt:
 else:
     st.session_state['disable_input'] = True
 
-st.caption("For machine learning or statistical inference, please instruct GPT to use either [scikit-learn](https://scikit-learn.org/stable/index.html) or [SciPy](https://scipy.org/).")
+st.caption(f'Up to {question_characters_bound} characters')
 
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
