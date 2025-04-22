@@ -456,9 +456,9 @@ def ai_model_printing(ai_choice, gpt_model_choice):
 #Function to seeing history
 @st.fragment
 def history_on_function():
-    st.subheader('Conversation')
+    #st.subheader('Conversation')
 
-    st.write('Instructions and responses are displayed in chronological order.')
+    st.info('Instructions and responses are displayed in chronological order.')
 
     st.caption(spreadsheet_caption)
 
@@ -626,13 +626,19 @@ def pandasai_ask():
         #Produce record of agent-based prompt cost and tokens
         prompt_tokens = cb.prompt_tokens #Equals 0 if no code has been produced
         prompt_cost = prompt_tokens*gpt_input_cost(st.session_state.gpt_model)
+
+        #Reset explain status
+        st.session_state["explain_toggle_disabled"] = True
+
+        #Reset clarifications provided status
+        st.session_state["q_provided"] = False
         
         #Produce response depending on whether the code produced is safe
         code = check_code_dict['code']
-        
         code_safe = check_code_dict['code_safe']
     
-        #Update session_state    
+        #Update session_states
+        st.session_state.code = code
         st.session_state.code_safe = code_safe
         
         if not code_safe:
@@ -655,106 +661,14 @@ def pandasai_ask():
         
         #keep response in session state and continue to process response        
         st.session_state.response = response
-                
+        
         #Obtain response cost and tokens
         response_cost = cb.total_cost - prompt_cost
         response_tokens = cb.completion_tokens
 
-        #Show response
-        st.subheader(f'{st.session_state.ai_choice} Response')    
-        #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
-
-        if (agent.last_error is not None) or (not code_safe):
-            st.error(response)
-
-        else:
-
-            if isinstance(response, pd.DataFrame):
-
-                try:
-    
-                    display_df_dict = display_df(response)
-                    
-                    response = display_df_dict['df']
-                    
-                    link_heading_config = display_df_dict['link_heading_config']
-                    
-                    st.dataframe(response, column_config=link_heading_config)
-
-                except Exception as e:
-
-                    print(f"Can't make response in df clickable due to error: {e}")
-
-                    st.write(response)
-
-            else:
-                
-                st.write(response)
-            
         #Keep record of response, cost and tokens
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'answer': response}})
-
-        #Display caption if response is a dataframe
-        if isinstance(response, pd.DataFrame):
-            
-            st.caption(spreadsheet_caption)
-
-        #For all GPT models, show any figure generated
-        #st.write(f'The number of figures is {plt.get_fignums()}')
-
-        if (('.png' in str(response)[-4:]) or (plt.get_fignums())):
-            if plt.get_fignums():
-                try:
-                    #st.write('**Visualisation**')
-            
-                    fig_to_plot = plt.gcf()
-                    st.pyplot(fig = fig_to_plot)
-                    
-                    #Keep record of response, cost and tokens
-                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
-    
-                    #Enable downloading
-                    pdf_to_download = io.BytesIO()
-                    png_to_download = io.BytesIO()
-    
-                    col1e, col2e = st.columns(2, gap = 'small')
-                    
-                    with col1e:
-                
-                        plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
-                        
-                        pdf_button = st.download_button(
-                           label="DOWNLOAD as a PDF",
-                           data=pdf_to_download,
-                           file_name='chart.pdf',
-                           mime="image/pdf"
-                        )
-                    with col2e:
-                        plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
-                        
-                        png_button = st.download_button(
-                           label="DOWNLOAD as a PNG",
-                           data=png_to_download,
-                           file_name='chart.png',
-                           mime="image/png"
-                        )
-                    
-                    #Keep record of response, cost and tokens
-                    #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
         
-                except Exception as e:
-                        
-                    print(e)     
-
-
-            else: #If st.pyplot doesn't work
-                #st.write('image')
-                st.warning('The image produced may not visualise properly.')
-                
-                st.image(image = response) #, use_column_width = 'never', output_format='png')                
-                
-                st.caption('Right click to save this image.')
-    
         #For displaying logs
         #st.subheader('Logs')
         #df_logs = agent.logs
@@ -767,13 +681,17 @@ def pandasai_ask():
         #code_tokens = float(0)
         
         #Explanations
-        #if st.session_state.explain_status is True:
         if explain_toggle and code_safe:
-    
-            explanation = agent.explain()
-            st.write('**Explanation**')
-            st.write(explanation)
 
+            #Get explanation
+            explanation = agent.explain()
+
+            #Update explanation in session state
+            st.session_state.explanation = explanation
+
+            #Reset explain status
+            st.session_state["explain_toggle_disabled"] = False
+            
             #Display agent-based cost and tokens
             explanation_cost = cb.total_cost - response_cost - prompt_cost
             explanation_tokens = cb.total_tokens - response_tokens - prompt_tokens
@@ -781,35 +699,16 @@ def pandasai_ask():
             #Keep record of explanation
             st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": explanation_cost, "tokens": explanation_tokens,   "role": "assistant", "content": {'answer': explanation}})
 
-        #Code
-        #if st.session_state.code_status is True:
-        if code_toggle and code_safe:
-            #try:
-                #code = agent.generate_code(prompt)
-                
-            st.write('**Code**')
-            st.code(code)
-    
-                #Display cost and tokens
-                #code_cost = cb.total_cost - explanation_cost - response_cost - prompt_cost
-                #code_tokens = cb.total_tokens -  explanation_tokens  - response_tokens - prompt_tokens
-    
-                #Keep record of code
-                #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
-            
-            #except Exception as e:
-                #st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
-                #print(e)
-    
-        #Acivate if want to display tokens and costs only if own account active
-        #if st.session_state['own_account'] == True:
-        
-        total_cost_tokens = f'(This exchange costed approximately USD $ {round(cb.total_cost + prompt_check_cost + code_check_cost, 5)} and totalled {(cb.total_tokens + + prompt_check_tokens + code_check_tokens)} tokens.)'
-        st.write(total_cost_tokens)
-        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
-        
+        #Update total cost abd tokens of last exchange
+        st.session_state.last_cost = round(cb.total_cost + prompt_check_cost + code_check_cost, 5)
+        st.session_state.last_tokens = cb.total_tokens + + prompt_check_tokens + code_check_tokens
+
+        #Update number of instructionsl left
+        st.session_state.instruction_left -= 1
+
         #Keep last processed prompt for input disabling purpose
-        st.session_state['last_prompt'] = prompt
+        #st.session_state['last_prompt'] = prompt
+
 
 
 # %%
@@ -874,6 +773,7 @@ The questions or instructions are as follows:
 
 
 # %%
+#NOT IN USE
 def langchain_write(response_json):
 
     if "text" in response_json:
@@ -906,7 +806,7 @@ def langchain_write(response_json):
         
         if response_json["code"]:
 
-            #if st.session_state.explain_status == True:
+            #if st.session_state.explain_toggle_disabled == True:
             
             st.write("**Code**")
         
@@ -917,6 +817,8 @@ def langchain_write(response_json):
 # %%
 #Langchain ask function
 
+#NOT IN USE
+
 def langchain_ask():
     with langchain_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize In progress...}$"):
 
@@ -926,9 +828,9 @@ def langchain_ask():
         
         prompt_to_process = langchain_further_instructions + prompt
 
-        if st.session_state.explain_status == True:
+        #if st.session_state.explain_toggle_disabled == True:
             
-            prompt_to_process += ' Explain your answer in detail. '
+            #prompt_to_process += ' Explain your answer in detail. '
 
         if st.session_state.code_status == True:
 
@@ -1229,10 +1131,19 @@ if 'instruction_left' not in st.session_state:
 
     st.session_state["instruction_left"] = default_instructions_bound
 
-#Initialize default explain status
+#Initialise cost and tokens for last exchange
 
-#if 'explain_status' not in st.session_state:
-    #st.session_state["explain_status"] = False
+if 'last_cost' not in st.session_state:
+
+    st.session_state["last_cost"] = 0
+
+if 'last_tokens' not in st.session_state:
+
+    st.session_state["last_tokens"] = 0
+
+#Initialize default explain status
+if 'explain_toggle_disabled' not in st.session_state:
+    st.session_state["explain_toggle_disabled"] = False
 
 #Initialize default show code status
 
@@ -1250,10 +1161,18 @@ if 'instruction_left' not in st.session_state:
 st.session_state['gpt_model'] = ai_basic_model
 
 #Initialize responses
-
 #For pandas ai
 if 'response' not in st.session_state:
     st.session_state["response"] = ''
+
+
+#Initialise default code
+if 'code' not in st.session_state:
+    st.session_state["code"] = ''
+
+#Initialise default explanation
+if 'explanation' not in st.session_state:
+    st.session_state["explanation"] = ''
 
 #For langchain
 if 'response_json' not in st.session_state:
@@ -1272,8 +1191,8 @@ if 'clarifying_answers' not in st.session_state:
     st.session_state["clarifying_answers"] = ['', '', '']
 
 #Initialize enhanced prompt
-if 'prompt_prefill' not in st.session_state:
-    st.session_state["prompt_prefill"] = ''
+#if 'prompt_prefill' not in st.session_state:
+    #st.session_state["prompt_prefill"] = ''
 
 #Initialize clarifying questions and answers status
 if 'q_and_a_provided' not in st.session_state:
@@ -1282,6 +1201,9 @@ if 'q_and_a_provided' not in st.session_state:
 #Initialize clarifying questions and answers toggle
 if 'q_and_a_toggle' not in st.session_state:
     st.session_state["q_and_a_toggle"] = False
+
+if 'q_provided' not in st.session_state:
+    st.session_state["q_provided"] = False
 
 #initialize spreadsheet produced to analyse or merge
 
@@ -1292,8 +1214,8 @@ if 'q_and_a_toggle' not in st.session_state:
     #st.session_state["merge_df_produced"] = False
 
 #Last prompt
-if 'last_prompt' not in st.session_state:
-    st.session_state['last_prompt'] = ''
+#if 'last_prompt' not in st.session_state:
+    #st.session_state['last_prompt'] = ''
 
 #Disable input and toggles
 if 'disable_input' not in st.session_state:
@@ -1302,6 +1224,7 @@ if 'disable_input' not in st.session_state:
 #Initialise default code safety status
 if 'code_safe' not in st.session_state:
     st.session_state["code_safe"] = True
+
 
 
 # %% [markdown]
@@ -1425,7 +1348,7 @@ else:
                 
                 st.warning('This key is not valid.')
     
-        st.markdown(f"""**:green[You can use the flagship version of GPT ({ai_flagship_model}),]** which is :red[significantly more expensive] than the default model ({ai_basic_model}) which you can use for free.""")  
+        st.markdown(f"""**:green[You can use the flagship GPT model ({ai_flagship_model}),]** which is :red[significantly more expensive] than the default model ({ai_basic_model}).""")  
         
         gpt_enhancement_entry = st.checkbox(label = 'Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
@@ -1603,7 +1526,8 @@ if st.button('REMOVE this spreadsheet', type = 'primary'):
 
     #Disable unnecessary buttons and pre-filled prompt
     conversion_msg_to_show = ''
-    st.session_state['prompt_prefill'] = ''
+    #st.session_state['prompt_prefill'] = ''
+    st.session_state['prompt'] = ''
     st.session_state['q_and_a_provided'] = False
     st.session_state.q_and_a_toggle = False
 
@@ -1657,29 +1581,39 @@ except Exception as e:
 #Area for entering instructions
 st.subheader(f'Give instructions to {st.session_state.ai_choice}')
 
-st.write(f':green[Please give your instructions in sequence.] {st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions. It will **only** use the data and/or information from your spreadsheet.')
+#st.success(f'**Please give your instructions in sequence.** {st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions based only on the data or information from your spreadsheet.')
 
-prompt = st.text_area(label = "For machine learning or statistical inference, please instruct GPT to use either [scikit-learn](https://scikit-learn.org/stable/index.html) or [SciPy](https://scipy.org/).",
-                      value = st.session_state.prompt_prefill, 
+#st.write(f'**:green[Please give your instructions in sequence.]** {st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions. It will only use the data and/or information from your spreadsheet.')
+
+st.write(f'{st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions based only on the data or information from your spreadsheet.')
+
+prompt = st.text_area(label = f"Enter up to {question_characters_bound} characters for each set of instructions",
+                      value = st.session_state.prompt, 
                       height= 250, 
                       max_chars=question_characters_bound,
                      #help = "For **machine learning**, please begin your instructions with ```import sklearn``` (to utilise [scikit-learn](https://scikit-learn.org/stable/index.html))."
                      ) 
 
-st.session_state.prompt = prompt
+#st.session_state.prompt = prompt
 
 #Disable toggles while prompt is not entered or the same as the last processed prompt
-if prompt:
-    if prompt != st.session_state.last_prompt:
-        st.session_state['disable_input'] = False
+#if prompt:
+    #if prompt != st.session_state.last_prompt:
+        #st.session_state['disable_input'] = False
     
-    else:
-        st.session_state['disable_input'] = True
+    #else:
+        #st.session_state['disable_input'] = True
 
-else:
+#else:
+    #st.session_state['disable_input'] = True
+
+#Disable toggles if prompt is not entered
+if not prompt:
     st.session_state['disable_input'] = True
+else:
+    st.session_state['disable_input'] = False
 
-st.caption(f'Up to {question_characters_bound} characters')
+st.write("""For machine learning or statistical inference, please start with an instruction to ```use scikit-learn``` ([user guide](https://scikit-learn.org/stable/user_guide.html)) or ```use SciPy```([user guide](https://docs.scipy.org/doc/scipy/)).""")
 
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
@@ -1692,11 +1626,28 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 
     with col1:
         #Explain 
-        explain_toggle = st.toggle('Explain', help = f'Ask {st.session_state.ai_choice} to explain its response.', disabled = st.session_state.disable_input)
-
+        explain_toggle = st.toggle(label = 'Explain', 
+                                   help = f'Ask {st.session_state.ai_choice} to explain its response. You may need to press :green[ASK] GPT again.', 
+                                   #disabled = st.session_state.explain_toggle_disabled
+                                   #disabled = st.session_state.disable_input
+                                   #disabled = bool((st.session_state.response != '') and (len(st.session_state.explanation) == 0)) #Disable if response has been produced but explanation has not been
+                                  )
+            
     with col2:
         #Get code 
-        code_toggle = st.toggle('Code', help = f'Ask {st.session_state.ai_choice} to produce a code.', disabled = st.session_state.disable_input)
+        code_toggle = st.toggle(label = 'Code', 
+                                help = f'Show any code produced.', 
+                                #disabled = st.session_state.disable_input
+                               )
+
+#Generate explain button
+#if st.session_state.ai_choice in {'GPT', 'LangChain'}:
+
+    #Explain 
+    #explain_toggle = st.toggle(label = 'Explain', 
+                               #help = f'Ask {st.session_state.ai_choice} to explain any response.', 
+                              #)
+
 
 
 # %% [markdown]
@@ -1706,7 +1657,7 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 #col1a, col2a, col3a, col4a = st.columns(4, gap = 'small')
 
 #with col2a:
-reset_button = st.button('RESET', type = 'primary', disabled = (not st.session_state.disable_input), help = 'You may need to press :red[RESET] before asking GPT.')
+reset_button = st.button('RESET', type = 'primary', disabled = ((not st.session_state.disable_input) or (not prompt)), help = 'You may need to press :red[RESET] before asking GPT.')
 
 #with col1a:
 with stylable_container(
@@ -1737,7 +1688,7 @@ if ask_button:
         #Keep record of response
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'error': no_more_instructions}})
 
-    elif len(st.session_state.prompt) == 0:
+    elif len(prompt) == 0:
         st.warning("Please enter some instruction.")
 
     else:
@@ -1775,7 +1726,10 @@ if ask_button:
         
         #Close clarifying questions form
         st.session_state["q_and_a_toggle"] = False
-        
+
+        #Get prompt
+        st.session_state.prompt = prompt
+
         if st.session_state.ai_choice == 'GPT':
             
             pandasai_ask()
@@ -1783,15 +1737,8 @@ if ask_button:
         else: #if st.session_state.ai_choice == 'LangChain':
 
             langchain_ask()
-                        
-        #Display number of instructionsl left
-        st.session_state.instruction_left -= 1
-        instructions_left_text = f"*You have :orange[{st.session_state.instruction_left}] instructions left.*"
-
-        st.write(instructions_left_text)
         
-        #Keep record of instructions left
-        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': instructions_left_text}})
+
 
 
 # %%
@@ -1848,106 +1795,272 @@ if reset_button:
     
     pai.clear_cache()
     st.session_state['response'] = '' #Adding this to hide clarifying questions and answers toggle upon resetting
-    st.session_state['last_prompt'] = '' #Adding this to allow asking the same question again
+    #st.session_state['last_prompt'] = '' #Adding this to allow asking the same question again
     #clear_most_cache()
     st.rerun()
+
+
+# %% [markdown]
+# ## Response, clarifying questions and history
+
+# %%
+#Show response
+
+if st.session_state.ai_choice == 'GPT':
+    
+    if st.session_state.response != '':
+    
+        #Show response
+        st.subheader(f'{st.session_state.ai_choice} Response')    
+        #st.write('*If you see an error, please modify your instructions or click :red[RESET] below and try again.*') # or :red[RESET] the AI.')
+    
+        response = st.session_state.response
+        
+        if (agent.last_error is not None) or (not st.session_state.code_safe):
+            st.error(response)
+    
+        else:
+    
+            if isinstance(response, pd.DataFrame):
+    
+                try:
+    
+                    display_df_dict = display_df(response)
+                    
+                    response = display_df_dict['df']
+                    
+                    link_heading_config = display_df_dict['link_heading_config']
+                    
+                    st.dataframe(response, column_config=link_heading_config)
+    
+                except Exception as e:
+    
+                    print(f"Can't make response in df clickable due to error: {e}")
+    
+                    st.write(response)
+    
+            else:
+                
+                st.write(response)
+            
+        #Display caption if response is a dataframe
+        if isinstance(response, pd.DataFrame):
+            
+            st.caption(spreadsheet_caption)
+    
+        #For all GPT models, show any figure generated
+        #st.write(f'The number of figures is {plt.get_fignums()}')
+    
+        if (('.png' in str(response)[-4:]) or (plt.get_fignums())):
+            if plt.get_fignums():
+                try:
+                    #st.write('**Visualisation**')
+            
+                    fig_to_plot = plt.gcf()
+                    st.pyplot(fig = fig_to_plot)
+                    
+                    #Keep record of response, cost and tokens
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'matplotlib figure': fig_to_plot}})
+    
+                    #Enable downloading
+                    pdf_to_download = io.BytesIO()
+                    png_to_download = io.BytesIO()
+    
+                    col1e, col2e = st.columns(2, gap = 'small')
+                    
+                    with col1e:
+                
+                        plt.savefig(pdf_to_download, bbox_inches='tight', format = 'pdf')
+                        
+                        pdf_button = st.download_button(
+                           label="DOWNLOAD as a PDF",
+                           data=pdf_to_download,
+                           file_name='chart.pdf',
+                           mime="image/pdf"
+                        )
+                    with col2e:
+                        plt.savefig(png_to_download, bbox_inches='tight', format = 'png')
+                        
+                        png_button = st.download_button(
+                           label="DOWNLOAD as a PNG",
+                           data=png_to_download,
+                           file_name='chart.png',
+                           mime="image/png"
+                        )
+                    
+                    #Keep record of response, cost and tokens
+                    #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": response_cost, "tokens": response_tokens,   "role": "assistant", "content": {'image': response}})
+        
+                except Exception as e:
+                        
+                    print(e)     
+    
+            else: #If st.pyplot doesn't work
+                #st.write('image')
+                st.warning('The image produced may not visualise properly.')
+                
+                st.image(image = response) #, use_column_width = 'never', output_format='png')                
+                
+                st.caption('Right click to save this image.')
+
+        #Display Explanation
+        if st.session_state.code_safe and (len(st.session_state.explanation) > 0):
+        
+            if explain_toggle:
+    
+                st.write('**Explanation**')
+                st.write(st.session_state.explanation)
+
+        #Display code
+        if st.session_state.code_safe and (len(st.session_state.code) > 0):
+        
+            if code_toggle:
+                    
+                st.write('**Code**')
+                #st.info('This code may not include importation of any modules or dependancies.')(
+                st.code(st.session_state.code)
+            
+                    #Display cost and tokens
+                    #code_cost = cb.total_cost - explanation_cost - response_cost - prompt_cost
+                    #code_tokens = cb.total_tokens -  explanation_tokens  - response_tokens - prompt_tokens
+            
+                    #Keep record of code
+                    #st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": code_cost, "tokens": code_tokens,   "role": "assistant", "content": {'code': code}})
+                
+                #except Exception as e:
+                    #st.warning(f'{st.session_state.ai_choice} failed to produce a code.')
+                    #print(e)
+        
+        #Display and keep record of number of instructionsl left
+        instructions_left_text = f"*You have :orange[{st.session_state.instruction_left}] instructions left.*"
+        st.write(instructions_left_text)
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': instructions_left_text}})
+        
+        #Display cost and tokens
+        total_cost_tokens = f'(This exchange costed approximately USD $ {st.session_state.last_cost} and totalled {st.session_state.last_tokens} tokens.)'
+        st.write(total_cost_tokens)
+        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
 
 
 # %%
 #Clarifying questions form
 
 if st.session_state.ai_choice == 'GPT':
-    if ((len(st.session_state.response) > 0) and 
+    if (
+        #(len(st.session_state.response) > 0) and #This can't process np type
+        (len(st.session_state.prompt) > 0) and 
+        #(len(prompt) > 0) and
         (st.session_state.q_and_a_provided == False) and
         (st.session_state.code_safe == True)
        ):
-        if st.toggle(label = 'Suggestions', key = 'q_and_a_toggle', help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'):
+        if st.toggle(label = 'Suggestions', 
+                     key = 'q_and_a_toggle', 
+                     help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'
+                    ):
         #if clarification_questions_toggle:
+            
+            if int(consent) == 0:
+                st.warning("You must tick 'Yes, I agree.' to use the app.")
         
-            with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize In progress...}$"):
+            else:
                 
-                prompt = st.session_state.prompt
-    
-                #if len(prompt) > 0:
-            
-                clarifying_questions = agent.clarification_questions(prompt)
-    
-                st.session_state.clarifying_questions = clarifying_questions
-    
-                #Keep record of clarifying questions
-                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": cb.total_tokens,   "role": "assistant", "content": {'answer': clarifying_questions}})
-                            
-            if len(clarifying_questions) == 0:
-                st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
-            
-            else: #if len(clarifying_questions) > 0:
-                with st.form("clarifying_questions_form"):
-            
-                    st.write(f'Please consider the following clarifying questions from {st.session_state.ai_choice}. You may answer them here, or redraft your questions or instructions in light of them.')
-        
-                    #Display up to 3 clarifying questions
-                    if len(st.session_state.clarifying_questions) > 0:
-            
-                        st.warning(f'Question 1: {st.session_state.clarifying_questions[0]}')
-                        st.session_state.clarifying_answers[0] = st.text_input(label = f'Enter your answer to question 1', max_chars = 250)
-            
-                    if len(st.session_state.clarifying_questions) > 1: 
-            
-                        st.warning(f'Question 2: {st.session_state.clarifying_questions[1]}')
-                        st.session_state.clarifying_answers[1] = st.text_input(label = f'Enter your answer to question 2', max_chars = 250)
-            
-                    if len(st.session_state.clarifying_questions) > 2: 
-            
-                        st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
-                        st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
-            
-                    #Acivate if want to display tokens and costs only if own account active
-                    #if st.session_state['own_account'] == True:
-                            
-                    add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
-            
-                    if add_q_a_button:
-                        for question_index in range(0, len(st.session_state.clarifying_answers)):
-                            
-                            st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
-                            
-                        intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
-            
-                        q_and_a_pairs = ''
-                        
-                        for question_index in range(0, len(st.session_state.clarifying_answers)):
-                            if len(st.session_state.clarifying_answers[question_index]) > 0:
-                                question_answer_pair = f' Question: ' + st.session_state.clarifying_questions[question_index] + f' Answer: ' + st.session_state.clarifying_answers[question_index]
-                                
-                                if question_answer_pair[-1] != '.':
-                                    question_answer_pair = question_answer_pair + '. '
-                                
-                                q_and_a_pairs = q_and_a_pairs + question_answer_pair            
-            
-                        if intro_q_and_a in st.session_state.prompt_prefill:
-                            
-                            st.session_state.prompt_prefill = st.session_state.prompt + q_and_a_pairs
-                       
-                        else:
-                            
-                            st.session_state.prompt_prefill = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
-        
-                        #Add clarifying answers to history
-                        st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
-                        
-                        #Change clarifying questions and answers status
-                        st.session_state['q_and_a_provided'] = True
+                with pandasai_get_openai_callback() as cb, st.spinner(r"$\textsf{\normalsize In progress...}$"):
+                    
+                    st.session_state.prompt = prompt
 
-                        #Change disable input status
-                        st.session_state['disable_input'] = False
-        
-                        st.rerun()
-            
-            clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
-            
-            st.write(clarifying_questions_cost_tokens)
+                    #Get clarification questions depending on if they have already been provided
 
-            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
+                    if not st.session_state.q_provided:
+
+                        clarifying_questions = agent.clarification_questions(prompt)
+    
+                        st.session_state.clarifying_questions = clarifying_questions
+
+                    else:
+                        
+                        clarifying_questions = st.session_state.clarifying_questions
+            
+                    #Keep record of clarifying questions
+                    st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": cb.total_tokens,   "role": "assistant", "content": {'answer': clarifying_questions}})
+                                
+                if len(clarifying_questions) == 0:
+                    st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
+
+                    #Update clarifications provided status
+                    st.session_state["q_provided"] = False
+                
+                else: #if len(clarifying_questions) > 0:
+
+                    #Update clarifications provided status
+                    st.session_state["q_provided"] = True
+
+                    with st.form("clarifying_questions_form"):
+                
+                        st.write(f'Please consider the following clarifying questions from {st.session_state.ai_choice}. You may answer them here, or redraft your questions or instructions in light of them.')
+            
+                        #Display up to 3 clarifying questions
+                        if len(st.session_state.clarifying_questions) > 0:
+                
+                            st.warning(f'Question 1: {st.session_state.clarifying_questions[0]}')
+                            st.session_state.clarifying_answers[0] = st.text_input(label = f'Enter your answer to question 1', max_chars = 250)
+                
+                        if len(st.session_state.clarifying_questions) > 1: 
+                
+                            st.warning(f'Question 2: {st.session_state.clarifying_questions[1]}')
+                            st.session_state.clarifying_answers[1] = st.text_input(label = f'Enter your answer to question 2', max_chars = 250)
+                
+                        if len(st.session_state.clarifying_questions) > 2: 
+                
+                            st.warning(f'Question 3: {st.session_state.clarifying_questions[2]}')
+                            st.session_state.clarifying_answers[2] = st.text_input(label = f'Enter your answer to question 3', max_chars = 250)
+                
+                        #Acivate if want to display tokens and costs only if own account active
+                        #if st.session_state['own_account'] == True:
+                                
+                        add_q_a_button = st.form_submit_button('ADD these answers to your instructions')
+                
+                        if add_q_a_button:
+                            for question_index in range(0, len(st.session_state.clarifying_answers)):
+                                
+                                st.write(f'Answer to question {question_index + 1}: + st.session_state.clarifying_answers[question_index]')
+                                
+                            intro_q_and_a = ' Take into account the following clarifying questions and their answers. '             
+                
+                            q_and_a_pairs = ''
+                            
+                            for question_index in range(0, len(st.session_state.clarifying_answers)):
+                                if len(st.session_state.clarifying_answers[question_index]) > 0:
+                                    question_answer_pair = f' Question: ' + st.session_state.clarifying_questions[question_index] + f' Answer: ' + st.session_state.clarifying_answers[question_index]
+                                    
+                                    if question_answer_pair[-1] != '.':
+                                        question_answer_pair = question_answer_pair + '. '
+                                    
+                                    q_and_a_pairs = q_and_a_pairs + question_answer_pair            
+                
+                            if intro_q_and_a in st.session_state.prompt:
+                                
+                                st.session_state.prompt = st.session_state.prompt + q_and_a_pairs
+                           
+                            else:
+                                
+                                st.session_state.prompt = st.session_state.prompt + intro_q_and_a + q_and_a_pairs
+            
+                            #Add clarifying answers to history
+                            st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "user", "content": {"prompt": st.session_state.clarifying_answers}})
+                            
+                            #Change clarifying questions and answers status
+                            st.session_state['q_and_a_provided'] = True
+    
+                            #Change disable input status
+                            st.session_state['disable_input'] = False
+            
+                            st.rerun()
+                
+                clarifying_questions_cost_tokens = f'(These clarifying questions costed USD $ {round(cb.total_cost, 5)} to produce and totalled {cb.total_tokens} tokens.)'
+                
+                st.write(clarifying_questions_cost_tokens)
+    
+                st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': clarifying_questions_cost_tokens}})
 
 
 # %%
