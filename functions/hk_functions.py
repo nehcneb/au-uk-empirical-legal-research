@@ -757,7 +757,7 @@ class hk_search_tool:
             alert_counter = 1
             while alert_counter <= alert_bound:
                 try:
-                    Wait(browser, 5).until(EC.alert_is_present())
+                    Wait(browser, 10).until(EC.alert_is_present())
                     alert += f"{browser.switch_to.alert.text}\n\n"
                     
                     try:
@@ -821,7 +821,7 @@ class hk_search_tool:
                 alert_counter = 1
                 while alert_counter <= alert_bound:
                     try:
-                        Wait(browser, 5).until(EC.alert_is_present())
+                        Wait(browser, 10).until(EC.alert_is_present())
                         alert += f"{browser.switch_to.alert.text}\n\n"
                         
                         try:
