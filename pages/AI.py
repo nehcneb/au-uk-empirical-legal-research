@@ -402,7 +402,7 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
                       config={"llm": llm, 
                               "verbose": True, 
                               "response_parser": StreamlitResponse, 
-                              "custom_whitelisted_dependencies": ["ast", "scikit-learn"], 
+                              "custom_whitelisted_dependencies": ["ast", "seaborn", "scikit-learn", "sklearn", "scipy"], 
                               'enable_cache': True, 
                               'use_error_correction_framework': True, 
                               'max_retries': 5
@@ -1659,7 +1659,12 @@ st.subheader(f'Give instructions to {st.session_state.ai_choice}')
 
 st.write(f':green[Please give instructions in sequence.] {st.session_state.ai_choice} will respond to at most {st.session_state.instructions_bound} sets of instructions. It will **only** use the data and/or information from your spreadsheet.')
 
-prompt = st.text_area(f'You may enter at most {question_characters_bound} characters.', value = st.session_state.prompt_prefill, height= 200, max_chars=question_characters_bound) 
+prompt = st.text_area(label = f'You may enter at most {question_characters_bound} characters.', 
+                      value = st.session_state.prompt_prefill, 
+                      height= 200, 
+                      max_chars=question_characters_bound,
+                     #help = "For **machine learning**, please begin your instructions with ```import sklearn``` (to utilise [scikit-learn](https://scikit-learn.org/stable/index.html))."
+                     ) 
 
 st.session_state.prompt = prompt
 
@@ -1674,7 +1679,7 @@ if prompt:
 else:
     st.session_state['disable_input'] = True
 
-st.caption("Please reach out to Ben Chen at ben.chen@sydney.edu.au if you'd like give more or longer instructions.")
+st.caption("For machine learning or statistical inference, please instruct GPT to use [scikit-learn](https://scikit-learn.org/stable/index.html) or [scipy](https://scipy.org/).")
 
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
@@ -1782,8 +1787,9 @@ if ask_button:
         #Display number of instructionsl left
         st.session_state.instruction_left -= 1
         instructions_left_text = f"*You have :orange[{st.session_state.instruction_left}] instructions left.*"
-        st.write(instructions_left_text)
 
+        st.write(instructions_left_text)
+        
         #Keep record of instructions left
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': instructions_left_text}})
 
