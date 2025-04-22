@@ -1661,7 +1661,7 @@ st.write(f':green[Please give instructions in sequence.] {st.session_state.ai_ch
 
 prompt = st.text_area(label = f'You may enter at most {question_characters_bound} characters.', 
                       value = st.session_state.prompt_prefill, 
-                      height= 200, 
+                      height= 250, 
                       max_chars=question_characters_bound,
                      #help = "For **machine learning**, please begin your instructions with ```import sklearn``` (to utilise [scikit-learn](https://scikit-learn.org/stable/index.html))."
                      ) 
