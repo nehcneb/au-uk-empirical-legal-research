@@ -1165,7 +1165,6 @@ st.session_state['gpt_model'] = ai_basic_model
 if 'response' not in st.session_state:
     st.session_state["response"] = ''
 
-
 #Initialise default code
 if 'code' not in st.session_state:
     st.session_state["code"] = ''
@@ -1546,7 +1545,7 @@ if ((len(conversion_msg_to_show) > 0) or (len(st.session_state.df_produced) > 0)
             st.success(f'The spreadsheet produced by {st.session_state.ai_choice} has been imported.')
     
         if st.session_state.q_and_a_provided == True:
-            st.success('Your clarifying answers have been added to your instructions. Please click ASK again.')
+            st.success('Your clarifying answers have been added to your instructions. Please press ASK again.')
 
 
 # %% [markdown]
@@ -1627,7 +1626,7 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
     with col1:
         #Explain 
         explain_toggle = st.toggle(label = 'Explain', 
-                                   help = f'Ask {st.session_state.ai_choice} to explain its response. You may need to press :green[ASK] GPT again.', 
+                                   help = f'Ask {st.session_state.ai_choice} to explain its response. You may need to press :green[ASK] GPT.', 
                                    #disabled = st.session_state.explain_toggle_disabled
                                    #disabled = st.session_state.disable_input
                                    #disabled = bool((st.session_state.response != '') and (len(st.session_state.explanation) == 0)) #Disable if response has been produced but explanation has not been
@@ -1657,7 +1656,7 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 #col1a, col2a, col3a, col4a = st.columns(4, gap = 'small')
 
 #with col2a:
-reset_button = st.button('RESET', type = 'primary', disabled = ((not st.session_state.disable_input) or (not prompt)), help = 'You may need to press :red[RESET] before asking GPT.')
+reset_button = st.button('RESET', type = 'primary', disabled = bool(len(str(st.session_state.response)) == 0), help = 'You may need to press :red[RESET] before asking GPT.')
 
 #with col1a:
 with stylable_container(
@@ -1670,6 +1669,21 @@ with stylable_container(
 ):
     ask_button = st.button("ASK", disabled = st.session_state.disable_input)
 
+
+# %%
+#Reset button
+
+#if st.button('RESET to get fresh responses', type = 'primary'):#, help = "click to engage with the AI afresh."):
+if reset_button:
+    
+    ai_own_account_entries_function()
+    
+    pai.clear_cache()
+    st.session_state['response'] = '' #Adding this to hide clarifying questions and answers toggle upon resetting
+    st.session_state["q_provided"] = False  #Adding this to clarify that clarifying questions have been removed
+    #st.session_state['last_prompt'] = '' #Adding this to allow asking the same question again
+    #clear_most_cache()
+    st.rerun()
 
 # %%
 # Generate output
@@ -1692,7 +1706,7 @@ if ask_button:
         st.warning("Please enter some instruction.")
 
     else:
-                
+        
         #Check GPT API key validity if activated
         
         if (own_account_entry) and (st.session_state.gpt_api_key_validity == False):
@@ -1738,7 +1752,7 @@ if ask_button:
 
             langchain_ask()
         
-
+        st.rerun()
 
 
 # %%
@@ -1786,18 +1800,6 @@ if st.session_state.ai_choice == 'LangChain':
 
 
 # %%
-#Reset button
-
-#if st.button('RESET to get fresh responses', type = 'primary'):#, help = "click to engage with the AI afresh."):
-if reset_button:
-    
-    ai_own_account_entries_function()
-    
-    pai.clear_cache()
-    st.session_state['response'] = '' #Adding this to hide clarifying questions and answers toggle upon resetting
-    #st.session_state['last_prompt'] = '' #Adding this to allow asking the same question again
-    #clear_most_cache()
-    st.rerun()
 
 
 # %% [markdown]
@@ -1808,7 +1810,7 @@ if reset_button:
 
 if st.session_state.ai_choice == 'GPT':
     
-    if st.session_state.response != '':
+    if len(str(st.session_state.response)) > 0:
     
         #Show response
         st.subheader(f'{st.session_state.ai_choice} Response')    
