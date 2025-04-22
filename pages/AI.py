@@ -1679,7 +1679,7 @@ if prompt:
 else:
     st.session_state['disable_input'] = True
 
-st.caption("For machine learning or statistical inference, please instruct GPT to use [scikit-learn](https://scikit-learn.org/stable/index.html) or [scipy](https://scipy.org/).")
+st.caption("For machine learning or statistical inference, please instruct GPT to use either [scikit-learn](https://scikit-learn.org/stable/index.html) or [SciPy](https://scipy.org/).")
 
 #Disable toggle for clarifying questions and answers BEFORE asking AI again
 if st.session_state.q_and_a_provided == True:
