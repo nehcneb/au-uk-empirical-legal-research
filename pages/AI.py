@@ -1756,47 +1756,6 @@ if ask_button:
 
 
 # %%
-#Buttons for importing any df produced    
-
-#For Pandasai
-if st.session_state.ai_choice == 'GPT':
-
-    if isinstance(st.session_state.response, pd.DataFrame):
-
-        col1b, col2b = st.columns(2, gap = 'small')
-
-        with col1b:
-            pandasai_analyse_button = st.button('ANALYSE the spreadsheet produced only')
-        
-        with col2b:
-            pandasai_merge_button = st.button('MERGE with your spreadsheet')
-
-        if pandasai_analyse_button:
-            pandasai_analyse_df_produced()
-
-        if pandasai_merge_button:
-            pandasai_merge_df_produced()
-
-#For Langchain,
-if st.session_state.ai_choice == 'LangChain':
-
-    if "dataframe" in st.session_state.response_json:
-        
-        if st.session_state.response_json["dataframe"]:
-
-            col1c, col2c = st.columns(2, gap = 'small')
-
-            with col1c:
-                langchain_analyse_button = st.button('ANALYSE the spreadsheet produced only')
-            
-            with col2c:
-                langchain_merge_button = st.button('MERGE with your spreadsheet')
-    
-            if langchain_analyse_button:
-                langchain_analyse_df_produced()
-    
-            if langchain_merge_button:
-                langchain_merge_df_produced()
 
 
 # %%
@@ -1943,6 +1902,49 @@ if st.session_state.ai_choice == 'GPT':
         st.write(total_cost_tokens)
         st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": float(0), "tokens": float(0),   "role": "assistant", "content": {'answer': total_cost_tokens}})
 
+
+# %%
+#Buttons for importing any df produced    
+
+#For Pandasai
+if st.session_state.ai_choice == 'GPT':
+
+    if isinstance(st.session_state.response, pd.DataFrame):
+
+        col1b, col2b = st.columns(2, gap = 'small')
+
+        with col1b:
+            pandasai_analyse_button = st.button('ANALYSE the spreadsheet produced only')
+        
+        with col2b:
+            pandasai_merge_button = st.button('MERGE with your spreadsheet')
+
+        if pandasai_analyse_button:
+            pandasai_analyse_df_produced()
+
+        if pandasai_merge_button:
+            pandasai_merge_df_produced()
+
+#For Langchain,
+if st.session_state.ai_choice == 'LangChain':
+
+    if "dataframe" in st.session_state.response_json:
+        
+        if st.session_state.response_json["dataframe"]:
+
+            col1c, col2c = st.columns(2, gap = 'small')
+
+            with col1c:
+                langchain_analyse_button = st.button('ANALYSE the spreadsheet produced only')
+            
+            with col2c:
+                langchain_merge_button = st.button('MERGE with your spreadsheet')
+    
+            if langchain_analyse_button:
+                langchain_analyse_df_produced()
+    
+            if langchain_merge_button:
+                langchain_merge_df_produced()
 
 # %%
 #Clarifying questions form
