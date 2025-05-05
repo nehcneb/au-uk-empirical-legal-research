@@ -567,7 +567,9 @@ afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page
 # ### Definitions of menu items
 
 # %%
-#For getting menu items from page source. Just make raw a massive string with each line in the form of <option value="49170f1f-f805-ee11-8f6e-000d3a6ad5b3" data-parent="a379125d-afc1-ed11-83fe-000d3a6ad49b">A fee or charge - eg premiums, excesses</option>'
+# For getting menu items from page source.
+
+#make raw a massive string with each line in the form of <option value="49170f1f-f805-ee11-8f6e-000d3a6ad5b3" data-parent="a379125d-afc1-ed11-83fe-000d3a6ad49b">A fee or charge - eg premiums, excesses</option>'
 
 raw = """"""
 
@@ -577,10 +579,17 @@ primary_keys_raw = re.findall(f'\>.*\<\/option\>', raw)
 primary_keys = []
 for key_raw in primary_keys_raw:
     key = key_raw.replace('</option>', '').replace('>', '')
-    primary_keys.append(key)
+
+    #Avoid empty names
+    if len(key.replace(' ', '')) > 0:
+
+        #Deal with repetitive names
+        while key in primary_keys:
+            key += '*'
+        
+        primary_keys.append(key)
     
 #primary_keys
-
 #Get 'value' key of the value-dictionary of each key in menu
 values_raw = re.findall(f'value\=\".+\"', raw)
 
@@ -591,7 +600,6 @@ for value_raw in values_raw:
             value_raw = value_raw.split(' data')[0]
         value = value_raw.replace('value=', '').replace('"', '')
         values.append(value)
-#values
 
 #Get any data parents
 data_parents_raw = re.findall(f'parent\=\".*\"', raw)
@@ -601,14 +609,14 @@ for data_parent_raw in data_parents_raw:
     if 'label' not in data_parent_raw:
         data_parent = data_parent_raw.replace('parent=', '').replace('"', '')
         data_parents.append(data_parent)
-#data_parents
 
+#data_parents
 #Create menu for copying and pasting
 menu = {}
 for primary_key in primary_keys:
     index = primary_keys.index(primary_key)
     value = values[index]
-
+    
     if len(data_parents) == 0:
         menu_item = {primary_key: {'value': value}}
     else:
@@ -618,8 +626,11 @@ for primary_key in primary_keys:
     menu.update(menu_item)
 
 # %%
+menu
+
+# %%
 #'Product line'
-#Updated 202041218
+#Updated 20250505
 
 product_line_options = {'Credit': {'value': '719de0b0-93c1-ed11-b597-00224892f893'},
  'Deposit Taking': {'value': '779de0b0-93c1-ed11-b597-00224892f893'},
@@ -634,7 +645,7 @@ product_line_options = {'Credit': {'value': '719de0b0-93c1-ed11-b597-00224892f89
 
 # %%
 #'Product category'
-#Updated 202041218
+#Updated 20250505
 
 #Data parents are values of product lines
 product_category_options = {'Annuity Policy': {'value': '78c2a0cb-93c1-ed11-b597-00224892f893',
@@ -708,7 +719,7 @@ product_category_options = {'Annuity Policy': {'value': '78c2a0cb-93c1-ed11-b597
 
 # %%
 #'Product name'
-#Updated 202041218
+#Updated 20250505
 
 product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892f51a'},
  'Annuity Policy': {'value': '89139d98-3fc2-ed11-b597-00224892f51a'},
@@ -732,6 +743,8 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Business Transaction Accounts': {'value': 'a5139d98-3fc2-ed11-b597-00224892f51a'},
  'Buy Now, Pay Later': {'value': 'a7139d98-3fc2-ed11-b597-00224892f51a'},
  'Cash Management Accounts': {'value': '5e897c0a-d053-ee11-be6f-000d3a6ad35b'},
+ 'Cash Management Accounts*': {'value': 'a9139d98-3fc2-ed11-b597-00224892f51a'},
+ 'Cash Management Accounts**': {'value': '8cfd2556-258e-ee11-be36-6045bde4aa06'},
  'Charitable/ Educational Schemes': {'value': 'ab139d98-3fc2-ed11-b597-00224892f51a'},
  'Cheques': {'value': 'ad139d98-3fc2-ed11-b597-00224892f51a'},
  'Commercial bills': {'value': 'af139d98-3fc2-ed11-b597-00224892f51a'},
@@ -740,6 +753,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Computer & Electronic Breakdown': {'value': 'b5139d98-3fc2-ed11-b597-00224892f51a'},
  'Construction Loans': {'value': 'b7139d98-3fc2-ed11-b597-00224892f51a'},
  'Consumer Credit Insurance': {'value': 'b9139d98-3fc2-ed11-b597-00224892f51a'},
+ 'Consumer Credit Insurance*': {'value': '3218b47b-268e-ee11-be36-6045bde4aa06'},
  'Consumer Guarantee': {'value': 'bb139d98-3fc2-ed11-b597-00224892f51a'},
  'Contractors All Risk': {'value': 'bd139d98-3fc2-ed11-b597-00224892f51a'},
  'Contracts for Difference': {'value': 'bf139d98-3fc2-ed11-b597-00224892f51a'},
@@ -748,6 +762,11 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Cryptocurrency': {'value': 'c7139d98-3fc2-ed11-b597-00224892f51a'},
  'Cyber': {'value': 'c9139d98-3fc2-ed11-b597-00224892f51a'},
  'Death Benefit': {'value': 'cb139d98-3fc2-ed11-b597-00224892f51a'},
+ 'Death Benefit*': {'value': '717416f2-278e-ee11-be36-6045bde4a41a'},
+ 'Death Benefit**': {'value': 'b38c09d9-2a8e-ee11-be36-6045bde4a41a'},
+ 'Death Benefit***': {'value': '7d68c7ec-2c8e-ee11-be36-6045bde4a41a'},
+ 'Death Benefit****': {'value': '322f228d-2d8e-ee11-be36-6045bde4a41a'},
+ 'Death Benefit*****': {'value': 'f5a921e1-cd9f-ee11-be37-6045bde6f4e7'},
  'Debentures': {'value': 'cd139d98-3fc2-ed11-b597-00224892f51a'},
  'Debt Agreement': {'value': 'cf139d98-3fc2-ed11-b597-00224892f51a'},
  'Debt management/credit repair': {'value': 'd1139d98-3fc2-ed11-b597-00224892f51a'},
@@ -770,11 +789,13 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Futures': {'value': 'f3139d98-3fc2-ed11-b597-00224892f51a'},
  'Glass': {'value': 'f5139d98-3fc2-ed11-b597-00224892f51a'},
  'Hire purchase/lease': {'value': 'f7139d98-3fc2-ed11-b597-00224892f51a'},
+ 'Hire purchase/lease*': {'value': 'e3abf1be-218e-ee11-be36-6045bde4aa06'},
  'Home Building': {'value': 'f9139d98-3fc2-ed11-b597-00224892f51a'},
  'Home Contents': {'value': 'fb139d98-3fc2-ed11-b597-00224892f51a'},
  'Home Loans': {'value': 'fd139d98-3fc2-ed11-b597-00224892f51a'},
  'Horse Schemes': {'value': 'ff139d98-3fc2-ed11-b597-00224892f51a'},
  'Income Protection': {'value': 'faf79a05-c953-ee11-be6f-000d3a6ad35b'},
+ 'Income Protection*': {'value': '01149d98-3fc2-ed11-b597-00224892f51a'},
  'Industrial Special Risk': {'value': '03149d98-3fc2-ed11-b597-00224892f51a'},
  'Interest free finance': {'value': '07149d98-3fc2-ed11-b597-00224892f51a'},
  'International Equity Funds': {'value': '09149d98-3fc2-ed11-b597-00224892f51a'},
@@ -785,6 +806,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Letter of credit': {'value': '13149d98-3fc2-ed11-b597-00224892f51a'},
  'Life Policy Fund': {'value': '15149d98-3fc2-ed11-b597-00224892f51a'},
  'Line of credit/overdraft': {'value': '17149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Line of credit/overdraft*': {'value': 'cbd06226-218e-ee11-be36-6045bde4aa06'},
  'Litigation Funding Scheme': {'value': '19149d98-3fc2-ed11-b597-00224892f51a'},
  'Livestock': {'value': '1b149d98-3fc2-ed11-b597-00224892f51a'},
  'Loss of Profits/ Business Interruption': {'value': '1d149d98-3fc2-ed11-b597-00224892f51a'},
@@ -801,6 +823,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Mortgage Offset Accounts': {'value': '31149d98-3fc2-ed11-b597-00224892f51a'},
  'Mortgage Schemes': {'value': '33149d98-3fc2-ed11-b597-00224892f51a'},
  'Motor Vehicle': {'value': '3d149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Motor Vehicle*': {'value': 'dcd07e3f-356f-ef11-a670-002248979a53'},
  'Motor Vehicle- Comprehensive': {'value': '35149d98-3fc2-ed11-b597-00224892f51a'},
  'Motor Vehicle- Third Party': {'value': '37149d98-3fc2-ed11-b597-00224892f51a'},
  'Motor Vehicle- Third Party Fire and Theft': {'value': '39149d98-3fc2-ed11-b597-00224892f51a'},
@@ -812,10 +835,15 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Online Accounts': {'value': '47149d98-3fc2-ed11-b597-00224892f51a'},
  'Options ': {'value': '49149d98-3fc2-ed11-b597-00224892f51a'},
  'Other Complaint': {'value': '9bd97ba8-c753-ee11-be6f-000d3a6ad35b'},
+ 'Other Complaint*': {'value': '3e17d79f-c853-ee11-be6f-000d3a6ad35b'},
+ 'Other Complaint**': {'value': 'bc92fcc5-ce53-ee11-be6f-000d3a6ad35b'},
+ 'Other Complaint***': {'value': 'f60b61a8-00e4-ed11-8847-000d3a6ad49b'},
  'Other Professional Indemnity': {'value': '4b149d98-3fc2-ed11-b597-00224892f51a'},
  'Other superannuation fund complaint': {'value': '2a187c25-6fe7-ed11-8848-000d3a6ad49b'},
  'Passbook Accounts': {'value': '4d149d98-3fc2-ed11-b597-00224892f51a'},
  'Pension': {'value': '4f149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Pension*': {'value': 'b98e7d7c-278e-ee11-be36-6045bde4a41a'},
+ 'Pension**': {'value': '58dfd680-2d8e-ee11-be36-6045bde4a41a'},
  'Personal and Domestic Property- Caravan': {'value': '51149d98-3fc2-ed11-b597-00224892f51a'},
  'Personal and Domestic Property- Domestic Pet': {'value': '53149d98-3fc2-ed11-b597-00224892f51a'},
  'Personal and Domestic Property- Horse': {'value': '55149d98-3fc2-ed11-b597-00224892f51a'},
@@ -845,18 +873,35 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Specific purpose': {'value': '87149d98-3fc2-ed11-b597-00224892f51a'},
  'Stored Value Cards': {'value': '89149d98-3fc2-ed11-b597-00224892f51a'},
  'Superannuation Account': {'value': '8b149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Superannuation Account*': {'value': 'b0f7d146-2b8e-ee11-be36-6045bde4a41a'},
+ 'Superannuation Account**': {'value': '8928f16d-2d8e-ee11-be36-6045bde4a41a'},
+ 'Superannuation Account***': {'value': '4b542808-2e8e-ee11-be36-6045bde4a41a'},
+ 'Superannuation Account****': {'value': 'f87e4611-cf9f-ee11-be37-6045bde6f4e7'},
  'Superannuation Fund': {'value': '8d149d98-3fc2-ed11-b597-00224892f51a'},
  'Swaps': {'value': '8f149d98-3fc2-ed11-b597-00224892f51a'},
  'Telegraphic Transfers': {'value': '91149d98-3fc2-ed11-b597-00224892f51a'},
  'Term Deposits': {'value': '93149d98-3fc2-ed11-b597-00224892f51a'},
  'Term Life': {'value': '95149d98-3fc2-ed11-b597-00224892f51a'},
  'Terminal Illness': {'value': '97149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Terminal Illness*': {'value': 'd1e580f1-2a8e-ee11-be36-6045bde4a41a'},
+ 'Terminal Illness**': {'value': '5ba3aaff-2c8e-ee11-be36-6045bde4a41a'},
+ 'Terminal Illness***': {'value': '065900b9-2d8e-ee11-be36-6045bde4a41a'},
+ 'Terminal Illness****': {'value': '38b92f12-ce9f-ee11-be37-6045bde6f4e7'},
  'Theft': {'value': '99149d98-3fc2-ed11-b597-00224892f51a'},
  'Ticket Insurance': {'value': '9b149d98-3fc2-ed11-b597-00224892f51a'},
  'Timeshare Schemes': {'value': '9d149d98-3fc2-ed11-b597-00224892f51a'},
  'Title Insurance': {'value': '9f149d98-3fc2-ed11-b597-00224892f51a'},
  'Total & Permanent Disability': {'value': '48c5503c-c953-ee11-be6f-000d3a6ad35b'},
+ 'Total & Permanent Disability*': {'value': 'a1149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Total & Permanent Disability**': {'value': '3697d553-298e-ee11-be36-6045bde4a41a'},
+ 'Total & Permanent Disability***': {'value': '4b393410-2b8e-ee11-be36-6045bde4a41a'},
+ 'Total & Permanent Disability****': {'value': 'bb19b324-2d8e-ee11-be36-6045bde4a41a'},
+ 'Total & Permanent Disability*****': {'value': '4ac09bdd-2d8e-ee11-be36-6045bde4a41a'},
+ 'Total & Permanent Disability******': {'value': '3f986a59-ce9f-ee11-be37-6045bde6f4e7'},
  'Total & Temporary Disability': {'value': 'afc19083-288e-ee11-be36-6045bde4a41a'},
+ 'Total & Temporary Disability*': {'value': 'df854728-2b8e-ee11-be36-6045bde4a41a'},
+ 'Total & Temporary Disability**': {'value': '68d0dc61-2d8e-ee11-be36-6045bde4a41a'},
+ 'Total & Temporary Disability***': {'value': 'd545c8f5-2d8e-ee11-be36-6045bde4a41a'},
  'Trauma': {'value': 'a5149d98-3fc2-ed11-b597-00224892f51a'},
  'Travel': {'value': 'a7149d98-3fc2-ed11-b597-00224892f51a'},
  "Travellers' Cheques": {'value': 'a9149d98-3fc2-ed11-b597-00224892f51a'},
@@ -872,7 +917,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
 
 # %%
 #'Issue type'
-#Updated 202041218
+#Updated 20250505
 
 issue_type_options = {'Advice': {'value': 'b3b1f969-afc1-ed11-83fe-000d3a6ad49b'},
  'Charges': {'value': 'a379125d-afc1-ed11-83fe-000d3a6ad49b'},
@@ -890,7 +935,7 @@ issue_type_options = {'Advice': {'value': 'b3b1f969-afc1-ed11-83fe-000d3a6ad49b'
 
 # %%
 #'Issue'
-#Updated 202041218
+#Updated 20250505
 
 #Data parents are values of issue types
 
@@ -992,9 +1037,13 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': 'b3b1f969-afc1-ed11-83fe-000d3a6ad49b'},
  'I believe the fee has been incorrectly charged to me': {'value': 'c1bd198d-1b01-ee11-8f6d-000d3a6ad35b',
   'data-parent': ''},
+ 'I believe the fee has been incorrectly charged to me*': {'value': 'c580a80a-1c01-ee11-8f6d-000d3a6ad35b',
+  'data-parent': ''},
  'I cannot afford my repayments': {'value': 'ffec1c3b-f4e8-ed11-8848-000d3a6b1bd3',
   'data-parent': 'b9b1f969-afc1-ed11-83fe-000d3a6ad49b'},
  'I was provided with incorrect fee information': {'value': 'cb01b180-1b01-ee11-8f6d-000d3a6ad35b',
+  'data-parent': ''},
+ 'I was provided with incorrect fee information*': {'value': '3087fefc-1b01-ee11-8f6d-000d3a6ad35b',
   'data-parent': ''},
  'Inappropriate advice': {'value': '3b33d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'b3b1f969-afc1-ed11-83fe-000d3a6ad49b'},
@@ -1078,6 +1127,8 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': ''},
  'Other reason for disputing the fee / not sure': {'value': '9514719f-1b01-ee11-8f6d-000d3a6ad35b',
   'data-parent': ''},
+ 'Other reason for disputing the fee / not sure*': {'value': '0c92d01c-1c01-ee11-8f6d-000d3a6ad35b',
+  'data-parent': ''},
  'Other type of scam': {'value': '54b1e51a-42df-ed11-a7c7-000d3a6ad49b',
   'data-parent': '9579125d-afc1-ed11-83fe-000d3a6ad49b'},
  'Repayment History Information': {'value': '9d33d755-94c1-ed11-b597-00224892f51a',
@@ -1086,8 +1137,6 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': 'b9b1f969-afc1-ed11-83fe-000d3a6ad49b'},
  'Responsible lending': {'value': '7f33d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'},
- 'Scam - MasterCard Prepaid': {'value': '1733d755-94c1-ed11-b597-00224892f51a',
-  'data-parent': '9579125d-afc1-ed11-83fe-000d3a6ad49b'},
  'Scam - phishing/ spoofing': {'value': '0fed3e7e-5cd8-ed11-a7c7-000d3a6ad5b3',
   'data-parent': '9579125d-afc1-ed11-83fe-000d3a6ad49b'},
  'Scam - remote access': {'value': 'ab6930b4-5cd8-ed11-a7c7-000d3a6ad5b3',
@@ -1211,6 +1260,10 @@ def afca_search(keywordsearch_input, #= '',
 
         product_category_value = product_category_options[product_category_input]["value"]
         dropdown_product_category.select_by_value(product_category_value)
+
+        #Pause for menu to update
+        pause.seconds(5)
+        
         #If parent value not automatically updated
         #for key in product_line_options:
             #if product_category_options[product_category_input]["data-parent"] == product_line_options[key]["value"]:
@@ -1222,16 +1275,26 @@ def afca_search(keywordsearch_input, #= '',
         product_name_value = product_name_options[product_name_input]["value"]
         dropdown_product_name.select_by_value(product_name_value)
 
+        #Pause for menu to update
+        pause.seconds(5)
+    
     if ((issue_type_input != None) and (issue_type_input != '')):
 
         issue_type_value = issue_type_options[issue_type_input]["value"]
         dropdown_issue_type.select_by_value(issue_type_value)
 
+        #Pause for menu to update
+        pause.seconds(5)
+        
     if ((issue_input != None) and (issue_input != '')):
 
         issue_value = issue_options[issue_input]["value"]
         dropdown_issue.select_by_value(issue_value)
         #If parent value not automatically updated
+
+        #Pause for menu to update
+        pause.seconds(5)
+
         #for key in issue_type_options:
             #if issue_options[issue_input]["data-parent"] == issue_type_options[key]["value"]:
                 #issue_type_value = issue_type_options[issue_type_input]["value"]

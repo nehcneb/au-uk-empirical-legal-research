@@ -85,7 +85,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error_email
 
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, spinner_text, own_gpt_headings, check_questions_answers, gpt_cost_msg
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg
 
 default_file_counter_bound = default_judgment_counter_bound
 
@@ -273,6 +273,208 @@ from functions.own_functions import image_to_b64_own, run_b64_own#, #GPT_b64_jso
 # %%
 #Import functions and variables
 from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
+
+
+# %% [markdown]
+# ## Run functions
+
+# %%
+@st.dialog("Producing data")
+def own_run_function():
+    
+    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
+
+        st.warning('You must upload some file(s).')
+
+    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+
+        st.warning("You must tick 'Use GPT' and enter some questions.")
+        
+    elif int(consent_entry) == 0:
+        
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
+    
+    elif len(st.session_state.df_individual)>0:
+        
+        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
+
+    else:
+
+        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                st.error('Your API key is not valid.')
+                st.stop()
+
+        spinner_text = "In progress..."
+        
+        with st.spinner(spinner_text):
+
+            try:
+                #Warning
+                if gpt_activation_entry:
+                    if st.session_state.gpt_model == basic_model:
+                        st.warning('A low-cost GPT model is in use. Please be cautious.')
+                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
+                    
+                    #if st.session_state.gpt_model == flagship_model:
+                        #st.warning('An expensive GPT model will process your files. Please be cautious.')
+                      
+                #Create spreadsheet of responses
+                df_master = own_create_df()
+                
+                #Activate user's own key or mine
+                if own_account_entry:
+                    
+                    API_key = df_master.loc[0, 'Your GPT API key']
+    
+                else:
+                    
+                    API_key = st.secrets["openai"]["gpt_api_key"]
+    
+                openai.api_key = API_key
+                
+                df_individual = run_own(df_master, uploaded_docs, uploaded_images)
+        
+                #Keep entries in session state
+                st.session_state["df_master"] = df_master
+    
+                #Change session states
+                st.session_state['need_resetting'] = 1
+                st.session_state["page_from"] = 'pages/OWN.py'
+                
+                #Keep data in session state
+                st.session_state["df_individual"] = df_individual
+
+                #Download data
+                #download_buttons(df_master, df_individual)
+
+                #Clear any error
+                st.session_state['error_msg'] = ''
+                
+                st.rerun()
+            
+            except Exception as e:
+
+                #Clear output
+                st.session_state["df_individual"] = pd.DataFrame([])
+                
+                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                
+                st.error(e)
+                
+                #st.error(traceback.format_exc())
+
+                print(e)
+
+                #print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+                st.rerun()
+
+                
+
+# %%
+@st.dialog("Producing data")
+def run_b64_function():         
+
+    if len(uploaded_images) == 0:
+
+        st.warning('You must upload some image(s).')
+
+    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+
+        st.warning("You must tick 'Use GPT' and enter some questions.")
+
+    elif int(consent_entry) == 0:
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
+    
+    elif len(st.session_state.df_individual)>0:
+        st.warning('You must :red[REMOVE] the data already produced before producing new data.')
+
+    else:
+
+        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                st.error('Your API key is not valid.')
+                st.stop()
+                
+        #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
+        #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
+
+        spinner_text = "In progress..."
+
+        with st.spinner(spinner_text):
+
+            try:                    
+                #Create spreadsheet of responses
+                df_master = own_create_df()
+
+                #Check for non-supported file types
+                if '.bmp' in str(df_master['Your uploaded files']).lower():
+                    st.error('Sorry, this app does not support BMP images.')
+                    st.stop()
+                    
+                if '.tiff' in str(df_master['Your uploaded files']).lower():
+                    st.error('Sorry, this app does not support TIFF images.')
+                    st.stop()
+                
+                #Activate user's own key or mine
+                if own_account_entry:
+                    
+                    API_key = df_master.loc[0, 'Your GPT API key']
+    
+                else:
+                    
+                    API_key = st.secrets["openai"]["gpt_api_key"]
+    
+                openai.api_key = API_key
+                
+                df_individual = run_b64_own(df_master, uploaded_images)
+
+                #Keep entries in session state    
+                st.session_state["df_master"] = df_master
+            
+                #Change session states
+                st.session_state['need_resetting'] = 1
+                st.session_state["page_from"] = 'pages/OWN.py'
+                
+                #Keep data in session state
+                st.session_state["df_individual"] = df_individual
+
+                #Download data
+                #download_buttons(df_master, df_individual)
+                
+                #if df_master.loc[0, 'Language choice'] != 'English':
+        
+                    #st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
+
+                #Clear any error
+                st.session_state['error_msg'] = ''
+                
+                st.rerun()
+            
+            except Exception as e:
+
+                #Clear output
+                st.session_state["df_individual"] = pd.DataFrame([])
+                
+                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                
+                st.error(e)
+                
+                #st.error(traceback.format_exc())
+
+                print(e)
+
+                #print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+                st.rerun()
+
 
 
 # %% [markdown]
@@ -829,93 +1031,7 @@ if (batch_mode_allowed() > 0) and ((own_account_entry) and (uploaded_images)):
 # %%
 if run_button:
 
-    if ((len(uploaded_docs) == 0) and (len(uploaded_images) == 0)):
-
-        st.warning('You must upload some file(s).')
-
-    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
-
-        st.warning("You must tick 'Use GPT' and enter some questions.")
-        
-    elif int(consent_entry) == 0:
-        
-        st.warning("You must tick 'Yes, I agree.' to use the app.")
-    
-    elif len(st.session_state.df_individual)>0:
-        
-        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
-
-    else:
-
-        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                
-            if is_api_key_valid(gpt_api_key_entry) == False:
-                st.error('Your API key is not valid.')
-                st.stop()
-
-        with st.spinner(spinner_text):
-
-            try:
-                #Warning
-                if gpt_activation_entry:
-                    if st.session_state.gpt_model == basic_model:
-                        st.warning('A low-cost GPT model is in use. Please be cautious.')
-                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or use a better model.')
-                    
-                    #if st.session_state.gpt_model == flagship_model:
-                        #st.warning('An expensive GPT model will process your files. Please be cautious.')
-                      
-                #Create spreadsheet of responses
-                df_master = own_create_df()
-                
-                #Activate user's own key or mine
-                if own_account_entry:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
-    
-                else:
-                    
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-    
-                openai.api_key = API_key
-                
-                df_individual = run_own(df_master, uploaded_docs, uploaded_images)
-        
-                #Keep entries in session state
-                st.session_state["df_master"] = df_master
-    
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                st.session_state["page_from"] = 'pages/OWN.py'
-                
-                #Keep data in session state
-                st.session_state["df_individual"] = df_individual
-
-                #Download data
-                #download_buttons(df_master, df_individual)
-
-                #Clear any error
-                st.session_state['error_msg'] = ''
-                
-                st.rerun()
-            
-            except Exception as e:
-
-                #Clear output
-                st.session_state["df_individual"] = pd.DataFrame([])
-                
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                #st.error(traceback.format_exc())
-
-                print(e)
-
-                #print(traceback.format_exc())
-
-                st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
-                
+    own_run_function()
 
 
 # %%
@@ -926,98 +1042,9 @@ if immediate_b64() > 0:
     if ((own_account_entry) and (uploaded_images)):
         
         if run_button_b64:
+
+            run_b64_function()
         
-            if len(uploaded_images) == 0:
-        
-                st.warning('You must upload some image(s).')
-        
-            elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
-        
-                st.warning("You must tick 'Use GPT' and enter some questions.")
-        
-            elif int(consent_entry) == 0:
-                st.warning("You must tick 'Yes, I agree.' to use the app.")
-            
-            elif len(st.session_state.df_individual)>0:
-                st.warning('You must :red[REMOVE] the data already produced before producing new data.')
-        
-            else:
-        
-                if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                        
-                    if is_api_key_valid(gpt_api_key_entry) == False:
-                        st.error('Your API key is not valid.')
-                        st.stop()
-                        
-                #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
-                #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-    
-                with st.spinner(spinner_text):
-        
-                    try:                    
-                        #Create spreadsheet of responses
-                        df_master = own_create_df()
-        
-                        #Check for non-supported file types
-                        if '.bmp' in str(df_master['Your uploaded files']).lower():
-                            st.error('Sorry, this app does not support BMP images.')
-                            st.stop()
-                            
-                        if '.tiff' in str(df_master['Your uploaded files']).lower():
-                            st.error('Sorry, this app does not support TIFF images.')
-                            st.stop()
-                        
-                        #Activate user's own key or mine
-                        if own_account_entry:
-                            
-                            API_key = df_master.loc[0, 'Your GPT API key']
-            
-                        else:
-                            
-                            API_key = st.secrets["openai"]["gpt_api_key"]
-            
-                        openai.api_key = API_key
-                        
-                        df_individual = run_b64_own(df_master, uploaded_images)
-    
-                        #Keep entries in session state    
-                        st.session_state["df_master"] = df_master
-                    
-                        #Change session states
-                        st.session_state['need_resetting'] = 1
-                        st.session_state["page_from"] = 'pages/OWN.py'
-                        
-                        #Keep data in session state
-                        st.session_state["df_individual"] = df_individual
-        
-                        #Download data
-                        #download_buttons(df_master, df_individual)
-                        
-                        #if df_master.loc[0, 'Language choice'] != 'English':
-                
-                            #st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
-        
-                        #Clear any error
-                        st.session_state['error_msg'] = ''
-                        
-                        st.rerun()
-                    
-                    except Exception as e:
-        
-                        #Clear output
-                        st.session_state["df_individual"] = pd.DataFrame([])
-                        
-                        st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                        
-                        st.error(e)
-                        
-                        #st.error(traceback.format_exc())
-        
-                        print(e)
-        
-                        #print(traceback.format_exc())
-        
-                        st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
 
 
 # %%
@@ -1056,7 +1083,6 @@ if return_button:
 
     st.switch_page("Home.py")
     
-
 
 # %%
 if reset_button:
@@ -1126,8 +1152,10 @@ if batch_mode_allowed() > 0:
     
                 #print(traceback.format_exc())
     
-                st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
-    
+                st.session_state['error_msg'] = traceback.format_exc()
+
+                st.rerun()
+
     if st.session_state.batch_submitted and st.session_state.need_resetting:
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
@@ -1144,7 +1172,11 @@ if batch_mode_allowed() > 0:
 
 # %%
 if len(st.session_state.error_msg) > 0:
-    
+
+    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+
+    st.error(st.session_state.error_msg)
+        
     report_error_button = st.button(label = 'REPORT the error', help = 'Send your entries and a report of the error to the developer.')
 
     if report_error_button:
@@ -1160,4 +1192,5 @@ if len(st.session_state.error_msg) > 0:
         #Clear any error
         st.session_state['error_msg'] = ''
 
-        st.success("Thank you for reporting the error. We will endeavour to fix it as soon as possible.")
+        st.success("Thank you for reporting the error. We will look at your report as soon as possible.")
+        

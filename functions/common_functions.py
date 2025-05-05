@@ -533,7 +533,8 @@ no_results_msg = 'Your search terms returned 0 results. Please change your searc
 # %%
 #Default spinner_text
 
-spinner_text = r"$\textsf{\normalsize In progress... }$"
+#spinner_text = r"$\textsf{\normalsize In progress... }$"
+spinner_text = 'In progress...'
 
 
 # %%

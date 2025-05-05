@@ -79,7 +79,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, report_error_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone
 
 #Import variables
-from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, spinner_text, own_gpt_headings, gpt_cost_msg
+from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg
 
 
 # %%
@@ -180,6 +180,205 @@ def own_account_entries_function():
 
     st.session_state.estimated_waiting_secs = min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])*30
 
+
+
+# %% [markdown]
+# ## Run functions
+
+# %%
+#For all jurisdictions
+
+@st.dialog("Producing data")
+def gpt_run_function():
+    
+    if int(consent_entry) == 0:
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
+
+    elif len(st.session_state.df_individual) > 0:
+        
+        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
+            
+    else:
+
+        own_account_entries_function()
+        
+        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                st.error('Your API key is not valid.')
+                st.stop()
+                
+        spinner_text = f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
+
+        with st.spinner(spinner_text):
+
+            try:
+                
+                #Warning
+                if gpt_activation_entry:
+                    if st.session_state.gpt_model == basic_model:
+                        st.warning('A low-cost GPT model is in use. Please be cautious.')
+                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+                    
+                    #if st.session_state.gpt_model == flagship_model:
+                        #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+                            
+                #Create spreadsheet of responses
+                df_master = st.session_state.df_master
+
+                #st.write(f"df_master.loc[0, 'Example'] == {df_master.loc[0, 'Example']}")
+                
+                #Activate user's own key or mine
+                if own_account_entry:
+                    
+                    API_key = df_master.loc[0, 'Your GPT API key']
+    
+                else:
+                    
+                    API_key = st.secrets["openai"]["gpt_api_key"]
+                
+                openai.api_key = API_key
+    
+                #Produce data
+                
+                jurisdiction_page = st.session_state.jurisdiction_page
+                
+                df_individual = gpt_run(jurisdiction_page, df_master)
+                                    
+                #Keep data in session state
+                st.session_state["df_individual"] = df_individual
+
+                #Change session states
+                st.session_state['need_resetting'] = 1
+                st.session_state["page_from"] = 'pages/GPT.py'           
+
+                #Download data
+                #download_buttons(df_master, df_individual)
+
+                #Clear any error
+                st.session_state['error_msg'] = ''
+                
+                st.rerun()
+            
+            except Exception as e:
+
+                #Clear output
+                st.session_state["df_individual"] = pd.DataFrame([])
+                
+                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                
+                st.error(e)
+                
+                st.error(traceback.format_exc())
+
+                print(e)
+
+                #print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+                st.rerun()
+
+
+
+# %%
+#For ER only
+
+@st.dialog("Producing data")
+def er_run_b64_function():
+
+    
+    if int(consent_entry) == 0:
+        st.warning("You must tick 'Yes, I agree.' to use the app.")
+
+    elif len(st.session_state.df_individual)>0:
+        st.warning('You must :red[REMOVE] the data already produced before producing new data.')
+            
+    else:
+
+        own_account_entries_function()
+        
+        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
+                                
+            if is_api_key_valid(gpt_api_key_entry) == False:
+                st.error('Your API key is not valid.')
+                st.stop()
+        #Increase waiting time
+        st.session_state.estimated_waiting_secs = st.session_state.estimated_waiting_secs*10
+        
+        spinner_text = f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
+
+        with st.spinner(spinner_text):
+
+            try:
+
+                #Warning
+                if gpt_activation_entry:
+                    if st.session_state.gpt_model == basic_model:
+                        st.warning('A low-cost GPT model is in use. Please be cautious.')
+                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+                    
+                    #if st.session_state.gpt_model == flagship_model:
+                        #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+                
+                #Definitions and functions for ER
+                from functions.er_functions import er_run_b64#, role_content_er#, er_run, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
+
+                #from functions.gpt_functions import get_image_dims, calculate_image_token_cost
+                
+                #system_instruction = role_content_er
+
+                #Create spreadsheet of responses
+                df_master = st.session_state.df_master
+
+                #Activate user's own key or mine
+                if own_account_entry:
+                    
+                    API_key = df_master.loc[0, 'Your GPT API key']
+    
+                else:
+                    
+                    API_key = st.secrets["openai"]["gpt_api_key"]
+                
+                openai.api_key = API_key
+
+                #Produce results
+                    
+                df_individual = er_run_b64(df_master)
+                    
+                #Keep data in session state
+                st.session_state["df_individual"] = df_individual
+
+                #Change session states
+                st.session_state['need_resetting'] = 1
+                st.session_state["page_from"] = 'pages/GPT.py'           
+
+                #Download data
+                #download_buttons(df_master, df_individual)
+
+                #Clear any error
+                st.session_state['error_msg'] = ''
+                
+                st.rerun()
+            
+            except Exception as e:
+
+                #Clear output
+                st.session_state["df_individual"] = pd.DataFrame([])
+                
+                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+                
+                st.error(e)
+                
+                #st.error(traceback.format_exc())
+
+                print(e)
+
+                #print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+                st.rerun()
 
 
 # %% [markdown]
@@ -669,92 +868,9 @@ if gpt_keep_button:
 
 # %%
 if run_button:
+
+    gpt_run_function()
     
-    if int(consent_entry) == 0:
-        st.warning("You must tick 'Yes, I agree.' to use the app.")
-
-    elif len(st.session_state.df_individual) > 0:
-        
-        st.warning('You must :red[REMOVE] the last produced data before producing new data.')
-            
-    else:
-
-        own_account_entries_function()
-        
-        if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                
-            if is_api_key_valid(gpt_api_key_entry) == False:
-                st.error('Your API key is not valid.')
-                st.stop()
-                
-        spinner_text += f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
-
-        with st.spinner(spinner_text):
-
-            try:
-                
-                #Warning
-                if gpt_activation_entry:
-                    if st.session_state.gpt_model == basic_model:
-                        st.warning('A low-cost GPT model is in use. Please be cautious.')
-                        st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
-                    
-                    #if st.session_state.gpt_model == flagship_model:
-                        #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
-                            
-                #Create spreadsheet of responses
-                df_master = st.session_state.df_master
-
-                #st.write(f"df_master.loc[0, 'Example'] == {df_master.loc[0, 'Example']}")
-                
-                #Activate user's own key or mine
-                if own_account_entry:
-                    
-                    API_key = df_master.loc[0, 'Your GPT API key']
-    
-                else:
-                    
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-                
-                openai.api_key = API_key
-    
-                #Produce data
-                
-                jurisdiction_page = st.session_state.jurisdiction_page
-                
-                df_individual = gpt_run(jurisdiction_page, df_master)
-                                    
-                #Keep data in session state
-                st.session_state["df_individual"] = df_individual
-
-                #Change session states
-                st.session_state['need_resetting'] = 1
-                st.session_state["page_from"] = 'pages/GPT.py'           
-
-                #Download data
-                #download_buttons(df_master, df_individual)
-
-                #Clear any error
-                st.session_state['error_msg'] = ''
-                
-                st.rerun()
-            
-            except Exception as e:
-
-                #Clear output
-                st.session_state["df_individual"] = pd.DataFrame([])
-                
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                st.error(traceback.format_exc())
-
-                print(e)
-
-                #print(traceback.format_exc())
-
-                st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
 
 
 # %%
@@ -786,97 +902,8 @@ if gpt_reset_button:
 if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py')):
 
     if er_run_button_b64:
-        
-        if int(consent_entry) == 0:
-            st.warning("You must tick 'Yes, I agree.' to use the app.")
-    
-        elif len(st.session_state.df_individual)>0:
-            st.warning('You must :red[REMOVE] the data already produced before producing new data.')
-                
-        else:
 
-            own_account_entries_function()
-            
-            if ((own_account_entry) and (st.session_state['df_master'].loc[0, 'Use GPT'] == True)):
-                                    
-                if is_api_key_valid(gpt_api_key_entry) == False:
-                    st.error('Your API key is not valid.')
-                    st.stop()
-            #Increase waiting time
-            st.session_state.estimated_waiting_secs = st.session_state.estimated_waiting_secs*10
-            
-            spinner_text += f'The estimated waiting time is {st.session_state.estimated_waiting_secs/60} minute(s).'
-    
-            with st.spinner(spinner_text):
-
-                try:
-
-                    #Warning
-                    if gpt_activation_entry:
-                        if st.session_state.gpt_model == basic_model:
-                            st.warning('A low-cost GPT model is in use. Please be cautious.')
-                            st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
-                        
-                        #if st.session_state.gpt_model == flagship_model:
-                            #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
-                    
-                    #Definitions and functions for ER
-                    from functions.er_functions import er_run_b64#, role_content_er#, er_run, er_methods_list, er_method_types, er_search, er_search_results_to_case_link_pairs, er_judgment_text, er_meta_judgment_dict, er_judgment_tokens_b64, er_meta_judgment_dict_b64, er_GPT_b64_json, er_engage_GPT_b64_json
-
-                    #from functions.gpt_functions import get_image_dims, calculate_image_token_cost
-                    
-                    #system_instruction = role_content_er
-
-                    #Create spreadsheet of responses
-                    df_master = st.session_state.df_master
-    
-                    #Activate user's own key or mine
-                    if own_account_entry:
-                        
-                        API_key = df_master.loc[0, 'Your GPT API key']
-        
-                    else:
-                        
-                        API_key = st.secrets["openai"]["gpt_api_key"]
-                    
-                    openai.api_key = API_key
-    
-                    #Produce results
-                        
-                    df_individual = er_run_b64(df_master)
-                        
-                    #Keep data in session state
-                    st.session_state["df_individual"] = df_individual
-    
-                    #Change session states
-                    st.session_state['need_resetting'] = 1
-                    st.session_state["page_from"] = 'pages/GPT.py'           
-    
-                    #Download data
-                    #download_buttons(df_master, df_individual)
-
-                    #Clear any error
-                    st.session_state['error_msg'] = ''
-                    
-                    st.rerun()
-                
-                except Exception as e:
-    
-                    #Clear output
-                    st.session_state["df_individual"] = pd.DataFrame([])
-                    
-                    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                    
-                    st.error(e)
-                    
-                    #st.error(traceback.format_exc())
-    
-                    print(e)
-    
-                    #print(traceback.format_exc())
-    
-                    st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
-
+        er_run_b64_function()
 
 
 # %% [markdown]
@@ -912,7 +939,7 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
 
             #print(traceback.format_exc())
 
-            st.session_state['error_msg'] = f"Exception == {e}\r\n\r\n traceback.format_exc() == {traceback.format_exc()}"
+            st.session_state['error_msg'] = traceback.format_exc()
     
     if st.session_state.batch_submitted and st.session_state.need_resetting:
         
@@ -928,13 +955,16 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
                 #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
 
-
 # %% [markdown]
 # ## Report error
 
 # %%
 if len(st.session_state.error_msg) > 0:
-    
+
+    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+
+    st.error(st.session_state.error_msg)
+        
     report_error_button = st.button(label = 'REPORT the error', help = 'Send your entries and a report of the error to the developer.')
 
     if report_error_button:
@@ -950,4 +980,5 @@ if len(st.session_state.error_msg) > 0:
         #Clear any error
         st.session_state['error_msg'] = ''
 
-        st.success("Thank you for reporting the error. We will endeavour to fix it as soon as possible.")
+        st.success("Thank you for reporting the error. We will look at your report as soon as possible.")
+        
