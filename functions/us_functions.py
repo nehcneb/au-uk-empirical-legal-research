@@ -1544,7 +1544,7 @@ class us_search_tool:
 
 
 # %%
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def us_search_function(token, 
               judgment_counter_bound, 
                 doc_type,

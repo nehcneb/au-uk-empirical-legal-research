@@ -239,6 +239,8 @@ def get_judgment_from_oalc(mnc_list):
         
         #Remove any blank or very short judgments
         mncs_to_pop = []
+
+        #judgment_text_lower_bound = 2000
         
         for mnc in mnc_judgment_dict.keys():
             if len(mnc_judgment_dict[mnc]) < judgment_text_lower_bound*4: #judgment_text_lower_bound is in tokens, each token ~= 4 characters
@@ -248,7 +250,7 @@ def get_judgment_from_oalc(mnc_list):
             mnc_judgment_dict.pop(mnc)
     
     return mnc_judgment_dict
-    
+
 
 # %%
 #mnc_list = ['[2015] NSWSC 52', '[2015] NSWSC 186', '[2015] NSWSC 172', '[2021] NSWSC 1406', '[1999] NSWSC 1028']

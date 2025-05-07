@@ -237,7 +237,7 @@ def nsw_short_judgment(uri):
 
 
 # %%
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def nsw_search(courts = [],
     tribunals = [],
     body = '',

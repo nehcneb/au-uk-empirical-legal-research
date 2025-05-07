@@ -217,7 +217,7 @@ def fca_search(court = '',
 # %%
 #Define function turning search results url to case_infos to judgments
 
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_counter_bound):
     
     #_soup is from scraping per fca_search
@@ -531,7 +531,7 @@ def fca_meta_judgment_dict(case_info):
 #Preliminary function for changing names for any PDF judgments
 #NOT IN USE
 
-@st.cache_data(show_spinner = False)
+#@st.cache_data(show_spinner = False)
 def fca_pdf_name_mnc_list(url_search_results, judgment_counter_bound):
                       
     #Scrape webpage of search results

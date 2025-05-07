@@ -117,7 +117,7 @@ def er_search(query= '',
 # %%
 #Define function turning search results url to case_link_pairs to judgments
 
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def er_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from er_search
 
@@ -182,7 +182,7 @@ def er_search_results_to_case_link_pairs(_soup, url_search_results, judgment_cou
 # %%
 #Convert case-link pairs to judgment text
 
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def er_judgment_text(case_link_pair):
     url = case_link_pair['link_direct']
     headers = {'User-Agent': 'whatever'}
