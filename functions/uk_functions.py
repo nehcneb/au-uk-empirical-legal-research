@@ -183,18 +183,17 @@ def uk_search(query= '',
 
 
     #Get soup
-    soup = BeautifulSoup(response.content, "lxml")
+    #soup = BeautifulSoup(response.content, "lxml")
 
-    
     return {'results_url': response.url, 'results_count': results_count, 'soup': soup}
 
 
 # %%
 #Define function turning search results url to case_infos to judgments
 
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
-    #Reponse is from scraping per uk_search
+    #_soup is from scraping per uk_search
     
     hrefs = _soup.find_all('span', {'class': 'judgment-listing__judgment'})
     case_infos = []
@@ -224,6 +223,7 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
     counter = 1
     
     for link in hrefs:
+        
         if counter <= judgment_counter_bound:
 
             case_info = {
@@ -233,6 +233,7 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
             'Date' : '',
             'Court' : ''
             }
+            
             try:
                 raw_link = link.find('a', href=True)['href']
                 
@@ -250,7 +251,6 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
                 
                 case_info['Case name'] = title
 
-                
                 court_raw = link.find('span', {'class': "judgment-listing__court"})
                 court = court_raw.get_text(strip = True)
 
@@ -267,7 +267,9 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
                 case_info['Date'] = date
 
             except Exception as e:
+                
                 print(f"{case_info['Case name']}: Can't get metadata")
+                
                 print(e)
             
             case_infos.append(case_info)
