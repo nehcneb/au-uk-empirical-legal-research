@@ -412,11 +412,25 @@ if date_parser(st.session_state['df_master'].loc[0, 'Date of judgment']) == None
 
     #st.write(f"date_list == {date_list}")
     
+    #st.write(f"date_list == {date_list}")
+    
     if len(date_list) == 3:
 
-        st.session_state['month_of_judgment'] = int(date_list[1])
-        
-        st.session_state['year_of_judgment'] = int(date_list[2])
+        if date_list[1].isdigit():
+
+            st.session_state['month_of_judgment'] = int(date_list[1])
+            
+        else:
+            
+            st.session_state['month_of_judgment'] = None
+
+        if date_list[2].isdigit():
+
+            st.session_state['year_of_judgment'] = int(date_list[2])
+
+        else:
+
+            st.session_state['year_of_judgment'] = None
 
 #st.write(f"st.session_state['month_of_judgment'] == {st.session_state['month_of_judgment']}")
 #st.write(f"st.session_state['year_of_judgment'] == {st.session_state['year_of_judgment']}")
@@ -469,16 +483,22 @@ if not month_year_only:
 else:
 
     #st.session_state['df_master'].loc[0, 'Date of judgment'] = None
+    
+    col1, col2 = st.columns(2, gap = 'small')
+    
+    with col1:
+    
+        month_entry = st.selectbox(label = 'Month of judgment', 
+                                   options = list(range(1, 13)), 
+                                  index = list_value_check(list(range(1, 13)), st.session_state['month_of_judgment']), 
+                                  )
 
-    month_entry = st.selectbox(label = 'Month of judgment', 
-                               options = list(range(1, 13)), 
-                              index = list_value_check(list(range(1, 13)), st.session_state['month_of_judgment']), 
-                              )
-
-    year_entry = st.selectbox(label = 'Year of judgment', 
-                              options = list(reversed(range(1945, datetime.now().year + 1))), 
-                            index = list_value_check(list(reversed(range(1945, datetime.now().year + 1))), st.session_state['year_of_judgment']), 
-                             )
+    with col2:
+        
+        year_entry = st.selectbox(label = 'Year of judgment', 
+                                  options = list(reversed(range(1945, datetime.now().year + 1))), 
+                                index = list_value_check(list(reversed(range(1945, datetime.now().year + 1))), st.session_state['year_of_judgment']), 
+                                 )
 
     date_of_judgment_entry = f"/{month_year_to_str(month_entry)}/{month_year_to_str(year_entry)}"
     
