@@ -67,7 +67,7 @@ from pyxlsb import open_workbook as open_xlsb
 # %%
 #Title of webpage
 st.set_page_config(
-   page_title="LawtoData: An Empirical Legal Research Kickstarter",
+   page_title="LawtoData: An Empirical Legal Research Automator",
    page_icon="🧊",
    layout="centered",
    initial_sidebar_state="collapsed",
@@ -201,7 +201,7 @@ def delete_all():
     
                         #pause.seconds(3)
                         st.rerun()
-    
+
 
 # %%
 #Initiate aws_s3, and get all_df_masters
