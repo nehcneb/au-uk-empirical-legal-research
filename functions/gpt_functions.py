@@ -83,7 +83,7 @@ flagship_model = 'gpt-4.1'
 judgment_batch_cutoff = 25
 
 #max number of judgments under batch mode
-judgment_batch_max = 100
+judgment_batch_max = 200
 
 # %%
 #Upperbound on the length of questions for GPT
