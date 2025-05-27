@@ -225,7 +225,7 @@ with st.spinner(spinner_text):
 # %%
 st.title(":blue[LawtoData]")
 
-st.subheader("An Empirical Legal Research Kickstarter")
+st.subheader("An Empirical Legal Research Automator")
 
 st.write('Thank you for using *LawtoData*! Please enter your nominated email address and access code to retrieve your requested data.')
 
