@@ -214,30 +214,30 @@ def get_judgment_from_oalc(mnc_list):
     
         where_str = ' OR '.join(where_list)
     
-        #Get judgments from corpus online
-        data = oalc_filter(dataset = corpus_dir, 
-                     #split = 'train', 
-                   config = subset, 
-                    where = where_str, 
-                     #where = """
-                     #("citation" ILIKE '%[1995] FCA 23' OR "citation" ILIKE '%[1995] HCA 1')
-                     #""", 
-                     #orderby = '"date" DESC NULLS LAST', 
-                     length = len(mnc_list))
-    
-        #print(data)
-        
         #Create dict of mncs and judgments
         for mnc in mnc_list:
             mnc_judgment_dict.update({mnc: ''})
 
-        #Try x times
+        #Try x times to get data from OALC
         try_counter = 1
         
         while try_counter <= try_max:
             
             try:
-                
+        
+                #Get judgments from corpus online
+                data = oalc_filter(dataset = corpus_dir, 
+                             #split = 'train', 
+                           config = subset, 
+                            where = where_str, 
+                             #where = """
+                             #("citation" ILIKE '%[1995] FCA 23' OR "citation" ILIKE '%[1995] HCA 1')
+                             #""", 
+                             #orderby = '"date" DESC NULLS LAST', 
+                             length = len(mnc_list))
+            
+                #print(data)
+                                
                 for case in data["rows"]:
                     citation = case['row']['citation']
                     mnc = split_title_mnc(citation)[1]
