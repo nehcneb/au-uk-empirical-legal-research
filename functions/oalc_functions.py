@@ -22,6 +22,7 @@ import os
 import streamlit as st
 import requests
 import re
+import pause
 
 
 # %%
@@ -33,6 +34,12 @@ from functions.common_functions import split_title_mnc, judgment_text_lower_boun
 #Decide whether to use Umar Butler's or mine
 corpus_dir = 'lawtodata/oalc_cases'
 #corpus_dir = 'umarbutler/open-australian-legal-corpus'
+
+# %%
+#How many times to try to get cases from OALC
+
+try_max = 3
+
 
 # %% [markdown]
 # # Download corpus then search
@@ -164,7 +171,7 @@ def oalc_filter(dataset,
 
     except Exception as e:
 
-        print('Failed to obtain cases from OLAC.')
+        print(f'Failed to obtain cases from OLAC due to error: {e}')
 
         return {}
         
@@ -223,20 +230,33 @@ def get_judgment_from_oalc(mnc_list):
         #Create dict of mncs and judgments
         for mnc in mnc_list:
             mnc_judgment_dict.update({mnc: ''})
-    
-        try:
-            
-            for case in data["rows"]:
-                citation = case['row']['citation']
-                mnc = split_title_mnc(citation)[1]
-                if mnc in mnc_judgment_dict.keys():
-                    judgment = case['row']['text']
-                    mnc_judgment_dict[mnc] = judgment
-    
-        except Exception as e:
-            
-            print(f"Can't get case from OALC due to error: {e}")
+
+        #Try x times
+        try_counter = 1
         
+        while try_counter <= try_max:
+            
+            try:
+                
+                for case in data["rows"]:
+                    citation = case['row']['citation']
+                    mnc = split_title_mnc(citation)[1]
+                    if mnc in mnc_judgment_dict.keys():
+                        judgment = case['row']['text']
+                        mnc_judgment_dict[mnc] = judgment
+
+                print(f"Got cases from OALC after {try_counter} try.")
+
+                try_counter += try_max
+            
+            except Exception as e:
+                
+                print(f"Can't get case from OALC after {try_counter} try due to error: {e}")
+
+                try_counter += 1
+
+                pause.seconds(10)
+
         #Remove any blank or very short judgments
         mncs_to_pop = []
 

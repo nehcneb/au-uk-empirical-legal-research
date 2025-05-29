@@ -1625,7 +1625,7 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
 
     with col1:
         #Explain 
-        explain_toggle = st.toggle(label = 'Explain', 
+        explain_toggle = st.checkbox(label = 'Explain', 
                                    help = f'Ask {st.session_state.ai_choice} to explain its response. You may need to press :green[ASK] GPT.', 
                                    #disabled = st.session_state.explain_toggle_disabled
                                    #disabled = st.session_state.disable_input
@@ -1634,7 +1634,7 @@ if st.session_state.ai_choice in {'GPT', 'LangChain'}:
             
     with col2:
         #Get code 
-        code_toggle = st.toggle(label = 'Code', 
+        code_toggle = st.checkbox(label = 'Code', 
                                 help = f'Show any code produced.', 
                                 #disabled = st.session_state.disable_input
                                )
@@ -1957,12 +1957,14 @@ if st.session_state.ai_choice == 'GPT':
         (st.session_state.q_and_a_provided == False) and
         (st.session_state.code_safe == True)
        ):
+
+        #with st.expander(label = f'Get suggestions to help draft your instructions', expanded = st.session_state.q_and_a_toggle):
+        
         if st.toggle(label = 'Suggestions', 
                      key = 'q_and_a_toggle', 
                      help = f'Get clarifying questions from {st.session_state.ai_choice} to help draft your instructions.'
                     ):
-        #if clarification_questions_toggle:
-            
+        
             if int(consent) == 0:
                 st.warning("You must tick 'Yes, I agree.' to use the app.")
         
@@ -1988,6 +1990,7 @@ if st.session_state.ai_choice == 'GPT':
                     st.session_state.messages.append({"time": str(datetime.now()), "cost (usd)": cb.total_cost, "tokens": cb.total_tokens,   "role": "assistant", "content": {'answer': clarifying_questions}})
                                 
                 if len(clarifying_questions) == 0:
+                    
                     st.error(f'{st.session_state.ai_choice} did not have any clarifying questions. Please amend your instructions and try again.')
 
                     #Update clarifications provided status
@@ -2072,9 +2075,9 @@ if st.session_state.ai_choice == 'GPT':
 #history_on = st.toggle(label = 'Display all instructions and responses')
 
 if len(st.session_state.messages) > 0:
-    history_on = st.toggle(label = 'Chat history', help = 'Display all instructions and responses.')
     
-    if history_on:
-    #if st.toggle(label = 'Display all instructions and responses'):
+    #if st.toggle(label = 'Chat history', help = 'Display all instructions and responses.'):
+    
+    with st.expander(label = 'Display all instructions and responses'):
     
         history_on_function()

@@ -640,14 +640,16 @@ st.markdown("""For each file, GPT will respond based only on information from th
 GPT will also provide references for its responses.
 """)
 
-if st.toggle('See tips for using GPT'):
-    tips()
-
 gpt_questions_entry = st.text_area(label = f"Your questions (up to {question_characters_bound} characters)", height= 250, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
 st.caption(f"By default, this app will use model {basic_model}. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
 
-if st.toggle('See/edit the system instruction for GPT (advanced users only)'):
+#if st.toggle('See tips for using GPT'):
+with st.expander("See tips for using GPT"):
+    tips()
+
+#if st.toggle('See/edit the system instruction for GPT (advanced users only)'):
+with st.expander("See/edit the system instruction for GPT (advanced users only)"):
 
     st.warning(gpt_system_msg)
 
@@ -1082,7 +1084,7 @@ if return_button:
     st.session_state["page_from"] = 'pages/OWN.py'
 
     st.switch_page("Home.py")
-    
+
 
 # %%
 if reset_button:
@@ -1193,4 +1195,4 @@ if len(st.session_state.error_msg) > 0:
         st.session_state['error_msg'] = ''
 
         st.success("Thank you for reporting the error. We will look at your report as soon as possible.")
-        
+
