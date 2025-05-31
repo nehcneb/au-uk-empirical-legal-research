@@ -445,7 +445,7 @@ st.header(f"Search :blue[cases of the United States courts]")
 
 st.success(default_msg)
 
-st.write(f'This app sources cases from [CourtListener](https://www.courtlistener.com/help/search-operators/).')
+st.write(f'This app sources cases from [CourtListener](https://www.courtlistener.com).')
 
 st.caption(default_caption)
 
