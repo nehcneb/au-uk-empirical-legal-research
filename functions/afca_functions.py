@@ -1571,7 +1571,9 @@ def afca_old_run(df_master):
             judgments_file.append(judgment_dict)
             
             pause.seconds(np.random.randint(20, 40))
-    
+
+            print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
+
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
@@ -1656,7 +1658,7 @@ def afca_new_run(df_master):
     pause.seconds(np.random.randint(15, 30))
     
     #Create list of judgment links
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #judgments_links = []
 
@@ -1665,7 +1667,7 @@ def afca_new_run(df_master):
     #for link in judgments_links:
     for link in search_results['urls']:
         
-        if counter < judgments_counter_bound:
+        if counter < judgment_counter_bound:
 
             judgment_dict = afca_meta_judgment_dict(link)
     
@@ -1674,6 +1676,8 @@ def afca_new_run(df_master):
             counter += 1
             
             pause.seconds(np.random.randint(15, 30))
+
+            print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
             
         else:
             

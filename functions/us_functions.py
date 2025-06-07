@@ -1470,12 +1470,20 @@ class us_search_tool:
                 opinion_list_raw = []
                 
                 #Get a list of opinions
+
+                #Start scraping counter
+                scraping_counter = 0
+                
                 opinions_list = result['opinions']
                 for opinion_raw in opinions_list:
                     opinion_json_cleaned = self.clean_opinion_json(opinion_raw, self.headers)
                     opinion_list_raw.append(opinion_json_cleaned)
                     pause.seconds(np.random.randint(5, 10))
 
+                    scraping_counter += 1
+                    
+                    print(f"Scrapped {scraping_counter}/{len(opinions_list)} docs.")
+                
                     #self.results_w_opinions[result_index]['opinions'].append(opinion_json_cleaned)
     
                 #Append opinion to result from combined, to leading, to concurrence, to dissent
@@ -1530,12 +1538,19 @@ class us_search_tool:
                 #Get a list of docs
                 docs_list = result['recap_documents']
 
+                #Start scraping counter
+                scraping_counter = 0
+                
                 #Get PDF for each doc json from the list of docs, then append each json with PDF to results_w_docs
                 for doc_raw in docs_list:
                     doc_json_cleaned = self.clean_doc_json(doc_raw, self.headers)
                     self.results_w_docs[result_index]['recap_documents'].append(doc_json_cleaned)
                     pause.seconds(np.random.randint(5, 10))
 
+                    scraping_counter += 1
+                    
+                    print(f"Scrapped {scraping_counter}/{len(docs_list)} docs.")
+                
                 #Add case-specific metadata key/values to results_w_docs, create list of dropable metadata
                 for key in result.keys():
                     if ((key not in self.renamed_keys) and (key not in self.results_w_docs[result_index].keys())):

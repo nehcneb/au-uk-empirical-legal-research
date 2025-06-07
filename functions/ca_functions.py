@@ -967,9 +967,9 @@ def ca_run(df_master):
                                    #year = ''
                                   )
         
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = ca_search_results_to_judgment_links(url_search_results, judgments_counter_bound)
+    judgments_links = ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound)
 
     for link in judgments_links:
 
@@ -977,6 +977,8 @@ def ca_run(df_master):
 
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(10, 20))
+
+        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

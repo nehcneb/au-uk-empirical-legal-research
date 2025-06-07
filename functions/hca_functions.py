@@ -763,7 +763,7 @@ def hca_run(df_master):
     judgments_file = []
     
     #Conduct search
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     case_infos = hca_search(collection = df_master.loc[0, 'Collection'], 
                    quick_search = df_master.loc[0, 'Quick search'],
@@ -776,7 +776,7 @@ def hca_run(df_master):
                     case_number = df_master.loc[0, 'Case number'], 
                     judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                     judge = df_master.loc[0, 'Judge'],
-                    judgment_counter_bound = judgments_counter_bound
+                    judgment_counter_bound = judgment_counter_bound
                     )['case_infos']
     
     if huggingface == False: #If not running on HuggingFace
@@ -932,7 +932,7 @@ def hca_batch(df_master):
     judgments_file = []
 
     #Conduct search
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     case_infos = hca_search(collection = df_master.loc[0, 'Collection'], 
                    quick_search = df_master.loc[0, 'Quick search'],
@@ -945,7 +945,7 @@ def hca_batch(df_master):
                     case_number = df_master.loc[0, 'Case number'], 
                     judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                     judge = df_master.loc[0, 'Judge'],
-                    judgment_counter_bound = judgments_counter_bound
+                    judgment_counter_bound = judgment_counter_bound
                     )['case_infos']
     
     if huggingface == False: #If not running on HuggingFace

@@ -1047,7 +1047,7 @@ class hk_search_tool:
         
                 self.case_infos_w_judgments.append(case_info_w_judgment)
                 
-                print(f"Scraped judgment {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
+                print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments.")
 
         #Scrape the next page if necessary and available
         while (len(self.case_infos_w_judgments) < min(self.results_count, self.judgment_counter_bound)) and (self.page < self.total_pages):
@@ -1073,7 +1073,7 @@ class hk_search_tool:
 
                     self.case_infos_w_judgments.append(case_info_w_judgment)
                     
-                    print(f"Scraped judgment {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)}")
+                    print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments.")
     
         #browser.delete_all_cookies()
         #browser.close()

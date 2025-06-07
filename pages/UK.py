@@ -411,7 +411,7 @@ if preview_button:
             
             judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
             
-            case_infos = uk_search_results_to_judgment_links(search_results_soup, judgments_counter_bound) 
+            case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound) 
             
             for case in case_infos:
             

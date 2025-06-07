@@ -270,7 +270,6 @@ from functions.common_functions import check_questions_answers
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
 
-
 # %%
 #Jurisdiction specific instruction
 #role_content_kr = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a reference to that part of the judgment or metadata. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
@@ -304,15 +303,17 @@ def kr_run(df_master):
 
     soup = url_soup['soup']
     
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = kr_search_results_to_case_link_pairs(soup, url_search_results, judgments_counter_bound)
+    case_link_pairs = kr_search_results_to_case_link_pairs(soup, url_search_results, judgment_counter_bound)
 
     for case_link_pair in case_link_pairs:
 
         judgment_dict = kr_meta_judgment_dict(case_link_pair)
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(5, 15))
+
+        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

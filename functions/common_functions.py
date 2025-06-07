@@ -104,7 +104,7 @@ from botocore.exceptions import ClientError
 
 # %%
 #Default judgment counter bound
-default_judgment_counter_bound = 10
+default_judgment_counter_bound = 100
 
 # %%
 #Default page bound for OWN.py

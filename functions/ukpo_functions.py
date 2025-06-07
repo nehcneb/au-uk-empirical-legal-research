@@ -397,6 +397,7 @@ class ukpo_search_tool:
                             break
 
                 except:
+                    
                     print(f"{case_info['Case name']}: can't get appeal status.")
 
                 case_info_w_judgment.update({'Appeal': appeal}) 
@@ -469,6 +470,8 @@ class ukpo_search_tool:
 
                 judgment_counter += 1
 
+                print(f"Scrapped {len(judgment_counter)}/{self.judgment_counter_bound} judgments.")
+            
             else:
                 #stop if reached the maximum number of results wanted
                 break

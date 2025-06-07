@@ -322,12 +322,12 @@ def nsw_search_preview(df_master):
 
     #Go through search results
     
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
     
     #Create list of relevant cases
     for decision in query.results():
         
-        if counter < judgments_counter_bound:
+        if counter < judgment_counter_bound:
 
             #Append to judgments_file to create df_individual
             decision_w_meta = decision.values.copy()
@@ -617,10 +617,10 @@ def nsw_run_direct(df_master):
 
     #Go through search results
     
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
     
     for decision in query.results():
-        if counter < judgments_counter_bound:
+        if counter < judgment_counter_bound:
             #Get case info from results page
             decision_w_meta = decision.values.copy()
 
@@ -758,12 +758,12 @@ def nsw_run(df_master):
     #Counter to limit search results to append
     counter = 0
 
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     if huggingface == False: #If not running on HuggingFace
 
         for decision in query.results():
-            if counter < judgments_counter_bound:
+            if counter < judgment_counter_bound:
                 #Get case info from results page
                 decision_w_meta = decision.values.copy()
 
@@ -803,7 +803,7 @@ def nsw_run(df_master):
         #Create list of relevant cases
         for decision in query.results():
             
-            if counter < judgments_counter_bound:
+            if counter < judgment_counter_bound:
     
                 #Append to judgments_file to create df_individual
                 decision_w_meta = decision.values.copy()
@@ -971,14 +971,14 @@ def nsw_batch(df_master):
     #Counter to limit search results to append
     counter = 0
 
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    #st.write(f"judgments_counter_bound == {judgments_counter_bound}")
+    #st.write(f"judgment_counter_bound == {judgment_counter_bound}")
     
     if huggingface == False: #If not running on HuggingFace
 
         for decision in query.results():
-            if counter < judgments_counter_bound:
+            if counter < judgment_counter_bound:
                 #Get case info from results page
                 decision_w_meta = decision.values.copy()
 
@@ -1018,7 +1018,7 @@ def nsw_batch(df_master):
         #Create list of relevant cases
         for decision in query.results():
             
-            if counter < judgments_counter_bound:
+            if counter < judgment_counter_bound:
     
                 #Append to judgments_file to create df_individual
                 decision_w_meta = decision.values.copy()

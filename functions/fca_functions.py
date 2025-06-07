@@ -694,10 +694,10 @@ def fca_run(df_master):
     
     results_url = search_results_soup_url['results_url']
     
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgment_counter_bound)
 
     #Create judgments file
     judgments_file = []
@@ -838,10 +838,10 @@ def fca_batch(df_master):
     
     results_url = search_results_soup_url['results_url']
     
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgment_counter_bound)
 
     #Create judgments file
     judgments_file = []

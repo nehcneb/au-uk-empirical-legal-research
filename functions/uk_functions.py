@@ -192,7 +192,7 @@ def uk_search(query= '',
 #Define function turning search results url to case_infos to judgments
 
 #@st.cache_data(show_spinner = False, ttl=600)
-def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
+def uk_search_results_to_judgment_links(_soup, results_url, judgment_counter_bound):
     #_soup is from scraping per uk_search
     
     hrefs = _soup.find_all('span', {'class': 'judgment-listing__judgment'})
@@ -221,6 +221,8 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
     #Start counter
     
     counter = 1
+
+    print(f"Getting case_infos from search results page 1/{page_total}")
     
     for link in hrefs:
         
@@ -245,7 +247,6 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
                 link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
                 case_info['Hyperlink to The National Archives'] = link_direct
 
-                
                 title_raw = link.find('span', {'class': "judgment-listing__title"})
                 title = title_raw.get_text(strip = True)
                 
@@ -276,23 +277,36 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
             
             counter = counter + 1
 
+    #print(f"page_total == {page_total}")
+
+    #print(f"range(page_total) == {range(page_total)}")
+    
     if page_total > 1:  
     
-        for page_ending in range(page_total):
+        for page_ending in range(2, page_total + 1):
             
             if counter <=judgment_counter_bound:
 
                 pause.seconds(np.random.randint(10, 20))
 
-                url_next_page = url_search_results + f"&page={page_ending + 1}"
+                print(f"Getting case_infos from search results page {page_ending}/{page_total}")
+                
+                url_next_page = results_url + f"&page={page_ending}"
+
+                #print(f"url_next_page == {url_next_page}")
                 
                 page_judgment_next_page = requests.get(url_next_page)
+                
                 soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
         
                 #Check if stll more results
+                
                 if 'No results have been found' not in str(soup_judgment_next_page):
+                    
                     hrefs_next_page = soup_judgment_next_page.find_all('span', {'class': 'judgment-listing__judgment'})
-                    for extra_link in hrefs_next_page:
+                    
+                    for link in hrefs_next_page:
+                        
                         if counter <= judgment_counter_bound:
 
                             case_info = {
@@ -304,7 +318,8 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
                             }
                             
                             try:
-                                raw_link = extra_link.find('a', href=True)['href']
+                                
+                                raw_link = link.find('a', href=True)['href']
                                 
                                 if "?" in raw_link:
                                     cleaned_link = raw_link.split('?')[0]
@@ -336,7 +351,9 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
                                 case_info['Date'] = date
                 
                             except Exception as e:
+                                
                                 print(f"{case_info['Case name']}: Can't get metadata")
+                                
                                 print(e)
 
                             case_infos.append(case_info)
@@ -349,7 +366,6 @@ def uk_search_results_to_judgment_links(_soup, judgment_counter_bound):
             else:
                 break
                 
-    
     return case_infos
 
 # %%
@@ -381,6 +397,7 @@ def uk_meta_judgment_dict(judgment_url_xml):
     #Get metadata
 
     try:
+        
         page = requests.get(judgment_url_xml)
         soup = BeautifulSoup(page.content, "lxml")
     
@@ -512,7 +529,7 @@ def uk_run(df_master):
     
     #Conduct search
     
-    search_results_soup = uk_search(query= df_master.loc[0, 'Free text'], 
+    search_results_url_soup = uk_search(query= df_master.loc[0, 'Free text'], 
                                    from_day= df_master.loc[0, 'From day'],
                                    from_month=df_master.loc[0, 'From month'], 
                                    from_year=df_master.loc[0, 'From year'], 
@@ -522,17 +539,23 @@ def uk_run(df_master):
                                    court= df_master.loc[0, 'Courts'], 
                                    party = df_master.loc[0, 'Party'], 
                                    judge = df_master.loc[0, 'Judge']
-                                  )['soup']
-        
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                  )
+    
+    search_results_soup = search_results_url_soup['soup']
 
-    case_infos = uk_search_results_to_judgment_links(search_results_soup, judgments_counter_bound)
+    results_url = search_results_url_soup['results_url']
+        
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+
+    case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, judgment_counter_bound)
 
     for case_info in case_infos:
 
         judgment_dict = uk_meta_judgment_dict(case_info['Hyperlink to The National Archives'])
-        judgments_file.append(judgment_dict)
+        judgments_file.append(judgment_dict)        
         pause.seconds(np.random.randint(10, 20))
+
+        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

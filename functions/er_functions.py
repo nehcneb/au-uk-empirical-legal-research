@@ -331,15 +331,17 @@ def er_run(df_master):
 
     soup = results_url_soup['soup']
 
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = er_search_results_to_case_link_pairs(soup, url_search_results, judgments_counter_bound)
+    case_link_pairs = er_search_results_to_case_link_pairs(soup, url_search_results, judgment_counter_bound)
 
     for case_link_pair in case_link_pairs:
 
         judgment_dict = er_meta_judgment_dict(case_link_pair)
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+
+        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -495,15 +497,17 @@ def er_run_b64(df_master):
 
     soup = results_url_soup['soup']
 
-    judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_link_pairs = er_search_results_to_case_link_pairs(soup, url_search_results, judgments_counter_bound)
+    case_link_pairs = er_search_results_to_case_link_pairs(soup, url_search_results, judgment_counter_bound)
 
     for case_link_pair in case_link_pairs:
 
         judgment_dict = er_meta_judgment_dict_b64(case_link_pair)
         judgments_file.append(judgment_dict)
         pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+
+        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
