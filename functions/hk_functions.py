@@ -563,13 +563,13 @@ class hk_search_tool:
         search_form = 'https://legalref.judiciary.hk/lrs/common/search/search_result_form.jsp?isadvsearch=1'
 
         #Get results page
-        response = requests.get(search_form, params=self.params, headers= {'User-Agent': 'whatever'}, allow_redirects=True)
-
-        #soup = BeautifulSoup(response.content, "lxml")
+        #response = requests.get(search_form, params=self.params, headers= {'User-Agent': 'whatever'}, allow_redirects=True)
 
         #Update return values
-        self.results_url = response.url
+        #self.results_url = response.url
 
+        self.results_url = search_form + urllib.parse.urlencode(params)
+        
         #Try to get search results a few times
 
         try_counter = 0

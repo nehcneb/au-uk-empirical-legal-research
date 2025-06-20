@@ -64,10 +64,6 @@ from pyxlsb import open_workbook as open_xlsb
 
 
 # %%
-test = 'A Copiholders Case [1657] EngR 1; (1657) Het 138; 124 E.R. 405 (B) (1 January 1657)'
-re.findall(r'(\d+\sE\.?R\.?\s\d+((\s\(\w+\))?))', test)[0]
-
-# %%
 #Import functions
 from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input
 #Import variables

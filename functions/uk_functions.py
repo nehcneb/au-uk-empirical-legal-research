@@ -374,7 +374,7 @@ def uk_search_results_to_judgment_links(_soup, results_url, judgment_counter_bou
 uk_meta_labels_droppable = ['Date', 
                          'Court', 
                          'Case number', 
-                         'Judge(s) (non-exhaustiveive)', 
+                         'Judge(s) (non-exhaustive)', 
                          'Parties', 
                          'Header'
                         ]
@@ -388,7 +388,7 @@ def uk_meta_judgment_dict(judgment_url_xml):
                 'Date' : '',
                 'Court' : '', 
                 'Case number': '',
-                'Judge(s) (non-exhaustiveive)' : [], 
+                'Judge(s) (non-exhaustive)' : [], 
                 'Parties' : [],
                 'Header' : '',
                 'judgment': ''
@@ -417,7 +417,7 @@ def uk_meta_judgment_dict(judgment_url_xml):
     
     for person in soup.find_all("tlcperson"):
         if 'judge' in str(person):
-            judgment_dict['Judge(s) (non-exhaustiveive)'].append(person["showas"])
+            judgment_dict['Judge(s) (non-exhaustive)'].append(person["showas"])
         else:
             judgment_dict['Parties'].append(person["showas"])
 

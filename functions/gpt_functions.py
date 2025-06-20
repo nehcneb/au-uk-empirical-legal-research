@@ -2019,6 +2019,14 @@ def gpt_run(jurisdiction_page, df_master):
         
         run = copy.copy(uk_run)
 
+    if jurisdiction_page == 'pages/BAILII.py':
+        
+        #system_instruction = role_content
+        
+        from functions.bailii_functions import bailii_run#, uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict
+        
+        run = copy.copy(bailii_run)
+
     if jurisdiction_page == 'pages/AFCA.py':
 
         #system_instruction = role_content
