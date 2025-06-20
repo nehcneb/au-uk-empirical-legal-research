@@ -572,11 +572,11 @@ class bailii_search_tool:
                 soup = BeautifulSoup(page.content, "lxml")
                 text = soup.get_text()
             
-                #Try to remove layout type content
-                mnc = case_info['Medium neutral citation']
-            
-                if mnc in text:
-                    text = text.split(mnc)[-1]
+                if '[Help]' in text:
+                    try:
+                        text = text.split('[Help]')[-1]
+                    except:
+                        print(f"Can't get rid of layout type content")
                 
                 #Attach judgment text and urls to case_info dict
                 case_info_w_judgment['judgment'] = text
