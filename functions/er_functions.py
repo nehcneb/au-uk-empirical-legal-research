@@ -276,9 +276,9 @@ def er_search_url(df_master):
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
+from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, basic_model, flagship_model
+from functions.gpt_functions import basic_model, flagship_model
 
 
 # %%
@@ -312,7 +312,6 @@ def er_run(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create judgments file
@@ -478,7 +477,6 @@ def er_run_b64(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create judgments file

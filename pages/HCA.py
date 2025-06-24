@@ -502,7 +502,7 @@ if preview_button:
                             case_number = df_master.loc[0, 'Case number'], 
                             judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                             judge = df_master.loc[0, 'Judge'],
-                            judgment_counter_bound = default_judgment_counter_bound
+                            judgment_counter_bound = df_master.loc[0, 'Maximum number of judgments'],
                             )
             
             results_count = hca_search_dict['results_count']
@@ -624,7 +624,7 @@ if next_button:
                                 case_number = df_master.loc[0, 'Case number'], 
                                 judge_includes = df_master.loc[0, 'Judge includes/does not include'],
                                 judge = df_master.loc[0, 'Judge'],
-                                judgment_counter_bound = default_judgment_counter_bound
+                                judgment_counter_bound = df_master.loc[0, 'Maximum number of judgments'],
                                 )
                 
                 results_count = hca_search_dict['results_count']

@@ -302,7 +302,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[cases of the England and Wales courts]")
+st.header(f"Search :blue[cases of the England and Wales courts from BAILII]")
 
 st.success(default_msg)
 
@@ -335,21 +335,28 @@ st.subheader("Your search terms")
 st.markdown("""For search tips, please visit [BAILII](https://www.bailii.org/form/search_cases.html). This section mimics their case law search function.
 """)
 
-citation_entry = st.text_input(label = 'Citation', value = st.session_state.df_master.loc[0, 'Citation'])
+citation_entry = st.text_input(label = 'Citation', value = st.session_state.df_master.loc[0, 'Citation'], help = 'e.g. [2000] 1 AC 360')
 
-case_name_entry = st.text_input(label = 'Case name', value = st.session_state.df_master.loc[0, 'Case name'])
+case_name_entry = st.text_input(label = 'Case name', value = st.session_state.df_master.loc[0, 'Case name'], help = 'e.g. barber v somerset')
 
-all_of_these_words_entry = st.text_input(label = 'All of these words', value = st.session_state.df_master.loc[0, 'All of these words'])
+all_of_these_words_entry = st.text_input(label = 'All of these words', value = st.session_state.df_master.loc[0, 'All of these words'], help = 'e.g. breach fiduciary duty')
 
-exact_phrase_entry = st.text_input(label = 'Exact phrase', value = st.session_state.df_master.loc[0, 'Exact phrase'])
+exact_phrase_entry = st.text_input(label = 'Exact phrase', value = st.session_state.df_master.loc[0, 'Exact phrase'], help = 'e.g. parliamentary sovereignty')
 
-any_of_these_words_entry = st.text_input(label = 'Any of these words', value = st.session_state.df_master.loc[0, 'Any of these words'])
+any_of_these_words_entry = st.text_input(label = 'Any of these words', value = st.session_state.df_master.loc[0, 'Any of these words'], help = 'e.g. waste pollution radiation')
 
-advanced_query_entry = st.text_input(label = 'Advanced query', value = st.session_state.df_master.loc[0, 'Advanced query'])
+advanced_query_entry = st.text_input(label = 'Advanced query [(help)](https://www.bailii.org/bailii/help/advanced_query.html)', value = st.session_state.df_master.loc[0, 'Advanced query'], help = 'e.g. pollut* and (nuclear or radioactiv*)')
+#st.write('')
 
-from_date_entry = st.date_input('From date', value = date_parser(st.session_state.df_master.loc[0, 'From date']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+date_col1, date_col2 = st.columns(2)
 
-to_date_entry = st.date_input('To date', value = date_parser(st.session_state.df_master.loc[0, 'To date']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+with date_col1:
+
+    from_date_entry = st.date_input('From date', value = date_parser(st.session_state.df_master.loc[0, 'From date']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+
+with date_col2:
+
+    to_date_entry = st.date_input('To date', value = date_parser(st.session_state.df_master.loc[0, 'To date']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 sortby_entry = st.selectbox(label = 'Sort results by', 
                                       options = [*bailii_sort_dict.keys()], 
@@ -392,6 +399,10 @@ if preview_button:
 
         st.warning('You must enter some search terms.')
 
+    elif len(courts_entry) == 0:
+        
+        st.warning('Please select at least one court to cover.')
+    
     else:
         
         with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
@@ -404,15 +415,26 @@ if preview_button:
         
             results_url = search_results_w_count['results_url']
     
-            if results_count > 0:
-    
-                #Display search results
-                st.success(f'Your search terms returned {results_count} result(s).')
-                                
-                st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+            case_infos = search_results_w_count['case_infos']
         
+            if results_count > 0:
+            
+                df_preview = pd.DataFrame(case_infos)
+        
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+        
+                df_preview = display_df_dict['df']
+        
+                link_heading_config = display_df_dict['link_heading_config']
+                    
+                #Display search results
+                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+            
             else:
-                
+    
                 st.error(no_results_msg)
 
 

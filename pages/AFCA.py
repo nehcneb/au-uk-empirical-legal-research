@@ -479,10 +479,16 @@ else:
     case_number_entry = st.text_input(label = 'Case number', value = st.session_state.df_master.loc[0, 'Case number'])
 
 #Dates are applicable to both collections
-    
-date_from_entry = st.date_input('Date from', value = date_parser(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
-date_to_entry = st.date_input('Date to', value = date_parser(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+date_col1, date_col2 = st.columns(2)
+
+with date_col1:
+    
+    date_from_entry = st.date_input('Date from', value = date_parser(st.session_state.df_master.loc[0, 'Date from']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+    
+with date_col2:
+
+    date_to_entry = st.date_input('Date to', value = date_parser(st.session_state.df_master.loc[0, 'Date to']), format="DD/MM/YYYY", help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 
 #st.subheader("Case metadata collection")

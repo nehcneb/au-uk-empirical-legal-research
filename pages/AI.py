@@ -329,7 +329,6 @@ def check_code(code = '', own_account_entry = False, prompt_safe = True, check =
 
 # %%
 #Specify AI-page specific models
-
 ai_basic_model = 'gpt-4o-mini'
 ai_flagship_model = 'gpt-4o'
 

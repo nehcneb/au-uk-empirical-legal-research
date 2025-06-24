@@ -574,9 +574,15 @@ case_name_entry = st.text_input(label = 'Case name', value = st.session_state['d
 
 docket_number_entry = st.text_input(label = 'Docket number', value = st.session_state['df_master'].loc[0, 'Docket number'])
 
-filed_after_entry = st.date_input(label = 'Filed after (month first)', value = us_date(st.session_state['df_master'].loc[0, 'Filed after']), format="MM/DD/YYYY", min_value = date(1658, 7, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+date_col1, date_col2 = st.columns(2)
 
-filed_before_entry = st.date_input(label = 'Filed before (month first)', value = us_date(st.session_state['df_master'].loc[0, 'Filed before']), format="MM/DD/YYYY", min_value = date(1658, 7, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+with date_col1:
+
+    filed_after_entry = st.date_input(label = 'Filed after (month first)', value = us_date(st.session_state['df_master'].loc[0, 'Filed after']), format="MM/DD/YYYY", min_value = date(1658, 7, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+
+with date_col2:
+
+    filed_before_entry = st.date_input(label = 'Filed before (month first)', value = us_date(st.session_state['df_master'].loc[0, 'Filed before']), format="MM/DD/YYYY", min_value = date(1658, 7, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 #If opinions chosen
 if collection_entry ==  list(us_collections.keys())[0]:

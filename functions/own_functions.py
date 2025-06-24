@@ -144,31 +144,6 @@ languages_list = list(languages_dict.keys())
 
 
 # %%
-#Define format functions for GPT questions    
-
-#Create function to split a string into a list by line
-def split_by_line(x):
-    y = x.split('\n')
-    for i in y:
-        if len(i) == 0:
-            y.remove(i)
-    return y
-
-#Create function to split a list into a dictionary for list items longer than 10 characters
-
-#Apply split_by_line() before the following function
-def GPT_label_dict(x_list):
-    GPT_dict = {}
-    for i in x_list:
-        if len(i) > 10:
-            GPT_index = x_list.index(i) + 1
-            i_label = 'GPT question ' + f'{GPT_index}'
-            GPT_dict.update({i_label: i})
-    return GPT_dict
-
-
-
-# %%
 # Function to convert each uploaded file to file name, text
 
 #@st.cache_data(show_spinner = False)
@@ -298,9 +273,9 @@ def image_to_text(uploaded_image, language, page_bound):
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, gpt_batch_input, engage_GPT_json, GPT_questions_check
+from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, gpt_batch_input, engage_GPT_json, GPT_questions_check
 #Import variables
-from functions.gpt_functions import question_characters_bound, questions_check_system_instruction, basic_model, flagship_model
+from functions.gpt_functions import questions_check_system_instruction, basic_model, flagship_model
 
 
 # %%
@@ -325,7 +300,6 @@ def run_own(df_master, uploaded_docs, uploaded_images):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create files file
@@ -478,7 +452,6 @@ def batch_b64_own(df_master, uploaded_images):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
 
     #Obtain bounds and language
@@ -550,7 +523,6 @@ def run_b64_own(df_master, uploaded_images):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
 
     #Obtain bounds and language
@@ -623,7 +595,6 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create files file

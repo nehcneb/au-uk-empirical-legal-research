@@ -79,7 +79,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, pdf_judgment, streamlit_timezone, save_input, download_buttons, send_notification_email, report_error_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone
 
 #Import variables
-from functions.common_functions import today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg
 
 
 # %%
@@ -95,7 +95,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, gpt_run, batch_request_function #GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, system_characters_bound, judgment_batch_cutoff, judgment_batch_max, default_caption, basic_model, flagship_model, role_content, gpt_system_msg
+from functions.gpt_functions import question_characters_bound, system_characters_bound, default_caption, basic_model, flagship_model, role_content, gpt_system_msg
 #, intro_for_GPT
 
 
@@ -871,7 +871,7 @@ if gpt_keep_button:
 if run_button:
 
     gpt_run_function()
-    
+
 
 # %%
 if return_button:

@@ -41,6 +41,20 @@ def immediate_b64():
 
 
 # %%
+#Default judgment counter bound
+default_judgment_counter_bound = 10
+
+#Cutoff for requiring batch mode
+judgment_batch_cutoff = 25 #Change this at home
+
+#max number of judgments under batch mode
+judgment_batch_max = 200
+
+# %%
+#Default page bound for OWN.py
+default_page_bound = 100
+
+# %%
 huggingface = True
 
 #if depends on director
@@ -99,17 +113,9 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
+
 # %% [markdown]
 # # Scraper etc
-
-# %%
-#Default judgment counter bound
-default_judgment_counter_bound = 10
-
-# %%
-#Default page bound for OWN.py
-default_page_bound = 100
-
 
 # %%
 #Check if string is date

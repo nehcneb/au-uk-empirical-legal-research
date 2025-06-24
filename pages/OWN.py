@@ -85,7 +85,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error_email
 
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg
 
 default_file_counter_bound = default_judgment_counter_bound
 
@@ -241,7 +241,7 @@ def own_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
-from functions.gpt_functions import question_characters_bound, system_characters_bound, judgment_batch_cutoff, judgment_batch_max, basic_model, flagship_model, gpt_system_msg
+from functions.gpt_functions import question_characters_bound, system_characters_bound, basic_model, flagship_model, gpt_system_msg
 
 
 # %%

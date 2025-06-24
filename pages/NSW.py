@@ -381,12 +381,18 @@ mnc_entry = st.text_input(label = "Medium neutral citation", value = st.session_
 
 st.caption("Must include square brackets eg [2022] NSWSC 922")
 
-startDate_entry = st.date_input(label = "Decision date from", value = date_parser(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+date_col1, date_col2 = st.columns(2)
+
+with date_col1:
+
+    startDate_entry = st.date_input(label = "Decision date from", value = date_parser(st.session_state['df_master'].loc[0, 'Decision date from']), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+
+with date_col2:
+
+    endDate_entry = st.date_input(label = "Decision date to", value = date_parser(st.session_state['df_master'].loc[0, 'Decision date to']),  format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 st.caption("Pre-1999 decisions are usually [not available](https://www.caselaw.nsw.gov.au/about) from NSW Caselaw and will unlikely to be collected.")
-
-endDate_entry = st.date_input(label = "Decision date to", value = date_parser(st.session_state['df_master'].loc[0, 'Decision date to']),  format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
-
+    
 fileNumber_entry = st.text_input(label = "File number", value = st.session_state['df_master'].loc[0, 'File number'])
 
 legislationCited_entry = st.text_input(label = "Legislation cited", value = st.session_state['df_master'].loc[0, 'Legislation cited'])

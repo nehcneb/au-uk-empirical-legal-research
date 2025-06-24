@@ -67,10 +67,10 @@ from pyxlsb import open_workbook as open_xlsb
 from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, send_notification_email
 
 # %% [markdown]
-# # gpt-3.5, 4o, 4o-mini, 4.1, 4.1-mini, 4.1-nano
+# # GPT functions and variables
 
 # %% [markdown]
-# ## Common functions and variables
+# ## Preliminary functions and variables
 
 # %%
 #GPT models to use
@@ -78,23 +78,12 @@ basic_model = 'gpt-4.1-mini'
 flagship_model = 'gpt-4.1'
 
 # %%
-#Cutoff for requiring activate batch mode
-
-judgment_batch_cutoff = 25
-
-#max number of judgments under batch mode
-judgment_batch_max = 200
-
-# %%
 #Upperbound on the length of questions for GPT
-
 question_characters_bound = 5120
-
 
 
 # %%
 #Upperbound on the length of system instruction for GPT
-
 system_characters_bound = 5120
 
 
@@ -123,12 +112,23 @@ def dict_to_string(questions_dict):
 #Create function to split a list into a dictionary for list items longer than 10 characters
 #Apply split_by_line() before the following function
 def GPT_label_dict(x_list):
+    
     GPT_dict = {}
+
+    if isinstance(x_list, str):
+
+        x_list = split_by_line(x_list)
+    
     for i in x_list:
+        
         if len(i) > 10:
+            
             GPT_index = x_list.index(i) + 1
+            
             i_label = f'GPT question {GPT_index}'
+            
             GPT_dict.update({i_label: i})
+            
     return GPT_dict
 
 
@@ -1951,7 +1951,7 @@ def batch_request_function():
 
 
 # %% [markdown]
-# # Run
+# # GPT run
 
 # %%
 #Jurisdiction specific instruction and functions

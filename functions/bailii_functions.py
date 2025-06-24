@@ -412,27 +412,23 @@ class bailii_search_tool:
             
             results_pattern = re.compile(r"Total\sresults.+")
             results_num_list = self.soup.find_all("td", text= results_pattern)
-
-            #Initialise default number of results
-            results_count = 0
-            total_pages = 0 #10 results per page
             
             if len(results_num_list) > 0:
             
                 results_count_raw = results_num_list[0].text.split(' ')[-1].replace(',', '')
                 self.results_count = int(float(results_count_raw))
-                total_pages = math.ceil(self.results_count/10)
+                self.total_pages = math.ceil(self.results_count/10)
 
-            print(f"Found {self.results_count} results or {total_pages} pages")
+            print(f"Found {self.results_count} results or {self.total_pages} pages")
             
             if self.results_count > 0:
                 
                 #Start counter
                 counter = 0
     
-                for page in range(1, total_pages + 1):
+                for page in range(1, self.total_pages + 1):
     
-                    if counter < self.judgment_counter_bound:
+                    if counter < min(self.results_count, self.judgment_counter_bound):
 
                         #For subsequent pages, need to press next
                         if page > 1:
@@ -448,13 +444,13 @@ class bailii_search_tool:
     
                         break
 
-                    print(f"Processing page {page} of {total_pages}")
+                    print(f"Processing page {page} of {self.total_pages}")
                     
                     cases_raw = self.soup.find_all("li")
                     
                     for case_raw in cases_raw:
                 
-                        if counter < self.judgment_counter_bound:
+                        if counter < min(self.results_count, self.judgment_counter_bound):
                 
                             #Initialise default values
                             case_name = ''
@@ -554,7 +550,7 @@ class bailii_search_tool:
 
         for case_info in self.case_infos:
 
-            if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+            if len(self.case_infos_w_judgments) < min(self.results_count, self.judgment_counter_bound):
 
                 #Pause to avoid getting kicked out
                 pause.seconds(np.random.randint(5, 10))
@@ -580,36 +576,26 @@ class bailii_search_tool:
                 
                 #Attach judgment text and urls to case_info dict
                 case_info_w_judgment['judgment'] = text
-            
+
+                #Make links clickable
+                for key in case_info_w_judgment:
+                    
+                    if 'Hyperlink' in key:
+                        
+                        direct_link = case_info_w_judgment[key]
+
+                        if '&query' in direct_link:
+                            
+                            direct_link = direct_link.split('&query')[0]
+                        
+                        case_info_w_judgment[key] = link(direct_link)
+
+                        break
+                
                 self.case_infos_w_judgments.append(case_info_w_judgment)
                     
                 print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments.")
 
-
-# %%
-#test = bailii_search_tool(citation= '',
-                  #case_name = '',
-                  #all_of_these_words = '',
-                  #exact_phrase = '',
-                  #any_of_these_words = 'fiduciary',
-                  #advanced_query = '',
-                  #datelow = '',
-                  #datehigh = '',
-                  #sort = list(bailii_sort_dict.keys())[0],
-                  #highlight = True,
-                #courts = ['High Court Administrative Court', 'High Court Chancery Division'],
-              #judgment_counter_bound = 15            
-             #)
-
-
-# %%
-#test.search()
-
-# %%
-#test.get_judgments()
-
-# %%
-#test.case_infos_w_judgments[0]
 
 # %%
 #@st.cache_data(show_spinner = False)
@@ -636,7 +622,7 @@ def bailii_search_url(df_master):
 
     bailii_search.search()
     
-    return {'results_url': bailii_search.results_url, 'results_count': bailii_search.results_count}
+    return {'results_url': bailii_search.results_url, 'results_count': bailii_search.results_count, 'case_infos': bailii_search.case_infos}
 
 
 
@@ -645,9 +631,9 @@ def bailii_search_url(df_master):
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
+from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, basic_model, flagship_model
+from functions.gpt_functions import basic_model, flagship_model
 
 
 # %%
@@ -666,7 +652,6 @@ def bailii_run(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create judgments file
@@ -726,3 +711,5 @@ def bailii_run(df_master):
         df_updated.pop('judgment')
     
     return df_updated
+
+# %%

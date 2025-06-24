@@ -262,51 +262,51 @@ def hca_search(collection = hca_collections[0],
     browser.refresh()
 
     #Clear button
-    clear_button = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//button[@value='Clear']")))
+    clear_button = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//button[@value='Clear']")))
     
     #Clear input
     clear_button.click()
 
     #Quick search
     #quick_search = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'qsrch-term')))
-    quick_search_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='qsrch-term']")))
+    quick_search_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='qsrch-term']")))
     
     #Search for citation
     #citation = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'id_filter_type_13')))
-    citation_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_type_13']")))
+    citation_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_type_13']")))
 
     #Parties include/not include
     parties_include_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'id_filter_relational_operator_2')))
     parties_include_category = Select(parties_include_input)
     
     #Parties
-    parties_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_2']")))
+    parties_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_2']")))
     
     #Year is/is not
     year_is_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'id_filter_relational_operator_4')))
     year_is_category = Select(year_is_input)
     
     #Year
-    year_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_4']")))
+    year_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_4']")))
 
     if collection != hca_collections[-1]:
 
         #Full text search
         #full_text = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'srch-term')))
-        full_text_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='srch-term']")))
+        full_text_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='srch-term']")))
         
         #case number
-        case_number_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_5']")))
+        case_number_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_5']")))
         
         #Judge includes/does not include
         judge_includes_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'id_filter_relational_operator_6')))
         judge_includes_category = Select(judge_includes_input)
         
         #Judge
-        judge_input = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_6']")))
+        judge_input = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='id_filter_6']")))
 
     #Search button
-    search_button = Wait(browser, 20).until(EC.visibility_of_element_located((By.ID, 'apply_filter')))
+    search_button = Wait(browser, 30).until(EC.visibility_of_element_located((By.ID, 'apply_filter')))
     
     #Enter input
     #Quick search
@@ -359,7 +359,7 @@ def hca_search(collection = hca_collections[0],
     search_button.click()
 
     #Results count
-    results_count_text = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//div[@id='postsearch']")))
+    results_count_text = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//div[@id='postsearch']")))
     results_count_raw = results_count_text.text.split('\n')[1]
     results_count = int(re.findall(r'\d+', results_count_raw)[0])
 
@@ -390,17 +390,21 @@ def hca_search(collection = hca_collections[0],
         #print(f'Searching page {page_counter}')
 
         #Get and click button for next page
-        next_page_button = Wait(browser, 20).until(EC.element_to_be_clickable((By.XPATH, "//a[@href='javascript:newPage(2)']")))
-    
-        browser.execute_script("arguments[0].click();",next_page_button)
+        #Top next button
+        next_page_button = Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//a[@id='nextbutton1']")))
 
+        #Bottom next button
+        #next_page_button = Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//a[@href='javascript:newPage(2)']")))
+        
+        browser.execute_script("arguments[0].click();",next_page_button)
+        
         #Wait for next page to load
         pause.seconds(np.random.randint(5, 10))
         
-        Wait(browser, 20).until(EC.text_to_be_present_in_element((By.XPATH, "//div[@id='postsearch']"), f'{str(page_counter)[-1]} (of'))
+        Wait(browser, 30).until(EC.text_to_be_present_in_element((By.XPATH, "//div[@id='postsearch']"), f'{str(page_counter)[-1]} (of'))
 
         #Report on search terms
-        results_count_text = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//div[@id='postsearch']")))
+        results_count_text = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//div[@id='postsearch']")))
         print(results_count_text.text.strip())
 
         #Get soup for next page
@@ -727,9 +731,9 @@ def hca_meta_judgment_dict_alt(judgment_url):
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_batch_input
+from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_batch_input
 #Import variables
-from functions.gpt_functions import question_characters_bound, basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model, flagship_model#, role_content
 
 
 # %%
@@ -756,7 +760,6 @@ def hca_run(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create judgments file
@@ -925,7 +928,6 @@ def hca_batch(df_master):
 
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Create judgments file

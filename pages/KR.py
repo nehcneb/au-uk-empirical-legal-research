@@ -39,7 +39,7 @@ import os
 import urllib.request
 import io
 from io import BytesIO
-
+import string
 
 #Streamlit
 import streamlit as st
@@ -61,15 +61,16 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons, list_value_check
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
+
 
 # %% [markdown]
 # # Kercher Reports search engine
 
 # %%
-from functions.kr_functions import kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict, kr_search_url
+from functions.kr_functions import kr_search_tool, kr_search_url #kr_methods_list, kr_method_types, kr_search, kr_search_results_to_case_link_pairs, kr_judgment_text, kr_meta_judgment_dict,
 
 
 # %%
@@ -109,12 +110,29 @@ def kr_create_df():
     #Own account status
     own_account = st.session_state.own_account
 
+    query = ''
+    try:
+        query = query_entry
+    except:
+        print('query not entered')
+        
+    year = ''
+    try:
+        year = year_entry
+    except:
+        print('year not entered')
+
+    letter = ''
+    try:
+        letter = letter_entry
+    except:
+        print('letter not entered')
+    
     try:
         judgments_counter_bound = judgments_counter_bound_entry
     except:
         print('judgments_counter_bound not entered')
         judgments_counter_bound = default_judgment_counter_bound
-
 
     #GPT enhancement
     try:
@@ -142,8 +160,9 @@ def kr_create_df():
            'Your name': name, 
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
-            'Enter search query': query_entry,
-           'Find (method)': method_entry,
+            'Search query': query,
+           'Specific year': year,
+           'Decision begins with': letter,
            'Metadata inclusion': True, #Placeholder even though no metadata collected
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': gpt_questions, 
@@ -155,6 +174,7 @@ def kr_create_df():
     df_master_new = pd.DataFrame(new_row, index = [0])
         
     return df_master_new
+
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -225,8 +245,9 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
     #Jurisdiction specific
-    st.session_state.df_master.loc[0, 'Enter search query'] = None
-    st.session_state.df_master.loc[0, 'Find (method)'] = 'Full text'
+    st.session_state.df_master.loc[0, 'Search query'] = None
+    st.session_state.df_master.loc[0, 'Specific year'] = None
+    st.session_state.df_master.loc[0, 'Decision begins with'] = None
 
     #Generally applicable
     st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
@@ -267,12 +288,21 @@ st.subheader("Your search terms")
 st.markdown("""For search tips, please visit [AustLII](https://www.austlii.edu.au/cgi-bin/viewdb/au/cases/nsw/NSWSupC/). This section mimics their search function.
 """)
 
-method_entry = st.selectbox(label = 'Find', options = kr_methods_list, index = kr_methods_list.index(st.session_state.df_master.loc[0, 'Find (method)']))
+#method_entry = st.selectbox(label = 'Find', options = kr_methods_list, index = kr_methods_list.index(st.session_state.df_master.loc[0, 'Find (method)']))
 
-query_entry = st.text_input(label = 'Enter search query', value = st.session_state.df_master.loc[0, 'Enter search query'])
-    
-st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
+st.info('Please enter only *one* of the following search terms.')
+
+year_entry = st.number_input(label = 'Specific year (1788-1899)', min_value = 1788, max_value = 1899,  value = st.session_state.df_master.loc[0, 'Specific year'])
+
+letter_entry = st.selectbox(label = 'Decision begins with', options = list(string.ascii_uppercase), index =  list_value_check(list(string.ascii_uppercase), st.session_state.df_master.loc[0, 'Decision begins with']))
+
+query_entry = st.text_input(label = 'Search query', value = st.session_state.df_master.loc[0, 'Search query'])
+
+if (year_entry and letter_entry) or (year_entry and query_entry) or (letter_entry and query_entry):
+
+    st.warning('This app will use only one search term. It will first use specific year, then decision begins with, then search query.')
+
+st.info("""You can preview the results returned by your search terms.""")
 
 with stylable_container(
     "purple",
@@ -282,7 +312,56 @@ with stylable_container(
         color: white;
     }""",
 ):
-    preview_button = st.button(label = 'PREVIEW on AustLII (in a popped up window)')
+    preview_button = st.button(label = 'PREVIEW')
+
+
+# %%
+
+# %% [markdown]
+# ## Preview
+
+# %%
+if preview_button:
+    
+    all_search_terms = str(year_entry) + str(letter_entry) + str(query_entry)
+    
+    if all_search_terms.replace('None', '') == "":
+
+        st.warning('You must enter some search terms.')
+
+    else:
+        
+        with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
+
+            df_master = kr_create_df()
+            
+            search_results_w_count = kr_search_url(df_master)
+            
+            results_count = search_results_w_count['results_count']
+        
+            results_url = search_results_w_count['results_url']
+    
+            case_infos = search_results_w_count['case_infos']
+        
+            if results_count > 0:
+            
+                df_preview = pd.DataFrame(case_infos)
+        
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+        
+                df_preview = display_df_dict['df']
+        
+                link_heading_config = display_df_dict['link_heading_config']
+                    
+                #Display search results
+                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+            
+            else:
+    
+                st.error(no_results_msg)
 
 
 # %% [markdown]
@@ -315,19 +394,9 @@ keep_button = st.button('SAVE')
 # # Save and run
 
 # %%
-if preview_button:
-    
-    df_master = kr_create_df()
-
-    judgments_url = kr_search_url(df_master)['results_url']
-
-    open_page(judgments_url)
-
-
-# %%
 if keep_button:
 
-    all_search_terms = str(query_entry)
+    all_search_terms = str(year_entry) + str(letter_entry) + str(query_entry)
         
     if all_search_terms.replace('None', '') == "":
 
@@ -363,7 +432,7 @@ if reset_button:
 # %%
 if next_button:
 
-    all_search_terms = str(query_entry)
+    all_search_terms = str(year_entry) + str(letter_entry) + str(query_entry)
         
     if all_search_terms.replace('None', '') == "":
 
@@ -378,15 +447,17 @@ if next_button:
             
             try:
     
-                kr_soup = kr_search_url(df_master)['soup']
-
-                if '>0  documents' in str(kr_soup):
-                    st.error(no_results_msg)
+                search_results_w_count = kr_search_url(df_master)
                 
+                results_count = search_results_w_count['results_count']
+                
+                if results_count == 0:
+                    st.error(no_results_msg)
+    
                 else:
-                    
+    
                     save_input(df_master)
-                    
+    
                     st.session_state["page_from"] = 'pages/KR.py'
                     
                     st.switch_page('pages/GPT.py')

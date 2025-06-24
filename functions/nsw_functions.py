@@ -415,9 +415,9 @@ def nsw_search_url(df_master):
 
 # %%
 #Import functions
-from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
+from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model, flagship_model#, role_content
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
@@ -571,9 +571,6 @@ def nsw_run_direct(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Do search
@@ -714,9 +711,6 @@ def nsw_run(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Do search
@@ -927,9 +921,6 @@ def nsw_batch(df_master):
     
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
-    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
-    df_master['Enter your questions for GPT'] = df_master['Enter your questions for GPT'][0: question_characters_bound].apply(split_by_line)
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
     #Do search

@@ -317,7 +317,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[cases of the United Kingdom courts and tribunals]")
+st.header(f"Search :blue[cases of select United Kingdom courts and tribunals from The National Archives]")
 
 st.success(default_msg)
 
@@ -352,9 +352,15 @@ st.markdown("""For search tips, please visit [The National Archives](https://cas
 
 query_entry = st.text_input(label = 'Free text', value = st.session_state.df_master.loc[0, 'Free text'])
 
-from_date_entry = st.date_input('From day', value = date_parser(f"{st.session_state.df_master.loc[0, 'From day']}/{st.session_state.df_master.loc[0, 'From month']}/{st.session_state.df_master.loc[0, 'From year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+date_col1, date_col2 = st.columns(2)
 
-to_date_entry = st.date_input('To day', value = date_parser(f"{st.session_state.df_master.loc[0, 'To day']}/{st.session_state.df_master.loc[0, 'To month']}/{st.session_state.df_master.loc[0, 'To year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+with date_col1:
+    
+    from_date_entry = st.date_input('From day', value = date_parser(f"{st.session_state.df_master.loc[0, 'From day']}/{st.session_state.df_master.loc[0, 'From month']}/{st.session_state.df_master.loc[0, 'From year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
+
+with date_col2:
+    
+    to_date_entry = st.date_input('To day', value = date_parser(f"{st.session_state.df_master.loc[0, 'To day']}/{st.session_state.df_master.loc[0, 'To month']}/{st.session_state.df_master.loc[0, 'To year']}"), format="DD/MM/YYYY", min_value = date(1900, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
 st.caption('[Relatively earlier](https://caselaw.nationalarchives.gov.uk/structured_search) judgments are not available.')
 
