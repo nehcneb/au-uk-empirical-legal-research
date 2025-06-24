@@ -63,7 +63,7 @@ page_dict = {"pages/HCA.py": "Cases of the High Court of Australia",
             #"pages/AFCA.py": 'Cases of the Australian Financial Complaints Authority', 
             #"pages/SCTA.py": 'Decisions of the Superannuation Complaints Tribunal of Australia', 
             "pages/ER.py": "The English Reports (nearly all English case reports from 1220 to 1866)", 
-            "pages/KR.py": "The Kercher Reports (cases of the New South Wales superior courts from 1788 to 1900)", 
+            "pages/KR.py": "The Kercher Reports (cases of the New South Wales superior courts from 1788 to 1899)", 
             "pages/OWN.py": "Your own files", 
             'pages/AI.py': "Your own spreadsheet"
             }
