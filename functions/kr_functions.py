@@ -90,11 +90,21 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 
+
 options = Options()
 options.add_argument("--disable-gpu")
 #options.add_argument("--headless")
 options.add_argument('--no-sandbox')  
 options.add_argument('--disable-dev-shm-usage')  
+
+if 'Users/Ben' not in os.getcwd(): 
+
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+    options.add_argument("window-size=1200x600")
 
 #@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
@@ -104,7 +114,8 @@ def get_driver():
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(30)
 
-    browser.minimize_window()#set_window_position(-2000,0)
+    if 'Users/Ben' in os.getcwd():
+        browser.minimize_window()
     
     return browser
 
@@ -112,7 +123,7 @@ def get_driver():
 
 # %%
 def kr_selenium_judgment_text(case_info):
-    url = case_info['link_direct']
+    url = case_info['Hyperlink to AustLII']
 
     browser = get_driver()
         
@@ -146,10 +157,10 @@ def kr_selenium_meta_judgment_dict(case_info):
                          'judgment': ''
                         }
     
-        case_name = case_info['case']
-        date = case_info['case'].split('(')[-1].replace(')', '')
-        year = case_info['case'].split('[')[1][0:4]
-        case_number_raw = case_info['case'].split('NSWSupC ')[1].split(' (')[0]
+        case_name = case_info['Case name']
+        date = case_info['Case name'].split('(')[-1].replace(')', '')
+        year = case_info['Case name'].split('[')[1][0:4]
+        case_number_raw = case_info['Case name'].split('NSWSupC ')[1].split(' (')[0]
         
         if ";" in case_number_raw:
             case_number = case_number_raw.split(';')[0]
@@ -160,8 +171,8 @@ def kr_selenium_meta_judgment_dict(case_info):
         nr_cite = ''
             
         try:
-            case_name = case_info['case'].split('[')[0][:-1]
-            nr_cite = case_info['case'].split('; ')[1].replace(' (' + date + ')', '')
+            case_name = case_info['Case name'].split('[')[0][:-1]
+            nr_cite = case_info['Case name'].split('; ')[1].replace(' (' + date + ')', '')
         except:
             pass
                     
@@ -169,7 +180,7 @@ def kr_selenium_meta_judgment_dict(case_info):
         judgment_dict['Medium neutral citation'] = mnc
         judgment_dict['Other reports'] = nr_cite
         judgment_dict['Date'] = date
-        judgment_dict['Hyperlink to AustLII'] = link(case_info['link_direct'])
+        judgment_dict['Hyperlink to AustLII'] = link(case_info['Hyperlink to AustLII'])
         judgment_dict['judgment'] = kr_selenium_judgment_text(case_info)
 
     except Exception as e:
@@ -359,8 +370,8 @@ class kr_search_tool:
                         link_direct = link.get('href')
                         link = 'https://www.austlii.edu.au' + link_direct.split('?context')[0]
                         
-                        dict_object = {'case': case, 
-                                       'link_direct': link}
+                        dict_object = {'Case name': case, 
+                                       'Hyperlink to AustLII': link}
                         
                         self.case_infos.append(dict_object)
                         
@@ -469,7 +480,7 @@ def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_cou
             case = link.get_text()
             link_direct = link.get('href')
             link = 'https://www.austlii.edu.au' + link_direct.split('?context')[0]
-            dict_object = { 'case': case, 'link_direct': link}
+            dict_object = { 'Case name': case, 'Hyperlink to AustLII': link}
             case_link_pairs.append(dict_object)
             counter = counter + 1
         
@@ -486,7 +497,7 @@ def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_cou
                     case = extra_link.get_text()
                     extra_link_direct = extra_link.get('href')
                     extra_link = 'https://www.austlii.edu.au' + extra_link_direct.split('?context')[0]
-                    dict_object = { 'case': case, 'link_direct': extra_link}
+                    dict_object = { 'Case name': case, 'Hyperlink to AustLII': extra_link}
                     case_link_pairs.append(dict_object)
                     counter = counter + 1
 
@@ -516,7 +527,7 @@ def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_cou
 
 #@st.cache_data(show_spinner = False)
 def kr_judgment_text(case_link_pair):
-    url = case_link_pair['link_direct']
+    url = case_link_pair['Hyperlink to AustLII']
     headers = {'User-Agent': 'whatever'}
     page = requests.get(url, headers=headers)
     soup = BeautifulSoup(page.content, "lxml")
@@ -546,10 +557,10 @@ def kr_meta_judgment_dict(case_link_pair):
                          'judgment': ''
                         }
     
-        case_name = case_link_pair['case']
-        date = case_link_pair['case'].split('(')[-1].replace(')', '')
-        year = case_link_pair['case'].split('[')[1][0:4]
-        case_number_raw = case_link_pair['case'].split('NSWSupC ')[1].split(' (')[0]
+        case_name = case_link_pair['Case name']
+        date = case_link_pair['Case name'].split('(')[-1].replace(')', '')
+        year = case_link_pair['Case name'].split('[')[1][0:4]
+        case_number_raw = case_link_pair['Case name'].split('NSWSupC ')[1].split(' (')[0]
         
         if ";" in case_number_raw:
             case_number = case_number_raw.split(';')[0]
@@ -560,8 +571,8 @@ def kr_meta_judgment_dict(case_link_pair):
         nr_cite = ''
             
         try:
-            case_name = case_link_pair['case'].split('[')[0][:-1]
-            nr_cite = case_link_pair['case'].split('; ')[1].replace(' (' + date + ')', '')
+            case_name = case_link_pair['Case name'].split('[')[0][:-1]
+            nr_cite = case_link_pair['Case name'].split('; ')[1].replace(' (' + date + ')', '')
         except:
             pass
                     
@@ -569,7 +580,7 @@ def kr_meta_judgment_dict(case_link_pair):
         judgment_dict['Medium neutral citation'] = mnc
         judgment_dict['Other reports'] = nr_cite
         judgment_dict['Date'] = date
-        judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['link_direct'])
+        judgment_dict['Hyperlink to AustLII'] = link(case_link_pair['Hyperlink to AustLII'])
         judgment_dict['judgment'] = kr_judgment_text(case_link_pair)
 
     except Exception as e:
