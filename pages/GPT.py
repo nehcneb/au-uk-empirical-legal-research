@@ -95,7 +95,7 @@ if 'page_from' not in st.session_state:
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, gpt_run, batch_request_function #GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import question_characters_bound, system_characters_bound, default_caption, basic_model, flagship_model, role_content, gpt_system_msg
+from functions.gpt_functions import question_characters_bound, system_characters_bound, default_caption, basic_model, flagship_model, role_content, gpt_system_msg, pages_w_batch
 #, intro_for_GPT
 
 
@@ -461,7 +461,7 @@ if "judgment_counter_max" not in st.session_state:
 
     st.session_state["judgment_counter_max"] = judgment_batch_cutoff
 
-if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
         
     st.session_state["judgment_counter_max"] = judgment_batch_max
 
@@ -773,7 +773,7 @@ st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet w
 
 #st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{estimated_waiting_secs/60} minute(s)**.""")
 
-if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
     st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} cases. Your requested data will be sent to your nominated email address in about **2 business days**. 
 """)
 
@@ -782,7 +782,7 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['page
 
 gpt_reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
-if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
     with stylable_container(
         "orange",
         css_styles="""
@@ -911,7 +911,7 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
 
 
 # %%
-if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py'])):
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
     
     if batch_button:
 

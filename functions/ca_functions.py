@@ -39,6 +39,7 @@ import os
 #import pypdf
 import io
 from io import BytesIO
+import ast
 
 #Streamlit
 import streamlit as st
@@ -106,6 +107,9 @@ except Exception as e:
     print(e)
     quit()
 
+
+# %% [markdown]
+# ## Definitions
 
 # %%
 #Define format functions for jurisdiction choice, and GPT questions
@@ -607,217 +611,6 @@ ca_court_tribunal_types = {'All courts and tribunals': '',
 # %%
 all_subjects = ['Access to information and privacy', 'Administrative remedies', 'Appeal', 'Arbitration', 'Bankruptcy and insolvency', 'Business', 'Child custody and access', 'Child protection', 'Citizenship and immigration', 'Commerce and industry', 'Constitution', 'Contracts', 'Creditors and debtors', 'Criminal or statutory infractions', 'Damages', 'Defences', 'Environment', 'Evidence', 'Family', 'Guardianship', 'Health and safety', 'Indigenous peoples', 'Insurance', 'Intellectual property', 'International', 'Interpretation', 'Judicial review', 'Labour and employment', 'Motor vehicles', 'Municipalities', 'Negligence', 'Practice and procedure', 'Professions and occupations', 'Property and trusts', 'Public administration', 'Residential tenancies', 'Rights and freedoms', 'Search and seizure', 'Sentencing', 'Support and maintenance', 'Taxation', 'Torts', 'Wills and estates', 'Young offenders'] #, '']
 
-
-# %%
-#Function turning search terms to search results url
-#@st.cache_data(show_spinner = False)
-def ca_search(jurisdiction  =  'All', 
-              court = 'All', 
-              phrase = '', 
-              case_name_mnc= '', 
-              court_tribunal_type = 'All courts and tribunals', 
-              subjects = [], 
-             on_this_date = '',
-            after_date = '',
-            before_date = '',
-              #cited = '', 
-              #year = ''
-             ):
-
-    today = datetime.now().strftime("%Y-%m-%d")
-    
-    #Default base url with jurisdiction and court to remove if not entered
-    base_url = f'https://www.canlii.org/en/jurisdiction_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&jId=jurisdiction_param,unspecified&text=phrase_param&id=case_name_mnc_param'
-    
-    #Add jurisdiction, court or year; these appear before or after #search/type=decision in url depending on whether a juirsdiction is chosen
-    if jurisdiction != 'All':
-
-        base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[jurisdiction]}')
-        
-    else:
-        
-        base_url = base_url.replace('&jId=jurisdiction_param,unspecified', '').replace('jurisdiction_param/', '')
-
-    if court != 'All':
-
-        base_url = f'https://www.canlii.org/en/jurisdiction_param/court_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&ccId=ccid_param&text=phrase_param&id=case_name_mnc_param'
-
-        base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[jurisdiction]}')
-
-        if court == 'Supreme Court of Canada':
-            
-            ccID = 'csc-scc'
-
-        elif court == 'Supreme Court of Canada - Applications for Leave':
-
-            ccID = 'csc-scc-al'
-
-        else:
-            ccID = all_ca_jurisdiction_court_pairs[jurisdiction][court]
-
-        base_url = base_url.replace('court_param', f'{all_ca_jurisdiction_court_pairs[jurisdiction][court]}')
-        
-        base_url = base_url.replace('ccid_param', ccID)
-    
-    else:
-        
-        base_url = base_url.replace('&ccId=court_param', '').replace('court_param/', '')
-
-    #if year != '':
-    #Year is a browse function
-
-    #Add court or tribunal type
-
-    if ca_court_tribunal_types[court_tribunal_type] != None:
-        base_url = base_url.replace('type_param', ca_court_tribunal_types[court_tribunal_type])
-
-    else:
-        base_url = base_url.replace('&ccType=type_param', '')
-
-    #Add dates
-
-    if before_date != '':
-        base_url = base_url.replace('before_date_param', before_date)
-
-    else:
-        print('Decision date is after not entered.')
-        #base_url = base_url.replace(f'&endDate={today}', '')
-
-    if after_date != '':
-        base_url = base_url.replace('after_date_param', after_date)
-
-    else:
-        base_url = base_url.replace('&startDate=after_date_param', '')
-
-    if ((on_this_date != '')  and (before_date == '') and (after_date == '')):
-        base_url = base_url.replace('on_this_date_param', on_this_date)
-
-    else:
-        base_url = base_url.replace('&date=on_this_date_param', '')
-
-    #Add topics 
-    if len(subjects) > 0:
-
-        subjects_text = ",".join(subjects)
-
-        base_url = base_url.replace('subjects_param', subjects_text)
-
-    else:
-        base_url = base_url.replace('&topics=subjects_param', '')
-
-    #Add search terms
-    
-    if phrase != '':
-        base_url = base_url.replace('phrase_param', phrase)
-    else:
-        base_url = base_url.replace('&text=phrase_param', '')
-
-        #base_url += f"&text={phrase}"
-
-    if case_name_mnc != '':
-        #base_url += f"&id={case_name_mnc}"
-        base_url = base_url.replace('case_name_mnc_param', case_name_mnc)
-    else:
-        base_url = base_url.replace('&id=case_name_mnc_param', '')
-
-    #Can't get noteup/discussion to work given dynamic
-
-    #if cited != '':
-        #base_url += f"&origin1=%2Fen%2Freflex%2F937222.html&nquery1={cited}"
-
-    #Directly return url
-
-    return base_url
-    
-    #headers = {'User-Agent': 'whatever'}    
-    #response = requests.get(base_url, headers=headers)
-    #response.raise_for_status()
-    # Process the response (e.g., extract relevant information)
-    # Your code here...
-    
-    #return response.url
-
-
-# %%
-#@st.cache_data(show_spinner = False, ttl=600)
-def ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound):
-    #Start counter
-    
-    counter = 1
-    
-    #Load page
-    
-    #browser = webdriver.Firefox(options=opts)
-
-    #browser = get_driver()
-    
-    browser.get(url_search_results)
-    browser.delete_all_cookies()
-    browser.refresh()
-    
-    #elements = browser.find_elements(By.CLASS_NAME, "result ")
-
-    elements = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
-    
-    #Get number of results
-    case_num = len(elements)
-    
-    #print(f"Elements: {case_num}")
-    
-    #pause.seconds(np.random.randint(10, 20))
-    
-    while case_num <= judgment_counter_bound:
-    
-        if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in browser.page_source:
-    
-            #load_more = browser.find_element(By.ID, "loadMoreResults")
-
-            load_more = Wait(browser, 5).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
-            
-            #pause.seconds(np.random.randint(10, 20))
-            
-            browser.execute_script("arguments[0].click();", load_more);
-            
-            #elements = browser.find_elements(By.CLASS_NAME, "result ")
-            
-            elements = Wait(browser, 5).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
-
-            case_num = len(elements)
-    
-        else:
-            break
-    
-    #print(f"Elements: {case_num}")
-    
-    #Start collecting cases
-    case_links = []
-    
-    for element in elements:
-        
-        if counter <= judgment_counter_bound:
-            case_info_raw = element.text
-            case_name = case_info_raw.split('\n')[1]
-            
-            url = element.get_attribute('innerHTML').split('data-lbh-document-url="')[1].split('" data-lbh-path')[0]
-            
-            case_info = {'name': case_name, 'url': url}
-            
-            case_links.append(case_info['url'])
-            
-            counter = counter + 1
-    
-        else:
-            break
-
-    #browser.close()
-    
-    return case_links
-
-# %%
-#meta_labels = ['lbh-document-url', 'lbh-title', "lbh-citation", "lbh-decision-date", "lbh-collection", "lbh-jurisdiction", "lbh-keywords", "lbh-subjects"]
-#meta_names = ['Hyperlink to CanLII', 'Case name', "Medium neutral citation", "Decision date", "Collection", "Jurisdiction", "Keywords", "Subjects"]
-
-
 # %%
 ca_meta_labels_droppable = ["Decision date", "Collection", "Jurisdiction", "Keywords", "Subjects", 'Court', 'File number', 'Other citations', 'Most recent unfavourable mention']
 
@@ -834,11 +627,20 @@ ca_meta_dict = {
  'Subjects': 'lbh-subjects'}
 
 
+# %% [markdown]
+# ## Search engine
+
 # %%
-#@st.cache_data(show_spinner = False)
 def ca_meta_judgment_dict(judgment_url):
     
-    judgment_dict = {'Case name': '', 'Medium neutral citation':'', 'Hyperlink to CanLII': link(judgment_url), 'File number': '', 'Other citations': '', 'Most recent unfavourable mention': '', 'judgment': ''}
+    judgment_dict = {'Case name': '', 
+                     'Medium neutral citation':'', 
+                     'Hyperlink to CanLII': link(judgment_url), 
+                     'File number': '', 
+                     'Other citations': '', 
+                     'Most recent unfavourable mention': '', 
+                     'judgment': ''
+                    }
 
     try:
 
@@ -888,15 +690,318 @@ def ca_meta_judgment_dict(judgment_url):
     return judgment_dict
 
 
+
 # %%
-def ca_search_url(df_master):
+#Function turning search terms to search results url
+#@st.cache_data(show_spinner = False)
+
+class ca_search_tool:
+
+    def __init__(self, 
+                jurisdiction  =  'All', 
+                court = 'All', 
+                phrase = '', 
+                case_name_mnc= '', 
+                court_tribunal_type = 'All courts and tribunals', 
+                subjects = [], 
+                on_this_date = '',
+                after_date = '',
+                before_date = '',
+                 judgment_counter_bound = default_judgment_counter_bound
+                ):
+        
+        self.jurisdiction  =  jurisdiction 
+        self.court = court
+        self.phrase = phrase
+        self.case_name_mnc= case_name_mnc
+        self.court_tribunal_type = court_tribunal_type
+        self.subjects = subjects
+        self.on_this_date = on_this_date
+        self.after_date = after_date
+        self.before_date = before_date
+
+        self.judgment_counter_bound = judgment_counter_bound
+    
+        self.results_count = 0
+    
+        self.results_url = ''
+        
+        self.case_infos = []
+
+    
+    def search(self):
+    
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        #Default base url with self.jurisdiction and self.court to remove if not entered
+        base_url = f'https://www.canlii.org/en/jurisdiction_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&jId=jurisdiction_param,unspecified&text=phrase_param&id=case_name_mnc_param'
+        
+        #Add self.jurisdiction, self.court or year; these appear before or after #search/type=decision in url depending on whether a juirsdiction is chosen
+        if self.jurisdiction != 'All':
+    
+            base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[self.jurisdiction]}')
+            
+        else:
+            
+            base_url = base_url.replace('&jId=jurisdiction_param,unspecified', '').replace('jurisdiction_param/', '')
+    
+        if self.court != 'All':
+    
+            base_url = f'https://www.canlii.org/en/jurisdiction_param/court_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&ccId=ccid_param&text=phrase_param&id=case_name_mnc_param'
+    
+            base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[self.jurisdiction]}')
+    
+            if self.court == 'Supreme self.court of Canada':
+                
+                ccID = 'csc-scc'
+    
+            elif self.court == 'Supreme self.court of Canada - Applications for Leave':
+    
+                ccID = 'csc-scc-al'
+    
+            else:
+                
+                ccID = all_ca_jurisdiction_court_pairs[self.jurisdiction][self.court]
+    
+            base_url = base_url.replace('court_param', f'{all_ca_jurisdiction_court_pairs[self.jurisdiction][self.court]}')
+            
+            base_url = base_url.replace('ccid_param', ccID)
+        
+        else:
+            
+            base_url = base_url.replace('&ccId=court_param', '').replace('court_param/', '')
+    
+        #if year != '':
+        #Year is a browse function
+    
+        #Add self.court or tribunal type
+    
+        if ca_court_tribunal_types[self.court_tribunal_type] != None:
+            base_url = base_url.replace('type_param', ca_court_tribunal_types[self.court_tribunal_type])
+    
+        else:
+            base_url = base_url.replace('&ccType=type_param', '')
+    
+        #Add dates
+    
+        if self.before_date != '':
+            base_url = base_url.replace('before_date_param', self.before_date)
+    
+        else:
+            print('Decision date is after not entered.')
+            #base_url = base_url.replace(f'&endDate={today}', '')
+    
+        if self.after_date != '':
+            base_url = base_url.replace('after_date_param', self.after_date)
+    
+        else:
+            
+            base_url = base_url.replace('&startDate=after_date_param', '')
+    
+        if ((self.on_this_date != '')  and (self.before_date == '') and (self.after_date == '')):
+            base_url = base_url.replace('on_this_date_param', self.on_this_date)
+    
+        else:
+            base_url = base_url.replace('&date=on_this_date_param', '')
+    
+        #Add topics 
+        if len(self.subjects) > 0:
+
+            if isinstance(self.subjects, str):
+
+                self.subjects = ast.literal_eval(self.subjects)
+    
+            subjects_text = ",".join(self.subjects)
+    
+            base_url = base_url.replace('subjects_param', subjects_text)
+    
+        else:
+            
+            base_url = base_url.replace('&topics=subjects_param', '')
+    
+        #Add search terms
+        
+        if self.phrase != '':
+            base_url = base_url.replace('phrase_param', self.phrase)
+        else:
+            base_url = base_url.replace('&text=phrase_param', '')
+    
+            #base_url += f"&text={self.phrase}"
+    
+        if self.case_name_mnc != '':
+            #base_url += f"&id={self.case_name_mnc}"
+            base_url = base_url.replace('case_name_mnc_param', self.case_name_mnc)
+        else:
+            base_url = base_url.replace('&id=case_name_mnc_param', '')
+    
+        #Can't get noteup/discussion to work given dynamic
+    
+        #if cited != '':
+            #base_url += f"&origin1=%2Fen%2Freflex%2F937222.html&nquery1={cited}"
+    
+        #Directly return url
+    
+        self.results_url = base_url
+
+        #Load page
+        
+        #browser = webdriver.Firefox(options=opts)
+    
+        #browser = get_driver()
+        
+        browser.get(self.results_url)
+        browser.delete_all_cookies()
+        browser.refresh()
+
+        #st.write(self.results_url)
+
+        #Get all cases from current page    
+        elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+        
+        #Get all number of results
+        #results_count_raw = Wait(browser, 10).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
+        results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
+
+        results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
+
+        #st.write(results_count_list)
+
+        if len(results_count_list) > 0:
+        
+            results_count = results_count_list[0]
+        
+            if isinstance(results_count, tuple):
+        
+                results_count = results_count[0]
+
+            self.results_count = int(float(results_count))
+
+        if self.results_count > 0:
+
+            #Get number of results from current page   
+            case_num = len(elements)
+        
+            #print(f"Elements: {case_num}")
+            
+            #pause.seconds(np.random.randint(10, 20))
+            
+            while case_num <= min(self.judgment_counter_bound, self.results_count):
+            
+                if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in browser.page_source:
+            
+                    #load_more = browser.find_element(By.ID, "loadMoreResults")
+        
+                    load_more = Wait(browser, 10).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
+                    
+                    #pause.seconds(np.random.randint(10, 20))
+                    
+                    browser.execute_script("arguments[0].click();", load_more);
+                    
+                    #elements = browser.find_elements(By.CLASS_NAME, "result ")
+                    
+                    elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+        
+                    case_num = len(elements)
+            
+                else:
+                    
+                    break
+            
+            #print(f"Elements: {case_num}")
+            
+            #Start collecting cases    
+            counter = 0
+                        
+            for element in elements:
+                
+                if counter < min(self.judgment_counter_bound, self.results_count):
+
+                    url = element.get_attribute('innerHTML').split('data-lbh-document-url="')[1].split('" data-lbh-path')[0]
+                    
+                    case_info_raw = element.text
+
+                    case_info_list = case_info_raw.split('\n')
+
+                    #Initialise default case name and citation
+                    case_name = case_info_list[1]
+
+                    citation = ''
+
+                    #Try to get case name and citation separately
+                    case_name_citation = case_info_list[1]
+
+                    citation_year_list = re.findall(r'(\,\s\d{4})', case_name_citation)
+
+                    if len(citation_year_list) > 0:
+
+                        splitter = citation_year_list[0]
+
+                        if isinstance(splitter, tuple):
+
+                            splitter = splitter[0]
+
+                        case_name = case_name_citation.split(splitter)[0]
+                        
+                        citation = splitter.replace(', ', '') + case_name_citation.split(splitter)[-1]                    
+                    
+                    court = case_info_list[2]
+
+                    date = case_info_list[3].split(' ')[0]
+
+                    #keywords = case_info_list[4]
+
+                    #subject = case_info_list[-1]
+                                        
+                    case_info = {'Case name': case_name, 
+                                 'Citations': citation,
+                                  'Hyperlink to CanLII': url,
+                                'Court': court,
+                                'Date': date,
+                                 #'Keywords': keywords,
+                                 #'Subjects': subject
+                                }
+                    
+                    self.case_infos.append(case_info)
+                    
+                    counter += 1
+
+                else:
+                    break
+            
+        #browser.close()
+            
+    #get judgments
+    def get_judgments(self):
+
+        self.case_infos_w_judgments = []
+
+        #Search if not done yet
+        if len(self.case_infos) == 0:
+
+            self.search()
+
+        for case_info in self.case_infos:
+
+            judgment_url = case_info['Hyperlink to CanLII']
+
+            judgment_dict = ca_meta_judgment_dict(judgment_url)
+    
+            self.case_infos_w_judgments.append(judgment_dict)
+
+            print(f"Scrapped {len(self.case_infos_w_judgments)}/{self.judgment_counter_bound} judgments.")
+            
+            pause.seconds(np.random.randint(15, 30))
+
+
+# %%
+def ca_search_preview(df_master):
     df_master = df_master.fillna('')
     
     #Combining catchwords into new column
     
     #Conduct search
     
-    url = ca_search(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
+    ca_search = ca_search_tool(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
                                    court = df_master.loc[0, 'Courts'], 
                                    phrase = df_master.loc[0, 'Document text'], 
                                    case_name_mnc= df_master.loc[0, 'Case name, citation or docket'],
@@ -905,11 +1010,21 @@ def ca_search_url(df_master):
                                    on_this_date = df_master.loc[0, 'Decision date is'],
                                     after_date = df_master.loc[0, 'Decision date is after'],
                                     before_date = df_master.loc[0, 'Decision date is before'], 
+                                judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']),
                                    #cited = '', 
                                    #year = ''
                                   )
     
-    return url
+    ca_search.search()
+    
+    results_count = ca_search.results_count
+    case_infos = ca_search.case_infos
+
+    results_url = ca_search.results_url
+
+    #st.write(results_url)
+    
+    return {'results_url': results_url, 'results_count': results_count, 'case_infos': case_infos}
 
 
 # %% [markdown]
@@ -920,7 +1035,6 @@ def ca_search_url(df_master):
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
 from functions.gpt_functions import basic_model, flagship_model#, role_content
-
 
 
 # %%
@@ -953,7 +1067,7 @@ def ca_run(df_master):
     
     #Conduct search
     
-    url_search_results = ca_search(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
+    ca_search = ca_search_tool(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
                                    court = df_master.loc[0, 'Courts'], 
                                    phrase = df_master.loc[0, 'Document text'], 
                                    case_name_mnc= df_master.loc[0, 'Case name, citation or docket'],
@@ -962,22 +1076,16 @@ def ca_run(df_master):
                                    on_this_date = df_master.loc[0, 'Decision date is'],
                                     after_date = df_master.loc[0, 'Decision date is after'],
                                     before_date = df_master.loc[0, 'Decision date is before'], 
+                                  judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                                    #cited = '', 
                                    #year = ''
                                   )
-        
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    judgments_links = ca_search_results_to_judgment_links(url_search_results, judgment_counter_bound)
+    ca_search.get_judgments()
+    
+    for judgment_json in ca_search.case_infos_w_judgments:
 
-    for link in judgments_links:
-
-        judgment_dict = ca_meta_judgment_dict(link)
-
-        judgments_file.append(judgment_dict)
-        pause.seconds(np.random.randint(10, 20))
-
-        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
+        judgments_file.append(judgment_json)
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -1020,3 +1128,72 @@ def ca_run(df_master):
                 pass
     
     return df_updated
+
+
+# %%
+#Obtain parameters
+
+@st.cache_data(show_spinner = False, ttl=600)
+def ca_batch(df_master):
+    df_master = df_master.fillna('')
+
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
+    
+    #Create judgments file
+    judgments_file = []
+    
+    #Conduct search
+        
+    ca_search = ca_search_tool(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
+                                   court = df_master.loc[0, 'Courts'], 
+                                   phrase = df_master.loc[0, 'Document text'], 
+                                   case_name_mnc= df_master.loc[0, 'Case name, citation or docket'],
+                                  subjects = df_master.loc[0, 'Subjects'],
+                                   court_tribunal_type = df_master.loc[0, 'Court or tribunal type'], 
+                                   on_this_date = df_master.loc[0, 'Decision date is'],
+                                    after_date = df_master.loc[0, 'Decision date is after'],
+                                    before_date = df_master.loc[0, 'Decision date is before'], 
+                                  judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                                   #cited = '', 
+                                   #year = ''
+                                  )
+
+    ca_search.get_judgments()
+    
+    for judgment_json in ca_search.case_infos_w_judgments:
+
+        judgments_file.append(judgment_json)
+
+    #Create and export json file with search results
+    json_individual = json.dumps(judgments_file, indent=2)
+
+    df_individual = pd.read_json(json_individual)
+
+    #Instruct GPT
+    
+    #GPT model
+
+    if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        gpt_model = flagship_model
+    else:        
+        gpt_model = basic_model
+        
+    #apply GPT_individual to each respondent's judgment spreadsheet
+
+    #Need to convert date column to string
+    if 'Date' in df_individual.columns:
+
+        df_individual['Date'] = df_individual['Date'].astype(str)
+    
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+
+    questions_json = df_master.loc[0, 'questions_json']
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
+    #Send batch input to gpt
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    
+    return batch_record_df_individual

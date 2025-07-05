@@ -613,6 +613,7 @@ if preview_button:
         st.warning('You must enter some search terms.')
 
     else:
+        
         with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
             
             df_master = hk_create_df()
@@ -646,7 +647,6 @@ if preview_button:
             else:
                 st.error(no_results_msg)
                 
-
 
 # %% [markdown]
 # ## Buttons

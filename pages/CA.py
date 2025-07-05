@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, save_input, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, save_input, download_buttons, display_df
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -69,7 +69,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # Canada search engine
 
 # %%
-from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search, ca_search_url, ca_search_results_to_judgment_links, ca_meta_labels_droppable, ca_meta_dict, ca_meta_judgment_dict
+from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search_tool, ca_search_preview, ca_meta_labels_droppable, ca_meta_dict
 
 
 # %%
@@ -442,19 +442,6 @@ st.caption('If left blank, all subjects will be covered.')
             #st.session_state["year"] = ''
 #else:
     #st.session_state["year"] = '' 
- 
-st.info("""You can preview the judgments returned by your search terms. You may have to unblock a popped up window, refresh this page, and re-enter your search terms.
-""")
-
-with stylable_container(
-    "purple",
-    css_styles="""
-    button {
-        background-color: purple;
-        color: white;
-    }""",
-):
-    preview_button = st.button(label = 'PREVIEW on CanLII (in a popped up window)')
 
 st.subheader("Judgment metadata collection")
 
@@ -464,6 +451,68 @@ You will always obtain case names and medium neutral citations.
 """)
 
 meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+
+st.info("""You can preview the results returned by your search terms.""")
+
+with stylable_container(
+    "purple",
+    css_styles="""
+    button {
+        background-color: purple;
+        color: white;
+    }""",
+):
+    preview_button = st.button(label = 'PREVIEW')
+
+
+# %%
+
+# %% [markdown]
+# ## Preview
+
+# %%
+if preview_button:
+    
+    ca_search_terms = str(case_name_mnc_entry)  + str(phrase_entry) + str(on_this_date_entry) + str(after_date_entry) + str(before_date_entry) + str(subjects_entry)
+    
+    if ca_search_terms.replace('None', '') == "":
+
+        st.warning('You must enter some search terms.')
+
+    else:
+        
+        with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
+            
+            df_master = ca_create_df()
+    
+            search_results_w_count = ca_search_preview(df_master)
+            
+            results_count = search_results_w_count['results_count']
+    
+            case_infos = search_results_w_count['case_infos']
+    
+            results_url = search_results_w_count['results_url']
+    
+            if results_count > 0:
+    
+                df_preview = pd.DataFrame(case_infos)
+    
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+    
+                df_preview = display_df_dict['df']
+    
+                link_heading_config = display_df_dict['link_heading_config']
+    
+                #Display search results
+                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+    
+                st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+        
+            else:
+                st.error(no_results_msg)
 
 
 # %% [markdown]
@@ -494,15 +543,6 @@ keep_button = st.button('SAVE')
 
 # %% [markdown]
 # # Save and run
-
-# %%
-if preview_button:
-    
-    df_master = ca_create_df()
-    
-    judgments_url = ca_search_url(df_master)
-    
-    open_page(judgments_url)
 
 # %%
 if keep_button:
@@ -560,19 +600,14 @@ if next_button:
 
             try:
 
-                ca_url_to_check = ca_search_url(df_master)
-                ca_urls = ca_search_results_to_judgment_links(ca_url_to_check, default_judgment_counter_bound)
-                #browser.get(ca_url_to_check)
-                #browser.delete_all_cookies()
-                #browser.refresh()
-                #ca_elements = browser.find_elements(By.CLASS_NAME, "result ")
-                #ca_case_num = len(ca_elements)
+                search_results_w_count = ca_search_preview(df_master)
                 
-                #if int(ca_case_num) == 0:
-                if len(ca_urls) == 0:
+                results_count = search_results_w_count['results_count']
+                
+                if results_count == 0:
                     
                     st.error(no_results_msg)
-                
+    
                 else:
                     
                     save_input(df_master)
