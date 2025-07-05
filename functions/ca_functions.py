@@ -40,6 +40,7 @@ import os
 import io
 from io import BytesIO
 import ast
+import urllib
 
 #Streamlit
 import streamlit as st
@@ -631,17 +632,24 @@ ca_meta_dict = {
 # ## Search engine
 
 # %%
-def ca_meta_judgment_dict(judgment_url):
-    
-    judgment_dict = {'Case name': '', 
-                     'Medium neutral citation':'', 
-                     'Hyperlink to CanLII': link(judgment_url), 
-                     'File number': '', 
-                     'Other citations': '', 
+def ca_meta_judgment_dict(case_info):
+
+    judgment_url = case_info['Hyperlink to CanLII']
+
+    #Make link clickable
+    case_info['Hyperlink to CanLII'] = link(case_info['Hyperlink to CanLII'])
+
+    #Add default values
+    case_info.update({'File number': '', 
                      'Most recent unfavourable mention': '', 
                      'judgment': ''
-                    }
+                         }
+                        )
 
+    #Remove sypnosis
+    if 'Synopsis' in case_info.keys():
+        case_info.pop('Synopsis')
+    
     try:
 
         headers = {'User-Agent': 'whatever'}
@@ -655,7 +663,7 @@ def ca_meta_judgment_dict(judgment_url):
                 meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
             except:
                 meta_content = ''
-            judgment_dict.update({meta: meta_content})
+            case_info.update({meta: meta_content})
     
         #Date, case number, citations
         
@@ -663,32 +671,31 @@ def ca_meta_judgment_dict(judgment_url):
         
         for meta in extra_metas:
             #if 'date:' in meta.text.lower():
-                #judgment_dict.update({'Date': meta.text})
+                #case_info.update({'Date': meta.text})
         
             if 'file number:' in meta.text.lower():
-                judgment_dict.update({'File number': meta.text.replace('\n', '').replace('File number:', '').replace('File numbers:', '')})
+                case_info.update({'File number': meta.text.replace('\n', '').replace('File number:', '').replace('File numbers:', '')})
         
             #if 'citation:' in meta.text.lower():
-                #judgment_dict.update({'Citation': meta.text})
+                #case_info.update({'Citation': meta.text})
         
             if 'other citation' in meta.text.lower():
-                judgment_dict.update({'Other citations': meta.text.replace('\n', '').replace('Other citation:', '').replace('Other citations:', '')})
+                case_info.update({'Other citations': meta.text.replace('\n', '').replace('Other citation:', '').replace('Other citations:', '')})
     
             if 'Most recent unfavourable mention' in meta.text.lower():
-                judgment_dict.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
+                case_info.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
     
         #Judgment text
     
         judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip=True)
     
-        judgment_dict.update({'judgment': judgment_text})
+        case_info.update({'judgment': judgment_text})
 
     except Exception as e:
-        print(f"{judgment_dict['Case name']}: judgment not scrapped")
+        print(f"{case_info['Case name']}: judgment not scrapped")
         print(e)
     
-    return judgment_dict
-
+    return case_info
 
 
 # %%
@@ -728,13 +735,12 @@ class ca_search_tool:
         
         self.case_infos = []
 
-    
     def search(self):
     
         today = datetime.now().strftime("%Y-%m-%d")
         
         #Default base url with self.jurisdiction and self.court to remove if not entered
-        base_url = f'https://www.canlii.org/en/jurisdiction_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&jId=jurisdiction_param,unspecified&text=phrase_param&id=case_name_mnc_param'
+        base_url = f'https://www.canlii.org/jurisdiction_param/?origLang=en#search/type=decision&jId=jurisdiction_param,unspecified'
         
         #Add self.jurisdiction, self.court or year; these appear before or after #search/type=decision in url depending on whether a juirsdiction is chosen
         if self.jurisdiction != 'All':
@@ -747,7 +753,7 @@ class ca_search_tool:
     
         if self.court != 'All':
     
-            base_url = f'https://www.canlii.org/en/jurisdiction_param/court_param/#search/type=decision&date=on_this_date_param&startDate=after_date_param&endDate={today}&ccType=type_param&topics=subjects_param&ccId=ccid_param&text=phrase_param&id=case_name_mnc_param'
+            base_url = f'https://www.canlii.org/jurisdiction_param/court_param/?origLang=en#search/type=decision&ccId=ccid_param'
     
             base_url = base_url.replace('jurisdiction_param', f'{all_ca_jurisdictions[self.jurisdiction]}')
     
@@ -771,38 +777,37 @@ class ca_search_tool:
             
             base_url = base_url.replace('&ccId=court_param', '').replace('court_param/', '')
     
-        #if year != '':
-        #Year is a browse function
-    
+        #D/W about year as it is a browse function
+
+        #Add seasrch params
+
+        params = {}
+        
         #Add self.court or tribunal type
     
         if ca_court_tribunal_types[self.court_tribunal_type] != None:
-            base_url = base_url.replace('type_param', ca_court_tribunal_types[self.court_tribunal_type])
-    
-        else:
-            base_url = base_url.replace('&ccType=type_param', '')
-    
+
+            params.update({'ccType': ca_court_tribunal_types[self.court_tribunal_type]})
+                
         #Add dates
     
         if self.before_date != '':
-            base_url = base_url.replace('before_date_param', self.before_date)
-    
+
+            params.update({'endDate': self.before_date})
+                
         else:
+
             print('Decision date is after not entered.')
-            #base_url = base_url.replace(f'&endDate={today}', '')
-    
-        if self.after_date != '':
-            base_url = base_url.replace('after_date_param', self.after_date)
-    
-        else:
             
-            base_url = base_url.replace('&startDate=after_date_param', '')
+            params.update({'endDate': today})
+
+        if self.after_date != '':
+
+            params.update({'startDate': self.after_date})
     
         if ((self.on_this_date != '')  and (self.before_date == '') and (self.after_date == '')):
-            base_url = base_url.replace('on_this_date_param', self.on_this_date)
-    
-        else:
-            base_url = base_url.replace('&date=on_this_date_param', '')
+
+            params.update({'date': self.on_this_date})
     
         #Add topics 
         if len(self.subjects) > 0:
@@ -812,36 +817,24 @@ class ca_search_tool:
                 self.subjects = ast.literal_eval(self.subjects)
     
             subjects_text = ",".join(self.subjects)
-    
-            base_url = base_url.replace('subjects_param', subjects_text)
-    
-        else:
-            
-            base_url = base_url.replace('&topics=subjects_param', '')
+
+            params.update({'topics': subjects_text})
     
         #Add search terms
         
         if self.phrase != '':
-            base_url = base_url.replace('phrase_param', self.phrase)
-        else:
-            base_url = base_url.replace('&text=phrase_param', '')
-    
-            #base_url += f"&text={self.phrase}"
+
+            params.update({'text': self.phrase})
     
         if self.case_name_mnc != '':
-            #base_url += f"&id={self.case_name_mnc}"
-            base_url = base_url.replace('case_name_mnc_param', self.case_name_mnc)
-        else:
-            base_url = base_url.replace('&id=case_name_mnc_param', '')
+
+            params.update({'id': self.case_name_mnc})
     
         #Can't get noteup/discussion to work given dynamic
     
-        #if cited != '':
-            #base_url += f"&origin1=%2Fen%2Freflex%2F937222.html&nquery1={cited}"
+        #return url
     
-        #Directly return url
-    
-        self.results_url = base_url
+        self.results_url = base_url + '&' + urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',')
 
         #Load page
         
@@ -922,10 +915,21 @@ class ca_search_tool:
 
                     case_info_list = case_info_raw.split('\n')
 
+                    #Remove 'AI generated'
+                    case_info_list_len = len(case_info_list)
+
+                    for list_index in range(case_info_list_len-1, -1, -1):
+
+                        if re.search(r'^ai.generated', case_info_list[list_index].lower()):
+
+                            del case_info_list[list_index]
+                    
                     #Initialise default case name and citation
                     case_name = case_info_list[1]
 
-                    citation = ''
+                    mnc = ''
+                    
+                    other_citations = ''
 
                     #Try to get case name and citation separately
                     case_name_citation = case_info_list[1]
@@ -942,23 +946,40 @@ class ca_search_tool:
 
                         case_name = case_name_citation.split(splitter)[0]
                         
-                        citation = splitter.replace(', ', '') + case_name_citation.split(splitter)[-1]                    
+                        mnc_other_citations = splitter.replace(', ', '') + case_name_citation.split(splitter)[-1]
+
+                        mnc_list = re.findall(r'(\d{4}\sCanLII\s\d+.+\,\s)', mnc_other_citations)
+
+                        if len(mnc_list) > 0:
+
+                            mnc = mnc_list[0]
+
+                            if isinstance(mnc, tuple):
+
+                                mnc = mnc[0]
+
+                            other_citations = mnc_other_citations.replace(mnc, '')
+
+                            mnc = mnc.replace(', ', '')
+
+                        else:
+                            
+                            mnc = mnc_other_citations
+                        
                     
                     court = case_info_list[2]
 
                     date = case_info_list[3].split(' ')[0]
 
-                    #keywords = case_info_list[4]
-
-                    #subject = case_info_list[-1]
+                    synopsis = '\n'.join(case_info_list[4:])
                                         
                     case_info = {'Case name': case_name, 
-                                 'Citations': citation,
+                                 'Medium neutral citation': mnc,
                                   'Hyperlink to CanLII': url,
+                                  'Other citations': other_citations,
                                 'Court': court,
-                                'Date': date,
-                                 #'Keywords': keywords,
-                                 #'Subjects': subject
+                                'Decision date': date,
+                                 'Synopsis': synopsis,
                                 }
                     
                     self.case_infos.append(case_info)
@@ -969,7 +990,7 @@ class ca_search_tool:
                     break
             
         #browser.close()
-            
+
     #get judgments
     def get_judgments(self):
 
@@ -982,9 +1003,7 @@ class ca_search_tool:
 
         for case_info in self.case_infos:
 
-            judgment_url = case_info['Hyperlink to CanLII']
-
-            judgment_dict = ca_meta_judgment_dict(judgment_url)
+            judgment_dict = ca_meta_judgment_dict(case_info)
     
             self.case_infos_w_judgments.append(judgment_dict)
 

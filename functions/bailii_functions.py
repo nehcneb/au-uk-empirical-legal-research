@@ -373,18 +373,17 @@ class bailii_search_tool:
     
         #params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
         
-        headers = {'User-Agent': 'whatever'}
+        #headers = {'User-Agent': 'whatever'}
         #response = requests.get(base_url, params=params, headers=headers)
     
         #soup = BeautifulSoup(response.content, "lxml")
     
-        self.results_url = base_url + urllib.parse.urlencode(params)
+        self.results_url = base_url + urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
     
-        print(f"self.results_url == {self.results_url}")
+        #print(f"self.results_url == {self.results_url}")
     
         #return {'results_url': self.results_url, 'soup': self.soup}
 
-        
     def search(self):
 
         if len(self.results_url) == 0:

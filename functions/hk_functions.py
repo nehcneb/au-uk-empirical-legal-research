@@ -335,8 +335,6 @@ class hk_search_tool:
         self.sortby = sortby
         
         self.judgment_counter_bound = judgment_counter_bound
-
-        self.params = []
         
         self.page = 1
         
@@ -557,18 +555,16 @@ class hk_search_tool:
         #Save params
         params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
         
-        self.params = params
-
         #API url
-        search_form = 'https://legalref.judiciary.hk/lrs/common/search/search_result_form.jsp?isadvsearch=1'
+        base_url = 'https://legalref.judiciary.hk/lrs/common/search/search_result_form.jsp?isadvsearch=1'
 
         #Get results page
-        response = requests.get(search_form, params=self.params, headers= {'User-Agent': 'whatever'}, allow_redirects=True)
+        #response = requests.get(base_url, params = params, headers= {'User-Agent': 'whatever'}, allow_redirects=True)
 
         #Update return values
-        self.results_url = response.url
+        #self.results_url = response.url
 
-        #self.results_url = search_form + urllib.parse.urlencode(params)
+        self.results_url = base_url + '&' + params
         
         #Try to get search results a few times
 
@@ -580,6 +576,9 @@ class hk_search_tool:
             try_counter += 1
             
             try:
+                
+                #Pause to avoid getting kicked out
+                pause.seconds(np.random.randint(5, 10))
                 
                 browser.get(self.results_url)
                 #browser.delete_all_cookies()
