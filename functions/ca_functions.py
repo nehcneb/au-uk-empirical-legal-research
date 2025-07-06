@@ -86,6 +86,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver import ActionChains
 
 options = Options()
 options.add_argument("--disable-gpu")
@@ -707,13 +708,13 @@ class ca_search_tool:
     def __init__(self, 
                 jurisdiction  =  'All', 
                 court = 'All', 
-                phrase = '', 
-                case_name_mnc= '', 
+                phrase = None, 
+                case_name_mnc= None, 
                 court_tribunal_type = 'All courts and tribunals', 
                 subjects = [], 
-                on_this_date = '',
-                after_date = '',
-                before_date = '',
+                on_this_date = None,
+                after_date = None,
+                before_date = None,
                  judgment_counter_bound = default_judgment_counter_bound
                 ):
         
@@ -737,7 +738,7 @@ class ca_search_tool:
 
     def search(self):
     
-        today = datetime.now().strftime("%Y-%m-%d")
+        #today = datetime.now().strftime("%Y-%m-%d")
         
         #Default base url with self.jurisdiction and self.court to remove if not entered
         base_url = f'https://www.canlii.org/jurisdiction_param/?origLang=en#search/type=decision&jId=jurisdiction_param,unspecified'
@@ -791,22 +792,24 @@ class ca_search_tool:
                 
         #Add dates
     
-        if self.before_date != '':
+        if self.before_date != None:
 
             params.update({'endDate': self.before_date})
                 
-        else:
+        #else:
 
-            print('Decision date is after not entered.')
+            #print('Decision date is after not entered.')
             
-            params.update({'endDate': today})
+            #params.update({'endDate': today})
 
-        if self.after_date != '':
+        if self.after_date != None:
 
             params.update({'startDate': self.after_date})
-    
-        if ((self.on_this_date != '')  and (self.before_date == '') and (self.after_date == '')):
 
+        #if ((self.on_this_date != '')  and (self.before_date == '') and (self.after_date == '')):
+        
+        if self.on_this_date != None:
+            
             params.update({'date': self.on_this_date})
     
         #Add topics 
@@ -822,11 +825,11 @@ class ca_search_tool:
     
         #Add search terms
         
-        if self.phrase != '':
+        if self.phrase != None:
 
             params.update({'text': self.phrase})
     
-        if self.case_name_mnc != '':
+        if self.case_name_mnc != None:
 
             params.update({'id': self.case_name_mnc})
     
@@ -836,38 +839,63 @@ class ca_search_tool:
     
         self.results_url = base_url + '&' + urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',')
 
+        #st.write(self.results_url)
+        
         #Load page
         
         #browser = webdriver.Firefox(options=opts)
     
         #browser = get_driver()
-        
+
+        #Get search results
         browser.get(self.results_url)
         browser.delete_all_cookies()
         browser.refresh()
 
-        #st.write(self.results_url)
+        try:
+            accept_all_cookies = Wait(browser, 10).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
+            accept_all_cookies.click()
 
-        #Get all cases from current page    
-        elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
-        
-        #Get all number of results
-        #results_count_raw = Wait(browser, 10).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
-        results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
+        except Exception as e:
+            print(f"Did not accept all cookies due to error: {e}")
 
-        results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
+        try:
+            search_button = Wait(browser, 10).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
+            search_button.click()
 
-        #st.write(results_count_list)
+        except Exception as e:
+            
+            print(f"Did not click search button due to error: {e}")
 
-        if len(results_count_list) > 0:
-        
-            results_count = results_count_list[0]
-        
-            if isinstance(results_count, tuple):
-        
-                results_count = results_count[0]
+        #Check if any cases found
+        try:
+            #Get all cases from current page    
+            #elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+            elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
+            
+            #Get all number of results
+            #results_count_raw = Wait(browser, 10).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
+            results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
+    
+            results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
+    
+            #st.write(results_count_list)
+    
+            if len(results_count_list) > 0:
+            
+                results_count = results_count_list[0]
+            
+                if isinstance(results_count, tuple):
+            
+                    results_count = results_count[0]
+    
+                self.results_count = int(float(results_count))
 
-            self.results_count = int(float(results_count))
+        except Exception as e:
+
+            print(f"No cases found due to error: {e}")
+
+        print(f"Number of cases found == {self.results_count}")
 
         if self.results_count > 0:
 
@@ -879,24 +907,46 @@ class ca_search_tool:
             #pause.seconds(np.random.randint(10, 20))
             
             while case_num <= min(self.judgment_counter_bound, self.results_count):
-            
+
+                print(f"Number of cases on current page  == {case_num}")
+
                 if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in browser.page_source:
             
                     #load_more = browser.find_element(By.ID, "loadMoreResults")
+
+                    try:
         
-                    load_more = Wait(browser, 10).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
-                    
-                    #pause.seconds(np.random.randint(10, 20))
-                    
-                    browser.execute_script("arguments[0].click();", load_more);
-                    
-                    #elements = browser.find_elements(By.CLASS_NAME, "result ")
-                    
-                    elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
-        
-                    case_num = len(elements)
+                        load_more = Wait(browser, 10).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
+                        
+                        #pause.seconds(np.random.randint(10, 20))
+                        
+                        browser.execute_script("arguments[0].click();", load_more);
+                        
+                        #elements = browser.find_elements(By.CLASS_NAME, "result ")
+                        
+                        elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+
+                        if len(elements) > case_num:
+                            
+                            case_num = len(elements)
+
+                        else:
+
+                            #case_num = min(self.judgment_counter_bound, self.results_count) + 1
+    
+                            break
+
+                    except Exception as e:
+                        
+                        print(f"Can't load more results due to error: {e}")
+
+                        #case_num = min(self.judgment_counter_bound, self.results_count) + 1
+
+                        break
             
                 else:
+
+                    #case_num = min(self.judgment_counter_bound, self.results_count) + 1
                     
                     break
             

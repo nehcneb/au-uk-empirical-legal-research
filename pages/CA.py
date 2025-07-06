@@ -139,6 +139,7 @@ def ca_create_df():
         
     #Other entries
     case_name_mnc = case_name_mnc_entry
+    
     phrase = phrase_entry
 
     #Court/tribunal types
@@ -150,7 +151,7 @@ def ca_create_df():
 
     #dates
     
-    on_this_date = ''
+    on_this_date = None
 
     try:
 
@@ -159,7 +160,7 @@ def ca_create_df():
     except:
         print('on_this_date not entered.')
     
-    before_date = ''
+    before_date = None
 
     try:
 
@@ -168,7 +169,7 @@ def ca_create_df():
     except:
         print('before_date not entered.')
 
-    after_date = ''
+    after_date = None
         
     try:
         after_date = after_date_entry.strftime("%Y-%m-%d")
