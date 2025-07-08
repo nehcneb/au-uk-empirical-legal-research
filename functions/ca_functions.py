@@ -737,7 +737,10 @@ class ca_search_tool:
         self.case_infos = []
 
     def search(self):
-    
+
+        #Reset infos of cases found
+        self.case_infos = []
+        
         #today = datetime.now().strftime("%Y-%m-%d")
         
         #Default base url with self.jurisdiction and self.court to remove if not entered

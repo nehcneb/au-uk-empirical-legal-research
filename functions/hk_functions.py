@@ -243,47 +243,6 @@ hc_appeal_dict = {'Court of Appeal': hk_appeals_from_ca,
 'Family Court': hk_appeals_from_fc
 }
 
-
-# %%
-#Function for changing selection menu for type on Streamlit
-
-def dict_value_or_none(some_dict, some_key):
-
-    if (some_key in [None, '']) or (not isinstance(some_dict, dict)):
-
-        return None
-    
-    elif some_key not in some_dict.keys():
-        
-        return None
-    
-    else:
-
-        return_value = some_dict[some_key]
-
-        if isinstance(return_value, dict):
-            
-            return_value = [*return_value.keys()]
-        
-        return return_value
-    
-
-
-# %%
-#Function for turning month or year choice to number or empty string
-
-def month_year_to_str(x):
-
-    if not re.search(r'\d+', str(x)):
-
-        return ''
-
-    else:
-        
-        return re.findall(r'\d+', str(x))[0]
-
-
-
 # %% [markdown]
 # ## Search engine
 
@@ -1012,7 +971,7 @@ class hk_search_tool:
         if len(appendices_dict) > 0:
             for app_key in appendices_dict.keys():
                 app_text = appendices_dict[app_key]
-                case_info_w_judgment.update({f'appendix to judgment: {app_key}': app_text})
+                case_info_w_judgment.update({f'appendix: {app_key}': app_text})
 
         #Make links clickable
         for key in case_info_w_judgment:
@@ -1037,7 +996,7 @@ class hk_search_tool:
         #Get judgments from cases shown on the initial page (page 1)
         for case_info in self.case_infos:
             
-            if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+            if len(self.case_infos_w_judgments) < min(self.results_count, self.judgment_counter_bound):
 
                 #Pause to avoid getting kicked out
                 pause.seconds(np.random.randint(5, 10))
@@ -1063,7 +1022,7 @@ class hk_search_tool:
             #Get judgments from cases shown on the initial page (page 1)
             for case_info in self.case_infos:
                 
-                if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+                if len(self.case_infos_w_judgments) < min(self.results_count, self.judgment_counter_bound):
     
                     #Pause to avoid getting kicked out
                     pause.seconds(np.random.randint(5, 10))
@@ -1196,7 +1155,7 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 role_content_hk = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. 
 Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a page or paragraph reference to that part of the judgment or metadata. 
 If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". 
-The "judgment" field of the JSON given to you is in English or Chinese or both. Please answer questions based on either or both languages. 
+The JSON given to you is in English or Chinese or both. Please answer questions based on either or both languages. 
 """
 
 #Respond in JSON form. In your response, produce as many keys as you need. 
@@ -1276,7 +1235,7 @@ def hk_run(df_master):
     #Pop judgment and appendices
     if pop_judgment() > 0:
         for col in df_updated.columns:
-            if (col == 'judgment') or (re.search(r'^(appendix\sto\sjudgment)', col)):
+            if (col == 'judgment') or (re.search(r'^appendix', col)):
                 df_updated.pop(col)
 
     #Pop empty columns (eg columns of Chinese original, English translation)
@@ -1289,3 +1248,76 @@ def hk_run(df_master):
 
 
 # %%
+#Obtain parameters
+
+@st.cache_data(show_spinner = False, ttl=600)
+def hk_batch(df_master):
+    df_master = df_master.fillna('')
+
+    #Apply split and format functions for headnotes choice, court choice and GPT questions
+     
+    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
+    
+    #Create judgments file
+    judgments_file = []
+    
+    #Conduct search
+        
+    hk_search = hk_search_function(
+                    any_of_these_words = df_master.loc[0, 'Any of these words'], 
+                    these_words_in_any_order = df_master.loc[0, 'These words in any order'], 
+                    this_phrase = df_master.loc[0, 'This phrase'], 
+                    stemming = df_master.loc[0, 'Stemming'], 
+                    date_of_judgment = df_master.loc[0, 'Date of judgment'],
+                    coram = df_master.loc[0, 'Coram'],
+                    parties = df_master.loc[0, 'Parties'], 
+                    representation = df_master.loc[0, 'Representation'], 
+                    offence = df_master.loc[0, 'Offence'],
+                    court_levels_filter = df_master.loc[0, 'Court level(s) filter'], 
+                    on_appeal_from_court = df_master.loc[0, 'On appeal from (court)'],
+                    on_appeal_from_type = df_master.loc[0, 'On appeal from (type)'], 
+                    medium_neutral_citation = df_master.loc[0, 'Medium neutral citation'], 
+                    case_number = df_master.loc[0, 'Case number'], 
+                    reported_citation = df_master.loc[0, 'Reported citation'], 
+                    databases = df_master.loc[0, 'Database(s)'], 
+                    sortby = df_master.loc[0, 'Sort by'],
+                    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments']),
+                )
+
+    hk_search.get_judgments()
+    
+    for judgment_json in hk_search.case_infos_w_judgments:
+
+        judgments_file.append(judgment_json)
+
+    #Create and export json file with search results
+    json_individual = json.dumps(judgments_file, indent=2)
+
+    df_individual = pd.read_json(json_individual)
+
+    #Instruct GPT
+    
+    #GPT model
+
+    if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        gpt_model = flagship_model
+    else:        
+        gpt_model = basic_model
+        
+    #apply GPT_individual to each respondent's judgment spreadsheet
+
+    #Need to convert date column to string
+    if 'Date' in df_individual.columns:
+
+        df_individual['Date'] = df_individual['Date'].astype(str)
+    
+    GPT_activation = int(df_master.loc[0, 'Use GPT'])
+
+    questions_json = df_master.loc[0, 'questions_json']
+
+    system_instruction = df_master.loc[0, 'System instruction']
+    
+    #Send batch input to gpt
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    
+    return batch_record_df_individual

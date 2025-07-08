@@ -1071,6 +1071,9 @@ class us_search_tool:
                 available_only = True,
               ):
 
+        #Reset infos of cases found
+        self.case_infos = []
+        
         #Determine document type sought
         self.doc_type_value = us_collections[doc_type]
 

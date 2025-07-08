@@ -146,8 +146,8 @@ def us_create_df():
 
     filtered_by_court = False
     
-    if Filtered_by_court_toggle:
-        filtered_by_court = Filtered_by_court_toggle
+    if filtered_by_court_toggle:
+        filtered_by_court = filtered_by_court_toggle
     
     if ((collection_entry ==  list(us_collections.keys())[0]) and (filtered_by_court)):
 
@@ -471,9 +471,9 @@ if collection_entry ==  list(us_collections.keys())[0]:
 
     st.write(f"For information about case coverage, please visit [CourtListener](https://www.courtlistener.com/help/coverage/opinions/).")
 
-    Filtered_by_court_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state['df_master'].loc[0, 'Filtered by court'])
+    filtered_by_court_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state['df_master'].loc[0, 'Filtered by court'])
     
-    if Filtered_by_court_toggle:
+    if filtered_by_court_toggle:
     
         st.warning('Please select courts to cover.')
     
@@ -509,7 +509,7 @@ if collection_entry ==  list(us_collections.keys())[0]:
                                               default = st.session_state['df_master'].loc[0, "More Courts"]
                                              )
             
-    else: #if Filtered_by_court_toggle == False
+    else: #if filtered_by_court_toggle == False
         
         st.info('All courts will be covered.')
         
@@ -525,9 +525,9 @@ else: #If pacer records chosen
 
     st.write(f"For information about case coverage, please visit [CourtListener](https://free.law/2017/08/15/we-have-all-free-pacer).")
     
-    Filtered_by_court_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state['df_master'].loc[0, 'Filtered by court'])
+    filtered_by_court_toggle = st.toggle(label = 'Select/unselect courts', value = st.session_state['df_master'].loc[0, 'Filtered by court'])
     
-    if Filtered_by_court_toggle:
+    if filtered_by_court_toggle:
     
         st.warning('Please select courts to cover.')
     
@@ -553,7 +553,7 @@ else: #If pacer records chosen
                                               default = st.session_state['df_master'].loc[0, "More Courts"]
                                              )
             
-    else: #if Filtered_by_court_toggle == False
+    else: #if filtered_by_court_toggle == False
         
         st.info('All courts will be covered.')
         

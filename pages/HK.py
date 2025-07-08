@@ -60,7 +60,8 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, display_df, download_buttons, date_parser, list_value_check
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, display_df, download_buttons, date_parser, list_value_check, dict_value_or_none, month_year_to_str
+
 #Import variables
 from functions.common_functions import today_in_nums, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -69,7 +70,7 @@ from functions.common_functions import today_in_nums, scraper_pause_mean, judgme
 # # HK search engine
 
 # %%
-from functions.hk_functions import hk_search_tool, hk_search_function, hk_search_preview, hk_sortby_dict, hk_sortby_keys, hk_sortby_values, hk_courts_dict, hk_courts_keys, hk_courts_values, hk_appeals_from_ca, hk_appeals_from_hc, hk_appeals_from_dc, hk_appeals_from_fc, hk_databases_dict, hk_databases_keys, hk_databases_values, hc_appeal_dict, dict_value_or_none, month_year_to_str
+from functions.hk_functions import hk_search_tool, hk_search_function, hk_search_preview, hk_sortby_dict, hk_sortby_keys, hk_sortby_values, hk_courts_dict, hk_courts_keys, hk_courts_values, hk_appeals_from_ca, hk_appeals_from_hc, hk_appeals_from_dc, hk_appeals_from_fc, hk_databases_dict, hk_databases_keys, hk_databases_values, hc_appeal_dict
 
 #hk_stemming_dict, hk_stemming_keys, hk_stemming_values, 
 
@@ -449,7 +450,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[cases of the Hong Kong courts and tribunals]")
+st.header(f"Search :blue[cases of the Hong Kong courts and tribunals (Hong Kong Legal Reference System)]")
 
 st.success(default_msg)
 
@@ -646,7 +647,7 @@ if preview_button:
         
             else:
                 st.error(no_results_msg)
-                
+
 
 # %% [markdown]
 # ## Buttons

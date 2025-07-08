@@ -1983,6 +1983,12 @@ def gpt_run(jurisdiction_page, df_master):
         from functions.hk_functions import hk_run, role_content_hk
         
         run = copy.copy(hk_run)
+
+    if jurisdiction_page == 'pages/HKLII.py':
+                
+        from functions.hklii_functions import hklii_run, role_content_hklii
+        
+        run = copy.copy(hklii_run)
     
     if jurisdiction_page == 'pages/US.py':
                 
@@ -2054,7 +2060,7 @@ def gpt_run(jurisdiction_page, df_master):
 # # GPT batch run
 
 # %%
-pages_w_batch = ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/US.py', 'pages/CA.py']
+pages_w_batch = ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/HKLII.py', 'pages/US.py', 'pages/CA.py']
 
 
 # %%
@@ -2087,11 +2093,17 @@ def gpt_batch_input_submit(jurisdiction_page, df_master):
         from functions.hk_functions import hk_batch, role_content_hk
         
         batch = copy.copy(hk_batch)
+
+    if jurisdiction_page == 'pages/HKLII.py':
+                
+        from functions.hklii_functions import hklii_batch, role_content_hklii
+        
+        batch = copy.copy(hklii_batch)
     
     if jurisdiction_page == 'pages/US.py':
                 
-        from functions.us_functions import us_batch#, us_search_function, us_court_choice_clean, us_order_by, us_pacer_order_by, us_precedential_status, us_fed_app_courts, us_fed_dist_courts, us_fed_hist_courts, us_bankr_courts, us_state_courts, us_more_courts, all_us_jurisdictions, us_date, us_collections, us_pacer_fed_app_courts, us_pacer_fed_dist_courts, us_pacer_bankr_courts, us_pacer_more_courts, all_us_pacer_jurisdictions, us_court_choice_clean_pacer
-            
+        from functions.us_functions import us_batch
+        
         batch = copy.copy(us_batch)
 
     if jurisdiction_page == 'pages/CA.py':

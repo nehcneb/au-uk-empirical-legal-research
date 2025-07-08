@@ -337,6 +337,31 @@ def list_value_check(some_list, some_value):
 
 
 # %%
+#Function for changing selection menu for type on Streamlit
+
+def dict_value_or_none(some_dict, some_key):
+
+    if (some_key in [None, '']) or (not isinstance(some_dict, dict)):
+
+        return None
+    
+    elif some_key not in some_dict.keys():
+        
+        return None
+    
+    else:
+
+        return_value = some_dict[some_key]
+
+        if isinstance(return_value, dict):
+            
+            return_value = [*return_value.keys()]
+        
+        return return_value
+    
+
+
+# %%
 def list_range_check(some_list, some_string):
     selected_list = []
     try:
@@ -355,6 +380,21 @@ def list_range_check(some_list, some_string):
             print(f'List {str(some_list)} does not contain {some_string}')
  
     return selected_list
+
+
+
+# %%
+#Function for turning month or year choice to number or empty string
+
+def month_year_to_str(x):
+
+    if not re.search(r'\d+', str(x)):
+
+        return ''
+
+    else:
+        
+        return re.findall(r'\d+', str(x))[0]
 
 
 

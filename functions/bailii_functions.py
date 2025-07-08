@@ -386,6 +386,9 @@ class bailii_search_tool:
 
     def search(self):
 
+        #Reset infos of cases found
+        self.case_infos = []
+        
         if len(self.results_url) == 0:
 
             self.get_url()
