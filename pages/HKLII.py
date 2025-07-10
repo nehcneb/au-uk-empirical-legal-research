@@ -440,7 +440,7 @@ if not filtered_by_dbs_toggle:
 
     dbs_en_other_entry = []
 
-    dbs_c_cases_entry_entry = []
+    dbs_c_cases_entry = []
 
     dbs_c_legis_entry = []
 

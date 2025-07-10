@@ -626,9 +626,6 @@ for primary_key in primary_keys:
     menu.update(menu_item)
 
 # %%
-menu
-
-# %%
 #'Product line'
 #Updated 20250505
 

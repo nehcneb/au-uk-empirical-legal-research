@@ -470,7 +470,7 @@ class ukpo_search_tool:
 
                 judgment_counter += 1
 
-                print(f"Scrapped {len(judgment_counter)}/{self.judgment_counter_bound} judgments.")
+                print(f"Scrapped {judgment_counter}/{self.judgment_counter_bound} judgments.")
             
             else:
                 #stop if reached the maximum number of results wanted
