@@ -450,8 +450,11 @@ else:
 
     st.warning("Please select the databases to cover.")
 
+
     
-    default_dbs_en_cases = st.checkbox(label = 'Select all English case databases', help = 'You may need to press :red[RESET] to select all.', value = bool(st.session_state['df_master'].loc[0, "English case databases"] == hklii_en_cases_list))
+    default_dbs_en_cases = st.button(label = 'Select all English case databases', help = 'You may need to press :red[RESET] to select all.', 
+                                     #value = bool(st.session_state['df_master'].loc[0, "English case databases"] == hklii_en_cases_list)
+                                    )
     
     if default_dbs_en_cases == True:
     
@@ -461,13 +464,13 @@ else:
     
         st.session_state['df_master'].at[0, "English case databases"] = hklii_en_cases_list
     
-    else:
+    #else:
         
-        if not isinstance(st.session_state['df_master'].loc[0, "English case databases"], list):
+        #if not isinstance(st.session_state['df_master'].loc[0, "English case databases"], list):
             
-            st.session_state['df_master']["English case databases"] = st.session_state['df_master']["English case databases"].astype('object')
+            #st.session_state['df_master']["English case databases"] = st.session_state['df_master']["English case databases"].astype('object')
     
-        st.session_state['df_master'].at[0, "English case databases"] = []
+        #st.session_state['df_master'].at[0, "English case databases"] = []
     
     dbs_en_cases_entry = st.multiselect(label = 'English case databases', 
                                           options = hklii_en_cases_list, 
@@ -476,8 +479,12 @@ else:
                                         )
     
     
+
+
     
-    default_dbs_en_legis = st.checkbox(label = 'Select all English legislation databases', help = 'You may need to press :red[RESET] to select all.', value = bool(st.session_state['df_master'].loc[0, "English legislation databases"] == hklii_en_legis_list))
+    default_dbs_en_legis = st.button(label = 'Select all English legislation databases', help = 'You may need to press :red[RESET] to select all.', 
+                                     #value = bool(st.session_state['df_master'].loc[0, "English legislation databases"] == hklii_en_legis_list)
+                                    )
     
     if default_dbs_en_legis == True:
     
@@ -487,22 +494,26 @@ else:
     
         st.session_state['df_master'].at[0, "English legislation databases"] = hklii_en_legis_list
     
-    else:
+    #else:
         
-        if not isinstance(st.session_state['df_master'].loc[0, "English legislation databases"], list):
+        #if not isinstance(st.session_state['df_master'].loc[0, "English legislation databases"], list):
             
-            st.session_state['df_master']["English legislation databases"] = st.session_state['df_master']["English legislation databases"].astype('object')
+            #st.session_state['df_master']["English legislation databases"] = st.session_state['df_master']["English legislation databases"].astype('object')
     
-        st.session_state['df_master'].at[0, "English legislation databases"] = []
-    
+        #st.session_state['df_master'].at[0, "English legislation databases"] = []
+
     dbs_en_legis_entry = st.multiselect(label = 'English legislation databases', 
                                           options = hklii_en_legis_list, 
                                           default = st.session_state['df_master'].loc[0, "English legislation databases"], 
                                         #disabled = bool(default_dbs_en_legis == False
                                         )
     
+
+
     
-    default_dbs_en_other = st.checkbox(label = 'Select all English other databases', help = 'You may need to press :red[RESET] to select all.', value = bool(st.session_state['df_master'].loc[0, "English other databases"] == hklii_en_other_list))
+    default_dbs_en_other = st.button(label = 'Select all English other databases', help = 'You may need to press :red[RESET] to select all.', 
+                                     #value = bool(st.session_state['df_master'].loc[0, "English other databases"] == hklii_en_other_list)
+                                    )
     
     if default_dbs_en_other == True:
     
@@ -512,22 +523,26 @@ else:
     
         st.session_state['df_master'].at[0, "English other databases"] = hklii_en_other_list
     
-    else:
+    #else:
         
-        if not isinstance(st.session_state['df_master'].loc[0, "English other databases"], list):
+        #if not isinstance(st.session_state['df_master'].loc[0, "English other databases"], list):
             
-            st.session_state['df_master']["English other databases"] = st.session_state['df_master']["English other databases"].astype('object')
+            #st.session_state['df_master']["English other databases"] = st.session_state['df_master']["English other databases"].astype('object')
     
-        st.session_state['df_master'].at[0, "English other databases"] = []
-    
+        #st.session_state['df_master'].at[0, "English other databases"] = []
+
     dbs_en_other_entry = st.multiselect(label = 'English other databases', 
                                           options = hklii_en_other_list, 
                                           default = st.session_state['df_master'].loc[0, "English other databases"], 
                                         #disabled = bool(default_dbs_en_other == False
                                         )
     
+
+
     
-    default_dbs_c_cases = st.checkbox(label = '選擇所有中文判案書資料庫', help = 'You may need to press :red[RESET] to select all.', value = bool(st.session_state['df_master'].loc[0, "中文判案書資料庫"] == hklii_c_cases_list))
+    default_dbs_c_cases = st.button(label = '選擇所有中文判案書資料庫', help = 'You may need to press :red[RESET] to select all.', 
+                                    #value = bool(st.session_state['df_master'].loc[0, "中文判案書資料庫"] == hklii_c_cases_list)
+                                   )
     
     if default_dbs_c_cases == True:
     
@@ -537,21 +552,25 @@ else:
     
         st.session_state['df_master'].at[0, "中文判案書資料庫"] = hklii_c_cases_list
     
-    else:
+    #else:
         
-        if not isinstance(st.session_state['df_master'].loc[0, "中文判案書資料庫"], list):
+        #if not isinstance(st.session_state['df_master'].loc[0, "中文判案書資料庫"], list):
             
-            st.session_state['df_master']["中文判案書資料庫"] = st.session_state['df_master']["中文判案書資料庫"].astype('object')
+            #st.session_state['df_master']["中文判案書資料庫"] = st.session_state['df_master']["中文判案書資料庫"].astype('object')
     
-        st.session_state['df_master'].at[0, "中文判案書資料庫"] = []
+        #st.session_state['df_master'].at[0, "中文判案書資料庫"] = []
     
     dbs_c_cases_entry = st.multiselect(label = '中文判案書資料庫', 
                                           options = hklii_c_cases_list, 
                                           default = st.session_state['df_master'].loc[0, "中文判案書資料庫"], 
                                         #disabled = bool(default_dbs_c_cases == False
                                         )
+
+
     
-    default_dbs_c_legis = st.checkbox(label = '選擇所有中文法例資料庫', help = 'You may need to press :red[RESET] to select all.', value = bool(st.session_state['df_master'].loc[0, "中文法例資料庫"] == hklii_c_legis_list))
+    default_dbs_c_legis = st.button(label = '選擇所有中文法例資料庫', help = 'You may need to press :red[RESET] to select all.', 
+                                    #value = bool(st.session_state['df_master'].loc[0, "中文法例資料庫"] == hklii_c_legis_list)
+                                   )
     
     if default_dbs_c_legis == True:
     
@@ -561,21 +580,25 @@ else:
     
         st.session_state['df_master'].at[0, "中文法例資料庫"] = hklii_c_legis_list
     
-    else:
+    #else:
         
-        if not isinstance(st.session_state['df_master'].loc[0, "中文法例資料庫"], list):
+        #if not isinstance(st.session_state['df_master'].loc[0, "中文法例資料庫"], list):
             
-            st.session_state['df_master']["中文法例資料庫"] = st.session_state['df_master']["中文法例資料庫"].astype('object')
+            #st.session_state['df_master']["中文法例資料庫"] = st.session_state['df_master']["中文法例資料庫"].astype('object')
     
-        st.session_state['df_master'].at[0, "中文法例資料庫"] = []
+        #st.session_state['df_master'].at[0, "中文法例資料庫"] = []
     
     dbs_c_legis_entry = st.multiselect(label = '中文法例資料庫', 
                                           options = hklii_c_legis_list, 
                                           default = st.session_state['df_master'].loc[0, "中文法例資料庫"], 
                                         #disabled = bool(default_dbs_c_legis == False
                                         )
+
+
     
-    default_dbs_c_other = st.checkbox(label = '選擇所有其他中文資料庫', help = 'You may need to press :red[RESET] to select all.', value = bool(st.session_state['df_master'].loc[0, "其他中文資料庫"] == hklii_c_other_list))
+    default_dbs_c_other = st.button(label = '選擇所有其他中文資料庫', help = 'You may need to press :red[RESET] to select all.', 
+                                    #value = bool(st.session_state['df_master'].loc[0, "其他中文資料庫"] == hklii_c_other_list)
+                                   )
     
     if default_dbs_c_other == True:
     
@@ -585,13 +608,13 @@ else:
     
         st.session_state['df_master'].at[0, "其他中文資料庫"] = hklii_c_other_list
     
-    else:
+    #else:
         
-        if not isinstance(st.session_state['df_master'].loc[0, "其他中文資料庫"], list):
+        #if not isinstance(st.session_state['df_master'].loc[0, "其他中文資料庫"], list):
             
-            st.session_state['df_master']["其他中文資料庫"] = st.session_state['df_master']["其他中文資料庫"].astype('object')
+            #st.session_state['df_master']["其他中文資料庫"] = st.session_state['df_master']["其他中文資料庫"].astype('object')
     
-        st.session_state['df_master'].at[0, "其他中文資料庫"] = []
+        #st.session_state['df_master'].at[0, "其他中文資料庫"] = []
     
     dbs_c_other_entry = st.multiselect(label = '其他中文資料庫', 
                                           options = hklii_c_other_list, 
@@ -599,6 +622,8 @@ else:
                                         #disabled = bool(default_dbs_c_other == False
                                         )
 
+
+    
 st.subheader("Your search terms")
 
 st.markdown("""For search tips, please visit [HKLII](https://www.hklii.hk/advancedsearch). This section mimics their advanced search function.
