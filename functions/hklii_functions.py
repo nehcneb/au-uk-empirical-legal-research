@@ -210,34 +210,38 @@ def hklii_get_judgment(case_info):
     browser.get(judgment_url)
 
     #Get judgment text
-    judgment_text = ''
+    extracted_text = ''
 
     try:
-        #Wait until judgment present
+        #Wait until text present
     
-        judgment_present = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, '//form[@name="search_body"]')))
+        text_present = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, '//form[@name="search_body"]|//div[@class="case-content mt-6 mb-10 pl-md-2 pr-md-2 pl-lg-4 pr-lg-4"]')))
 
-        soup = BeautifulSoup(browser.page_source, "lxml")
+        extracted_text = text_present.text
+    
+        #soup = BeautifulSoup(browser.page_source, "lxml")
 
-        judgment_text = soup.find('form', attrs={'name': 'search_body'}).get_text()
+        #extracted_text = soup.find('form', attrs={'name': 'search_body'}).get_text()
     
     except Exception as e:
 
-        print(f"{case_info['Title']}: can't get judgment_text due to error: {e}")
+        print(f"{case_info['Title']}: can't get extracted_text due to error: {e}")
     
     #Add meta
+
+    soup = BeautifulSoup(browser.page_source, "lxml")
     
-    mata_labels = soup.find_all('span', class_ = 'spec_infolabel darkgrey-text')
-    mata_texts = soup.find_all('span', class_ = 'spec_infoval darkgrey-text')
+    meta_labels = soup.find_all('span', class_ = 'spec_infolabel darkgrey-text')
+    meta_texts = soup.find_all('span', class_ = 'spec_infoval darkgrey-text')
 
-    if len(mata_labels) == len(mata_texts):
+    if len(meta_labels) == len(meta_texts):
 
-        for meta_counter in range(0, len(mata_labels)):
+        for meta_counter in range(0, len(meta_labels)):
 
             try:
 
-                meta_label = mata_labels[meta_counter].get_text(strip = True)
-                meta_text = mata_texts[meta_counter].get_text(strip = True)
+                meta_label = meta_labels[meta_counter].get_text(strip = True)
+                meta_text = meta_texts[meta_counter].get_text(strip = True)
 
                 case_info.update({meta_label: meta_text})
 
@@ -245,7 +249,7 @@ def hklii_get_judgment(case_info):
                 
                 print(f"{case_info['Title']}: can't get meta label indexed {meta_counter} due to error: {e}")
 
-    #Add appeal history
+    #Add appeal history if any
     appeals = soup.find_all('a', class_ = 'apphislink')
 
     for appeal_counter in range(0, len(appeals)):
@@ -265,12 +269,14 @@ def hklii_get_judgment(case_info):
             print(f"{case_info['Title']}: can't get appeal history indexed {appeal_counter} due to error: {e}")
 
     #Add judgment text at the end
-    case_info.update({'extracted_text': judgment_text})
+    case_info.update({'extracted_text': extracted_text})
     
     browser.quit()
     
     return case_info
 
+
+# %%
 
 # %%
 class hklii_search_tool:

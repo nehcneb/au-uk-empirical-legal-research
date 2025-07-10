@@ -364,12 +364,22 @@ class ukpo_search_tool:
 
         #st.write('Running get_judgments()')
 
+        #Create folder for saving files
+        doc_folder = 'UKPO_FILES'
+
+        #Save file
+        try:
+            os.mkdir(doc_folder)
+            print(f"Directory '{doc_folder}' created successfully.")
+        except:
+            print(f"Directory '{doc_folder}' already exists.")
+
         #Initialise list of case_infos with judgment text
         
         self.case_infos_w_judgments = []
 
         judgment_counter = 0
-        
+            
         for case_info in self.case_infos:
 
             case_info_w_judgment = case_info.copy()
@@ -426,34 +436,26 @@ class ukpo_search_tool:
                 pause.seconds(np.random.randint(15, 20))
 
                 try:
+
+                    #Save file first
+                    r = requests.get(judgment_link)
+                
+                    doc_file_name = f"{doc_folder}/{judgment_link.split('/')[-1]}"
                     
+                    with open(doc_file_name, 'wb') as f:
+                        f.write(r.content)
+
+                    print(f"{case_info['Case name']}: saved file.")
+                    
+                    #If the judgment is in .doc, can only save the judgment to a local folder                    
                     if '.pdf' in judgment_link:
     
                         judgment_text = pdf_judgment(judgment_link)
                     
                         print(f"{case_info['Case name']}: got judgment.")
                     
-                    if '.doc' in judgment_link:
+                    #if '.doc' in judgment_link:
                     
-                        #If the judgment is in .doc, can only save the judgment to a local folder
-                        doc_folder = 'UKPO_FILES'
-                        
-                        try:
-                            os.mkdir(doc_folder)
-                            print(f"Directory '{doc_folder}' created successfully.")
-                        except:
-                            print(f"Directory '{doc_folder}' already exists.")
-                        
-                        #Convert .doc to .docx
-                        r = requests.get(judgment_link)
-                    
-                        doc_file_name = f"{doc_folder}/{judgment_link.split('/')[-1]}"
-                        
-                        with open(doc_file_name, 'wb') as f:
-                            f.write(r.content)
-
-                        print(f"{case_info['Case name']}: saved file.")
-
                 except:
                     
                     print(f"{case_info['Case name']}: can't get judgment or save file.")

@@ -423,6 +423,12 @@ if 'System instruction' not in st.session_state.df_master.columns:
         from functions.hk_functions import role_content_hk
     
         st.session_state['df_master'].loc[0, 'System instruction'] = role_content_hk
+
+    elif st.session_state.jurisdiction_page == 'pages/HKLII.py':
+
+        from functions.hklii_functions import role_content_hklii
+    
+        st.session_state['df_master'].loc[0, 'System instruction'] = role_content_hklii
     
     elif st.session_state.jurisdiction_page == 'pages/ER.py':
 
