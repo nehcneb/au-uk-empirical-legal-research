@@ -70,7 +70,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_image_judgment
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -450,7 +450,7 @@ class ukpo_search_tool:
                     #If the judgment is in .doc, can only save the judgment to a local folder                    
                     if '.pdf' in judgment_link:
     
-                        judgment_text = pdf_judgment(judgment_link)
+                        judgment_text = pdf_image_judgment(judgment_link)
                     
                         print(f"{case_info['Case name']}: got judgment.")
                     

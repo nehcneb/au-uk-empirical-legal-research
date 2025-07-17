@@ -401,7 +401,6 @@ class bailii_search_tool:
             'Date': '',
              'Reports': '', 
              'Hyperlink to BAILII': self.results_url, 
-             'judgment': ''
             }
     
             self.case_infos.append(case_info)
@@ -537,7 +536,6 @@ class bailii_search_tool:
                                     'Date': date,
                                      'Reports': reports, 
                                      'Hyperlink to BAILII': link, 
-                                     'judgment': ''
                                     }
                 
                             self.case_infos.append(case_info)
@@ -576,8 +574,8 @@ class bailii_search_tool:
                     except:
                         print(f"Can't get rid of layout type content")
                 
-                #Attach judgment text and urls to case_info dict
-                case_info_w_judgment['judgment'] = text
+                #Attach judgment text to case_info_w_judgment dict
+                case_info_w_judgment.update({'judgment': text})
 
                 #Make links clickable
                 for key in case_info_w_judgment:

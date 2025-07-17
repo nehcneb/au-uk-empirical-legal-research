@@ -97,6 +97,11 @@ import pause
 import re
 import mammoth
 
+#PDF images
+import pdf2image
+from PIL import Image
+import pytesseract
+
 #Excel
 import openpyxl
 from pyxlsb import open_workbook as open_xlsb
@@ -283,6 +288,32 @@ def pdf_judgment(url):
     for page in pdfdoc_remote.pages:
         text_list.append(page.extract_text())
     
+    return str(text_list)
+
+
+
+# %%
+#Define function for judgment link containing PDF images
+def pdf_image_judgment(url):
+    headers = {'User-Agent': 'whatever'}
+
+    r = requests.get(url, headers=headers, allow_redirects = True)
+    
+    remote_file_bytes = r.content
+
+    images = pdf2image.convert_from_bytes(remote_file_bytes, timeout=30)
+    
+    #Extract text from images
+    text_list = []
+    
+    max_images_number = len(images)
+
+    for image in images[ : max_images_number]:
+        
+        text_page = pytesseract.image_to_string(image, timeout=30)
+        
+        text_list.append(text_page)
+        
     return str(text_list)
 
 
