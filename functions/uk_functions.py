@@ -38,6 +38,8 @@ from urllib.request import urlretrieve
 import os
 from io import BytesIO
 import ast
+import math
+
 
 #Streamlit
 import streamlit as st
@@ -192,179 +194,151 @@ def uk_search(query= '',
 #Define function turning search results url to case_infos to judgments
 
 #@st.cache_data(show_spinner = False, ttl=600)
-def uk_search_results_to_judgment_links(_soup, results_url, judgment_counter_bound):
+def uk_search_results_to_judgment_links(_soup, results_url, results_count, judgment_counter_bound):
     #_soup is from scraping per uk_search
-    
-    hrefs = _soup.find_all('span', {'class': 'judgment-listing__judgment'})
-    case_infos = []
 
-    #Get total number of pages
-    page_nums_raw = _soup.find_all('li', attrs={'class': 'pagination__list-item'})
-    page_nums = []
-    
-    for page_num in page_nums_raw:
-        try:
-            if ('Previous' not in page_num.get_text()) and ('Next' not in page_num.get_text()):
-                
-                page_nums.append(page_num)
-    
-        except:
-            print('No new page')
-    
-    if len(page_nums) > 1:
-        
-        page_total = int(page_nums[-1].get_text().split('Page')[1].split('\n')[0])
-    
-    else:
-        page_total = 1
+    #Get total number of pages; 50 results per page
+    page_total = math.ceil(results_count/50)
     
     #Start counter
+    page_counter = 1
     
-    counter = 1
+    counter = 0
 
-    print(f"Getting case_infos from search results page 1/{page_total}")
+    case_infos = []
     
-    for link in hrefs:
+    while page_counter <= page_total:
+    
+        if page_counter > 1:
+            
+            pause.seconds(np.random.randint(10, 20))
+
+            url_next_page = results_url + f"&page={page_counter}"
+
+            print(f"Getting case_infos from search results page {page_counter}/{page_total}. url_next_page == {url_next_page}")
+            
+            page_judgment_next_page = requests.get(url_next_page)
+            
+            _soup = BeautifulSoup(page_judgment_next_page.content, "lxml")
+
+        else:
         
-        if counter <= judgment_counter_bound:
-
-            case_info = {
-            'Case name': '',
-             'Medium neutral citation': '',
-            'Hyperlink to The National Archives' : '', 
-            'Date' : '',
-            'Court' : ''
-            }
+            print(f"Getting case_infos from search results page {page_counter}/{page_total}. results_url == {results_url}")
             
-            try:
-                raw_link = link.find('a', href=True)['href']
-                
-                if "?" in raw_link:
-                    cleaned_link = raw_link.split('?')[0]
-                else:
-                    cleaned_link = raw_link
-                
-                link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
-                case_info['Hyperlink to The National Archives'] = link_direct
+        title_link_court_list = _soup.find_all('div', {'class': 'judgments-table__detail'})
 
-                title_raw = link.find('span', {'class': "judgment-listing__title"})
-                title = title_raw.get_text(strip = True)
-                
-                case_info['Case name'] = title
+        mnc_date_list = _soup.find_all('tr')
 
-                court_raw = link.find('span', {'class': "judgment-listing__court"})
-                court = court_raw.get_text(strip = True)
+        #st.write(f"len(title_link_court_list) == {len(title_link_court_list)}")
 
-                case_info['Court'] = court
-
-                mnc_raw = link.find('span', {'class': "judgment-listing__neutralcitation"})
-                mnc = mnc_raw.get_text(strip = True)
-
-                case_info['Medium neutral citation'] = mnc
-
-                date_raw = link.find('time', {'class': "judgment-listing__date"})
-                date = date_raw.get_text(strip = True)
-
-                case_info['Date'] = date
-
-            except Exception as e:
-                
-                print(f"{case_info['Case name']}: Can't get metadata")
-                
-                print(e)
-            
-            case_infos.append(case_info)
-            
-            counter = counter + 1
-
-    #print(f"page_total == {page_total}")
-
-    #print(f"range(page_total) == {range(page_total)}")
-    
-    if page_total > 1:  
-    
-        for page_ending in range(2, page_total + 1):
-            
-            if counter <=judgment_counter_bound:
-
-                pause.seconds(np.random.randint(10, 20))
-
-                print(f"Getting case_infos from search results page {page_ending}/{page_total}")
-                
-                url_next_page = results_url + f"&page={page_ending}"
-
-                #print(f"url_next_page == {url_next_page}")
-                
-                page_judgment_next_page = requests.get(url_next_page)
-                
-                soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
+        #st.write(f"len(mnc_date_list) == {len(mnc_date_list)}")
         
-                #Check if stll more results
-                
-                if 'No results have been found' not in str(soup_judgment_next_page):
-                    
-                    hrefs_next_page = soup_judgment_next_page.find_all('span', {'class': 'judgment-listing__judgment'})
-                    
-                    for link in hrefs_next_page:
-                        
-                        if counter <= judgment_counter_bound:
+        #st.write(f"mnc_date_list[1] == {mnc_date_list[1]}")
 
-                            case_info = {
-                            'Case name': '',
-                             'Medium neutral citation': '',
-                            'Hyperlink to The National Archives' : '', 
-                            'Date' : '',
-                            'Court' : ''
-                            }
-                            
-                            try:
-                                
-                                raw_link = link.find('a', href=True)['href']
-                                
-                                if "?" in raw_link:
-                                    cleaned_link = raw_link.split('?')[0]
-                                else:
-                                    cleaned_link = raw_link
-                                
-                                link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
-                                case_info['Hyperlink to The National Archives'] = link_direct
-                
-                                
-                                title_raw = link.find('span', {'class': "judgment-listing__title"})
-                                title = title_raw.get_text(strip = True)
-                                
-                                case_info['Case name'] = title
-                
-                                court_raw = link.find('span', {'class': "judgment-listing__court"})
-                                court = court_raw.get_text(strip = True)
-                
-                                case_info['Court'] = court
-                
-                                mnc_raw = link.find('span', {'class': "judgment-listing__neutralcitation"})
-                                mnc = mnc_raw.get_text(strip = True)
-                
-                                case_info['Medium neutral citation'] = mnc
-                
-                                date_raw = link.find('time', {'class': "judgment-listing__date"})
-                                date = date_raw.get_text(strip = True)
-                
-                                case_info['Date'] = date
-                
-                            except Exception as e:
-                                
-                                print(f"{case_info['Case name']}: Can't get metadata")
-                                
-                                print(e)
-
-                            case_infos.append(case_info)
-                            
-                            counter = counter + 1
+        #Counting to get mnc and date
+        page_specific_judgment_counter = 0
+        
+        for link in title_link_court_list:
+            
+            if counter < min(judgment_counter_bound, results_count):
     
-                else:
-                    break
+                case_info = {
+                'Case name': '',
+                 'Medium neutral citation': '',
+                'Hyperlink to The National Archives' : '', 
+                'Date' : '',
+                'Court' : ''
+                }
+                
+                try:
 
+                    #st.write(link)
+                    
+                    raw_link = link.find('a', href=True)['href']
+
+                    #st.write(f"raw_link == {raw_link}")
+                    
+                    if "?" in raw_link:
+                        cleaned_link = raw_link.split('?')[0]
+                    else:
+                        cleaned_link = raw_link
+                    
+                    link_direct = f'https://caselaw.nationalarchives.gov.uk{cleaned_link}/data.xml'
+                    
+                    case_info['Hyperlink to The National Archives'] = link_direct
+    
+                    title_raw = link.find('div', {'class': "judgments-table__title"})
+                    title = title_raw.get_text(strip = True)
+                    
+                    case_info['Case name'] = title
+    
+                    court_raw = link.find('div', {'class': "judgments-table__subtitle"})
+                    court = court_raw.get_text(strip = True)
+    
+                    case_info['Court'] = court
+
+                    mnc_date_text = mnc_date_list[page_specific_judgment_counter+1].get_text()
+
+                    #st.write(f"mnc_date_text == {mnc_date_text}")
+                    
+                    mnc = ''
+
+                    mnc_list = re.findall(r'(\[\d{4}\]\s\w+\s\d+(\s\(\w+\))?)', mnc_date_text)
+
+                    #st.write(f"mnc_list == {mnc_list}")
+                    
+                    if len(mnc_list) > 0:
+
+                        mnc = mnc_list[-1]
+
+                        if isinstance(mnc, tuple):
+
+                            mnc = mnc[0]
+    
+                    case_info['Medium neutral citation'] = mnc
+
+                    date = ''
+                    
+                    date_list = re.findall(r'(\d{1,2}\s\w+\s\d{4})', mnc_date_text)
+
+                    #st.write(f"date_list == {date_list}")
+                    
+                    if len(mnc_list) > 0:
+    
+                        date = date_list[-1]
+    
+                        if isinstance(date, tuple):
+    
+                            date = date[0]
+    
+                    case_info['Date'] = date
+    
+                except Exception as e:
+                    
+                    print(f"{case_info['Case name']}: Can't get metadata")
+                    
+                    print(e)
+
+                #st.write(case_info)
+                
+                case_infos.append(case_info)
+
+                page_specific_judgment_counter += 1
+                
+                counter += 1
+
+                #print(f"Scrapped {counter}/{min(judgment_counter_bound, results_count)} judgments")
+                
             else:
+
+                page_counter += page_total
+                
                 break
+        
+        page_counter += 1
+
+
+    #st.write(case_info)
                 
     return case_infos
 
@@ -543,10 +517,12 @@ def uk_run(df_master):
     search_results_soup = search_results_url_soup['soup']
 
     results_url = search_results_url_soup['results_url']
-        
+
+    results_count = search_results_url_soup['results_count']
+    
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
-    case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, judgment_counter_bound)
+    case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgment_counter_bound)
 
     for case_info in case_infos:
 
@@ -554,7 +530,7 @@ def uk_run(df_master):
         judgments_file.append(judgment_dict)        
         pause.seconds(np.random.randint(10, 20))
 
-        print(f"Scrapped {len(judgments_file)}/{judgment_counter_bound} judgments.")
+        print(f"Scrapped {len(judgments_file)}/{max(judgment_counter_bound, results_count)} judgments.")
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

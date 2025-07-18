@@ -408,7 +408,7 @@ if preview_button:
         results_url = results_url_num['results_url']
     
         search_results_soup = results_url_num['soup']
-    
+        
         if results_count > 0:
         
             #Get relevant cases
@@ -417,7 +417,7 @@ if preview_button:
             
             judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
             
-            case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound) 
+            case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgments_counter_bound) 
             
             for case in case_infos:
             
@@ -425,9 +425,11 @@ if preview_button:
                 judgments_file.append(case)
     
             #Clean df
-            
+
+            #st.write(case_infos)
+
             df_preview = pd.DataFrame(judgments_file)
-    
+            
             #Clean df
             df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
             

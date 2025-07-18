@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_image_judgment
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -1444,7 +1444,7 @@ class us_search_tool:
         if 'local_path' in opinion_json.keys():
             if '.pdf' in str(opinion_json['local_path']).lower():
                 pdf_url = 'https://storage.courtlistener.com/' + opinion_json['local_path']
-                opinion_text = pdf_judgment(pdf_url)
+                opinion_text = pdf_image_judgment(pdf_url)
 
         #st.write(opinion_json.keys())
         
@@ -1519,7 +1519,7 @@ class us_search_tool:
         if ('filepath_local' in recap_document.keys()) and ('is_available' in recap_document.keys()):
             if (('.pdf' in str(recap_document['filepath_local']).lower()) and (str(recap_document['is_available']).lower() == 'true')):
                 pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']    
-                recap_document['file_content'] = pdf_judgment(pdf_url)
+                recap_document['file_content'] = pdf_image_judgment(pdf_url)
         
         return recap_document
 
