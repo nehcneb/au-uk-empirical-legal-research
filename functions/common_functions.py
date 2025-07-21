@@ -682,7 +682,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             
         else:
             
-            st.success('Your entries are now available for download.')
+            st.info('Your entries are now available for download.')
         
         responses_output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
         
