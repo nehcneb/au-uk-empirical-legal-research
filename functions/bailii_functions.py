@@ -75,7 +75,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # BAILII search engine
 
 # %%
-from functions.common_functions import link
+from functions.common_functions import link, pdf_image_judgment
 
 # %%
 #Scrape javascript
@@ -114,6 +114,10 @@ except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
     print(e)
     quit()
+
+# %%
+#Threshold characters count for getting pdf instead of html
+bailii_pdf_judgment_threshold = 2048
 
 # %%
 #Definitions for search function
@@ -394,17 +398,24 @@ class bailii_search_tool:
             self.get_url()
             
         #If citation for a case directly give, then return only that case
-        if 'lucy_search' not in self.results_url:
-    
+        if 'find_by_citation.cgi' in self.results_url:
+
+            headers = {'User-Agent': 'whatever'}
+            
+            direct_link = requests.get(self.results_url, headers=headers).url
+            
             case_info = {'Case name': '',
              'Medium neutral citation' : self.citation, 
             'Date': '',
              'Reports': '', 
-             'Hyperlink to BAILII': self.results_url, 
+             'Hyperlink to BAILII': direct_link, 
             }
     
             self.case_infos.append(case_info)
-    
+
+            self.results_count = int(1)
+            self.total_pages = math.ceil(self.results_count/10)
+        
         else:
 
             browser.get(self.results_url)
@@ -497,7 +508,7 @@ class bailii_search_tool:
                                         
                                         date =  date.replace('(', '').replace(')', '')
                                     
-                                    mnc_list = re.findall(r'(\[\d{4}\].+\w+\d+\s?(\(\w+\))?)', case_name)
+                                    mnc_list = re.findall(r'(\[\d{4}\].+\d+(\s\(\w+\))?)', case_name)
                                     
                                     if len(mnc_list) > 0:
                                     
@@ -577,6 +588,71 @@ class bailii_search_tool:
                 #Attach judgment text to case_info_w_judgment dict
                 case_info_w_judgment.update({'judgment': text})
 
+                #If judgment text is too short, get pdf instead
+                if len(text) < bailii_pdf_judgment_threshold:
+
+                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                    
+                    print(f"{case_info['Case name']}: judgment from html is too short, try to get judgment from any pdf.")                        
+
+                    pdf_links_raw = soup.find_all("a", href=re.compile("\.pdf"))
+
+                    if len(pdf_links_raw) > 0:
+
+                        pdf_link = 'https://www.bailii.org' + pdf_links_raw[0]['href']
+
+                        print(f"{case_info['Case name']}: trying to get judgment from {pdf_link}.")                        
+                        
+                        try:
+                            
+                            text = pdf_image_judgment(pdf_link)
+
+                            case_info_w_judgment.update({'judgment': text})
+
+                            print(f"{case_info['Case name']}: got judgment from pdf.")                        
+                        
+                        except Exception as e:
+
+                            print(f"{case_info['Case name']}: can't get judgment from pdf due to error: {e}")                        
+
+                    #Get metadata if not obtained already
+
+                    try:
+
+                        if len(case_info['Case name']) == 0:
+
+                            case_name = ''
+                            
+                            date = ''
+
+                            case_name_raw = soup.find('title').get_text()
+
+                            if case_info['Medium neutral citation'] in case_name_raw:
+
+                                case_name = case_name_raw.split(case_info['Medium neutral citation'])[0]
+
+                                date = case_name_raw.split(case_info['Medium neutral citation'])[-1]
+
+                                while case_name[-1] == ' ':
+
+                                    case_name = case_name[:-1]
+
+                                while date[-1] in [' ', ')']:
+
+                                    date = date[:-1]
+
+                                while date[0] in [' ', '(']:
+                                    
+                                    date = date[1:]
+                            
+                            case_info_w_judgment.update({'Case name': case_name})
+    
+                            case_info_w_judgment.update({'Date': date})
+
+                    except Exception as e:
+                        
+                        print(f"{case_info['Case name']}: can't get case name or date due to erro: {e}")                        
+                
                 #Make links clickable
                 for key in case_info_w_judgment:
                     

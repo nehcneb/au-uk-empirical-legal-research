@@ -967,7 +967,7 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_
 # %%
 if len(st.session_state.error_msg) > 0:
 
-    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
+    st.error('Sorry, an error has occurred. Please change your entries or wait a few hours, and try again.')
 
     st.error(st.session_state.error_msg)
         
