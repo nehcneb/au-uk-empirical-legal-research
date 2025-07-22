@@ -69,7 +69,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # Canada search engine
 
 # %%
-from functions.ca_functions import browser, all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search_tool, ca_search_preview, ca_meta_labels_droppable, ca_meta_dict
+from functions.ca_functions import all_ca_jurisdictions, ca_courts, bc_courts, ab_courts, sk_courts, mb_courts, on_courts, qc_courts, nb_courts, ns_courts, pe_courts, nl_courts, yk_courts, nt_courts, nu_courts, all_ca_jurisdiction_court_pairs, ca_court_tribunal_types, all_subjects, ca_search_tool, ca_search_preview, ca_meta_labels_droppable, ca_meta_dict
 
 
 # %%

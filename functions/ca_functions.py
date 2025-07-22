@@ -120,8 +120,8 @@ try:
     
     browser = get_driver()
     
-    #browser.implicitly_wait(5)
-    #browser.set_page_load_timeout(30)
+    browser.implicitly_wait(5)
+    browser.set_page_load_timeout(30)
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -870,6 +870,8 @@ class ca_search_tool:
         #browser = get_driver()
 
         #Get search results
+        #browser = get_driver()
+        
         browser.get(self.results_url)
         #browser.delete_all_cookies()
         #browser.refresh()
@@ -1061,7 +1063,7 @@ class ca_search_tool:
                 else:
                     break
             
-        #browser.close()
+        #browser.quit()
 
     #get judgments
     def get_judgments(self):
@@ -1081,7 +1083,7 @@ class ca_search_tool:
 
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{self.judgment_counter_bound} judgments.")
             
-            pause.seconds(np.random.randint(15, 15))
+            pause.seconds(np.random.randint(10, 20))
 
 
 # %%
