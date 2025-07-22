@@ -856,14 +856,14 @@ class ca_search_tool:
         browser.refresh()
 
         try:
-            accept_all_cookies = Wait(browser, 10).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
+            accept_all_cookies = Wait(browser, 30).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
             accept_all_cookies.click()
 
         except Exception as e:
             print(f"Did not accept all cookies due to error: {e}")
 
         try:
-            search_button = Wait(browser, 10).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
+            search_button = Wait(browser, 30).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
             search_button.click()
 
         except Exception as e:
@@ -873,11 +873,11 @@ class ca_search_tool:
         #Check if any cases found
         try:
             #Get all cases from current page    
-            #elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
-            elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
+            #elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+            elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
             
             #Get all number of results
-            #results_count_raw = Wait(browser, 10).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
+            #results_count_raw = Wait(browser, 30).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
             results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
     
             results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
@@ -919,7 +919,7 @@ class ca_search_tool:
 
                     try:
         
-                        load_more = Wait(browser, 10).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
+                        load_more = Wait(browser, 30).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
                         
                         #pause.seconds(np.random.randint(10, 20))
                         
@@ -927,7 +927,7 @@ class ca_search_tool:
                         
                         #elements = browser.find_elements(By.CLASS_NAME, "result ")
                         
-                        elements = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+                        elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
 
                         if len(elements) > case_num:
                             
