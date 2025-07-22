@@ -852,8 +852,8 @@ class ca_search_tool:
 
         #Get search results
         browser.get(self.results_url)
-        browser.delete_all_cookies()
-        browser.refresh()
+        #browser.delete_all_cookies()
+        #browser.refresh()
 
         try:
             accept_all_cookies = Wait(browser, 30).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
