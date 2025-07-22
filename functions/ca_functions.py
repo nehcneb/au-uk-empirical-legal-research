@@ -86,6 +86,7 @@ from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
 
 
 options = Options()
@@ -652,71 +653,6 @@ ca_meta_dict = {
 # ## Search engine
 
 # %%
-def ca_meta_judgment_dict(case_info):
-
-    judgment_url = case_info['Hyperlink to CanLII']
-
-    #Make link clickable
-    case_info['Hyperlink to CanLII'] = link(case_info['Hyperlink to CanLII'])
-
-    #Add default values
-    case_info.update({'File number': '', 
-                     'Most recent unfavourable mention': '', 
-                     'judgment': ''
-                         }
-                        )
-
-    #Remove sypnosis
-    if 'Synopsis' in case_info.keys():
-        case_info.pop('Synopsis')
-    
-    try:
-
-        headers = {'User-Agent': 'whatever'}
-        page = requests.get(judgment_url, headers=headers)
-        soup = BeautifulSoup(page.content, "lxml")
-        meta_tags = soup.find_all("meta")
-        
-        #Attach metadata
-        for meta in ca_meta_dict.keys():
-            try:
-                meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
-            except:
-                meta_content = ''
-            case_info.update({meta: meta_content})
-    
-        #Date, case number, citations
-        
-        extra_metas = soup.find_all('div', class_ = "row py-1")
-        
-        for meta in extra_metas:
-            #if 'date:' in meta.text.lower():
-                #case_info.update({'Date': meta.text})
-        
-            if 'file number:' in meta.text.lower():
-                case_info.update({'File number': meta.text.replace('\n', '').replace('File number:', '').replace('File numbers:', '')})
-        
-            #if 'citation:' in meta.text.lower():
-                #case_info.update({'Citation': meta.text})
-        
-            if 'other citation' in meta.text.lower():
-                case_info.update({'Other citations': meta.text.replace('\n', '').replace('Other citation:', '').replace('Other citations:', '')})
-    
-            if 'Most recent unfavourable mention' in meta.text.lower():
-                case_info.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
-    
-        #Judgment text
-    
-        judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip=True)
-    
-        case_info.update({'judgment': judgment_text})
-
-    except Exception as e:
-        print(f"{case_info['Case name']}: judgment not scrapped")
-        print(e)
-    
-    return case_info
-
 
 # %%
 #Function turning search terms to search results url
@@ -873,24 +809,42 @@ class ca_search_tool:
         #browser = get_driver()
         
         browser.get(self.results_url)
-        #browser.delete_all_cookies()
-        #browser.refresh()
+        browser.delete_all_cookies()
+        browser.refresh()
+
+        #try:
+            #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
+
+            #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, './/div[@id = "understandCookieConsent"|@id = "cookieConsentBlocker"]'))) 
+            
+            #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "//*[contains(text(), 'ookieConsent')]"))) 
+            
+            #accept_cookies.click()
+
+            #print(f"Accepted cookies")
+        
+        #except Exception as e:
+            
+            #print(f"Did not accept cookies due to error: {e}")
 
         try:
-            accept_all_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
-            accept_all_cookies.click()
-
-        except Exception as e:
-            print(f"Did not accept all cookies due to error: {e}")
-
-        try:
+            
             search_button = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
+            
             search_button.click()
 
-        except Exception as e:
+        #except Exception as e:
             
+            #print(f"Did not click search button due to error: {e}")
+        
+        except ElementClickInterceptedException as e:
+
             print(f"Did not click search button due to error: {e}")
 
+            print("Trying to click on search button again")
+
+            browser.execute_script("arguments[0].click()", search_button)
+            
         #Check if any cases found
         try:
             #Get all cases from current page    
@@ -1065,6 +1019,72 @@ class ca_search_tool:
             
         #browser.quit()
 
+    #Get judgment text from each case
+    def ca_meta_judgment_dict(self, case_info):
+    
+        judgment_url = case_info['Hyperlink to CanLII']
+    
+        #Make link clickable
+        case_info['Hyperlink to CanLII'] = link(case_info['Hyperlink to CanLII'])
+    
+        #Add default values
+        case_info.update({'File number': '', 
+                         'Most recent unfavourable mention': '', 
+                         'judgment': ''
+                             }
+                            )
+    
+        #Remove sypnosis
+        if 'Synopsis' in case_info.keys():
+            case_info.pop('Synopsis')
+        
+        try:
+    
+            headers = {'User-Agent': 'whatever'}
+            page = requests.get(judgment_url, headers=headers)
+            soup = BeautifulSoup(page.content, "lxml")
+            meta_tags = soup.find_all("meta")
+            
+            #Attach metadata
+            for meta in ca_meta_dict.keys():
+                try:
+                    meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
+                except:
+                    meta_content = ''
+                case_info.update({meta: meta_content})
+        
+            #Date, case number, citations
+            
+            extra_metas = soup.find_all('div', class_ = "row py-1")
+            
+            for meta in extra_metas:
+                #if 'date:' in meta.text.lower():
+                    #case_info.update({'Date': meta.text})
+            
+                if 'file number:' in meta.text.lower():
+                    case_info.update({'File number': meta.text.replace('\n', '').replace('File number:', '').replace('File numbers:', '')})
+            
+                #if 'citation:' in meta.text.lower():
+                    #case_info.update({'Citation': meta.text})
+            
+                if 'other citation' in meta.text.lower():
+                    case_info.update({'Other citations': meta.text.replace('\n', '').replace('Other citation:', '').replace('Other citations:', '')})
+        
+                if 'Most recent unfavourable mention' in meta.text.lower():
+                    case_info.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
+        
+            #Judgment text
+        
+            judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip=True)
+        
+            case_info.update({'judgment': judgment_text})
+    
+        except Exception as e:
+            print(f"{case_info['Case name']}: judgment not scrapped")
+            print(e)
+        
+        return case_info
+    
     #get judgments
     def get_judgments(self):
 
@@ -1077,7 +1097,7 @@ class ca_search_tool:
 
         for case_info in self.case_infos:
 
-            judgment_dict = ca_meta_judgment_dict(case_info)
+            judgment_dict = self.ca_meta_judgment_dict(case_info)
     
             self.case_infos_w_judgments.append(judgment_dict)
 
