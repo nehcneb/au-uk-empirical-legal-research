@@ -74,8 +74,6 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 from functions.common_functions import link
 
 # %%
-#Scrape javascript
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -86,19 +84,40 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver import ActionChains
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+
 
 options = Options()
 options.add_argument("--disable-gpu")
-options.add_argument("--headless")
+#options.add_argument("--headless")
 options.add_argument('--no-sandbox')  
 options.add_argument('--disable-dev-shm-usage')  
 
+if 'Users/Ben' not in os.getcwd(): 
+
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+    options.add_argument("window-size=1200x600")
+
 #@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
-    return webdriver.Chrome(options=options)
+
+    browser = webdriver.Chrome(options=options)
+
+    browser.implicitly_wait(15)
+    browser.set_page_load_timeout(30)
+
+    if 'Users/Ben' in os.getcwd():
+        browser.minimize_window()
+    
+    return browser
 
 try:
+    
     browser = get_driver()
     
     #browser.implicitly_wait(5)
@@ -856,14 +875,14 @@ class ca_search_tool:
         #browser.refresh()
 
         try:
-            accept_all_cookies = Wait(browser, 30).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
+            accept_all_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
             accept_all_cookies.click()
 
         except Exception as e:
             print(f"Did not accept all cookies due to error: {e}")
 
         try:
-            search_button = Wait(browser, 30).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
+            search_button = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
             search_button.click()
 
         except Exception as e:
@@ -873,11 +892,11 @@ class ca_search_tool:
         #Check if any cases found
         try:
             #Get all cases from current page    
-            #elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
-            elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
+            #elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+            elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
             
             #Get all number of results
-            #results_count_raw = Wait(browser, 30).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
+            #results_count_raw = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
             results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
     
             results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
@@ -919,7 +938,7 @@ class ca_search_tool:
 
                     try:
         
-                        load_more = Wait(browser, 30).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
+                        load_more = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
                         
                         #pause.seconds(np.random.randint(10, 20))
                         
@@ -927,7 +946,7 @@ class ca_search_tool:
                         
                         #elements = browser.find_elements(By.CLASS_NAME, "result ")
                         
-                        elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+                        elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
 
                         if len(elements) > case_num:
                             
@@ -1062,7 +1081,7 @@ class ca_search_tool:
 
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{self.judgment_counter_bound} judgments.")
             
-            pause.seconds(np.random.randint(15, 30))
+            pause.seconds(np.random.randint(15, 15))
 
 
 # %%
