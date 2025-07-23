@@ -886,7 +886,7 @@ st.header("Next steps")
 #Calculate estimating waiting time
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])*30/60} minute(s)**.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {int(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files']))} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])*30/60} minute(s)**.
 """)
 
 if batch_mode_allowed() > 0:
@@ -904,7 +904,7 @@ if batch_mode_allowed() > 0:
             color: black;
         }""",
     ):
-        batch_button = st.button(label = 'REQUEST data', 
+        batch_button = st.button(label = f"REQUEST data (up to {st.session_state['judgment_counter_max']} files)", 
                                   help = 'You can only :orange[REQUEST] data once per session.', 
                                  disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
                                 )
@@ -918,7 +918,7 @@ with stylable_container(
     }""",
 ):
 
-    run_button = st.button(label = 'PRODUCE data', 
+    run_button = st.button(label = f"PRODUCE data now (up to {int(min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of files']))} files)", 
                           help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
                            disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"])))
                           )
@@ -932,7 +932,7 @@ if ((own_account_entry == True) and (uploaded_images)):
 Alternatively, you can send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach.
 """)
     
-        run_button_b64 = st.button(label = 'SEND images to GPT directly', 
+        run_button_b64 = st.button(label = f"SEND images to GPT directly now (up to {min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of files'])} files)", 
                                   help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
                                    disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"])))
                                   )
@@ -944,7 +944,7 @@ Alternatively, you can send images directly to GPT. This alternative approach ma
 Alternatively, you can request to send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach. Your request data will be sent to your nominated email address in about **2 business days**.
 """)
         
-        batch_button_b64 = st.button(label = 'REQUEST to send images to GPT directly', 
+        batch_button_b64 = st.button(label = f"REQUEST to send images to GPT directly (up to {st.session_state['judgment_counter_max']} files)", 
                                        help = 'You can only :orange[REQUEST] data once per session.', 
                                  disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
                                     )

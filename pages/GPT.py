@@ -457,10 +457,11 @@ if 'disable_input' not in st.session_state:
 #default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max/2
 
 #Instant mode max/batch mode threshold
-if own_account_allowed() > 0:
+if "judgment_batch_cutoff" not in st.session_state:
+#if own_account_allowed() > 0:
     st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
-else:
-    st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
+#else:
+    #st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
 #Maximum number of judgments to process under any mode
 if "judgment_counter_max" not in st.session_state:
@@ -774,7 +775,7 @@ st.header("Next steps")
 #estimated_waiting_secs = int(float(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])))*30
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])*30/60} minute(s)**.
+st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {int(min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of judgments']))} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])*30/60} minute(s)**.
 """)
 
 #st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of judgments'])} cases. The estimated waiting time is **{estimated_waiting_secs/60} minute(s)**.""")
@@ -797,7 +798,7 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_
             color: black;
         }""",
     ):
-        batch_button = st.button(label = 'REQUEST data', 
+        batch_button = st.button(label = f"REQUEST data (up to {st.session_state['judgment_counter_max']} cases)", 
                                  help = 'You can only :orange[REQUEST] data once per session.', 
                                  disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
                                 )#, disabled = not bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > default_judgment_counter_bound))
@@ -810,7 +811,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = 'PRODUCE data', 
+    run_button = st.button(label = f"PRODUCE data now (up to {int(min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of judgments']))} cases)", 
                            help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
                            disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"])))
                           )

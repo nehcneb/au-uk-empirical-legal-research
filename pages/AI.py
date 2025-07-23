@@ -365,6 +365,10 @@ def llm_setting(ai_choice, key, gpt_model_choice):
     if ai_choice == 'GPT':
         
         llm = OpenAI(api_token=key, model = gpt_model_choice)
+
+    if ai_choice == 'LangChain': 
+
+        llm = ChatOpenAI(model_name = gpt_model_choice, temperature=0.2, openai_api_key=key, streaming = False)
     
     return llm
 
