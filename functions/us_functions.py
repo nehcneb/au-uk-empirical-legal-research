@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_image_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -1410,47 +1410,34 @@ class us_search_tool:
         #if 'id' in opinion_json.keys():
             #opinion_id = opinion_json['id']
 
-        #Getting opinion text from sources sorted from worst to best, so the last checked is best
+        #Getting opinion text from sources sorted from best to worst
         #See https://www.courtlistener.com/help/api/rest/case-law/#opinion-endpoint
-        
-        if 'plain_text' in opinion_json.keys():
-            if len(opinion_json['plain_text']) > 0:
-                opinion_text = opinion_json['plain_text']
-        
-        if 'html' in opinion_json.keys():
-            if len(opinion_json['html']) > 0:
-                opinion_text = opinion_json['html']
 
-        if 'html_anon_2020' in opinion_json.keys():
-            if len(opinion_json['html_anon_2020']) > 0:
-                opinion_text = opinion_json['html_anon_2020']
 
-        if 'xml_harvard' in opinion_json.keys():
-            if len(opinion_json['xml_harvard']) > 0:
-                opinion_text = opinion_json['xml_harvard']
+        for text_key in ['html_with_citations', 'html_columbia', 'html_lawbox', 'xml_harvard', 'html_anon_2020', 'html', 'plain_text' ]:
 
-        if 'html_lawbox' in opinion_json.keys():
-            if len(opinion_json['html_lawbox']) > 0:
-                opinion_text = opinion_json['html_lawbox']
+            if text_key in opinion_json.keys():
+    
+                if len(opinion_json[text_key]) > 0:
+                    
+                    opinion_text = opinion_json[text_key]
 
-        if 'html_columbia' in opinion_json.keys():
-            if len(opinion_json['html_columbia']) > 0:
-                opinion_text = opinion_json['html_columbia']
-        
-        if 'html_with_citations' in opinion_json.keys():
-            if len(opinion_json['html_with_citations']) > 0:
-                opinion_text = opinion_json['html_with_citations']
+                    print(f"Opinion id {opinion_id}: got text from {text_key}")
+                    
+                    break
 
-        if 'local_path' in opinion_json.keys():
+        #Get text from pdf only if has to
+        if (len(opinion_text) == 0) and ('local_path' in opinion_json.keys()):
             if '.pdf' in str(opinion_json['local_path']).lower():
                 pdf_url = 'https://storage.courtlistener.com/' + opinion_json['local_path']
-                opinion_text = pdf_image_judgment(pdf_url)
+                opinion_text = pdf_judgment(pdf_url)
 
         #st.write(opinion_json.keys())
         
         opinion_json_cleaned = {'snippet': opinion_snippet, 'type': opinion_type, 'text': opinion_text}
         
         if len(opinion_json_cleaned['text']) == 0:
+            
             print(f'Opinion id {opinion_id}: no text scraped. Please check {opinion_url}.')
 
         return opinion_json_cleaned
@@ -1464,6 +1451,9 @@ class us_search_tool:
         else:
             
             self.results_w_opinions = self.results_to_show.copy()
+
+            #Start scraping counter
+            scraping_counter = 0
             
             for result in self.results:
     
@@ -1474,19 +1464,10 @@ class us_search_tool:
                 
                 #Get a list of opinions
 
-                #Start scraping counter
-                scraping_counter = 0
-                
                 opinions_list = result['opinions']
                 for opinion_raw in opinions_list:
                     opinion_json_cleaned = self.clean_opinion_json(opinion_raw, self.headers)
-                    opinion_list_raw.append(opinion_json_cleaned)
-                    pause.seconds(np.random.randint(5, 10))
-
-                    scraping_counter += 1
-                    
-                    print(f"Scrapped {scraping_counter}/{len(opinions_list)} docs.")
-                
+                    opinion_list_raw.append(opinion_json_cleaned)                
                     #self.results_w_opinions[result_index]['opinions'].append(opinion_json_cleaned)
     
                 #Append opinion to result from combined, to leading, to concurrence, to dissent
@@ -1509,6 +1490,12 @@ class us_search_tool:
                     if ((key not in self.renamed_keys) and (key not in self.results_w_opinions[result_index].keys())):
                         self.results_w_opinions[result_index][key] = result[key]
                         self.metadata_droppable.append(key)
+    
+                scraping_counter += 1
+                
+                print(f"Scrapped {scraping_counter}/{len(self.results)} docs.")
+    
+                pause.seconds(np.random.randint(2, 5))
 
     #Define function for getting PDF from one link
     #@st.cache_data(show_spinner = False)
@@ -1519,7 +1506,7 @@ class us_search_tool:
         if ('filepath_local' in recap_document.keys()) and ('is_available' in recap_document.keys()):
             if (('.pdf' in str(recap_document['filepath_local']).lower()) and (str(recap_document['is_available']).lower() == 'true')):
                 pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']    
-                recap_document['file_content'] = pdf_image_judgment(pdf_url)
+                recap_document['file_content'] = pdf_judgment(pdf_url)
         
         return recap_document
 
@@ -1531,7 +1518,10 @@ class us_search_tool:
             print('Not scraping PACER documents because another type of documents is sought.')
         else:
             self.results_w_docs = self.results_to_show.copy()
-            
+
+            #Start scraping counter
+            scraping_counter = 0
+                
             for result in self.results:
     
                 #Create placeholder for 'recap_documents' (instead of 'judgment')
@@ -1541,24 +1531,22 @@ class us_search_tool:
                 #Get a list of docs
                 docs_list = result['recap_documents']
 
-                #Start scraping counter
-                scraping_counter = 0
-                
                 #Get PDF for each doc json from the list of docs, then append each json with PDF to results_w_docs
                 for doc_raw in docs_list:
                     doc_json_cleaned = self.clean_doc_json(doc_raw, self.headers)
                     self.results_w_docs[result_index]['recap_documents'].append(doc_json_cleaned)
-                    pause.seconds(np.random.randint(5, 10))
-
-                    scraping_counter += 1
-                    
-                    print(f"Scrapped {scraping_counter}/{len(docs_list)} docs.")
                 
                 #Add case-specific metadata key/values to results_w_docs, create list of dropable metadata
                 for key in result.keys():
                     if ((key not in self.renamed_keys) and (key not in self.results_w_docs[result_index].keys())):
                         self.results_w_docs[result_index][key] = result[key]
                         self.metadata_droppable.append(key)
+
+                scraping_counter += 1
+                
+                print(f"Scrapped {scraping_counter}/{len(self.results)} docs.")
+
+                pause.seconds(np.random.randint(2, 5))
 
 
 # %%

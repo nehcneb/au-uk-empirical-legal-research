@@ -60,7 +60,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, pdf_image_judgment, link, is_date, split_title_mnc
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, pdf_judgment, link, is_date, split_title_mnc
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -552,7 +552,7 @@ def hca_meta_judgment_dict(judgment_url):
     
         #Judgment text
         judgment_url = judgment_url.replace('showCase', 'downloadPdf')
-        judgment_dict['judgment'] = pdf_image_judgment(judgment_url)
+        judgment_dict['judgment'] = pdf_judgment(judgment_url)
 
     except Exception as e:
         print(f"{judgment_dict['Case name']}: judgment not scrapped")
@@ -604,7 +604,7 @@ def hca_meta_judgment_dict_alt(judgment_url):
             raw_link = judgment_pdfs_list[0]['href']
             pdf_link = 'https://eresources.hcourt.gov.au' + raw_link
             pdf_link = pdf_link.replace('showCase', 'downloadPdf')
-            judgment_dict['judgment'] = pdf_image_judgment(pdf_link)
+            judgment_dict['judgment'] = pdf_judgment(pdf_link)
     
         else:
             judgment_dict['judgment'] = ''

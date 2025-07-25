@@ -519,7 +519,7 @@ if 'System instruction' not in st.session_state.df_master.columns:
         
     st.session_state['df_master'].loc[0, 'System instruction'] = role_content_own
 
-if 'System instruction' not in st.session_state.df_master.columns:
+if 'Example' not in st.session_state.df_master.columns:
         
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
@@ -549,7 +549,13 @@ if "judgment_counter_max" not in st.session_state:
 
 if batch_mode_allowed() > 0:
 
-    st.session_state["judgment_counter_max"] = int(round(judgment_batch_max))
+    if own_account_allowed() > 0:
+
+        st.session_state["judgment_counter_max"] = judgment_batch_max
+
+    else:
+
+        st.session_state["judgment_counter_max"] = judgment_batch_cutoff
 
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
