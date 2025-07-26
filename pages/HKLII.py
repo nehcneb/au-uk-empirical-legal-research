@@ -439,7 +439,7 @@ filtered_by_dbs_toggle = st.toggle(label = 'Select/unselect databases',
 
 if not filtered_by_dbs_toggle:
 
-    st.info("All databases will be covered if you don't select one.")
+    st.info("All databases will be covered if you don't make a selection.")
 
     dbs_en_cases_entry = []
 
