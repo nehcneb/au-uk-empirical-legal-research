@@ -64,7 +64,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, send_notification_email
+from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, send_notification_email, search_error_display
 
 # %% [markdown]
 # # GPT functions and variables
@@ -1934,20 +1934,26 @@ def batch_request_function():
                     #Change session states
                     st.session_state["batch_submitted"] = True
                     st.session_state['need_resetting'] = 1
-
+                    st.session_state["batch_error"] == False
+                    st.session_state['error_msg'] = ''
+                    
                     st.rerun()
                 
                 except Exception as e:
 
-                    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                    
-                    st.error(e)
-                    
-                    st.error(traceback.format_exc())
+                    #Change session states
+                    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound                    
+                    st.session_state["batch_submitted"] = False
+                    st.session_state["batch_error"] = True
     
-                    print(e)
-    
+                    st.error(search_error_display)
+                                    
                     print(traceback.format_exc())
+    
+                    st.session_state['error_msg'] = traceback.format_exc()
+
+                    st.rerun()
+
 
 
 # %% [markdown]

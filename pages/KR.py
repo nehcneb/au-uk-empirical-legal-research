@@ -40,6 +40,7 @@ import urllib.request
 import io
 from io import BytesIO
 import string
+import traceback
 
 #Streamlit
 import streamlit as st
@@ -61,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons, list_value_check
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons, list_value_check, report_error
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -260,6 +261,14 @@ if 'df_individual_output' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
+#Initialise jurisdiction_page
+if 'jurisdiction_page' not in st.session_state:
+    st.session_state['jurisdiction_page'] = 'pages/KR.py'
+
+#Initialise error reporting status
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = ''
+
 # %%
 #If landing page is not home
 if 'page_from' not in st.session_state:
@@ -333,35 +342,46 @@ if preview_button:
         
         with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
 
-            df_master = kr_create_df()
+            try:
+
+                df_master = kr_create_df()
+                
+                search_results_w_count = kr_search_url(df_master)
+                
+                results_count = search_results_w_count['results_count']
             
-            search_results_w_count = kr_search_url(df_master)
+                results_url = search_results_w_count['results_url']
+        
+                case_infos = search_results_w_count['case_infos']
             
-            results_count = search_results_w_count['results_count']
-        
-            results_url = search_results_w_count['results_url']
-    
-            case_infos = search_results_w_count['case_infos']
-        
-            if results_count > 0:
+                if results_count > 0:
+                
+                    df_preview = pd.DataFrame(case_infos)
             
-                df_preview = pd.DataFrame(case_infos)
-        
-                #Get display settings
-                display_df_dict = display_df(df_preview)
-        
-                df_preview = display_df_dict['df']
-        
-                link_heading_config = display_df_dict['link_heading_config']
-                    
-                #Display search results
-                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                            
-                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+                    #Get display settings
+                    display_df_dict = display_df(df_preview)
             
-            else:
-    
-                st.error(no_results_msg)
+                    df_preview = display_df_dict['df']
+            
+                    link_heading_config = display_df_dict['link_heading_config']
+                        
+                    #Display search results
+                    st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                                
+                    st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+                
+                else:
+        
+                    st.error(no_results_msg)
+
+            except Exception as e:
+
+                st.error(search_error_display)
+                
+                print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
 
 
 # %% [markdown]
@@ -463,7 +483,25 @@ if next_button:
                     st.switch_page('pages/GPT.py')
 
             except Exception as e:
-                print(search_error_display)
-                print(e)
+
                 st.error(search_error_display)
-                st.error(e)
+                
+                print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+
+# %%
+
+# %% [markdown]
+# # Report error
+
+# %%
+if len(st.session_state.error_msg) > 0:
+
+    report_error_button = st.button(label = 'REPORT the error', type = 'primary', help = 'Send your entries and a report of the error to the developer.')
+
+    if report_error_button:
+
+        st.session_state.error_msg = report_error(error_msg = st.session_state.error_msg, jurisdiction_page = st.session_state.jurisdiction_page, df_master = st.session_state.df_master)
+

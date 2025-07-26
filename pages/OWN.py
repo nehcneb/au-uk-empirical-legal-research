@@ -82,12 +82,11 @@ st.set_page_config(
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error_email
+from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display
 
-default_file_counter_bound = default_judgment_counter_bound
 
 # %% [markdown]
 # # Functions for Own Files
@@ -140,7 +139,7 @@ def own_create_df():
         file_counter_bound = file_counter_bound_entry
     except:
         print('File counter bound not entered')
-        file_counter_bound = default_file_counter_bound
+        file_counter_bound = default_judgment_counter_bound
 
     #Page counter bound
     #page_bound = st.session_state['df_master'].loc[0,'Maximum number of pages per file']
@@ -350,6 +349,7 @@ def own_run_function():
                 #download_buttons(df_master, df_individual)
 
                 #Clear any error
+                st.session_state["batch_error"] = False
                 st.session_state['error_msg'] = ''
                 
                 st.rerun()
@@ -359,21 +359,13 @@ def own_run_function():
                 #Clear output
                 st.session_state["df_individual"] = pd.DataFrame([])
                 
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                #st.error(traceback.format_exc())
-
-                print(e)
-
-                #print(traceback.format_exc())
+                st.error(search_error_display)
+                                
+                print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
 
-                st.rerun()
 
-                
 
 # %%
 @st.dialog("Producing data")
@@ -452,6 +444,7 @@ def run_b64_function():
                     #st.warning("If your spreadsheet reader does not display non-English text properly, please change the encoding to UTF-8 Unicode.")
 
                 #Clear any error
+                st.session_state["batch_error"] = False
                 st.session_state['error_msg'] = ''
                 
                 st.rerun()
@@ -461,19 +454,12 @@ def run_b64_function():
                 #Clear output
                 st.session_state["df_individual"] = pd.DataFrame([])
                 
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                #st.error(traceback.format_exc())
-
-                print(e)
-
-                #print(traceback.format_exc())
+                st.error(search_error_display)
+                                
+                print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
-
-                st.rerun()
+                
 
 
 
@@ -501,7 +487,7 @@ if 'df_master' not in st.session_state:
     df_master_dict = {'Your name': '',
     'Your email address': '',
     'Your GPT API key': '',
-    'Maximum number of files': default_file_counter_bound,
+    'Maximum number of files': default_judgment_counter_bound,
     'Maximum number of pages per file': default_page_bound,
     'Language choice': 'English',
     'Enter your questions for GPT': '',
@@ -561,6 +547,9 @@ if batch_mode_allowed() > 0:
 if "batch_submitted" not in st.session_state:
     st.session_state["batch_submitted"] = False
 
+if "batch_error" not in st.session_state:
+    st.session_state["batch_error"] = False
+
 if "batch_ready_for_submission" not in st.session_state:
     st.session_state["batch_ready_for_submission"] = False
 
@@ -576,6 +565,10 @@ if "df_example_key" not in st.session_state:
 if 'estimated_waiting_secs' not in st.session_state:
     
     st.session_state['estimated_waiting_secs'] = int(float(st.session_state["judgment_batch_cutoff"]))*30
+
+#Initialise jurisdiction_page
+if 'jurisdiction_page' not in st.session_state:
+    st.session_state['jurisdiction_page'] = 'pages/OWN.py'
 
 #Initialise error reporting status
 if 'error_msg' not in st.session_state:
@@ -593,7 +586,7 @@ st.header(f"Research :blue[your own files]")
     
 st.success(f'Please upload your documents or images.')
 
-st.caption(f'By default, this app will extract text from up to {default_file_counter_bound} files, and process up to approximately {round(tokens_cap(basic_model)*3/4)} words from the first {default_page_bound} pages of each file. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
+st.caption(f'By default, this app will extract text from up to {default_judgment_counter_bound} files, and process up to approximately {round(tokens_cap(basic_model)*3/4)} words from the first {default_page_bound} pages of each file. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more files or more pages per file.')
 
 st.warning('This app works only if the text from your file(s) is displayed horizontally and neatly.')
 
@@ -734,7 +727,11 @@ if uploaded_file:
         
     except Exception as e:
         
-        st.error(f'Sorry, this app is unable to follow this example due to this error: {e}')
+        st.error(f'Sorry, this app is unable to follow the selected example.')
+
+        print(traceback.format_exc())
+
+        st.session_state['error_msg'] = traceback.format_exc()
 
 if len(st.session_state.df_example_to_show) > 0:
         
@@ -1038,8 +1035,9 @@ if (batch_mode_allowed() > 0) and ((own_account_entry) and (uploaded_images)):
 
 # %%
 if run_button:
-
+            
     own_run_function()
+
 
 
 # %%
@@ -1053,7 +1051,6 @@ if immediate_b64() > 0:
 
             run_b64_function()
         
-
 
 # %%
 if keep_button:
@@ -1130,41 +1127,18 @@ if batch_mode_allowed() > 0:
 
         else:
 
-            try:
-                #Create spreadsheet of responses
-                df_master = own_create_df()
-    
-                #Ensure b64 is turned off
-                df_master.loc[0, 'b64_enabled'] = False
-                
-                #Keep entries in session state    
-                st.session_state["df_master"] = df_master
-                
-                own_batch_request_function(df_master, uploaded_docs, uploaded_images)
+            #Create spreadsheet of responses
+            df_master = own_create_df()
 
-                #Don't clear any error
-                #st.session_state['error_msg'] = ''
-                            
-            except Exception as e:
-    
-                #Clear output
-                st.session_state["df_individual"] = pd.DataFrame([])
-                
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                #st.error(traceback.format_exc())
-    
-                print(e)
-    
-                #print(traceback.format_exc())
-    
-                st.session_state['error_msg'] = traceback.format_exc()
+            #Ensure b64 is turned off
+            df_master.loc[0, 'b64_enabled'] = False
+            
+            #Keep entries in session state    
+            st.session_state["df_master"] = df_master
+            
+            own_batch_request_function(df_master, uploaded_docs, uploaded_images)
 
-                st.rerun()
-
-    if st.session_state.batch_submitted and st.session_state.need_resetting:
+    if st.session_state.batch_submitted and st.session_state.need_resetting and (st.session_state.batch_error == False):
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
 
@@ -1173,6 +1147,13 @@ if batch_mode_allowed() > 0:
             if st.session_state.gpt_model == basic_model:
                 st.warning('A low-cost GPT model is in use. Please be cautious.')
                 st.caption(f'Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or use a better model.')
+            
+            #if st.session_state.gpt_model == flagship_model:
+                #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
+
+    if (st.session_state.batch_error) and (len(st.session_state.error_msg) > 0):
+
+        st.error(search_error_display)
 
 
 # %% [markdown]
@@ -1181,24 +1162,9 @@ if batch_mode_allowed() > 0:
 # %%
 if len(st.session_state.error_msg) > 0:
 
-    st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-
-    st.error(st.session_state.error_msg)
-        
-    report_error_button = st.button(label = 'REPORT the error', help = 'Send your entries and a report of the error to the developer.')
+    report_error_button = st.button(label = 'REPORT the error', type = 'primary', help = 'Send your entries and a report of the error to the developer.')
 
     if report_error_button:
 
-        #Send me an email to let me know
-        report_error_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
-                                ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address'],
-                           jurisdiction_page = st.session_state.jurisdiction_page,
-                           df_master = st.session_state['df_master'], 
-                           error_msg = st.session_state.error_msg
-                               )
-
-        #Clear any error
-        st.session_state['error_msg'] = ''
-
-        st.success("Thank you for reporting the error. We will look at your report as soon as possible.")
+        st.session_state.error_msg = report_error(error_msg = st.session_state.error_msg, jurisdiction_page = st.session_state.jurisdiction_page, df_master = st.session_state.df_master)
 

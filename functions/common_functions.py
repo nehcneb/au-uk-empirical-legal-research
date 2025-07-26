@@ -22,7 +22,7 @@ def own_account_allowed():
 
 # %%
 def check_questions_answers():
-    return 0
+    return 1
 
 
 # %%
@@ -528,7 +528,8 @@ def reverse_link(x):
 
 # %%
 #Display error for scraping
-search_error_display = 'The database from which this app sources cases is not responding. Please try again in a few hours.'
+#search_error_display = 'The database from which this app sources cases is not responding. Please try again in a few hours.'
+search_error_display = 'Sorry, an error has occurred. Please change your entries or wait a few hours, and try again.'
 
 
 # %%
@@ -888,6 +889,28 @@ def uploaded_file_to_df(uploaded_file):
 
     return df
     
+
+
+# %%
+#Function for reporting error
+
+def report_error(error_msg, jurisdiction_page, df_master):
+
+    #Send me an email to let me know
+    report_error_email(ULTIMATE_RECIPIENT_NAME = df_master.loc[0, 'Your name'], 
+                            ULTIMATE_RECIPIENT_EMAIL = df_master.loc[0, 'Your email address'],
+                       jurisdiction_page = jurisdiction_page,
+                       df_master = df_master, 
+                       error_msg = error_msg
+                        )
+
+    st.success("Thank you for reporting the error. We will look at your report as soon as possible.")
+    
+    #Clear any error
+    error_msg_to_return = ''
+    
+    return error_msg_to_return
+
 
 
 # %% [markdown]

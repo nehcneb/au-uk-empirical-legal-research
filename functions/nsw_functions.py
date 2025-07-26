@@ -65,7 +65,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, date_parser, save_input, split_title_mnc, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, date_parser, save_input, split_title_mnc, pdf_image_judgment
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
@@ -225,7 +225,7 @@ def nsw_short_judgment(uri):
     if str(PDF_raw_link).lower() != 'none':
         PDF_link = 'https://www.caselaw.nsw.gov.au' + PDF_raw_link.get('href')    
         headers = {'User-Agent': 'whatever'}
-        judgment_text = pdf_judgment(PDF_link)
+        judgment_text = pdf_image_judgment(PDF_link)
         judgment_type = 'pdf'
         
     #Return html text if no PDF

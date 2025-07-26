@@ -534,162 +534,162 @@ class hk_search_tool:
 
             try_counter += 1
             
-            try:
+            #try:
                 
-                #Pause to avoid getting kicked out
-                pause.seconds(np.random.randint(5, 10))
-                
-                browser.get(self.results_url)
-                #browser.delete_all_cookies()
-                browser.refresh()
-        
-                #self.soup = BeautifulSoup(browser.page_source, "lxml")
-                
-                results_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
-                
-                self.results_count = int(results_count_list[0].text)
-        
-                page_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
-        
-                self.total_pages = int(page_count_list[0].text)
-                                
-                self.soup = BeautifulSoup(browser.page_source, "lxml")
-        
-                #Get case infos from search results page
-                
-                case_numbers_list_raw = self.soup.find_all('a', {'class': 'searchfont result-caseno'})
-                
-                link_mnc_list_raw = self.soup.find_all('div', {'class': 'col-md-6 pl-1'}) #Every second item in this list is redundant
-
-                #st.write(f"link_mnc_list_raw == {link_mnc_list_raw}")
-                
-                date_list_raw = self.soup.find_all('div', {'class': 'col-md-4 pl-1'})
-                
-                case_names_list_raw = self.soup.find_all('div', {'class': 'col-md-12 pl-1'})
-                
-                case_numbers_list = []
-
-                reported_list = []
-                
-                mnc_list = []
-                
-                judgment_urls_list = []
-                
-                date_list = []
-                
-                case_names_list = []
-                
-                for case_number_raw in case_numbers_list_raw:
-                    case_number = case_number_raw.get_text(strip = True)
-                    case_numbers_list.append(case_number)
-                
-                mnc_counter = 0
-                
-                for link_mnc_raw in link_mnc_list_raw:
-
-                    if mnc_counter % 2 == 0:
-                        
-                        #link_mnc_raw = link_mnc_raw.get_text(strip = True) #This doesn't work on Streamlit Cloud
-                        
-                        link_mnc_raw = str(link_mnc_raw)
-                        
-                        #st.write(f"link_mnc_raw == {link_mnc_raw}")
-
-                        if re.search(r'\[\d{4}\].+\d+', link_mnc_raw):
+            #Pause to avoid getting kicked out
+            pause.seconds(np.random.randint(5, 10))
+            
+            browser.get(self.results_url)
+            #browser.delete_all_cookies()
+            browser.refresh()
+    
+            #self.soup = BeautifulSoup(browser.page_source, "lxml")
+            
+            results_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
+            
+            self.results_count = int(results_count_list[0].text)
+    
+            page_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
+    
+            self.total_pages = int(page_count_list[0].text)
                             
-                            mnc = re.findall(r'\[\d{4}\].+\d+', link_mnc_raw)[0]
-                        
-                        else:
-                            
-                            mnc = ''
-                
-                        if re.search(r"\'DIS.+\'", link_mnc_raw):
-                        
-                            judgment_url = re.findall(r"\'DIS.+\'", link_mnc_raw)[0]
-                        
-                        else:
-                            
-                            judgment_url = ''
-                        
-                        judgment_url =  "https://legalref.judiciary.hk/lrs/common/search/search_result_detail_frame.jsp?" + judgment_url.replace("'", "")
-                            
-                        mnc_list.append(mnc)
-                
-                        judgment_urls_list.append(judgment_url)
+            self.soup = BeautifulSoup(browser.page_source, "lxml")
+    
+            #Get case infos from search results page
+            
+            case_numbers_list_raw = self.soup.find_all('a', {'class': 'searchfont result-caseno'})
+            
+            link_mnc_list_raw = self.soup.find_all('div', {'class': 'col-md-6 pl-1'}) #Every second item in this list is redundant
+
+            #st.write(f"link_mnc_list_raw == {link_mnc_list_raw}")
+            
+            date_list_raw = self.soup.find_all('div', {'class': 'col-md-4 pl-1'})
+            
+            case_names_list_raw = self.soup.find_all('div', {'class': 'col-md-12 pl-1'})
+            
+            case_numbers_list = []
+
+            reported_list = []
+            
+            mnc_list = []
+            
+            judgment_urls_list = []
+            
+            date_list = []
+            
+            case_names_list = []
+            
+            for case_number_raw in case_numbers_list_raw:
+                case_number = case_number_raw.get_text(strip = True)
+                case_numbers_list.append(case_number)
+            
+            mnc_counter = 0
+            
+            for link_mnc_raw in link_mnc_list_raw:
+
+                if mnc_counter % 2 == 0:
                     
-                    mnc_counter += 1
-                
-                for date_raw in date_list_raw:
+                    #link_mnc_raw = link_mnc_raw.get_text(strip = True) #This doesn't work on Streamlit Cloud
                     
-                    date = date_raw.get_text(strip = True)
-                
-                    if ':' in date:
-                        date = date.split(':')[-1]
-                
-                    date = date.replace(' ', '')
-                        
-                    date_list.append(date)
-                
-                for case_name_raw in case_names_list_raw:
+                    link_mnc_raw = str(link_mnc_raw)
                     
-                    case_name = case_name_raw.get_text(strip = True)
+                    #st.write(f"link_mnc_raw == {link_mnc_raw}")
 
-                    reported = ''
-
-                    if 'Reported in' in case_name:
+                    if re.search(r'\[\d{4}\].+\d+', link_mnc_raw):
                         
-                        case_name_reported = case_name.split('Reported in')
-
-                        case_name = case_name_reported[0]
-                        
-                        while case_name[-1] in [';', ' ']:
-                            case_name = case_name[:-1]
-
-                        reported = case_name_reported[1]
-
-                        while reported[0] in [':', ' ']:
-                            reported = reported[1:]
+                        mnc = re.findall(r'\[\d{4}\].+\d+', link_mnc_raw)[0]
                     
-                    case_names_list.append(case_name)
-
-                    reported_list.append(reported)
+                    else:
+                        
+                        mnc = ''
+            
+                    if re.search(r"\'DIS.+\'", link_mnc_raw):
                     
-                for case_name in case_names_list:
-        
-                    if len(self.case_infos) < self.judgment_counter_bound:
-        
-                        counter = len(self.case_infos)
-        
-                        judgment_url = judgment_urls_list[counter]
-        
-                        mnc = mnc_list[counter]
-
-                        reported = reported_list[counter]
+                        judgment_url = re.findall(r"\'DIS.+\'", link_mnc_raw)[0]
+                    
+                    else:
                         
-                        case_number = case_numbers_list[counter]
-        
-                        date = date_list[counter]
+                        judgment_url = ''
+                    
+                    judgment_url =  "https://legalref.judiciary.hk/lrs/common/search/search_result_detail_frame.jsp?" + judgment_url.replace("'", "")
                         
-                        case_info = {'Case name': case_name,
-                                    'Hyperlink to the Hong Kong Legal Reference System': judgment_url, 
-                                     'Medium neutral citation': mnc,
-                                     'Reported': reported,
-                                    'Case number': case_number,
-                                    'Date': date
-                                    }
-        
-                        self.case_infos.append(case_info)
-        
-                #browser.delete_all_cookies()
-                #browser.close()
-
-                try_success = True
-
-                #print(f"Got {self.results_count} search results based on page {self.page}.")
+                    mnc_list.append(mnc)
+            
+                    judgment_urls_list.append(judgment_url)
                 
-            except Exception as e:
+                mnc_counter += 1
+            
+            for date_raw in date_list_raw:
+                
+                date = date_raw.get_text(strip = True)
+            
+                if ':' in date:
+                    date = date.split(':')[-1]
+            
+                date = date.replace(' ', '')
+                    
+                date_list.append(date)
+            
+            for case_name_raw in case_names_list_raw:
+                
+                case_name = case_name_raw.get_text(strip = True)
 
-                print(f"Failed to get search results due to error: {e}")
+                reported = ''
+
+                if 'Reported in' in case_name:
+                    
+                    case_name_reported = case_name.split('Reported in')
+
+                    case_name = case_name_reported[0]
+                    
+                    while case_name[-1] in [';', ' ']:
+                        case_name = case_name[:-1]
+
+                    reported = case_name_reported[1]
+
+                    while reported[0] in [':', ' ']:
+                        reported = reported[1:]
+                
+                case_names_list.append(case_name)
+
+                reported_list.append(reported)
+                
+            for case_name in case_names_list:
+    
+                if len(self.case_infos) < self.judgment_counter_bound:
+    
+                    counter = len(self.case_infos)
+    
+                    judgment_url = judgment_urls_list[counter]
+    
+                    mnc = mnc_list[counter]
+
+                    reported = reported_list[counter]
+                    
+                    case_number = case_numbers_list[counter]
+    
+                    date = date_list[counter]
+                    
+                    case_info = {'Case name': case_name,
+                                'Hyperlink to the Hong Kong Legal Reference System': judgment_url, 
+                                 'Medium neutral citation': mnc,
+                                 'Reported': reported,
+                                'Case number': case_number,
+                                'Date': date
+                                }
+    
+                    self.case_infos.append(case_info)
+    
+            #browser.delete_all_cookies()
+            #browser.close()
+
+            try_success = True
+
+            #print(f"Got {self.results_count} search results based on page {self.page}.")
+                
+            #except Exception as e:
+
+                #print(f"Failed to get search results due to error: {e}")
     
     #Function for attaching judgment text to case_info dict
     def attach_judgment_text_and_urls(self, case_info):

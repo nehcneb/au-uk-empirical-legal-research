@@ -37,6 +37,7 @@ import httplib2
 from urllib.request import urlretrieve
 import os
 from io import BytesIO
+import traceback
 
 #Streamlit
 import streamlit as st
@@ -57,7 +58,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons, report_error
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -263,10 +264,6 @@ if 'need_resetting' not in st.session_state:
 if 'df_individual_output' not in st.session_state:
 
     st.session_state['df_individual_output'] = pd.DataFrame([])
-    
-#Disable toggles
-if 'disable_input' not in st.session_state:
-    st.session_state["disable_input"] = True
 
 if 'df_master' not in st.session_state:
 
@@ -300,6 +297,18 @@ if 'df_master' not in st.session_state:
     df_master_dict.update(jurisdiction_specific_dict)
     
     st.session_state['df_master'] = pd.DataFrame([df_master_dict])
+
+#Disable toggles
+if 'disable_input' not in st.session_state:
+    st.session_state["disable_input"] = True
+
+#Initialise jurisdiction_page
+if 'jurisdiction_page' not in st.session_state:
+    st.session_state['jurisdiction_page'] = 'pages/UK.py'
+
+#Initialise error reporting status
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = ''
 
 
 # %%
@@ -398,57 +407,68 @@ with stylable_container(
 if preview_button:
     
     with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
-        
-        df_master = uk_create_df()
-    
-        results_url_num = uk_search_url(df_master)
-            
-        results_count = results_url_num['results_count']
-    
-        results_url = results_url_num['results_url']
-    
-        search_results_soup = results_url_num['soup']
-        
-        if results_count > 0:
-        
-            #Get relevant cases
-            
-            judgments_file = []
-            
-            judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-            
-            case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgments_counter_bound) 
-            
-            for case in case_infos:
-            
-                #add search results to json
-                judgments_file.append(case)
-    
-            #Clean df
 
-            #st.write(case_infos)
+        try:
+            
+            df_master = uk_create_df()
+        
+            results_url_num = uk_search_url(df_master)
+                
+            results_count = results_url_num['results_count']
+        
+            results_url = results_url_num['results_url']
+        
+            search_results_soup = results_url_num['soup']
+            
+            if results_count > 0:
+            
+                #Get relevant cases
+                
+                judgments_file = []
+                
+                judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                
+                case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgments_counter_bound) 
+                
+                for case in case_infos:
+                
+                    #add search results to json
+                    judgments_file.append(case)
+        
+                #Clean df
+    
+                #st.write(case_infos)
+    
+                df_preview = pd.DataFrame(judgments_file)
+                
+                #Clean df
+                df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
+                
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+        
+                df_preview = display_df_dict['df']
+        
+                link_heading_config = display_df_dict['link_heading_config']
+        
+                #Display search results
+                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+        
+                st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+        
+            else:
+                st.error(no_results_msg)
 
-            df_preview = pd.DataFrame(judgments_file)
+        except Exception as e:
+
+            st.error(search_error_display)
             
-            #Clean df
-            df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
-            
-            #Get display settings
-            display_df_dict = display_df(df_preview)
-    
-            df_preview = display_df_dict['df']
-    
-            link_heading_config = display_df_dict['link_heading_config']
-    
-            #Display search results
-            st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                        
-            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-    
-            st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-    
-        else:
-            st.error(no_results_msg)
+            print(traceback.format_exc())
+
+            st.session_state['error_msg'] = traceback.format_exc()
+
 
 
 # %% [markdown]
@@ -558,7 +578,23 @@ if next_button:
                     st.switch_page('pages/GPT.py')
 
             except Exception as e:
-                print(search_error_display)
-                print(e)
+
                 st.error(search_error_display)
-                st.error(e)
+                
+                print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+
+# %% [markdown]
+# # Report error
+
+# %%
+if len(st.session_state.error_msg) > 0:
+
+    report_error_button = st.button(label = 'REPORT the error', type = 'primary', help = 'Send your entries and a report of the error to the developer.')
+
+    if report_error_button:
+
+        st.session_state.error_msg = report_error(error_msg = st.session_state.error_msg, jurisdiction_page = st.session_state.jurisdiction_page, df_master = st.session_state.df_master)
+

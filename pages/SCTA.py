@@ -39,6 +39,7 @@ import os
 import urllib.request
 import io
 from io import BytesIO
+import traceback
 
 #Streamlit
 import streamlit as st
@@ -60,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, download_buttons, report_error
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -314,6 +315,14 @@ if 'df_individual_output' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
+#Initialise jurisdiction_page
+if 'jurisdiction_page' not in st.session_state:
+    st.session_state['jurisdiction_page'] = 'pages/SCTA.py'
+
+#Initialise error reporting status
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = ''
+
 # %%
 #If landing page is not home
 if 'page_from' not in st.session_state:
@@ -467,8 +476,24 @@ if next_button:
                     st.switch_page('pages/GPT.py')
 
             except Exception as e:
-                print(search_error_display)
-                print(e)
+
                 st.error(search_error_display)
-                st.error(e)
+                
+                print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+
+
+# %% [markdown]
+# # Report error
+
+# %%
+if len(st.session_state.error_msg) > 0:
+
+    report_error_button = st.button(label = 'REPORT the error', type = 'primary', help = 'Send your entries and a report of the error to the developer.')
+
+    if report_error_button:
+
+        st.session_state.error_msg = report_error(error_msg = st.session_state.error_msg, jurisdiction_page = st.session_state.jurisdiction_page, df_master = st.session_state.df_master)
 

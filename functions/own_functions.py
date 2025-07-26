@@ -75,7 +75,7 @@ from pyxlsb import open_workbook as open_xlsb
 #Import functions
 from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, send_notification_email, get_aws_s3, aws_df_get, aws_df_put
 #Import variables
-from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, truncation_note, spinner_text
+from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, truncation_note, spinner_text, search_error_display
 
 
 # %%
@@ -813,19 +813,24 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                 #Change session states
                 st.session_state["batch_submitted"] = True
                 st.session_state['need_resetting'] = 1
-                                    
+                st.session_state["batch_error"] == False
+                st.session_state['error_msg'] = ''
+                
                 st.rerun()
             
             except Exception as e:
 
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                st.error(traceback.format_exc())
+                #Change session states
+                st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound                    
+                st.session_state["batch_submitted"] = False
+                st.session_state["batch_error"] = True
 
-                print(e)
-
+                st.error(search_error_display)
+                                
                 print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+                st.rerun()
 
 

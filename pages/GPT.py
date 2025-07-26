@@ -76,10 +76,10 @@ st.set_page_config(
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, streamlit_timezone, save_input, download_buttons, send_notification_email, report_error_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone
+from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, streamlit_timezone, save_input, download_buttons, send_notification_email, open_page, clear_cache_except_validation_df_master, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg, search_error_display
 
 
 # %%
@@ -256,6 +256,7 @@ def gpt_run_function():
                 #download_buttons(df_master, df_individual)
 
                 #Clear any error
+                st.session_state["batch_error"] = False
                 st.session_state['error_msg'] = ''
                 
                 st.rerun()
@@ -265,20 +266,12 @@ def gpt_run_function():
                 #Clear output
                 st.session_state["df_individual"] = pd.DataFrame([])
                 
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                st.error(traceback.format_exc())
-
-                print(e)
-
-                #print(traceback.format_exc())
+                st.error(search_error_display)
+                                
+                print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
-
-                st.rerun()
-
+                
 
 
 # %%
@@ -356,6 +349,7 @@ def er_run_b64_function():
                 #download_buttons(df_master, df_individual)
 
                 #Clear any error
+                st.session_state["batch_error"] = False
                 st.session_state['error_msg'] = ''
                 
                 st.rerun()
@@ -365,19 +359,12 @@ def er_run_b64_function():
                 #Clear output
                 st.session_state["df_individual"] = pd.DataFrame([])
                 
-                st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-                
-                st.error(e)
-                
-                #st.error(traceback.format_exc())
-
-                print(e)
-
-                #print(traceback.format_exc())
+                st.error(search_error_display)
+                                
+                print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
-
-                st.rerun()
+                    
 
 
 # %% [markdown]
@@ -475,6 +462,9 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
     st.session_state["batch_submitted"] = False
+
+if "batch_error" not in st.session_state:
+    st.session_state["batch_error"] = False
 
 if "batch_ready_for_submission" not in st.session_state:
     st.session_state["batch_ready_for_submission"] = False
@@ -612,8 +602,12 @@ if uploaded_file:
         
     except Exception as e:
         
-        st.error(f'Sorry, this app is unable to follow this example due to this error: {e}')
+        st.error(f'Sorry, this app is unable to follow the selected example.')
 
+        print(traceback.format_exc())
+
+        st.session_state['error_msg'] = traceback.format_exc()
+        
 if len(st.session_state.df_example_to_show) > 0:
         
     st.success('For each case, GPT will *try* to produce something like the following:')
@@ -703,38 +697,10 @@ else:
         
         judgments_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
         
-        #if judgments_counter_bound_entry:
-        
-        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
-    
         if judgments_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
             st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} cases may need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
 
-        #st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {round(tokens_cap(st.session_state.gpt_model)*3/4)} words from each case, for up to {st.session_state['df_master'].loc[0, 'Maximum number of judgments']} case(s).*")
-    
-    #else:
-        
-        #st.session_state["own_account"] = False
-
-        #st.session_state['df_master'].loc[0, 'Use own account'] = False
-    
-        #st.session_state.gpt_model = basic_model
-
-        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    
-        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
-        
-#else:
-        #st.session_state["own_account"] = False
-
-        #st.session_state['df_master'].loc[0, 'Use own account'] = False
-    
-        #st.session_state.gpt_model = basic_model
-
-        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-    
-        #st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
 
 
 # %% [markdown]
@@ -921,34 +887,12 @@ if ((own_account_entry) and (st.session_state.jurisdiction_page == 'pages/ER.py'
 if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
     
     if batch_button:
-
-        try:
-            
-            own_account_entries_function()
-            
-            batch_request_function()
-
-            #Don't clear any error
-            #st.session_state['error_msg'] = ''
-            
-        except Exception as e:
-
-            #Clear output
-            st.session_state["df_individual"] = pd.DataFrame([])
-            
-            st.error('Sorry, an error has occurred. Please change your questions or wait a few hours, and try again.')
-            
-            st.error(e)
-            
-            #st.error(traceback.format_exc())
-
-            print(e)
-
-            #print(traceback.format_exc())
-
-            st.session_state['error_msg'] = traceback.format_exc()
+        
+        own_account_entries_function()
+        
+        batch_request_function()
     
-    if st.session_state.batch_submitted and st.session_state.need_resetting:
+    if st.session_state.batch_submitted and st.session_state.need_resetting and (st.session_state.batch_error == False):
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
 
@@ -961,31 +905,22 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_
             #if st.session_state.gpt_model == flagship_model:
                 #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
 
+    if (st.session_state.batch_error) and (len(st.session_state.error_msg) > 0):
+
+        st.error(search_error_display)
+
+
 
 # %% [markdown]
-# ## Report error
+# # Report error
 
 # %%
 if len(st.session_state.error_msg) > 0:
 
-    st.error('Sorry, an error has occurred. Please change your entries or wait a few hours, and try again.')
-
-    st.error(st.session_state.error_msg)
-        
-    report_error_button = st.button(label = 'REPORT the error', help = 'Send your entries and a report of the error to the developer.')
+    report_error_button = st.button(label = 'REPORT the error', type = 'primary', help = 'Send your entries and a report of the error to the developer.')
 
     if report_error_button:
 
-        #Send me an email to let me know
-        report_error_email(ULTIMATE_RECIPIENT_NAME = st.session_state['df_master'].loc[0, 'Your name'], 
-                                ULTIMATE_RECIPIENT_EMAIL = st.session_state['df_master'].loc[0, 'Your email address'],
-                           jurisdiction_page = st.session_state.jurisdiction_page,
-                           df_master = st.session_state['df_master'], 
-                           error_msg = st.session_state.error_msg
-                               )
+        st.session_state.error_msg = report_error(error_msg = st.session_state.error_msg, jurisdiction_page = st.session_state.jurisdiction_page, df_master = st.session_state.df_master)
 
-        #Clear any error
-        st.session_state['error_msg'] = ''
-
-        st.success("Thank you for reporting the error. We will look at your report as soon as possible.")
 

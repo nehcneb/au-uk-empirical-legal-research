@@ -56,8 +56,8 @@ page_dict = {"pages/HCA.py": "Cases of the High Court of Australia",
             "pages/FCA.py": "Cases of the Federal Court of Australia", 
             "pages/NSW.py": "Cases of the New South Wales courts and tribunals", 
             #"pages/CA.py": 'Cases of the Canadian courts, boards and tribunals',
-            #"pages/HK.py": "Cases of the Hong Kong courts and tribunals (Hong Kong Legal Reference System)",
-             #"pages/HKLII.py": "Cases, legislation and other legal materials from Hong Kong (HKLII)",
+            #"pages/HK.py": "Cases of the Hong Kong courts and tribunals", # (Hong Kong Legal Reference System)
+            "pages/HKLII.py": "Cases, legislation and other legal materials from Hong Kong", # (HKLII)
             #"pages/UK.py": "Cases of the United Kingdom courts and tribunals", 
             #"pages/BAILII.py": "Cases of the England and Wales courts", 
               "pages/US.py": "Cases of the United States courts", 
@@ -97,7 +97,7 @@ st.subheader("An Empirical Legal Research Automator")
 
 st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-empirical-legal-research) web app designed to help kickstart empirical projects using court cases. It can **automatically**
 
-(1) collect cases from Australia, the United Kingdom and the United States; and
+(1) collect cases from Australia, Hong Kong, the United Kingdom and the United States; and
 
 (2) extract and code **your** choice of case data or information, partially using GPT.
 

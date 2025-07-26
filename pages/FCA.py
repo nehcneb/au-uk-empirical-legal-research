@@ -39,6 +39,8 @@ import os
 #import pypdf
 import io
 from io import BytesIO
+import traceback
+
 
 #Streamlit
 import streamlit as st
@@ -59,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, date_parser, save_input, display_df, download_buttons
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_range_check, date_parser, save_input, display_df, download_buttons, report_error
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg, search_error_display
 
@@ -331,6 +333,14 @@ if 'df_individual_output' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
+#Initialise jurisdiction_page
+if 'jurisdiction_page' not in st.session_state:
+    st.session_state['jurisdiction_page'] = 'pages/FCA.py'
+
+#Initialise error reporting status
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = ''
+
 # %%
 #If landing page is not home
 if 'page_from' not in st.session_state:
@@ -440,50 +450,62 @@ with stylable_container(
 if preview_button:
     
     with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
+
+        try:
+            
+            df_master = fca_create_df()
+            
+            results_url_num = fca_search_url(df_master)
+                
+            results_count = results_url_num['results_count']
         
-        df_master = fca_create_df()
+            results_url = results_url_num['results_url']
         
-        results_url_num = fca_search_url(df_master)
-            
-        results_count = results_url_num['results_count']
-    
-        results_url = results_url_num['results_url']
-    
-        search_results_soup = results_url_num['soup']
-    
-        if results_count > 0:
+            search_results_soup = results_url_num['soup']
         
-            #Get relevant cases
+            if results_count > 0:
             
-            judgments_file = []
+                #Get relevant cases
+                
+                judgments_file = []
+                
+                judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                
+                case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
+                
+                for case in case_infos:
+                
+                    #add search results to json
+                    judgments_file.append(case)
+        
+                df_preview = pd.DataFrame(judgments_file)
+        
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+        
+                df_preview = display_df_dict['df']
+        
+                link_heading_config = display_df_dict['link_heading_config']
+        
+                #Display search results
+                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                            
+                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+        
+                st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+        
+            else:
+                st.error(no_results_msg)
+
+
+        except Exception as e:
+
+            st.error(search_error_display)
             
-            judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-            
-            case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
-            
-            for case in case_infos:
-            
-                #add search results to json
-                judgments_file.append(case)
-    
-            df_preview = pd.DataFrame(judgments_file)
-    
-            #Get display settings
-            display_df_dict = display_df(df_preview)
-    
-            df_preview = display_df_dict['df']
-    
-            link_heading_config = display_df_dict['link_heading_config']
-    
-            #Display search results
-            st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                        
-            st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-    
-            st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-    
-        else:
-            st.error(no_results_msg)
+            print(traceback.format_exc())
+
+            st.session_state['error_msg'] = traceback.format_exc()
+
 
 # %% [markdown]
 # ## Buttons
@@ -595,10 +617,24 @@ if next_button:
                     st.switch_page('pages/GPT.py')
                     
             except Exception as e:
-                print(search_error_display)
-                print(e)
+
                 st.error(search_error_display)
-                st.error(e)
-        
-                st.stop()
+                
+                print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
+
+
+
+# %% [markdown]
+# # Report error
+
+# %%
+if len(st.session_state.error_msg) > 0:
+
+    report_error_button = st.button(label = 'REPORT the error', type = 'primary', help = 'Send your entries and a report of the error to the developer.')
+
+    if report_error_button:
+
+        st.session_state.error_msg = report_error(error_msg = st.session_state.error_msg, jurisdiction_page = st.session_state.jurisdiction_page, df_master = st.session_state.df_master)
 
