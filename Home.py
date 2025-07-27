@@ -54,13 +54,13 @@ from functions.common_functions import own_account_allowed, check_questions_answ
 #Dict of available sources
 page_dict = {"pages/HCA.py": "Cases of the High Court of Australia",
             "pages/FCA.py": "Cases of the Federal Court of Australia", 
-            "pages/NSW.py": "Cases of the New South Wales courts and tribunals", 
+            "pages/NSW.py": "Cases from New South Wales", 
             #"pages/CA.py": 'Cases of the Canadian courts, boards and tribunals',
             #"pages/HK.py": "Cases of the Hong Kong courts and tribunals", # (Hong Kong Legal Reference System)
             "pages/HKLII.py": "Cases, legislation and other legal materials from Hong Kong", # (HKLII)
-            #"pages/UK.py": "Cases of the United Kingdom courts and tribunals", 
-            #"pages/BAILII.py": "Cases of the England and Wales courts", 
-              "pages/US.py": "Cases of the United States courts", 
+            #"pages/UK.py": "Cases from the United Kingdom", 
+            #"pages/BAILII.py": "Cases from England and Wales", 
+              "pages/US.py": "Cases from the United States", 
             #"pages/AFCA.py": 'Cases of the Australian Financial Complaints Authority', 
             #"pages/SCTA.py": 'Decisions of the Superannuation Complaints Tribunal of Australia', 
             "pages/ER.py": "The English Reports (nearly all English case reports from 1220 to 1866)", 

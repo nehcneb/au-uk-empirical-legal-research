@@ -1155,8 +1155,7 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 role_content_hk = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. 
 Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from a part of the judgment or metadata, include a page or paragraph reference to that part of the judgment or metadata. 
 If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". 
-The JSON given to you is in English or Chinese or both. Please answer questions based on either or both languages. 
-"""
+The JSON given to you is in English or Chinese or both. Please answer questions based on either or both languages."""
 
 #Respond in JSON form. In your response, produce as many keys as you need. 
 

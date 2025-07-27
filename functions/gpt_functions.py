@@ -358,8 +358,7 @@ def judgment_prompt_json(judgment_json, gpt_model):
 #For modern judgments, define system role content for GPT
 role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and the associated metadata in JSON form. 
 Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
-If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'. 
-"""
+If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'."""
 #Respond in JSON form. In your response, produce as many keys as you need. 
 
 
