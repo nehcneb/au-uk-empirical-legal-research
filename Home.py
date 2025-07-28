@@ -57,7 +57,7 @@ page_dict = {"pages/HCA.py": "Cases of the High Court of Australia",
             "pages/NSW.py": "Cases from New South Wales", 
             #"pages/CA.py": 'Cases of the Canadian courts, boards and tribunals',
             #"pages/HK.py": "Cases of the Hong Kong courts and tribunals", # (Hong Kong Legal Reference System)
-            "pages/HKLII.py": "Cases, legislation and other legal materials from Hong Kong", # (HKLII)
+            "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials", # (HKLII)
             #"pages/UK.py": "Cases from the United Kingdom", 
             #"pages/BAILII.py": "Cases from England and Wales", 
               "pages/US.py": "Cases from the United States", 
@@ -116,7 +116,10 @@ else:
     st.markdown("""**Get started below :green[for free]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
 
-st.caption('The developer [Ben Chen of Sydney Law School](https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html) acknowledges and greatly appreciates the exemplary technical assistance of Mike Lynch and Xinwei Luo of Sydney Informatics Hub, a Core Research Facility of the University of Sydney. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
+st.caption('Please direct any enquiries to [Ben Chen of Sydney Law School](https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html) at ben.chen@sydney.edu.au.')
+
+#st.caption('The developer [Ben Chen of Sydney Law School](https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html) acknowledges and greatly appreciates the exemplary technical assistance of Mike Lynch and Xinwei Luo of Sydney Informatics Hub, a Core Research Facility of the University of Sydney. Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
+
 
 #, as well as the financial support provided by a University of Sydney Research Accelerator (SOAR) Prize. 
 
