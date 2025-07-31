@@ -52,7 +52,8 @@ from functions.common_functions import own_account_allowed, check_questions_answ
 
 # %%
 #Dict of available sources
-page_dict = {"pages/HCA.py": "Cases of the High Court of Australia",
+page_dict = {
+            #"pages/HCA.py": "Cases of the High Court of Australia",
             "pages/FCA.py": "Cases of the Federal Court of Australia", 
             "pages/NSW.py": "Cases from New South Wales", 
             #"pages/CA.py": 'Cases of the Canadian courts, boards and tribunals',
