@@ -72,8 +72,8 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # High Court of Australia search engine
 
 # %%
-from functions.hca_functions import hca_collections, parties_include_categories, year_is_categories, judge_includes_categories, hca_search, hca_meta_labels_droppable, hca_meta_judgment_dict, hca_meta_judgment_dict_alt#, hca_mnc_to_link_browse, hca_citation_to_link, hca_mnc_to_link, hca_load_data, hca_data_url, hca_df, hca_judgment_to_exclude, hca_search_results_to_judgment_links_filtered_df, hca_search_url, hca_year_range, hca_judge_list, hca_party_list, hca_terms_to_add, hca_enhanced_search  
-#hca_search_results_to_judgment_links, hca_pdf_judgment
+from functions.hca_functions import hca_collections, hca_collections_years_dict, hca_collections_judges_dict, hca_search_methods_dict, hca_search_preview, hca_meta_labels_droppable
+
 
 
 # %%
@@ -129,65 +129,58 @@ def hca_create_df():
         
     #Other entries
     collection = collection_entry
-    quick_search = quick_search_entry
-    citation =  citation_entry
+    method = method_entry
 
-    full_text = ''
+
+    keywords = ''
+    
     try:
-        full_text = full_text_entry
+        
+        keywords = keywords_entry
 
     except:
-        print('Full text not entered.')
+        print(f'keywords not entered')
 
-    parties_include = list(parties_include_categories.keys())[0]
+    citation = ''
+    
     try:
-        parties_include = parties_include_entry
+        
+        citation = citation_entry
 
     except:
-        print('parties_include not entered.')
-
-    parties = ''
-    try:
-        parties = parties_entry
-
-    except:
-        print('parties not entered.')
-
-    year_is = list(year_is_categories.keys())[0]
-    try:
-        year_is = year_is_entry
-
-    except:
-        print('year_is not entered.')
-
-    year = ''
-    try:
-        year = year_entry
-
-    except:
-        print('year not entered.')
+        print(f'citation not entered')
 
     case_number = ''
+    
     try:
+        
         case_number = case_number_entry
 
     except:
-        print('case_number not entered.')
+        print(f'case_number not entered')
+        
 
-    judge_includes = list(judge_includes_categories.keys())[0]
-    try:
-        judge_includes = judge_includes_entry
-
-    except:
-        print('judge_includes not entered.')
-
-    judge = ''
+    judge = None
     try:
         judge = judge_entry
 
     except:
         print('judge not entered.')
+
+    clr = None
+    try:
+        clr = str(clr_entry)
+
+    except:
+        print('CLR not entered.')
     
+    year = None
+    try:
+        year = str(year_entry)
+
+    except:
+        print('year not entered.')
+
     #GPT choice and entry
     gpt_activation_status = False
    
@@ -222,16 +215,14 @@ def hca_create_df():
            'Your email address': email, 
            'Your GPT API key': gpt_api_key, 
             'Collection' : collection, 
-            'Quick search': quick_search, 
-            'Search for citation': citation, 
-             'Full text search': full_text, 
-           'Parties include/do not include': parties_include, 
-               'Parties': parties,
-               'Year is/is not': year_is,
-               'Year': year,
+            'Search method': method,
+            'Keyword search': keywords, 
+            'Medium neutral citation': citation, 
                'Case number': case_number,
-               'Judge includes/does not include': judge_includes,
-               'Judge': judge,
+               'Justices': judge,
+               'Filter by CLR volume': clr,
+              'Year': year,
+
                #The following are common to all pages
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
@@ -244,7 +235,6 @@ def hca_create_df():
     df_master_new = pd.DataFrame(new_row, index = [0])
             
     return df_master_new
-
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -261,7 +251,6 @@ from functions.gpt_functions import question_characters_bound, default_msg, defa
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
 
 
 # %%
@@ -315,18 +304,16 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
     #Jurisdiction specific
-    st.session_state.df_master.loc[0, 'Collection'] = 'Judgments 2000-present' 
-    st.session_state.df_master.loc[0, 'Quick search'] = None
-    st.session_state.df_master.loc[0, 'Full text search'] = None 
-    st.session_state.df_master.loc[0, 'Search for citation'] = None 
-    st.session_state.df_master.loc[0, 'Parties include/do not include'] = list(parties_include_categories.keys())[0] 
-    st.session_state.df_master.loc[0, 'Parties'] = None 
-    st.session_state.df_master.loc[0, 'Year is/is not'] = list(year_is_categories.keys())[0] 
-    st.session_state.df_master.loc[0, 'Year'] = None 
+    st.session_state.df_master.loc[0, 'Collection'] = hca_collections[0]
+    st.session_state.df_master.loc[0, 'Search method'] = hca_search_methods_dict[hca_collections[0]][0]
+    st.session_state.df_master.loc[0, 'Keyword search'] = None
     st.session_state.df_master.loc[0, 'Case number'] = None 
-    st.session_state.df_master.loc[0, 'Judge includes/does not include'] = list(judge_includes_categories.keys())[0] 
-    st.session_state.df_master.loc[0, 'Judge']  = None
+    st.session_state.df_master.loc[0, 'Justices']  = None
+    st.session_state.df_master.loc[0, 'Filter by CLR volume'] = None
+    st.session_state.df_master.loc[0, 'Year'] = None 
 
+    st.session_state.df_master.loc[0, 'Medium neutral citation'] = None 
+    
     #Generally applicable
     st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
 
@@ -378,95 +365,101 @@ st.caption(default_caption)
 
 reset_button = st.button(label='RESET', type = 'primary')
 
-st.subheader("Judgment collection")
+st.subheader("Judgments collection")
 
-collection_entry = st.selectbox(label = 'Select one to search', options = hca_collections, index = list_value_check(hca_collections, st.session_state.df_master.loc[0, 'Collection']))
+collection_entry = st.selectbox(label = 'Select a judgments collection to search', options = hca_collections, index = list_value_check(hca_collections, st.session_state.df_master.loc[0, 'Collection']))
+
+if collection_entry != st.session_state.df_master.loc[0, 'Collection']:
+
+    st.session_state['df_master'].loc[0, 'Justices'] = None
+
+    st.session_state['df_master'].loc[0, 'Filter by CLR volume'] = None
+    
+    st.session_state['df_master'].loc[0, 'Year'] = None
+
+method_entry = st.selectbox(label = 'Select a search method', options = hca_search_methods_dict[collection_entry], index = list_value_check(hca_search_methods_dict[collection_entry], st.session_state.df_master.loc[0, 'Search method']))
+
+last_entry = None
 
 st.subheader("Your search terms")
 
-st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section mimics their judgments search function.
+st.markdown("""For search tips, please visit the [High Court Judgments Database](https://eresources.hcourt.gov.au/search?col=0&facets=&srch-Term=). This section largely mimics their judgments search function.
 """)
 
-quick_search_entry = st.text_input(label = 'Quick search', 
-                                   value = st.session_state.df_master.loc[0, 'Quick search'],
-                                  help = """**Quick search** searches party names and the catchwords of the judgments.
-There are various ways you can search
+if method_entry:
 
-* To search for a phrase enclose the phrase in "double quotation" marks. The phrase will be looked for in the main body of the judgment. Each of the words will need to appear in the catchwords or parties.
+    if 'Keyword' in method_entry:
+            
+        keywords_entry = st.text_input(label = 'Keyword search', 
+                                           value = st.session_state.df_master.loc[0, 'Keyword search'],
+                                          help = "")
+        
+        st.caption('Search by case name or party names')
 
-* Words are not case-sensitive. Small words (such as "the","to","of" etc) are ignored unless they are part of a phrase.
+        if keywords_entry:
 
-* Type in a party's name. If the name you typed is a party, these cases will be found.
-
-* Typing in catchwords will find cases where these catchwords appear. All the words you type must appear.
-
-* Two catchwords (or multiple phrases and catchwords) can be searched for together e.g. **"industrial law" repudiation**.
-"""
-#* Clicking on "show more options" will give you more search options e.g. full-text or searching over a date range. #Doesn't exist on HCA's search engine
-                                  )
-st.caption('Quick search searches party names and catchwords of the judgments.')
-
-citation_entry = st.text_input(label = 'Search for citation', 
-                               value = st.session_state.df_master.loc[0, 'Search for citation'],
-                               help = 'Enter full citation eg [2013] HCA 1 or 249 CLR 435'
-                              )
-
-if collection_entry != hca_collections[-1]:
-
-    full_text_entry = st.text_input(label = 'Full text search', 
-                                    value = st.session_state.df_master.loc[0, 'Full text search'],
-                                    help = 'Search the full text of the cases.'
-                                   )
-
-else:
-    full_text_entry = ''
-
-st.subheader("Filter search")
-
-parties_col1, parties_col2 = st.columns(2)
-
-with parties_col1:
-    parties_include_entry = st.selectbox(label = 'Parties include/do not include', options = parties_include_categories, index = list_value_check(list(parties_include_categories.keys()), st.session_state.df_master.loc[0, 'Parties include/do not include']))
-with parties_col2:
-    parties_entry = st.text_input(label = 'Parties', value = st.session_state.df_master.loc[0, 'Parties'])
-
-year_col1, year_col2 = st.columns(2)
-
-with year_col1:
-    year_is_entry = st.selectbox(label = 'Year is/is not', options = year_is_categories, index = list_value_check(list(year_is_categories.keys()), st.session_state.df_master.loc[0, 'Year is/is not']))
-with year_col2:
-    year_entry = st.text_input(label = 'Year', 
-                               value = st.session_state.df_master.loc[0, 'Year'],
-                              help = 'You can search a range eg 2003 TO 2004'
-                              )
-
-if collection_entry != hca_collections[-1]:
-
-    case_number_entry = st.text_input(label = 'Case number', 
-                                      value = st.session_state.df_master.loc[0, 'Case number'],
-                                     help = 'Enter eg S30/2008'
-                                     ) 
-
-    judge_col1, judge_col2 = st.columns(2)
+            last_entry = keywords_entry
     
-    with judge_col1:
-        judge_includes_entry = st.selectbox(label = 'Judge includes/does not include', options = judge_includes_categories, index = list_value_check(list(judge_includes_categories.keys()), st.session_state.df_master.loc[0, 'Judge includes/does not include']))
-    with judge_col2:
-        judge_entry = st.text_input(label = 'Judge', value = st.session_state.df_master.loc[0, 'Judge'])
+    if 'case number' in method_entry:
+        
+        case_number_entry = st.text_input(label = 'Case number', 
+                                          value = st.session_state.df_master.loc[0, 'Case number'],
+                                         )
 
-else:
-    case_number_entry = ''
-    judge_includes_entry = list(judge_includes_categories.keys())[0]
-    judge_entry = ''
+        if case_number_entry:
 
-#st.subheader("Judgment metadata collection")
+            last_entry = case_number_entry
+        
+    if 'Justices' in method_entry:
+        
+        judge_entry = st.selectbox(label = 'Justices', 
+                                    options = hca_collections_judges_dict[collection_entry],
+                                    index = list_value_check(hca_collections_judges_dict[collection_entry], st.session_state.df_master.loc[0, 'Justices'])
+                                    )
 
-#st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+        if judge_entry:
 
-#Case name and medium neutral citation are always included with your results.""")
+            last_entry = judge_entry
 
-#meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
-meta_data_entry = True
+    if 'year' in method_entry:
+        
+        year_entry = st.selectbox(label = 'Year', 
+                                        options = hca_collections_years_dict[collection_entry],
+                                        index = list_value_check(hca_collections_years_dict[collection_entry], st.session_state.df_master.loc[0, 'Year'])
+                                        )
+
+        if year_entry:
+
+            last_entry = year_entry
+    
+    if 'Citation' in method_entry:
+        
+        citation_entry = st.text_input(label = 'Medium neutral citation', 
+                                   value = st.session_state.df_master.loc[0, 'Medium neutral citation'],
+                                  )
+
+        if method_entry:
+
+            last_entry = method_entry
+        
+    if 'CLR' in method_entry:
+        
+        clr_entry = st.selectbox(label = 'Filter by CLR volume', 
+                                 options = list(range(1, 100+1)),
+                                 index = list_value_check(list(range(1, 100+1)), st.session_state.df_master.loc[0, 'Filter by CLR volume'])
+                                )
+
+        if clr_entry:
+
+            last_entry = clr_entry
+
+st.subheader("Judgment metadata collection")
+
+st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+
+Case name and medium neutral citation are always included with your results.""")
+
+meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 
 st.info("""You can preview the results returned by your search terms.""")
 
@@ -487,9 +480,9 @@ with stylable_container(
 # %%
 if preview_button:
 
-    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry) + str(parties_entry)  + str(year_entry)  + str(judge_entry) 
+    hca_search_terms = str(last_entry) 
     
-    if all_search_terms.replace('None', '') == "":
+    if hca_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
 
@@ -498,55 +491,47 @@ if preview_button:
         with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
 
             try:
-        
+            
                 df_master = hca_create_df()
-                    
-                #Conduct search    
-                hca_search_dict = hca_search(collection = df_master.loc[0, 'Collection'], 
-                               quick_search = df_master.loc[0, 'Quick search'],
-                               citation = df_master.loc[0, 'Search for citation'], 
-                                full_text = df_master.loc[0, 'Full text search'], 
-                                parties_include = df_master.loc[0, 'Parties include/do not include'],
-                                parties = df_master.loc[0, 'Parties'],
-                                year_is = df_master.loc[0, 'Year is/is not'],
-                                year = df_master.loc[0, 'Year'], 
-                                case_number = df_master.loc[0, 'Case number'], 
-                                judge_includes = df_master.loc[0, 'Judge includes/does not include'],
-                                judge = df_master.loc[0, 'Judge'],
-                                judgment_counter_bound = df_master.loc[0, 'Maximum number of judgments'],
-                                )
-                
-                results_count = hca_search_dict['results_count']
         
-                case_infos = hca_search_dict['case_infos']
-            
-                if results_count > 0:
+                search_results_w_count = hca_search_preview(df_master)
                 
+                results_count = search_results_w_count['results_count']
+        
+                case_infos = search_results_w_count['case_infos']
+        
+                results_url = search_results_w_count['results_url']
+        
+                if results_count > 0:
+        
                     df_preview = pd.DataFrame(case_infos)
-            
+        
                     #Get display settings
                     display_df_dict = display_df(df_preview)
-            
+        
                     df_preview = display_df_dict['df']
-            
+        
                     link_heading_config = display_df_dict['link_heading_config']
-                        
+        
                     #Display search results
                     st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
                                 
                     st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-                
-                else:
         
+                    st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+            
+                else:
                     st.error(no_results_msg)
 
             except Exception as e:
-    
+
                 st.error(search_error_display)
                 
                 print(traceback.format_exc())
-    
+
                 st.session_state['error_msg'] = traceback.format_exc()
+
+
 
 
 # %% [markdown]
@@ -583,9 +568,9 @@ if keep_button:
 
     #Check whether search terms entered
 
-    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry) + str(parties_entry)  + str(year_entry)  + str(judge_entry) 
+    hca_search_terms = str(last_entry) 
     
-    if all_search_terms.replace('None', '') == "":
+    if hca_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
             
@@ -618,9 +603,10 @@ if reset_button:
 
 # %%
 if next_button:
-    all_search_terms = str(quick_search_entry) + str(citation_entry) + str(full_text_entry) + str(parties_entry)  + str(year_entry)  + str(judge_entry) 
+    
+    hca_search_terms = str(last_entry) 
         
-    if all_search_terms.replace('None', '') == "":
+    if hca_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
 
@@ -632,23 +618,11 @@ if next_button:
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             try:
+
+                search_results_w_count = hca_search_preview(df_master)
                 
-                hca_search_dict = hca_search(collection = df_master.loc[0, 'Collection'], 
-                               quick_search = df_master.loc[0, 'Quick search'],
-                               citation = df_master.loc[0, 'Search for citation'], 
-                                full_text = df_master.loc[0, 'Full text search'], 
-                                parties_include = df_master.loc[0, 'Parties include/do not include'],
-                                parties = df_master.loc[0, 'Parties'],
-                                year_is = df_master.loc[0, 'Year is/is not'],
-                                year = df_master.loc[0, 'Year'], 
-                                case_number = df_master.loc[0, 'Case number'], 
-                                judge_includes = df_master.loc[0, 'Judge includes/does not include'],
-                                judge = df_master.loc[0, 'Judge'],
-                                judgment_counter_bound = df_master.loc[0, 'Maximum number of judgments'],
-                                )
+                results_count = search_results_w_count['results_count']
                 
-                results_count = hca_search_dict['results_count']
-                    
                 if results_count == 0:
                     
                     st.error(no_results_msg)
@@ -656,11 +630,11 @@ if next_button:
                 else:
                     
                     save_input(df_master)
-                    
+    
                     st.session_state["page_from"] = 'pages/HCA.py'
                     
                     st.switch_page('pages/GPT.py')
-           
+
             except Exception as e:
 
                 st.error(search_error_display)

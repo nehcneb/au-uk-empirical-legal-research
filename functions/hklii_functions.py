@@ -277,8 +277,6 @@ def hklii_get_judgment(case_info):
 
 
 # %%
-
-# %%
 class hklii_search_tool:
 
     def __init__(self, 

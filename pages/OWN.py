@@ -1050,7 +1050,7 @@ if immediate_b64() > 0:
         if run_button_b64:
 
             run_b64_function()
-        
+
 
 # %%
 if keep_button:
