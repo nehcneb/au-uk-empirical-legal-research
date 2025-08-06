@@ -88,7 +88,6 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
 
-
 options = Options()
 options.add_argument("--disable-gpu")
 #options.add_argument("--headless")
@@ -112,6 +111,23 @@ def get_driver():
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(30)
 
+    stealth(browser,
+    
+            languages=["en-US", "en"],
+    
+            vendor="Google Inc.",
+    
+            platform="Win32",
+    
+            webgl_vendor="Intel Inc.",
+    
+            renderer="Intel Iris OpenGL Engine",
+    
+            webdriver=False,
+    
+            fix_hairline=True)
+            
+    
     if 'Users/Ben' in os.getcwd():
         browser.minimize_window()
     
@@ -121,8 +137,8 @@ try:
     
     browser = get_driver()
     
-    browser.implicitly_wait(5)
-    browser.set_page_load_timeout(30)
+    #browser.implicitly_wait(5)
+    #browser.set_page_load_timeout(30)
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -653,8 +669,6 @@ ca_meta_dict = {
 # ## Search engine
 
 # %%
-
-# %%
 #Function turning search terms to search results url
 #@st.cache_data(show_spinner = False)
 
@@ -809,8 +823,8 @@ class ca_search_tool:
         #browser = get_driver()
         
         browser.get(self.results_url)
-        browser.delete_all_cookies()
-        browser.refresh()
+        #browser.delete_all_cookies()
+        #browser.refresh()
 
         #try:
             #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))

@@ -72,7 +72,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # High Court of Australia search engine
 
 # %%
-from functions.hca_functions import hca_collections, hca_collections_years_dict, hca_collections_judges_dict, hca_search_methods_dict, hca_search_preview, hca_meta_labels_droppable
+from functions.hca_functions import hca_collections, hca_collections_years_dict, hca_collections_judges_dict, hca_search_methods_dict, hca_clr_volumns, hca_search_preview, hca_meta_labels_droppable
 
 
 
@@ -377,7 +377,9 @@ if collection_entry != st.session_state.df_master.loc[0, 'Collection']:
     
     st.session_state['df_master'].loc[0, 'Year'] = None
 
-method_entry = st.selectbox(label = 'Select a search method', options = hca_search_methods_dict[collection_entry], index = list_value_check(hca_search_methods_dict[collection_entry], st.session_state.df_master.loc[0, 'Search method']))
+#method_entry = st.selectbox(label = 'Select a search method', options = hca_search_methods_dict[collection_entry], index = list_value_check(hca_search_methods_dict[collection_entry], st.session_state.df_master.loc[0, 'Search method']))
+
+method_entry = hca_search_methods_dict[collection_entry][0]
 
 last_entry = None
 
@@ -394,7 +396,7 @@ if method_entry:
                                            value = st.session_state.df_master.loc[0, 'Keyword search'],
                                           help = "")
         
-        st.caption('Search by case name or party names')
+        st.caption('Also searches case name and party names')
 
         if keywords_entry:
 
@@ -414,7 +416,8 @@ if method_entry:
         
         judge_entry = st.selectbox(label = 'Justices', 
                                     options = hca_collections_judges_dict[collection_entry],
-                                    index = list_value_check(hca_collections_judges_dict[collection_entry], st.session_state.df_master.loc[0, 'Justices'])
+                                    index = list_value_check(hca_collections_judges_dict[collection_entry], st.session_state.df_master.loc[0, 'Justices']),
+                                     help = "If you cannot change this entry, please press :red[RESET] and try again."
                                     )
 
         if judge_entry:
@@ -425,13 +428,26 @@ if method_entry:
         
         year_entry = st.selectbox(label = 'Year', 
                                         options = hca_collections_years_dict[collection_entry],
-                                        index = list_value_check(hca_collections_years_dict[collection_entry], st.session_state.df_master.loc[0, 'Year'])
+                                        index = list_value_check(hca_collections_years_dict[collection_entry], st.session_state.df_master.loc[0, 'Year']),
+                                     help = "If you cannot change this entry, please press :red[RESET] and try again."
                                         )
 
         if year_entry:
 
             last_entry = year_entry
     
+    if 'CLR' in method_entry:
+        
+        clr_entry = st.selectbox(label = 'Filter by CLR volume', 
+                                 options = hca_clr_volumns,
+                                 index = list_value_check(hca_clr_volumns, st.session_state.df_master.loc[0, 'Filter by CLR volume']),
+                                  help = "If you cannot change this entry, please press :red[RESET] and try again."
+                                )
+
+        if clr_entry:
+
+            last_entry = clr_entry
+
     if 'Citation' in method_entry:
         
         citation_entry = st.text_input(label = 'Medium neutral citation', 
@@ -442,16 +458,6 @@ if method_entry:
 
             last_entry = method_entry
         
-    if 'CLR' in method_entry:
-        
-        clr_entry = st.selectbox(label = 'Filter by CLR volume', 
-                                 options = list(range(1, 100+1)),
-                                 index = list_value_check(list(range(1, 100+1)), st.session_state.df_master.loc[0, 'Filter by CLR volume'])
-                                )
-
-        if clr_entry:
-
-            last_entry = clr_entry
 
 st.subheader("Judgment metadata collection")
 
@@ -521,6 +527,7 @@ if preview_button:
                     st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
             
                 else:
+                    
                     st.error(no_results_msg)
 
             except Exception as e:
@@ -530,8 +537,6 @@ if preview_button:
                 print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
-
-
 
 
 # %% [markdown]

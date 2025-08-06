@@ -66,9 +66,87 @@ from functions.common_functions import own_account_allowed, pop_judgment, conver
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
-
 # %% [markdown]
 # # High Court of Australia search engine
+
+# %%
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import ActionChains
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait as Wait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
+from selenium_stealth import stealth
+
+options = Options()
+#options.add_argument("--disable-gpu")
+#options.add_argument("--headless")
+#options.add_argument('--no-sandbox')  
+#options.add_argument('--disable-dev-shm-usage')  
+
+options.add_experimental_option("excludeSwitches", ["enable-automation"])
+options.add_experimental_option('useAutomationExtension', False)
+
+from selenium import webdriver
+
+
+if 'Users/Ben' not in os.getcwd(): 
+
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+    options.add_argument("window-size=1200x600")
+
+#@st.cache_resource(show_spinner = False, ttl=600)
+def get_driver():
+
+    browser = webdriver.Chrome(options=options)
+
+    browser.implicitly_wait(15)
+    browser.set_page_load_timeout(30)
+
+    stealth(browser,
+    
+            languages=["en-US", "en"],
+    
+            vendor="Google Inc.",
+    
+            platform="Win32",
+    
+            webgl_vendor="Intel Inc.",
+    
+            renderer="Intel Iris OpenGL Engine",
+    
+            webdriver=False,
+    
+            fix_hairline=True)
+    
+    if 'Users/Ben' in os.getcwd():
+        browser.minimize_window()
+    
+    return browser
+
+try:
+    
+    browser = get_driver()
+    
+    #browser.implicitly_wait(5)
+    #browser.set_page_load_timeout(30)
+    
+except Exception as e:
+    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
+    print(e)
+    quit()
+
 
 # %%
 #Load hca_data
@@ -100,12 +178,15 @@ hca_collections_dict = {
 
 
 hca_collections_years_dict = {
-'Judgments 2000-present': list(range(datetime.now().year, 2000-1, -1)),
-'Commonwealth Law Reports, volumes 1-100': list(range(1903, 1959 + 1)),
-'Single Justice Judgments': list(range(datetime.now().year, 2024-1, -1)),
-'Unreported Judgments': list(range(1994, 1921-1, -1)) + ['1906'],
+'Judgments 2000-present': [str(x) for x in range(datetime.now().year, 2000-1, -1)],
+'Commonwealth Law Reports, volumes 1-100': [str(x) for x in range(1903, 1959 + 1)],
+'Single Justice Judgments': [str(x) for x in range(datetime.now().year, 2024-1, -1)],
+'Unreported Judgments': [str(x) for x in (list(range(1994, 1921-1, -1)) + ['1906'])],
 }
 
+
+# %%
+hca_clr_volumns = [str(x) for x in range(1, 100+1)]
 
 # %%
 hca_collections = list(hca_collections_dict.keys())
@@ -232,10 +313,10 @@ hca_collections_judges_dict = {
 
 # %%
 hca_search_methods_dict = {
-'Judgments 2000-present': ["Keywords or case number", "Justices or year", "Citation"],
-'Commonwealth Law Reports, volumes 1-100': ["Keywords", "CLR volumn or year"],
-'Single Justice Judgments':["Keywords or case number", "Justices or year", "Citation"],
-'Unreported Judgments': ["Keywords or case number", "Justices or year", "Citation"],    
+'Judgments 2000-present': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],
+'Commonwealth Law Reports, volumes 1-100': ["Keywords, CLR volumn or year"], #["Keywords", "CLR volumn or year"],
+'Single Justice Judgments': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],
+'Unreported Judgments': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],    
 }
 
 
@@ -276,6 +357,8 @@ class hca_search_tool:
         self.total_pages = 1
         
         self.results_url = ''
+
+        self.results_url_to_show = ''
         
         self.soup = None
         
@@ -291,52 +374,31 @@ class hca_search_tool:
         self.case_infos = []
         
         params_raw = []
-
-        selection_counter = 0
         
-        for selection in [self.year, self.judge, self.clr]:
+        base_url = f'https://www.hcourt.gov.au/cases-and-judgments/judgments/{hca_collections_dict[self.collection]}?'
 
-            #st.write(f"selection == {selection}")
-            #st.write(f"type(selection) == {type(selection)}")
+        #Url for selenium to start
+
+        self.results_url = base_url
+        
+        #Before entering year, justice or CLR, must enter keywords or case number first, then load
+        
+        browser.get(self.results_url)
+
+        if len(self.keywords) > 0:
             
-            if (not pd.isna(selection)) and (not selection == None) and (not str(selection) == 'None'):
+            keywords_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-keywords--2"]')))
+            keywords_input.send_keys(self.keywords)
 
-                if isinstance(selection, float) or isinstance(selection, int) or isinstance(selection, int):
+            params_raw.append(('keywords', self.keywords))
 
-                    selection = str(int(selection))
-
-                if isinstance(selection, str):
-
-                    #st.write(f"len(selection) == {len(selection)}")
-                    
-                    if len(selection) > 0:
-
-                        #If year
-                        if re.search(r'\d{4}', selection):
-        
-                            selection = f"d:{selection}"
-
-                        #If CLR volumn
-                        elif re.search(r'\d+', selection):
-        
-                            selection = f"volume:{selection}"
-
-                        #If judge
-                        else:
-                            selection = all_judges_dict[selection]
-                            
-                        params_raw.append((f'f[{selection_counter}]', selection))
-
-                        #st.write(f"Appended selection == {selection}")
-                    
-                        selection_counter += 1
-        
-        params_raw.append(('keywords', self.keywords))
-        
         if len(self.case_number) > 0:
 
-            params_raw.append(('case_number', self.case_number))
+            case_number_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
+            keywords_input.send_keys(self.case_number)
 
+            params_raw.append(('case_number', self.case_number))
+        
         elif (len(self.case_number) == 0) and (len(self.citation) > 0):
 
             print(f"Trying to infer case_number from self.citation == {self.citation}")
@@ -360,54 +422,84 @@ class hca_search_tool:
                                 case_number = case_number.split(puncutation)[0]
 
                         print(f"Inferred case_number == {case_number} from self.citation == {self.citation}")
-    
-                        params_raw.append(('case_number', case_number))
-                
-        #Save params
-        #params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote, safe='%')
+
+            case_number_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
+            keywords_input.send_keys(case_number)
+
+            params_raw.append(('case_number', case_number))
+
+        #Select 100 results per page
+        items_per_page_menu = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'edit-items-per-page--2')))
+        items_per_page_menu_input = Select(items_per_page_menu)
+        
+        items_per_page_menu_input.select_by_value('100')
+
+        #Click apply button and load
+        apply_button = Wait(browser, 20).until(EC.visibility_of_element_located((By.ID, 'edit-submit-judgments--2')))
+        apply_button.click()
+
+        #Wait until search results present, if any        
+        loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
+        
+        #Update results_url
         params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
-        
-        base_url = f'https://www.hcourt.gov.au/cases-and-judgments/judgments/{hca_collections_dict[self.collection]}?'
-
-        #Add judge and year if chosen
-
-        #if self.collection == hca_collections[0]:
-
-            #if self.judge != None:
-    
-                #base_url += f"f%5B1%5D={judges_dict[self.judge]}"
-    
-            #if self.year != None:
-    
-                #base_url += f"f%5B0%5D={f"d:{self.year}"}"
-        
-        #API url
         self.results_url = base_url + '&' + params + '&items_per_page=100'
-
-        #Get results
-
-        #print(f"self.results_url == {self.results_url}")
-
-        #st.write(f"self.results_url == {self.results_url}")
         
-        results_page = requests.get(self.results_url)
-        self.soup = BeautifulSoup(results_page.content, "lxml")
+        #Enter year, justice or CLR if selection
+        selection_counter = 0
 
-        #browser = get_driver()
-    
-        #browser.implicitly_wait(5)
-        #browser.set_page_load_timeout(30)
+        for selection in [self.judge, self.year, self.clr]:
 
-        #browser.get(self.results_url)
-        #browser.delete_all_cookies()
-        #browser.refresh()
+            if (not pd.isna(selection)) and (not selection == None) and (not str(selection) == 'None'):
 
-        #self.soup = BeautifulSoup(browser.page_source, "lxml")
+                if isinstance(selection, float) or isinstance(selection, int) or isinstance(selection, int):
 
-        #browser.quit()        
+                    selection = str(int(selection))
 
-        #st.write(self.soup)
+                if isinstance(selection, str):
+
+                    if len(selection) > 0:
+
+                        #If year
+                        if re.search(r'\d{4}', selection):
         
+                            selection = f"d:{selection}"
+
+                        #If CLR volumn
+                        elif re.search(r'\d+', selection):
+        
+                            selection = f"volume:{selection}"
+
+                        #If judge
+                        else:
+                            selection = all_judges_dict[selection]
+                            
+                        params_raw.append((f'f[{selection_counter}]', selection))
+
+                        selection_counter += 1
+
+                        #Update self.results_url then reload selenium
+                        params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
+                
+                        self.results_url = base_url + '&' + params + '&items_per_page=100'
+        
+                        #Pause to avoid getting kicked out
+                        pause.seconds(np.random.randint(10, 15))
+
+                        print(f"Given '{selection}' entered, loading {self.results_url} ")
+                        
+                        browser.get(self.results_url)
+
+
+                        #Wait until search results present, if any
+                        loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
+
+        print(f"Loaded results from self.results_url == {self.results_url}")
+
+        #st.write(f"Getting results from self.results_url == {self.results_url}")
+                
+        self.soup = BeautifulSoup(browser.page_source, "lxml")
+
         #Get results count
         if 'displaying' in self.soup.text.lower():
             
@@ -439,19 +531,19 @@ class hca_search_tool:
 
                         next_page_url = self.results_url + f"&page={page}"
 
-                        results_page = requests.get(next_page_url)
-                        self.soup = BeautifulSoup(results_page.content, "lxml")
+                        #results_page = requests.get(next_page_url)
+                        #self.soup = BeautifulSoup(results_page.content, "lxml")
                         
-                        #browser = get_driver()
-                    
-                        #browser.implicitly_wait(5)
-                        #browser.set_page_load_timeout(30)
+                        #browser = get_driver() #Don't
 
-                        #browser.get(self.next_page_url)
-                        #browser.delete_all_cookies()
-                        #browser.refresh()
+                        browser.get(self.next_page_url)
+                        #browser.delete_all_cookies() #Don't
+                        #browser.refresh() #Don't
 
-                        #self.soup = BeautifulSoup(browser.page_source, "lxml")
+                        #Wait until search results present, if any
+                        loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
+
+                        self.soup = BeautifulSoup(browser.page_source, "lxml")
 
                         #browser.quit()
         
@@ -467,8 +559,9 @@ class hca_search_tool:
                                          'Hyperlink to High Court Judgments Database': '',
                                          'Reported': '',
                                          'Medium neutral citation': '',
+                                          'Case number': '',
                                          'Before': '',
-                                         'Date': ''
+                                         'Date': '', 
                                         }
 
                             try:
@@ -581,19 +674,19 @@ class hca_search_tool:
         
         judgment_url = case_info['Hyperlink to High Court Judgments Database']
         
-        result_page = requests.get(judgment_url)
-        result_soup = BeautifulSoup(result_page.content, "lxml")
+        #result_page = requests.get(judgment_url)
+        #result_soup = BeautifulSoup(result_page.content, "lxml")
 
-        #browser = get_driver()
+        #browser = get_driver() #Don't
     
-        #browser.implicitly_wait(5)
-        #browser.set_page_load_timeout(30)
+        browser.get(judgment_url)
+        #browser.delete_all_cookies() #Don't
+        #browser.refresh() #Don't
 
-        #browser.get(judgment_url)
-        #browser.delete_all_cookies()
-        #browser.refresh()
+        #Wait until pdf link present
+        pdf_link_present = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//span[@class='file file--mime-application-pdf file--application-pdf']")))
         
-        #self.soup = BeautifulSoup(browser.get.page_source, "lxml")
+        result_soup = BeautifulSoup(browser.page_source, "lxml")
 
         #browser.quit()
 
@@ -617,7 +710,7 @@ class hca_search_tool:
             pdf_link = 'https://www.hcourt.gov.au' + pdf_link.find('a', href=True)['href']
 
             #Pause to avoid getting kicked out
-            pause.seconds(np.random.randint(10, 15))
+            #pause.seconds(np.random.randint(10, 15))
             
             if ('2000' in self.collection) or ('Single' in self.collection):
             
