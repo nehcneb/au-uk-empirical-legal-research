@@ -526,6 +526,8 @@ def afca_old_pdf_judgment(case_meta):
         pdf_file = url.split('/')[-1]    
         browser_old.get(url)
         
+        pdf_file = urllib.parse.unquote(pdf_file)
+        
         pdf_path = f"{download_dir}/{pdf_file}"
     
         #Limiting waiting time for downloading PDF to 1 min

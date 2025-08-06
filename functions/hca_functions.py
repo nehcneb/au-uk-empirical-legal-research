@@ -43,6 +43,16 @@ from io import BytesIO
 from io import StringIO
 import math
 
+#import glob
+
+#PDF images
+import pdf2image
+from PIL import Image
+import pytesseract
+
+#PDF
+import pypdf
+
 #Streamlit
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
@@ -62,7 +72,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, pdf_judgment, pdf_image_judgment, link, is_date, split_title_mnc
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, link, is_date, split_title_mnc
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -91,8 +101,17 @@ options = Options()
 #options.add_argument('--no-sandbox')  
 #options.add_argument('--disable-dev-shm-usage')  
 
+download_dir = os.getcwd() + '/HCA_PDFs'
+
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option('useAutomationExtension', False)
+
+options.add_experimental_option('prefs', {
+"download.default_directory": download_dir, #Change default directory for downloads
+"download.prompt_for_download": False, #To auto download the file
+"download.directory_upgrade": True,
+"plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
+})
 
 from selenium import webdriver
 
@@ -490,13 +509,10 @@ class hca_search_tool:
                         
                         browser.get(self.results_url)
 
-
                         #Wait until search results present, if any
                         loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
 
         print(f"Loaded results from self.results_url == {self.results_url}")
-
-        #st.write(f"Getting results from self.results_url == {self.results_url}")
                 
         self.soup = BeautifulSoup(browser.page_source, "lxml")
 
@@ -548,7 +564,7 @@ class hca_search_tool:
                         #browser.quit()
         
                     print(f"Getting results from page {page}, {self.results_url}")
-    
+                    
                     results = self.soup.find_all('div', class_ = 'views-row')
 
                     for result in results:
@@ -673,6 +689,8 @@ class hca_search_tool:
         judgment_text = ''
         
         judgment_url = case_info['Hyperlink to High Court Judgments Database']
+
+        case_info.update({'Hyperlink to High Court Judgments Database': link(judgment_url)})
         
         #result_page = requests.get(judgment_url)
         #result_soup = BeautifulSoup(result_page.content, "lxml")
@@ -685,6 +703,8 @@ class hca_search_tool:
 
         #Wait until pdf link present
         pdf_link_present = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//span[@class='file file--mime-application-pdf file--application-pdf']")))
+
+        #st.write(f"pdf_link_present")
         
         result_soup = BeautifulSoup(browser.page_source, "lxml")
 
@@ -697,9 +717,9 @@ class hca_search_tool:
                 catchwords = result_soup.find('div', class_ = 'text-content clearfix field field--name-field-hca-catchwords field--type-text-long field--label-above')
                 catchwords = catchwords.text
     
-            except:
+            except Exception as e:
                 
-                print(f"{case_info['Case name']}: Can't get catchwords")
+                print(f"{case_info['Case name']}: Can't get catchwords due to error: {e}")
 
         #Get judgment text
 
@@ -709,20 +729,62 @@ class hca_search_tool:
         
             pdf_link = 'https://www.hcourt.gov.au' + pdf_link.find('a', href=True)['href']
 
-            #Pause to avoid getting kicked out
-            #pause.seconds(np.random.randint(10, 15))
-            
-            if ('2000' in self.collection) or ('Single' in self.collection):
-            
-                judgment_text = pdf_judgment(pdf_link)
+            print(f"{case_info['Case name']}: Trying to download pdf from pdf_link == {pdf_link}")
 
-            else:
+            browser.get(pdf_link)
+            
+            pdf_file = pdf_link.split('/')[-1]    
+
+            pdf_file = urllib.parse.unquote(pdf_file)
+            
+            pdf_path = f"{download_dir}/{pdf_file}"
+
+            #list_of_files = glob.glob(f'{download_dir}/*') # * means all if need specific format then *.csv
+            #pdf_path = max(list_of_files, key=os.path.getctime)
+
+            print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
+
+            #Limiting waiting time for downloading PDF to 1 min
+            
+            waiting_counter = 0
+            
+            while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
+                pause.seconds(5)
+                waiting_counter += 1
                 
-                judgment_text = pdf_image_judgment(pdf_link)
+            if ('2000' in self.collection) or ('Single' in self.collection):
+                
+                pdfdoc_remote = pypdf.PdfReader(pdf_path)
+                
+                text_list = []
+                
+                for page in pdfdoc_remote.pages:
+                    text_list.append(page.extract_text())
+                
+                os.remove(pdf_path)
+                
+                judgment_text = str(text_list)
+                
+            else:
+
+                images = pdf2image.convert_from_path(pdf_path, timeout=30)
+                
+                #Extract text from images
+                text_list = []
+                
+                max_images_number = len(images)
             
-        except:
+                for image in images[ : max_images_number]:
+                    
+                    text_page = pytesseract.image_to_string(image, timeout=30)
+                    
+                    text_list.append(text_page)
+
+                judgment_text = str(text_list)
             
-            print(f"{case_info['Case name']}: Can't get judgment_text")
+        except Exception as e:
+            
+            print(f"{case_info['Case name']}: Can't get judgment_text due to error: {e}")
 
         case_info.update({'Catchwords': catchwords})
         case_info.update({'judgment': judgment_text})
@@ -775,6 +837,8 @@ class hca_search_tool:
 
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
 
+            #st.write(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
+
         else:
             #If huggingface not enabled
             self.case_infos_direct = copy.deepcopy(self.case_infos)
@@ -790,8 +854,12 @@ class hca_search_tool:
             self.case_infos_w_judgments.append(case_info_w_judgment)
             
             print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
+
+            st.write(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
             
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
+
+            st.write(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
 
 
 # %%
