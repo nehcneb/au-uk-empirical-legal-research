@@ -37,21 +37,10 @@ import httplib2
 import urllib
 from urllib.request import urlretrieve
 import os
-#import pypdf
 import io
 from io import BytesIO
 from io import StringIO
 import math
-
-#import glob
-
-#PDF images
-import pdf2image
-from PIL import Image
-import pytesseract
-
-#PDF
-import pypdf
 
 #Streamlit
 import streamlit as st
@@ -72,7 +61,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, link, is_date, split_title_mnc
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, link, is_date, split_title_mnc, pdf_judgment, pdf_image_judgment
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -154,17 +143,14 @@ def get_driver():
     
     return browser
 
-try:
+#try:
     
-    browser = get_driver()
+    #browser = get_driver()
     
-    #browser.implicitly_wait(5)
-    #browser.set_page_load_timeout(30)
-    
-except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    print(e)
-    quit()
+#except Exception as e:
+    #st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
+    #print(e)
+    #quit()
 
 
 # %%
@@ -198,7 +184,7 @@ hca_collections_dict = {
 
 hca_collections_years_dict = {
 'Judgments 2000-present': [str(x) for x in range(datetime.now().year, 2000-1, -1)],
-'Commonwealth Law Reports, volumes 1-100': [str(x) for x in range(1903, 1959 + 1)],
+'Commonwealth Law Reports, volumes 1-100': [str(x) for x in range(1903, 1958 + 1)],
 'Single Justice Judgments': [str(x) for x in range(datetime.now().year, 2024-1, -1)],
 'Unreported Judgments': [str(x) for x in (list(range(1994, 1921-1, -1)) + ['1906'])],
 }
@@ -401,6 +387,8 @@ class hca_search_tool:
         self.results_url = base_url
         
         #Before entering year, justice or CLR, must enter keywords or case number first, then load
+
+        browser = get_driver()
         
         browser.get(self.results_url)
 
@@ -457,14 +445,14 @@ class hca_search_tool:
         apply_button = Wait(browser, 20).until(EC.visibility_of_element_located((By.ID, 'edit-submit-judgments--2')))
         apply_button.click()
 
-        #Wait until search results present, if any        
+        #Wait until any search results present       
         loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
         
         #Update results_url
         params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote)
         self.results_url = base_url + '&' + params + '&items_per_page=100'
         
-        #Enter year, justice or CLR if selection
+        #Enter year, justice or CLR if selected
         selection_counter = 0
 
         for selection in [self.judge, self.year, self.clr]:
@@ -509,10 +497,10 @@ class hca_search_tool:
                         
                         browser.get(self.results_url)
 
-                        #Wait until search results present, if any
+                        #Wait until any search results present
                         loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
 
-        print(f"Loaded results from self.results_url == {self.results_url}")
+        print(f"Loaded search results from self.results_url == {self.results_url}")
                 
         self.soup = BeautifulSoup(browser.page_source, "lxml")
 
@@ -547,11 +535,7 @@ class hca_search_tool:
 
                         next_page_url = self.results_url + f"&page={page}"
 
-                        #results_page = requests.get(next_page_url)
-                        #self.soup = BeautifulSoup(results_page.content, "lxml")
-                        
-                        #browser = get_driver() #Don't
-
+                        browser = get_driver()
                         browser.get(self.next_page_url)
                         #browser.delete_all_cookies() #Don't
                         #browser.refresh() #Don't
@@ -561,9 +545,9 @@ class hca_search_tool:
 
                         self.soup = BeautifulSoup(browser.page_source, "lxml")
 
-                        #browser.quit()
+                        browser.quit()
         
-                    print(f"Getting results from page {page}, {self.results_url}")
+                    print(f"Getting results from page {page} (0 denotes first page)")
                     
                     results = self.soup.find_all('div', class_ = 'views-row')
 
@@ -681,6 +665,8 @@ class hca_search_tool:
                     #Got enough results, break out of page loop
                     break
 
+        browser.quit()
+
     #Function for attaching judgment text to case_info dict
     def attach_judgment(self, case_info):
 
@@ -690,27 +676,19 @@ class hca_search_tool:
         
         judgment_url = case_info['Hyperlink to High Court Judgments Database']
 
-        case_info.update({'Hyperlink to High Court Judgments Database': link(judgment_url)})
-        
-        #result_page = requests.get(judgment_url)
-        #result_soup = BeautifulSoup(result_page.content, "lxml")
-
-        #browser = get_driver() #Don't
+        browser = get_driver()
     
         browser.get(judgment_url)
         #browser.delete_all_cookies() #Don't
         #browser.refresh() #Don't
-
+        
         #Wait until pdf link present
         pdf_link_present = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//span[@class='file file--mime-application-pdf file--application-pdf']")))
 
-        #st.write(f"pdf_link_present")
-        
         result_soup = BeautifulSoup(browser.page_source, "lxml")
-
-        #browser.quit()
-
+        
         #Get catchwords
+
         if 'text-content clearfix field field--name-field-hca-catchwords field--type-text-long field--label-above' in str(result_soup):
             
             try:
@@ -722,27 +700,23 @@ class hca_search_tool:
                 print(f"{case_info['Case name']}: Can't get catchwords due to error: {e}")
 
         #Get judgment text
-
+        
         try:
+
+            #Stat downloading judgment pdf
+            pdf_link_present.click()
+                
+            #Get path to most recent downloaded file
             
             pdf_link = result_soup.find('span', class_ = 'file file--mime-application-pdf file--application-pdf')
         
             pdf_link = 'https://www.hcourt.gov.au' + pdf_link.find('a', href=True)['href']
 
-            print(f"{case_info['Case name']}: Trying to download pdf from pdf_link == {pdf_link}")
-
-            browser.get(pdf_link)
-            
             pdf_file = pdf_link.split('/')[-1]    
 
             pdf_file = urllib.parse.unquote(pdf_file)
             
             pdf_path = f"{download_dir}/{pdf_file}"
-
-            #list_of_files = glob.glob(f'{download_dir}/*') # * means all if need specific format then *.csv
-            #pdf_path = max(list_of_files, key=os.path.getctime)
-
-            print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
 
             #Limiting waiting time for downloading PDF to 1 min
             
@@ -751,36 +725,19 @@ class hca_search_tool:
             while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
                 pause.seconds(5)
                 waiting_counter += 1
-                
+                            
+            #print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
+
             if ('2000' in self.collection) or ('Single' in self.collection):
-                
-                pdfdoc_remote = pypdf.PdfReader(pdf_path)
-                
-                text_list = []
-                
-                for page in pdfdoc_remote.pages:
-                    text_list.append(page.extract_text())
-                
-                os.remove(pdf_path)
-                
-                judgment_text = str(text_list)
-                
+
+                judgment_text = pdf_judgment(url_or_path = pdf_path, url_given = False)
+                                                                
             else:
-
-                images = pdf2image.convert_from_path(pdf_path, timeout=30)
                 
-                #Extract text from images
-                text_list = []
-                
-                max_images_number = len(images)
-            
-                for image in images[ : max_images_number]:
-                    
-                    text_page = pytesseract.image_to_string(image, timeout=30)
-                    
-                    text_list.append(text_page)
+                judgment_text = pdf_image_judgment(url_or_path = pdf_path, url_given = False)
 
-                judgment_text = str(text_list)
+            #MUST remove pdf from download folder automatically or manually
+            os.remove(pdf_path)
             
         except Exception as e:
             
@@ -788,7 +745,9 @@ class hca_search_tool:
 
         case_info.update({'Catchwords': catchwords})
         case_info.update({'judgment': judgment_text})
-
+        
+        browser.quit()
+        
         return case_info
     
     #Function for getting all requested judgments
@@ -825,7 +784,12 @@ class hca_search_tool:
                 if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
                     
                     case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
-    
+
+                    #Make link clickable
+                    judgment_url = case_info['Hyperlink to High Court Judgments Database']
+                    case_info.update({'Hyperlink to High Court Judgments Database': link(judgment_url)})
+
+                    #Add case_info to self.case_infos_w_judgments
                     self.case_infos_w_judgments.append(case_info)
     
                     print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
@@ -837,9 +801,8 @@ class hca_search_tool:
 
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
 
-            #st.write(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
-
         else:
+            
             #If huggingface not enabled
             self.case_infos_direct = copy.deepcopy(self.case_infos)
         
@@ -849,17 +812,20 @@ class hca_search_tool:
             #Pause to avoid getting kicked out
             pause.seconds(np.random.randint(10, 15))
 
-            case_info_w_judgment = self.attach_judgment(case_info)
+            case_info = self.attach_judgment(case_info)
 
-            self.case_infos_w_judgments.append(case_info_w_judgment)
+            #Make link clickable
+            judgment_url = case_info['Hyperlink to High Court Judgments Database']
+            case_info.update({'Hyperlink to High Court Judgments Database': link(judgment_url)})
+
+            #Add case_info to self.case_infos_w_judgments
+
+            self.case_infos_w_judgments.append(case_info)
             
             print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
-
-            st.write(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
             
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
 
-            st.write(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
 
 
 # %%

@@ -87,12 +87,28 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium_stealth import stealth
 
 options = Options()
-options.add_argument("--disable-gpu")
+#options.add_argument("--disable-gpu")
 #options.add_argument("--headless")
-options.add_argument('--no-sandbox')  
-options.add_argument('--disable-dev-shm-usage')  
+#options.add_argument('--no-sandbox')  
+#options.add_argument('--disable-dev-shm-usage')  
+
+download_dir = os.getcwd() + '/HCA_PDFs'
+
+options.add_experimental_option("excludeSwitches", ["enable-automation"])
+options.add_experimental_option('useAutomationExtension', False)
+
+options.add_experimental_option('prefs', {
+"download.default_directory": download_dir, #Change default directory for downloads
+"download.prompt_for_download": False, #To auto download the file
+"download.directory_upgrade": True,
+"plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
+})
+
+from selenium import webdriver
+
 
 if 'Users/Ben' not in os.getcwd(): 
 
@@ -126,19 +142,15 @@ def get_driver():
             webdriver=False,
     
             fix_hairline=True)
-            
     
-    if 'Users/Ben' in os.getcwd():
-        browser.minimize_window()
+    #if 'Users/Ben' in os.getcwd():
+        #browser.minimize_window()
     
     return browser
 
 try:
     
     browser = get_driver()
-    
-    #browser.implicitly_wait(5)
-    #browser.set_page_load_timeout(30)
     
 except Exception as e:
     st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
@@ -826,53 +838,61 @@ class ca_search_tool:
         #browser.delete_all_cookies()
         #browser.refresh()
 
-        #try:
+        try:
             #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
 
             #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, './/div[@id = "understandCookieConsent"|@id = "cookieConsentBlocker"]'))) 
             
-            #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "//*[contains(text(), 'ookieConsent')]"))) 
+            accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "//*[contains(text(), 'cookieConsent')]"))) 
             
-            #accept_cookies.click()
+            accept_cookies.click()
 
-            #print(f"Accepted cookies")
+            print(f"Accepted cookies")
         
-        #except Exception as e:
+        except ElementClickInterceptedException as e:
+
+            print(f"Did not accept cookies due to error: {e}")
+
+            try:
             
-            #print(f"Did not accept cookies due to error: {e}")
+                print("Trying to accept cookies again")
+    
+                browser.execute_script("arguments[0].click()", accept_cookies)
+
+            except Exception as e:
+
+                print(f"Did not accept cookies due to error: {e}")            
 
         try:
             
             search_button = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
             
             search_button.click()
-
-        #except Exception as e:
             
-            #print(f"Did not click search button due to error: {e}")
-        
         except ElementClickInterceptedException as e:
 
             print(f"Did not click search button due to error: {e}")
 
-            print("Trying to click on search button again")
-
-            browser.execute_script("arguments[0].click()", search_button)
+            try:
+            
+                print("Trying to click on search button again")
+    
+                browser.execute_script("arguments[0].click()", search_button)
+            
+            except Exception as e:
+                
+                print(f"Did not click search button due to error: {e}")
             
         #Check if any cases found
         try:
             #Get all cases from current page    
-            #elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
             elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
             
             #Get all number of results
-            #results_count_raw = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, '//span[@id="typeFacetText-decision"]')))
             results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
     
             results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
-    
-            #st.write(results_count_list)
-    
+        
             if len(results_count_list) > 0:
             
                 results_count = results_count_list[0]
@@ -904,8 +924,6 @@ class ca_search_tool:
 
                 if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in browser.page_source:
             
-                    #load_more = browser.find_element(By.ID, "loadMoreResults")
-
                     try:
         
                         load_more = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
@@ -913,9 +931,7 @@ class ca_search_tool:
                         #pause.seconds(np.random.randint(10, 20))
                         
                         browser.execute_script("arguments[0].click();", load_more);
-                        
-                        #elements = browser.find_elements(By.CLASS_NAME, "result ")
-                        
+                                                
                         elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
 
                         if len(elements) > case_num:
@@ -923,8 +939,6 @@ class ca_search_tool:
                             case_num = len(elements)
 
                         else:
-
-                            #case_num = min(self.judgment_counter_bound, self.results_count) + 1
     
                             break
 
@@ -932,17 +946,11 @@ class ca_search_tool:
                         
                         print(f"Can't load more results due to error: {e}")
 
-                        #case_num = min(self.judgment_counter_bound, self.results_count) + 1
-
                         break
             
                 else:
-
-                    #case_num = min(self.judgment_counter_bound, self.results_count) + 1
                     
                     break
-            
-            #print(f"Elements: {case_num}")
             
             #Start collecting cases    
             counter = 0

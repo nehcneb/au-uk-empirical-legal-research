@@ -845,7 +845,7 @@ class hk_search_tool:
         
             try:
                 
-                judgment_text = pdf_judgment(pdf_url)
+                judgment_text = pdf_judgment(url_or_path = pdf_url, url_given = True)
                 
                 print(f"{case_number}: Got judgment from pdf.")
             
@@ -866,52 +866,6 @@ class hk_search_tool:
 
                 print(f"{case_number}: Can't get judgment from docx.")
         
-        #Older method for getting judgment text from pdf or docx by inference from case number
-
-        #if len(judgment_text) == 0:
-
-            #case_number_ds = re.findall(r'\d+', case_number)
-            #case_number_numbers = case_number_ds[0]
-            #case_number_alphabets = case_number.split(case_number_numbers)[0]
-            #case_number_year = case_number_ds[1]
-            #case_number_numbers_6_digis = case_number_numbers
-            #while len(case_number_numbers_6_digis) < 6:
-                #case_number_numbers_6_digis = '0' + case_number_numbers_6_digis
-                
-            #for language in ['en', 'ch']:
-
-                #for doc_type in ['docx', 'doc']:
-
-                    #pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-
-                    #if len(judgment_text) == 0:
-
-                        #pdf_url = f'https://legalref.judiciary.hk/lrs/common/ju/loadPdf.jsp?url=https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.{doc_type}&mobile=N'
-                    
-                        #try:
-                            
-                            #judgment_text = pdf_judgment(pdf_url)
-                            
-                            #print(f"{case_number}: Got judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-                        
-                        #except Exception as e:
-
-                            #print(f"{case_number}: Can't get judgment in language == {language} from pdf based on doc_type == {doc_type}.")
-
-            #if len(judgment_text) == 0:
-            
-                #try:
-
-                    #docx_url = f'https://legalref.judiciary.hk/doc/judg/word/vetted/other/{language}/{case_number_year}/{case_number_alphabets}{case_number_numbers_6_digis}_{case_number_year}.docx'
-                    
-                    #judgment_text = docx_judgment(docx_url)
-                    
-                    #print(f"{case_number}: Got judgment in language == {language} from docx.")
-
-                #except Exception as e:
-                    
-                    #print(f"{case_number}: Can't get judgment from pdf or docx.")
-
         #Create updated case_info dict with judgment text and links to Chinese translation, English original
         case_info_w_judgment = {'Case name': case_info['Case name'],
                                 'Hyperlink to the Hong Kong Legal Reference System': case_info['Hyperlink to the Hong Kong Legal Reference System'],

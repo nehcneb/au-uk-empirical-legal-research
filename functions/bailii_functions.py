@@ -605,7 +605,7 @@ class bailii_search_tool:
                         
                         try:
                             
-                            text = pdf_image_judgment(pdf_link)
+                            text = pdf_image_judgment(url_or_path = pdf_link, url_given = True)
 
                             case_info_w_judgment.update({'judgment': text})
 

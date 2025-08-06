@@ -1430,7 +1430,7 @@ class us_search_tool:
         if (len(opinion_text) == 0) and ('local_path' in opinion_json.keys()):
             if '.pdf' in str(opinion_json['local_path']).lower():
                 pdf_url = 'https://storage.courtlistener.com/' + opinion_json['local_path']
-                opinion_text = pdf_judgment(pdf_url)
+                opinion_text = pdf_judgment(url_or_path = pdf_url, url_given = True)
 
         #st.write(opinion_json.keys())
         
@@ -1506,7 +1506,7 @@ class us_search_tool:
         if ('filepath_local' in recap_document.keys()) and ('is_available' in recap_document.keys()):
             if (('.pdf' in str(recap_document['filepath_local']).lower()) and (str(recap_document['is_available']).lower() == 'true')):
                 pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']    
-                recap_document['file_content'] = pdf_judgment(pdf_url)
+                recap_document['file_content'] = pdf_judgment(url_or_path = pdf_url, url_given = True)
         
         return recap_document
 

@@ -272,17 +272,23 @@ def link(x):
 
 # %%
 #Define function for judgment link containing PDF
-def pdf_judgment(url):
-    headers = {'User-Agent': 'whatever'}
+def pdf_judgment(url_or_path, url_given = True):
 
-    #print(url)
+    #If the str given is url
+    if url_given == True:
     
-    r = requests.get(url, headers=headers, allow_redirects = True)
+        headers = {'User-Agent': 'whatever'}
+        
+        r = requests.get(url_or_path, headers=headers, allow_redirects = True)
+    
+        remote_file_bytes = io.BytesIO(r.content)
+        pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
 
-    #print('Got judgment bytes data')
+    else:
+        #If the str given is path to pdf
+        
+        pdfdoc_remote = pypdf.PdfReader(url_or_path)
     
-    remote_file_bytes = io.BytesIO(r.content)
-    pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
     text_list = []
 
     for page in pdfdoc_remote.pages:
@@ -294,15 +300,24 @@ def pdf_judgment(url):
 
 # %%
 #Define function for judgment link containing PDF images
-def pdf_image_judgment(url):
-    headers = {'User-Agent': 'whatever'}
+def pdf_image_judgment(url_or_path = '', url_given = True):
 
-    r = requests.get(url, headers=headers, allow_redirects = True)
+    #If the str given is url
+    if url_given == True:
     
-    remote_file_bytes = r.content
+        headers = {'User-Agent': 'whatever'}
+    
+        r = requests.get(url_or_path, headers=headers, allow_redirects = True)
+        
+        remote_file_bytes = r.content
+    
+        images = pdf2image.convert_from_bytes(remote_file_bytes, timeout=30)
+        
+    else:
+        
+        #If the str given is path to pdf
+        images = pdf2image.convert_from_path(url_or_path, timeout=30)
 
-    images = pdf2image.convert_from_bytes(remote_file_bytes, timeout=30)
-    
     #Extract text from images
     text_list = []
     

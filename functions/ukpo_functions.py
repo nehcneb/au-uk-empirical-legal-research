@@ -450,15 +450,15 @@ class ukpo_search_tool:
                     #If the judgment is in .doc, can only save the judgment to a local folder                    
                     if '.pdf' in judgment_link:
     
-                        judgment_text = pdf_image_judgment(judgment_link)
+                        judgment_text = pdf_image_judgment(url_or_path = judgment_link, url_given = True)
                     
                         print(f"{case_info['Case name']}: got judgment.")
                     
                     #if '.doc' in judgment_link:
                     
-                except:
+                except Exception as e:
                     
-                    print(f"{case_info['Case name']}: can't get judgment or save file.")
+                    print(f"{case_info['Case name']}: can't get judgment or save file due to error: {e}.")
                     
                 #Add judgment to dict of case_info_w_judgment
                 case_info_w_judgment.update({'judgment': judgment_text}) 

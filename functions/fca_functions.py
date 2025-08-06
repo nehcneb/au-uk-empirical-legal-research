@@ -510,17 +510,20 @@ def fca_meta_judgment_dict(case_info):
     
         #Check if gets taken to a PDF
         else:
+            
             print(f"{judgment_dict['Case name']}: getting pdf judgment.")
             
             #Attach judgment pdf text
             try:
-                judgment_pdf_raw = pdf_image_judgment(judgment_url)
+                judgment_pdf_raw = pdf_image_judgment(url_or_path = judgment_url, url_given = True)
                 judgment_dict['judgment'] = judgment_pdf_raw
                 
-            except:
-                pass
-        
+            except Exception as e:
+                
+                print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
+
     except Exception as e:
+        
         print(f"{judgment_dict['Case name']}: judgment not scrapped")
         print(e)
     

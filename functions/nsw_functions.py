@@ -214,7 +214,9 @@ def nsw_link(x):
 def nsw_short_judgment(uri):
     
     html_link = 'https://www.caselaw.nsw.gov.au'+ uri
-    page_html = requests.get(html_link)
+    
+    page_html = requests.get(html_link, headers = {'User-Agent': 'whatever'})
+    
     soup_html = BeautifulSoup(page_html.content, "lxml")
 
     judgment_type = ''
@@ -224,8 +226,7 @@ def nsw_short_judgment(uri):
     
     if str(PDF_raw_link).lower() != 'none':
         PDF_link = 'https://www.caselaw.nsw.gov.au' + PDF_raw_link.get('href')    
-        headers = {'User-Agent': 'whatever'}
-        judgment_text = pdf_image_judgment(PDF_link)
+        judgment_text = pdf_image_judgment(url_or_path = PDF_link, url_given = True)
         judgment_type = 'pdf'
         
     #Return html text if no PDF
