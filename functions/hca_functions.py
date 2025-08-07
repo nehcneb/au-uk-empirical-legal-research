@@ -84,24 +84,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium_stealth import stealth
 
-options = Options()
-#options.add_argument("--disable-gpu")
-#options.add_argument("--headless")
-#options.add_argument('--no-sandbox')  
-#options.add_argument('--disable-dev-shm-usage')  
-
-download_dir = os.getcwd() + '/HCA_PDFs'
-
-options.add_experimental_option("excludeSwitches", ["enable-automation"])
-options.add_experimental_option('useAutomationExtension', False)
-
-options.add_experimental_option('prefs', {
-"download.default_directory": download_dir, #Change default directory for downloads
-"download.prompt_for_download": False, #To auto download the file
-"download.directory_upgrade": True,
-"plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
-})
-
 if 'Users/Ben' not in os.getcwd(): 
 
     from pyvirtualdisplay import Display
@@ -109,11 +91,26 @@ if 'Users/Ben' not in os.getcwd():
     display = Display(visible=0, size=(1200, 1600))  
     display.start()
 
-    options.add_argument("window-size=1200x600")
+#For downloading judgments
+download_dir = os.getcwd() + '/HCA_PDFs'
 
 #@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
 
+    options = Options()
+    
+    #For automation
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    
+    #For downloading judgments
+    options.add_experimental_option('prefs', {
+    "download.default_directory": download_dir, #Change default directory for downloads
+    "download.prompt_for_download": False, #To auto download the file
+    "download.directory_upgrade": True,
+    "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
+    })
+    
     browser = webdriver.Chrome(options=options)
 
     browser.implicitly_wait(15)
@@ -140,14 +137,6 @@ def get_driver():
     
     return browser
 
-#try:
-    
-    #browser = get_driver()
-    
-#except Exception as e:
-    #st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    #print(e)
-    #quit()
 
 
 # %%
@@ -554,8 +543,8 @@ class hca_search_tool:
 
                             case_info = {'Case name': '',
                                          'Hyperlink to High Court Judgments Database': '',
-                                         'Reported': '',
                                          'Medium neutral citation': '',
+                                          'Reported': '',
                                           'Case number': '',
                                          'Before': '',
                                          'Date': '', 

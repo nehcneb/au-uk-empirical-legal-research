@@ -106,9 +106,9 @@ def get_driver():
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(30)
 
-    #Window must be kept open
-    #if 'Users/Ben' in os.getcwd():
-        #browser.minimize_window()
+    #Window can be minimised
+    if 'Users/Ben' in os.getcwd():
+        browser.minimize_window()
     
     return browser
 
@@ -665,7 +665,7 @@ class ca_search_tool:
                  judgment_counter_bound = default_judgment_counter_bound
                 ):
         
-        self.jurisdiction  =  jurisdiction 
+        self.jurisdiction  = jurisdiction 
         self.court = court
         self.phrase = phrase
         self.case_name_mnc= case_name_mnc
@@ -683,13 +683,15 @@ class ca_search_tool:
         
         self.case_infos = []
 
+        #Selenium objects
+        self.browser = None
+        self.elements = None
+    
     def search(self):
 
         #Reset infos of cases found
         self.case_infos = []
-        
-        #today = datetime.now().strftime("%Y-%m-%d")
-        
+                
         #Default base url with self.jurisdiction and self.court to remove if not entered
         base_url = f'https://www.canlii.org/jurisdiction_param/?origLang=en#search/type=decision&jId=jurisdiction_param,unspecified'
         
@@ -746,17 +748,9 @@ class ca_search_tool:
 
             params.update({'endDate': self.before_date})
                 
-        #else:
-
-            #print('Decision date is after not entered.')
-            
-            #params.update({'endDate': today})
-
         if self.after_date != None:
 
             params.update({'startDate': self.after_date})
-
-        #if ((self.on_this_date != '')  and (self.before_date == '') and (self.after_date == '')):
         
         if self.on_this_date != None:
             
@@ -788,76 +782,73 @@ class ca_search_tool:
         #return url
     
         self.results_url = base_url + '&' + urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',')
-
-        #st.write(self.results_url)
         
         #Load page
             
-        browser = get_driver()
+        self.browser = get_driver()
 
-        browser.get(self.results_url)
+        self.browser.get(self.results_url)
 
+        #Accept cookies
         try:
             
-            accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@id='understandCookieConsent' or @id='cookieConsentBlocker']"))) 
+            accept_cookies = Wait(self.browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@id='understandCookieConsent' or @id='cookieConsentBlocker']"))) 
 
             accept_cookies.click()
             
-            print(f"Accepted cookies")
-
-            pause.seconds(np.random.randint(2, 5))
+            print(f"Clicked accept_cookies")
 
         except ElementClickInterceptedException as e:
 
-            print(f"Did not accept cookies due to error: {e}")
+            print(f"Did not click accept_cookies due to error: {e}")            
 
             try:
             
-                print("Trying to accept cookies again")
+                print("Trying to click accept_cookies again")
                 
-                browser.execute_script("arguments[0].click()", accept_cookies)
-
-                pause.seconds(np.random.randint(2, 5))
+                self.browser.execute_script("arguments[0].click()", accept_cookies)
             
             except Exception as e:
 
-                print(f"Did not accept cookies due to error: {e}")            
-                
+                print(f"Did not click accept_cookies due to error: {e}")            
+
+        pause.seconds(np.random.randint(scraper_pause_mean, scraper_pause_mean + 10))                
+
+        #click on search button
         try:
 
-            search_button = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Start a search']")))
+            search_button = Wait(self.browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Start a search']")))
 
             print("search_button found")
             
             search_button.click()
 
             print(f"search_button clicked")
-        
-            #actions.move_to_element(search_button).click().perform()
-            
+                    
         except ElementClickInterceptedException as e:
 
-            print(f"Did not click search button due to error: {e}")
+            print(f"Did not click search_button due to error: {e}")
 
             try:
             
-                print("Trying to click on search button again")
+                print("Trying to click search_button again")
 
-                browser.execute_script("arguments[0].click()", search_button)
+                self.browser.execute_script("arguments[0].click()", search_button)
 
-                print(f"search_button clicked")
+                print(f"Slicked search_button")
             
             except Exception as e:
                 
-                print(f"Did not click search button due to error: {e}")
+                print(f"Did not click search_button due to error: {e}")
             
         #Check if any cases found
         try:
-            #Get all cases from current page    
-            elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
             
-            #Get all number of results
-            results_count_raw = browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
+            #Get all cases from current page    
+            self.elements = Wait(self.browser, 15).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
+            
+            #Get number of results
+            results_count_raw = self.browser.find_element(By.XPATH, '//span[@id="typeFacetText-decision"]')
     
             results_count_list = re.findall(r'(\d+)', results_count_raw.get_attribute('innerHTML').replace(',', ''))
         
@@ -875,36 +866,32 @@ class ca_search_tool:
 
             print(f"No cases found due to error: {e}")
 
-        print(f"Number of cases found == {self.results_count}")
+        print(f"self.results_count == {self.results_count}")
 
         if self.results_count > 0:
 
             #Get number of results from current page   
-            case_num = len(elements)
-        
-            #print(f"Elements: {case_num}")
-            
-            #pause.seconds(np.random.randint(10, 20))
-            
-            while case_num <= min(self.judgment_counter_bound, self.results_count):
+            case_num = len(self.elements)
+                    
+            while case_num < min(self.judgment_counter_bound, self.results_count):
+
+                pause.seconds(np.random.randint(scraper_pause_mean, scraper_pause_mean + 10))                        
 
                 print(f"Number of cases on current page  == {case_num}")
 
-                if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in browser.page_source:
+                if '<div id="loadMoreResults" class="d-print-none" style="display:none;">' not in self.browser.page_source:
             
                     try:
         
-                        load_more = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
+                        load_more = Wait(self.browser, 15).until(EC.visibility_of_element_located((By.ID, "loadMoreResults")))
                         
-                        #pause.seconds(np.random.randint(10, 20))
-                        
-                        browser.execute_script("arguments[0].click();", load_more);
+                        self.browser.execute_script("arguments[0].click();", load_more);
                                                 
-                        elements = Wait(browser, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "result ")))
+                        self.elements = Wait(self.browser, 15).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
 
-                        if len(elements) > case_num:
+                        if len(self.elements) > case_num:
                             
-                            case_num = len(elements)
+                            case_num = len(self.elements)
 
                         else:
     
@@ -915,39 +902,46 @@ class ca_search_tool:
                         print(f"Can't load more results due to error: {e}")
 
                         break
-            
+
                 else:
                     
                     break
             
-            #Start collecting cases    
+            #Start collecting case_infos
             counter = 0
                         
-            for element in elements:
+            for element in self.elements:
                 
                 if counter < min(self.judgment_counter_bound, self.results_count):
 
+                    #Get html attrs for case
                     case_soup = BeautifulSoup(element.get_attribute('innerHTML'), "lxml")
 
                     case_soup_attrs_raw = case_soup.find('div', class_ = 'searchResult data_caselaw col px-0')
 
                     case_soup_attrs = case_soup_attrs_raw.attrs
                     
-                    url = case_soup_attrs['data-lbh-document-url']
+                    #Initialise default return dict
+                    case_info = {'Case name': '', 
+                                 'Medium neutral citation': '',
+                                  'Hyperlink to CanLII': '',
+                                  'Other citations': '',
+                                'Court': '',
+                                'Decision date': '',
+                                 'Keywords': '',
+                                 'Subjects': ''
+                                }
 
-                    case_name = ''
-
-                    if 'data-lbh-title' in case_soup_attrs.keys():
-
-                        case_name = case_soup_attrs['data-lbh-title']
-
+                    #Get citations
                     citations = case_soup_attrs['data-lbh-citation']
 
                     citations_list = citations.split(', ')
 
                     mnc = ''
 
-                    other_citations = []
+                    other_citations_list = []
+
+                    other_citations = ''
                     
                     if len(citations_list) > 0:
 
@@ -959,107 +953,75 @@ class ca_search_tool:
 
                             else:
 
-                                other_citations.append(citation)
-
+                                other_citations_list.append(citation)
+                    
                     else:
 
                         mnc = citations
 
-                    date = ''
+                    other_citations = ', '.join(other_citations)
 
-                    if 'data-lbh-decision-date' in case_soup_attrs.keys():
+                    case_info['Medium neutral citation'] = mnc
+                    case_info['Other citations'] = other_citations
 
-                        date = case_soup_attrs['data-lbh-decision-date']
-
-                    court = ''
-
-                    if 'data-lbh-collection' in case_soup_attrs.keys():
-                        
-                        court = case_soup_attrs['data-lbh-collection']
-
-
-                    synopsis = []
-
-                    for key in ['data-lbh-keywords', 'data-lbh-subjects']:
-
-                        if key in case_soup_attrs.keys():
-
-                            synopsis.append(case_soup_attrs[key])                           
+                    #Get other metadata                    
                     
-                    case_info = {'Case name': case_name, 
-                                 'Medium neutral citation': mnc,
-                                  'Hyperlink to CanLII': url,
-                                  'Other citations': ', '.join(other_citations),
-                                'Court': court,
-                                'Decision date': date,
-                                 'Synopsis': '\n'.join(synopsis)
+                    #Define correspondence of LawtoData keys and CanLII keys
+                    case_info_meta = {'Case name': 'data-lbh-title', 
+                                  'Hyperlink to CanLII': 'data-lbh-document-url',
+                                'Court': 'data-lbh-collection',
+                                'Date': 'data-lbh-decision-date',
+                                 'Keywords': 'data-lbh-keywords',
+                                 'Subjects': 'data-lbh-subjects'
                                 }
+
+                    for key in case_info_meta.keys():
+
+                        canlii_key = case_info_meta[key]
+
+                        if canlii_key in case_soup_attrs.keys():
+
+                            case_info[key] = case_soup_attrs[canlii_key]   
                     
                     self.case_infos.append(case_info)
                     
                     counter += 1
 
                 else:
+                    
                     break
         
-        browser.delete_all_cookies()
-        browser.quit()
-
     #Get judgment text from each case
-    def ca_meta_judgment_dict(self, case_info):
-    
+    def attach_judgment(self, case_info, judgment_html):
+        
         judgment_url = case_info['Hyperlink to CanLII']
     
         #Make link clickable
         case_info['Hyperlink to CanLII'] = link(case_info['Hyperlink to CanLII'])
     
-        #Add default values
+        #Add default values for additional metadata
         case_info.update({'File number': '', 
                          'Most recent unfavourable mention': '', 
                          'judgment': ''
                              }
                             )
     
-        #Remove sypnosis
-        if 'Synopsis' in case_info.keys():
-            case_info.pop('Synopsis')
-        
         try:
-    
-            browser = get_driver()
-    
-            browser.get(judgment_url)
 
-            try:
-                
-                accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@id='understandCookieConsent' or @id='cookieConsentBlocker']"))) 
-    
-                accept_cookies.click()
-                
-                print(f"Accepted cookies")
-    
-                pause.seconds(np.random.randint(2, 5))
-    
-            except ElementClickInterceptedException as e:
-    
-                print(f"Did not accept cookies due to error: {e}")
-    
-                try:
-                
-                    print("Trying to accept cookies again")
-                    
-                    browser.execute_script("arguments[0].click()", accept_cookies)
-    
-                    pause.seconds(np.random.randint(2, 5))
-                
-                except Exception as e:
-    
-                    print(f"Did not accept cookies due to error: {e}")            
- 
-            soup = BeautifulSoup(browser.page_source, "lxml")
-            meta_tags = soup.find_all("meta")
+            #Get judgment text and additional metadata
+
+            soup = BeautifulSoup(judgment_html, "lxml")
+
+            #Judgment text
+        
+            judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip = True)
+        
+            case_info.update({'judgment': judgment_text})
             
             #Attach metadata
+            
+            meta_tags = soup.find_all("meta")
+            
             for meta in ca_meta_dict.keys():
                 try:
                     meta_content = soup.select(f'meta[name={ca_meta_dict[meta]}]')[0].attrs["content"]
@@ -1087,19 +1049,11 @@ class ca_search_tool:
                 if 'Most recent unfavourable mention' in meta.text.lower():
                     case_info.update({'Most recent unfavourable mention': meta.text.replace('\n', '').replace('Most recent unfavourable mention:', '')})
         
-            #Judgment text
-        
-            judgment_text = soup.find('div', class_ ='documentcontent').get_text(strip=True)
-        
-            case_info.update({'judgment': judgment_text})
-    
         except Exception as e:
+            
             print(f"{case_info['Case name']}: judgment not scrapped")
             print(e)
 
-        browser.delete_all_cookies()
-        browser.quit()
-        
         return case_info
     
     #get judgments
@@ -1112,23 +1066,60 @@ class ca_search_tool:
 
             self.search()
 
+        #Get judgment text and metadata for all relevant cases
+        
         for case_info in self.case_infos:
 
-            judgment_dict = self.ca_meta_judgment_dict(case_info)
-    
+            #Pause to avoid getting kicked out
+            pause.seconds(np.random.randint(scraper_pause_mean, scraper_pause_mean + 10))
+
+            #Get search results from self.browser
+
+            self.elements = Wait(self.browser, 15).until(EC.presence_of_all_elements_located((By.XPATH, "//li[@class='result ']")))
+            
+            #Click on relevant case name on self.browser
+            element = self.elements[len(self.case_infos_w_judgments)]
+
+            case_name_button = element.find_element(By.CLASS_NAME, "name")
+            
+            case_name_button.click()
+
+            #Get judgment text and metadata
+
+            judgment_present = Wait(self.browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='documentcontent']")))
+
+            judgment_html = self.browser.page_source
+
+            judgment_dict = self.attach_judgment(case_info, judgment_html)
+
+            #Add to case_infos_w_judgments 
             self.case_infos_w_judgments.append(judgment_dict)
 
+            #Pause to avoid getting kicked out
+            pause.seconds(np.random.randint(scraper_pause_mean, scraper_pause_mean + 10))
+
+            #Go back to search results page
+            self.browser.back()
+
+            #Report status
             print(f"Scrapped {len(self.case_infos_w_judgments)}/{self.judgment_counter_bound} judgments.")
+
+        #Quit self.browser when done
+        self.quit_browser()
             
-            pause.seconds(np.random.randint(10, 20))
+    #Quit self.browser when done
+    def quit_browser(self):
+
+        self.browser.delete_all_cookies()
+        self.browser.quit()
+
 
 
 # %%
 def ca_search_preview(df_master):
+    
     df_master = df_master.fillna('')
-    
-    #Combining catchwords into new column
-    
+        
     #Conduct search
     
     ca_search = ca_search_tool(jurisdiction  = df_master.loc[0, 'Jurisdiction'],
@@ -1152,7 +1143,7 @@ def ca_search_preview(df_master):
 
     results_url = ca_search.results_url
 
-    #st.write(results_url)
+    ca_search.quit_browser()
     
     return {'results_url': results_url, 'results_count': results_count, 'case_infos': case_infos}
 
@@ -1173,13 +1164,6 @@ from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
-
-# %%
-#Jurisdiction specific instruction and functions
-
-#system_instruction = role_content
-
-#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain parameters

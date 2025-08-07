@@ -475,8 +475,6 @@ with stylable_container(
     preview_button = st.button(label = 'PREVIEW')
 
 
-# %%
-
 # %% [markdown]
 # ## Preview
 
