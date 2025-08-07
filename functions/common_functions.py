@@ -636,6 +636,8 @@ spinner_text = 'In progress...'
 
 funder_msg = "I developed LawtoData with a view to promoting and advancing quantitative legal research. Please feel free to share this app with others if you find it useful. "
 
+funder_msg_html = "I developed <em>LawtoData</em> with a view to promoting and advancing quantitative legal research. Please feel free to share this app with others if you find it useful. "
+
 
 # %%
 #Cost

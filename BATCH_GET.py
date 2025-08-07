@@ -61,7 +61,7 @@ import streamlit as st
 
 # %%
 #Import functions and variables
-from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, date_parser, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, str_to_int, default_judgment_counter_bound
+from functions.common_functions import check_questions_answers, pop_judgment, funder_msg, funder_msg_html, date_parser, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, str_to_int, default_judgment_counter_bound
 
 from functions.gpt_functions import basic_model, flagship_model, gpt_batch_input_submit, split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_run
 
@@ -656,7 +656,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Dear {ULTIMATE_RECIPIENT_NAME}
     </p>
     <p>
-    Thank you for using LawtoData. You can now download your requested data from the following website:
+    Thank you for using <em>LawtoData</em>. You can now download your requested data from the following website:
     </p>
     <p>
     {ACCESS_LINK}
@@ -665,7 +665,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Your access code is {BATCH_CODE}
     </p>    
     <p>
-    {funder_msg}
+    {funder_msg_html}
     </p>    
     <p>Please don't hesitate to reach out if I could be of assistance.</p> 
     <p>
