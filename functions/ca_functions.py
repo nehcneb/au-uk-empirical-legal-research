@@ -74,6 +74,8 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 from functions.common_functions import link
 
 # %%
+#Scrape javascript
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -84,31 +86,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
-from selenium_stealth import stealth
-
-options = Options()
-#options.add_argument("--disable-gpu")
-#options.add_argument("--headless")
-#options.add_argument('--no-sandbox')  
-#options.add_argument('--disable-dev-shm-usage')  
-
-download_dir = os.getcwd() + '/HCA_PDFs'
-
-options.add_experimental_option("excludeSwitches", ["enable-automation"])
-options.add_experimental_option('useAutomationExtension', False)
-
-options.add_experimental_option('prefs', {
-"download.default_directory": download_dir, #Change default directory for downloads
-"download.prompt_for_download": False, #To auto download the file
-"download.directory_upgrade": True,
-"plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
-})
-
-from selenium import webdriver
-
+import undetected_chromedriver as uc
 
 if 'Users/Ben' not in os.getcwd(): 
 
@@ -117,45 +96,32 @@ if 'Users/Ben' not in os.getcwd():
     display = Display(visible=0, size=(1200, 1600))  
     display.start()
 
-    options.add_argument("window-size=1200x600")
-
 #@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
 
-    browser = webdriver.Chrome(options=options)
+    options = uc.ChromeOptions()
+        
+    browser = uc.Chrome(options = options)
 
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(30)
 
-    stealth(browser,
-    
-            languages=["en-US", "en"],
-    
-            vendor="Google Inc.",
-    
-            platform="Win32",
-    
-            webgl_vendor="Intel Inc.",
-    
-            renderer="Intel Iris OpenGL Engine",
-    
-            webdriver=False,
-    
-            fix_hairline=True)
-    
+    #Window must be kept open
     #if 'Users/Ben' in os.getcwd():
         #browser.minimize_window()
     
     return browser
 
-try:
+#try:
+    #browser = get_driver()
+
+    #browser.minimize_window()#set_window_position(-2000,0)
     
-    browser = get_driver()
-    
-except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    print(e)
-    quit()
+#except Exception as e:
+    #st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
+    #print(e)
+    #quit()
+
 
 
 # %% [markdown]
@@ -826,29 +792,21 @@ class ca_search_tool:
         #st.write(self.results_url)
         
         #Load page
-        
-        #browser = webdriver.Firefox(options=opts)
-    
-        #browser = get_driver()
+            
+        browser = get_driver()
 
-        #Get search results
-        #browser = get_driver()
-        
         browser.get(self.results_url)
-        #browser.delete_all_cookies()
-        #browser.refresh()
 
         try:
-            #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "understandCookieConsent")))
+            
+            accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@id='understandCookieConsent' or @id='cookieConsentBlocker']"))) 
 
-            #accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, './/div[@id = "understandCookieConsent"|@id = "cookieConsentBlocker"]'))) 
-            
-            accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "//*[contains(text(), 'cookieConsent')]"))) 
-            
             accept_cookies.click()
-
+            
             print(f"Accepted cookies")
-        
+
+            pause.seconds(np.random.randint(2, 5))
+
         except ElementClickInterceptedException as e:
 
             print(f"Did not accept cookies due to error: {e}")
@@ -856,18 +814,26 @@ class ca_search_tool:
             try:
             
                 print("Trying to accept cookies again")
-    
+                
                 browser.execute_script("arguments[0].click()", accept_cookies)
 
+                pause.seconds(np.random.randint(2, 5))
+            
             except Exception as e:
 
                 print(f"Did not accept cookies due to error: {e}")            
-
+                
         try:
-            
-            search_button = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//i[@class='fas fa-search search-button-spinner']")))
+
+            search_button = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Start a search']")))
+
+            print("search_button found")
             
             search_button.click()
+
+            print(f"search_button clicked")
+        
+            #actions.move_to_element(search_button).click().perform()
             
         except ElementClickInterceptedException as e:
 
@@ -876,8 +842,10 @@ class ca_search_tool:
             try:
             
                 print("Trying to click on search button again")
-    
+
                 browser.execute_script("arguments[0].click()", search_button)
+
+                print(f"search_button clicked")
             
             except Exception as e:
                 
@@ -959,77 +927,72 @@ class ca_search_tool:
                 
                 if counter < min(self.judgment_counter_bound, self.results_count):
 
-                    url = element.get_attribute('innerHTML').split('data-lbh-document-url="')[1].split('" data-lbh-path')[0]
+                    case_soup = BeautifulSoup(element.get_attribute('innerHTML'), "lxml")
+
+                    case_soup_attrs_raw = case_soup.find('div', class_ = 'searchResult data_caselaw col px-0')
+
+                    case_soup_attrs = case_soup_attrs_raw.attrs
                     
-                    case_info_raw = element.text
+                    url = case_soup_attrs['data-lbh-document-url']
 
-                    case_info_list = case_info_raw.split('\n')
+                    case_name = ''
 
-                    #Remove 'AI generated'
-                    case_info_list_len = len(case_info_list)
+                    if 'data-lbh-title' in case_soup_attrs.keys():
 
-                    for list_index in range(case_info_list_len-1, -1, -1):
+                        case_name = case_soup_attrs['data-lbh-title']
 
-                        if re.search(r'^ai.generated', case_info_list[list_index].lower()):
+                    citations = case_soup_attrs['data-lbh-citation']
 
-                            del case_info_list[list_index]
-                    
-                    #Initialise default case name and citation
-                    case_name = case_info_list[1]
+                    citations_list = citations.split(', ')
 
                     mnc = ''
+
+                    other_citations = []
                     
-                    other_citations = ''
+                    if len(citations_list) > 0:
 
-                    #Try to get case name and citation separately
-                    case_name_citation = case_info_list[1]
+                        for citation in citations_list:
 
-                    citation_year_list = re.findall(r'(\,\s\d{4})', case_name_citation)
+                            if 'CanLII' in citation:
 
-                    if len(citation_year_list) > 0:
+                                mnc = citation
 
-                        splitter = citation_year_list[0]
+                            else:
 
-                        if isinstance(splitter, tuple):
+                                other_citations.append(citation)
 
-                            splitter = splitter[0]
+                    else:
 
-                        case_name = case_name_citation.split(splitter)[0]
+                        mnc = citations
+
+                    date = ''
+
+                    if 'data-lbh-decision-date' in case_soup_attrs.keys():
+
+                        date = case_soup_attrs['data-lbh-decision-date']
+
+                    court = ''
+
+                    if 'data-lbh-collection' in case_soup_attrs.keys():
                         
-                        mnc_other_citations = splitter.replace(', ', '') + case_name_citation.split(splitter)[-1]
+                        court = case_soup_attrs['data-lbh-collection']
 
-                        mnc_list = re.findall(r'(\d{4}\sCanLII\s\d+.+\,\s)', mnc_other_citations)
 
-                        if len(mnc_list) > 0:
+                    synopsis = []
 
-                            mnc = mnc_list[0]
+                    for key in ['data-lbh-keywords', 'data-lbh-subjects']:
 
-                            if isinstance(mnc, tuple):
+                        if key in case_soup_attrs.keys():
 
-                                mnc = mnc[0]
-
-                            other_citations = mnc_other_citations.replace(mnc, '')
-
-                            mnc = mnc.replace(', ', '')
-
-                        else:
-                            
-                            mnc = mnc_other_citations
-                        
+                            synopsis.append(case_soup_attrs[key])                           
                     
-                    court = case_info_list[2]
-
-                    date = case_info_list[3].split(' ')[0]
-
-                    synopsis = '\n'.join(case_info_list[4:])
-                                        
                     case_info = {'Case name': case_name, 
                                  'Medium neutral citation': mnc,
                                   'Hyperlink to CanLII': url,
-                                  'Other citations': other_citations,
+                                  'Other citations': ', '.join(other_citations),
                                 'Court': court,
                                 'Decision date': date,
-                                 'Synopsis': synopsis,
+                                 'Synopsis': '\n'.join(synopsis)
                                 }
                     
                     self.case_infos.append(case_info)
@@ -1038,8 +1001,9 @@ class ca_search_tool:
 
                 else:
                     break
-            
-        #browser.quit()
+        
+        browser.delete_all_cookies()
+        browser.quit()
 
     #Get judgment text from each case
     def ca_meta_judgment_dict(self, case_info):
@@ -1062,9 +1026,37 @@ class ca_search_tool:
         
         try:
     
-            headers = {'User-Agent': 'whatever'}
-            page = requests.get(judgment_url, headers=headers)
-            soup = BeautifulSoup(page.content, "lxml")
+            browser = get_driver()
+    
+            browser.get(judgment_url)
+
+            try:
+                
+                accept_cookies = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//button[@id='understandCookieConsent' or @id='cookieConsentBlocker']"))) 
+    
+                accept_cookies.click()
+                
+                print(f"Accepted cookies")
+    
+                pause.seconds(np.random.randint(2, 5))
+    
+            except ElementClickInterceptedException as e:
+    
+                print(f"Did not accept cookies due to error: {e}")
+    
+                try:
+                
+                    print("Trying to accept cookies again")
+                    
+                    browser.execute_script("arguments[0].click()", accept_cookies)
+    
+                    pause.seconds(np.random.randint(2, 5))
+                
+                except Exception as e:
+    
+                    print(f"Did not accept cookies due to error: {e}")            
+ 
+            soup = BeautifulSoup(browser.page_source, "lxml")
             meta_tags = soup.find_all("meta")
             
             #Attach metadata
@@ -1104,6 +1096,9 @@ class ca_search_tool:
         except Exception as e:
             print(f"{case_info['Case name']}: judgment not scrapped")
             print(e)
+
+        browser.delete_all_cookies()
+        browser.quit()
         
         return case_info
     

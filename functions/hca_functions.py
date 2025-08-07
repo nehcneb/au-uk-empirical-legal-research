@@ -102,9 +102,6 @@ options.add_experimental_option('prefs', {
 "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
 })
 
-from selenium import webdriver
-
-
 if 'Users/Ben' not in os.getcwd(): 
 
     from pyvirtualdisplay import Display
