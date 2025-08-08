@@ -792,9 +792,6 @@ with stylable_container(
                            disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input))
                           )
 
-st.write(f"st.session_state['df_master'].loc[0, 'Maximum number of judgments'] ==  {st.session_state['df_master'].loc[0, 'Maximum number of judgments']}")
-st.write(f'st.session_state["judgment_batch_cutoff"] == {st.session_state["judgment_batch_cutoff"]}')
-
 #Display need resetting message if necessary
 #if st.session_state.need_resetting == 1:
     #if len(st.session_state.df_individual) > 0:

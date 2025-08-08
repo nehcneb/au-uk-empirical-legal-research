@@ -1931,6 +1931,7 @@ def batch_request_function():
                                            )
 
                     #Change session states
+                    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound                    
                     st.session_state["batch_submitted"] = True
                     st.session_state["batch_error"] == False
                     st.session_state['error_msg'] = ''
