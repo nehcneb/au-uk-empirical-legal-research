@@ -70,7 +70,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # Federal Courts search engine
 
 # %%
-from functions.fca_functions import fca_courts, fca_courts_list, npa_dict, npa_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict, fca_pdf_name_mnc_list, fca_pdf_name
+from functions.fca_functions import fca_courts, fca_courts_list, npa_dict, npa_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict
 #fca_link_to_doc
 
 

@@ -891,8 +891,14 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_
         own_account_entries_function()
         
         batch_request_function()
+
+
+
+# %%
+#Batch submission status
+if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
     
-    if st.session_state.batch_submitted and st.session_state.need_resetting and (st.session_state.batch_error == False):
+    if st.session_state.batch_submitted and (st.session_state.batch_error == False):
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
 
@@ -908,7 +914,6 @@ if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_
     if (st.session_state.batch_error) and (len(st.session_state.error_msg) > 0):
 
         st.error(search_error_display)
-
 
 
 # %% [markdown]

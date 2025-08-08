@@ -38,6 +38,7 @@ import os
 #import pypdf
 import io
 from io import BytesIO
+import copy
 
 #Streamlit
 import streamlit as st
@@ -421,6 +422,7 @@ fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_
 
 #@st.cache_data(show_spinner = False)
 def fca_meta_judgment_dict(case_info):
+    
     judgment_dict = {'Case name': '',
                  'Medium neutral citation': '',
                 'Hyperlink to Federal Court Digital Law Library' : '', 
@@ -452,156 +454,72 @@ def fca_meta_judgment_dict(case_info):
                 'Order': '',
                 'judgment' : ''
                 }
+    
+    if 'Case name' in case_info.keys():
+        judgment_dict['Case name'] = case_info['Case name']
 
-    try:
+    if 'Medium neutral citation' in case_info.keys():
+        judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
+
+    #Attach hyperlink
+
+    judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
     
-        if 'Case name' in case_info.keys():
-            judgment_dict['Case name'] = case_info['Case name']
+    judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
+
+    #Get judgment text
+    judgment_text = ''
     
-        if 'Medium neutral citation' in case_info.keys():
-            judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
+    #Check if not taken to a PDF
+    if not bool(case_info['Judgment in PDF']): #or if '.pdf' not in judgment_url.lower():
     
-        #Attach hyperlink
-    
-        judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
-        
-        judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
-        
-        #Check if not gets taken to a PDF
-    
-        #if '.pdf' not in judgment_url.lower():
-        if not bool(case_info['Judgment in PDF']):
+        try:
             
-            judgment_text = ''
-            order_text = ''
-        
+            page = requests.get(judgment_url)
+            
+            soup = BeautifulSoup(page.content, "lxml")
+
+            #Attach judgment
             try:
-                page = requests.get(judgment_url)
-                soup = BeautifulSoup(page.content, "lxml")
-                meta_tags = soup.find_all("meta")
-            
-                #Attach meta tags
-                if len(meta_tags)>0:
-                    for tag_index in range(len(meta_tags)):
-                        meta_name = meta_tags[tag_index].get("name")
-                        if meta_name in fca_metalabels:
-                            meta_content = meta_tags[tag_index].get("content")
-                            judgment_dict[meta_name] = meta_content
-                            
-                judgment_raw = ''
-                judgment_raw = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
-        
-                above_reasons_for_judgment = str(re.split("REASONS FOR JUDGMENT", judgment_raw, flags=re.IGNORECASE)[0])
-        
-                below_reasons_for_judgment = str(re.split("REASONS FOR JUDGMENT", judgment_raw, flags=re.IGNORECASE)[1:])
-        
-                order_text = "BETWEEEN:" + str(re.split("BETWEEN:", above_reasons_for_judgment, flags=re.IGNORECASE)[1:])[2:][:-2]
-        
-                judgment_text = below_reasons_for_judgment
-        
+                
+                judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
+
             except:
-                try:
-                    judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
-                except:
-                    judgment_text = soup.get_text(separator="\n", strip=True)
-            
-            judgment_dict['judgment'] = judgment_text
-            judgment_dict['Order'] = order_text
-    
-        #Check if gets taken to a PDF
-        else:
-            
-            print(f"{judgment_dict['Case name']}: getting pdf judgment.")
-            
-            #Attach judgment pdf text
-            try:
-                judgment_pdf_raw = pdf_judgment(url_or_path = judgment_url, url_given = True)
-                judgment_dict['judgment'] = judgment_pdf_raw
                 
-            except Exception as e:
-                
-                print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
+                judgment_text = soup.get_text(separator="\n", strip=True)
 
-    except Exception as e:
+            #Attach meta tags
+            meta_tags = soup.find_all("meta")
         
-        print(f"{judgment_dict['Case name']}: judgment not scrapped")
-        print(e)
+            #Attach meta tags
+            if len(meta_tags)>0:
+                for tag_index in range(len(meta_tags)):
+                    meta_name = meta_tags[tag_index].get("name")
+                    if meta_name in fca_metalabels:
+                        meta_content = meta_tags[tag_index].get("content")
+                        judgment_dict[meta_name] = meta_content
+                        
+        except:
+            
+            print(f"{judgment_dict['Case name']}: can't get html judgment or meta due to error {e}.")
+            
+    #Check if gets taken to a PDF
+    else:
+        
+        print(f"{judgment_dict['Case name']}: trying to get pdf judgment")
+        
+        #Get judgment pdf text
+        try:
+            
+            judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
+                        
+        except Exception as e:
+            
+            print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
+
+    judgment_dict['judgment'] = judgment_text
     
     return judgment_dict
-
-
-# %%
-#Preliminary function for changing names for any PDF judgments
-#NOT IN USE
-
-#@st.cache_data(show_spinner = False)
-def fca_pdf_name_mnc_list(url_search_results, judgment_counter_bound):
-                      
-    #Scrape webpage of search results
-    page = requests.get(url_search_results)
-    soup = BeautifulSoup(page.content, "lxml")
-    
-    #Placeholder
-    name_mnc_list = []
-
-    #Start counter
-    counter = 1
-    # Get links of first 20 results
-    #links_raw = soup.find_all("a", href=re.compile("fca")) #If want to search FCA only
-    links_raw = soup.find_all("a", href=re.compile("judgments"))
-    
-    for i in links_raw:
-        if (('title=' in str(i)) and (counter <=judgment_counter_bound)):
-            name_mnc_list.append(i['title'])
-            counter = counter + 1
-    
-    #Go beyond first 20 results
-
-    #Auxiliary list for getting more pages of search results
-    further_page_ending_list = []
-    for i in range(100):
-        further_page_ending = 20 + i
-        if ((str(further_page_ending)[-1] =='1') & (str(further_page_ending)[0] not in ['3', '5', '7', '9', '11'])):
-            further_page_ending_list.append(str(further_page_ending))
-
-    for ending in further_page_ending_list:
-        if counter <=judgment_counter_bound:
-            
-            pause.seconds(np.random.randint(5, 15))
-
-            url_next_page = url_search_results + '&start_rank=' + f"{ending}"
-            page_judgment_next_page = requests.get(url_next_page)
-            soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
-            #links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("fca")) #If want to search FCA only
-            links_next_page_raw = soup_judgment_next_page.find_all("a", href=re.compile("judgments"))
-    
-            #Check if stll more results
-            if len(links_next_page_raw) > 0:
-                for i in links_next_page_raw:
-                    if (('title=' in str(i)) and (counter <=judgment_counter_bound)):
-                        name_mnc_list.append(i['title'])
-                        counter = counter + 1
-            else:
-                break
-        
-    return name_mnc_list
-
-
-# %%
-#Function for changing names for any PDF judgments
-#NOT IN USE
-
-def fca_pdf_name(name_mnc_list, mnc):
-    #Placeholder
-    name = 'Not working properly because judgment in PDF. References to paragraphs likely to pages or wrong.' 
-    
-    for i in name_mnc_list:
-        if mnc in i:
-            name_raw = i.split(' ' + mnc)[0]
-            name = name_raw.replace('Cached: ', '')
-            
-    return name
-
 
 
 # %%
@@ -707,19 +625,15 @@ def fca_run(df_master):
     if huggingface == False: #If not running on HuggingFace
         
         for case_info in case_infos:
+            
             judgment_dict = fca_meta_judgment_dict(case_info)
-            case_info.update({'judgment': str(judgment_dict)})
-            
-            #Make judgment_link clickable
-            clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-            case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
-            
-            judgments_file.append(case_info)
 
             print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-            
-            pause.seconds(np.random.randint(5, 15))
 
+            pause.seconds(np.random.randint(5, 15))
+            
+            judgments_file.append(judgment_dict)
+    
     else: #If running on HuggingFace
 
         #Load oalc
@@ -730,9 +644,6 @@ def fca_run(df_master):
 
         for case in case_infos:
 
-            #add search results to json
-            judgments_file.append(case)
-
             #Add mnc to list for HuggingFace
             mnc_list.append(case['Medium neutral citation'])
 
@@ -740,26 +651,31 @@ def fca_run(df_master):
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
             
         #Append judgment to judgments_file 
-        for case_info in judgments_file:
+        for case_info in case_infos:
             
             #Append judgments from oalc first
             if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
                 case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
 
+                #Make judgment_link clickable
+                clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
+                case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
+
+                #Create judgment_dict with oalc judgment text
+                judgment_dict = copy.deepcopy(case_info)
+                
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
 
             else: #Get judgment from FCA if can't get from oalc
-                judgment_dict_direct = fca_meta_judgment_dict(case_info)
-                case_info.update({'judgment': str(judgment_dict_direct)})
                 
+                judgment_dict = fca_meta_judgment_dict(case_info)
+        
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-
+                
                 pause.seconds(np.random.randint(5, 15))
 
-            #Make judgment_link clickable
-            clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-            case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
+            judgments_file.append(judgment_dict)
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -850,19 +766,15 @@ def fca_batch(df_master):
     if huggingface == False: #If not running on HuggingFace
         
         for case_info in case_infos:
+            
             judgment_dict = fca_meta_judgment_dict(case_info)
-            case_info.update({'judgment': str(judgment_dict)})
-            
-            #Make judgment_link clickable
-            clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-            case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
-            
-            judgments_file.append(case_info)
 
             print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
 
             pause.seconds(np.random.randint(5, 15))
-
+            
+            judgments_file.append(judgment_dict)
+    
     else: #If running on HuggingFace
 
         #Load oalc
@@ -873,9 +785,6 @@ def fca_batch(df_master):
 
         for case in case_infos:
 
-            #add search results to json
-            judgments_file.append(case)
-
             #Add mnc to list for HuggingFace
             mnc_list.append(case['Medium neutral citation'])
 
@@ -883,26 +792,31 @@ def fca_batch(df_master):
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
             
         #Append judgment to judgments_file 
-        for case_info in judgments_file:
+        for case_info in case_infos:
             
             #Append judgments from oalc first
             if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
                 
                 case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
 
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
-            
-            else: #Get judgment from FCA if can't get from oalc
-                judgment_dict_direct = fca_meta_judgment_dict(case_info)
-                case_info.update({'judgment': str(judgment_dict_direct)})
-                
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
+                #Make judgment_link clickable
+                clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
+                case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
 
+                #Create judgment_dict with oalc judgment text
+                judgment_dict = copy.deepcopy(case_info)
+                
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
+
+            else: #Get judgment from FCA if can't get from oalc
+                
+                judgment_dict = fca_meta_judgment_dict(case_info)
+        
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
+                
                 pause.seconds(np.random.randint(5, 15))
 
-            #Make judgment_link clickable
-            clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-            case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
+            judgments_file.append(judgment_dict)
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)

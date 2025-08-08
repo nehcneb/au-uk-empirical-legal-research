@@ -1026,9 +1026,6 @@ if (batch_mode_allowed() > 0) and ((own_account_entry) and (uploaded_images)):
             
             own_batch_request_function(df_master, uploaded_docs, uploaded_images)
 
-    #if st.session_state.batch_submitted == True:
-        
-        #st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
 
 # %% [markdown]
 # ## Save and run etc
@@ -1138,7 +1135,13 @@ if batch_mode_allowed() > 0:
             
             own_batch_request_function(df_master, uploaded_docs, uploaded_images)
 
-    if st.session_state.batch_submitted and st.session_state.need_resetting and (st.session_state.batch_error == False):
+
+
+# %%
+#Batch submission status
+if batch_mode_allowed() > 0:
+    
+    if st.session_state.batch_submitted and (st.session_state.batch_error == False):
         
         st.success('Your data request has been submitted. This app will send your requested data to your nominated email address in about **2 business days**. Feel free to close this app.')
 
@@ -1154,7 +1157,6 @@ if batch_mode_allowed() > 0:
     if (st.session_state.batch_error) and (len(st.session_state.error_msg) > 0):
 
         st.error(search_error_display)
-
 
 # %% [markdown]
 # ## Report error

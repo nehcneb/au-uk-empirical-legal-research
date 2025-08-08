@@ -811,7 +811,6 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
 
                 #Change session states
                 st.session_state["batch_submitted"] = True
-                st.session_state['need_resetting'] = 1
                 st.session_state["batch_error"] == False
                 st.session_state['error_msg'] = ''
                 
