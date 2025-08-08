@@ -321,6 +321,11 @@ def own_run_function():
                       
                 #Create spreadsheet of responses
                 df_master = own_create_df()
+
+                #Reduce maximum run number to batch limit if needed
+                if df_master.loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"]:
+
+                    df_master.loc[0, 'Maximum number of files'] = st.session_state["judgment_batch_cutoff"]
                 
                 #Activate user's own key or mine
                 if own_account_entry:
@@ -404,6 +409,11 @@ def run_b64_function():
                 #Create spreadsheet of responses
                 df_master = own_create_df()
 
+                #Reduce maximum run number to batch limit if needed
+                if df_master.loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"]:
+
+                    df_master.loc[0, 'Maximum number of files'] = st.session_state["judgment_batch_cutoff"]
+                
                 #Check for non-supported file types
                 if '.bmp' in str(df_master['Your uploaded files']).lower():
                     st.error('Sorry, this app does not support BMP images.')

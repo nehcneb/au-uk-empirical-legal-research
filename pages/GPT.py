@@ -222,7 +222,12 @@ def gpt_run_function():
                     
                     #if st.session_state.gpt_model == flagship_model:
                         #st.warning('An expensive GPT model will process the cases found. Please be cautious.')
-                            
+
+                #Reduce maximum run number to batch limit if needed
+                if st.session_state.df_master.loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"]:
+
+                    st.session_state.df_master.loc[0, 'Maximum number of judgments'] = st.session_state["judgment_batch_cutoff"]
+                
                 #Create spreadsheet of responses
                 df_master = st.session_state.df_master
 
@@ -320,6 +325,11 @@ def er_run_b64_function():
                 
                 #system_instruction = role_content_er
 
+                #Reduce maximum run number to batch limit if needed
+                if st.session_state.df_master.loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"]:
+
+                    st.session_state.df_master.loc[0, 'Maximum number of judgments'] = st.session_state["judgment_batch_cutoff"]
+                
                 #Create spreadsheet of responses
                 df_master = st.session_state.df_master
 
@@ -779,8 +789,11 @@ with stylable_container(
 ):
     run_button = st.button(label = f"PRODUCE data now (up to {int(min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of judgments']))} cases)", 
                            help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
-                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"])))
+                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input))
                           )
+
+st.write(f"st.session_state['df_master'].loc[0, 'Maximum number of judgments'] ==  {st.session_state['df_master'].loc[0, 'Maximum number of judgments']}")
+st.write(f'st.session_state["judgment_batch_cutoff"] == {st.session_state["judgment_batch_cutoff"]}')
 
 #Display need resetting message if necessary
 #if st.session_state.need_resetting == 1:
@@ -804,7 +817,7 @@ Alternatively, you can send the relevant PDFs to GPT as images. This alternative
     #b64_help_text = 'GPT will process images directly, instead of text first extracted from images by an Optical Character Recognition engine. This only works for PNG, JPEG, JPG, GIF images.'
     er_run_button_b64 = st.button(label = 'SEND PDFs to GPT as images',
                              help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
-                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of judgments'] > st.session_state["judgment_batch_cutoff"])))
+                           disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input))
                                  )
 
 
