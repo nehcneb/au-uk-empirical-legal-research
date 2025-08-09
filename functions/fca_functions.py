@@ -416,9 +416,10 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
 # %%
 #Meta labels and judgment combined
 #IN USE
-fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to']
-#'MNC', 
-fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'FileName', 'Asset_ID', 'Date.published', 'Appeal_to', 'Order']
+fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to']
+#'MNC', 'FileName', 'Asset_ID', 
+fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to', 'Order']
+#'FileName', 'Asset_ID', 
 
 #@st.cache_data(show_spinner = False)
 def fca_meta_judgment_dict(case_info):
@@ -447,11 +448,12 @@ def fca_meta_judgment_dict(case_info):
                  'Summary' : '',  
                  'Corrigenda' : '',  
                  'Parties' : '',  
-                'FileName' : '',  
-                 'Asset_ID' : '',  
+                #'FileName' : '',  
+                 #'Asset_ID' : '',  
                  'Date.published' : '', 
                 'Appeal_to' : '', 
                 'Order': '',
+                'Judgment in PDF': False,
                 'judgment' : ''
                 }
     
@@ -460,6 +462,9 @@ def fca_meta_judgment_dict(case_info):
 
     if 'Medium neutral citation' in case_info.keys():
         judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
+
+    if 'Judgment in PDF' in case_info.keys():
+        judgment_dict['Judgment in PDF'] = case_info['Judgment in PDF']
 
     #Attach hyperlink
 

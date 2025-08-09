@@ -233,13 +233,7 @@ st.write('Your access code can be found in the email notifying you of the availa
 
 email_entry = st.text_input(label = 'Email address', value = st.session_state['df_master'].loc[0, 'Your email address'])
 
-#if email_entry:
-st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
-
 batch_id_entry = st.text_input(label = 'Access code', value = st.session_state['df_master'].loc[0, 'batch_id'])
-
-#if batch_id_entry:
-st.session_state['df_master'].loc[0, 'batch_id'] = batch_id_entry
 
 #Retrive data button
 with stylable_container(
@@ -267,11 +261,18 @@ if st.session_state.df_master.loc[0, 'status'] == 'deleted':
 
 # %%
 if retrive_button:
+    
     if not (batch_id_entry and email_entry):
         st.warning('Please enter your nominated email address and access code.')
         #quit()
         st.stop()
+
     else:        
+
+        st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+        
+        st.session_state['df_master'].loc[0, 'batch_id'] = batch_id_entry
+
         st.session_state['match_status'] = check_email_batch_id(st.session_state.all_df_masters, email_entry, batch_id_entry)
 
     if st.session_state['match_status'] == False:
@@ -280,6 +281,7 @@ if retrive_button:
         st.stop()
         
     else:
+        
         with st.spinner('Retrieving your data...'):
 
             #pause.seconds(3)
@@ -298,13 +300,12 @@ if retrive_button:
                     #State the status of this df_individual
                     st.session_state.df_master.loc[0, 'status'] = st.session_state.all_df_masters.loc[batch_index, 'status']
 
-                    #st.write(f"st.session_state.df_master.loc[0, 'status'] == {st.session_state.df_master.loc[0, 'status']}")
-
-                    #pause.seconds(3)
+                    st.session_state["page_from"] = 'pages/BATCH.py'           
                     
                     st.rerun()
                 
                 else:
+                    
                     st.error('Your nominated email address or access code is not correct, or the requested data cannot be found.')
                     
             except Exception as e:
@@ -313,11 +314,11 @@ if retrive_button:
 
 
 # %%
-if (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
+if batch_id_entry and email_entry and (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
 
-    st.session_state["page_from"] = 'pages/BATCH.py'           
-
-    #Download data
-    download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
+    if( st.session_state['df_master'].loc[0, 'Your email address'] == email_entry) and (st.session_state['df_master'].loc[0, 'batch_id'] == batch_id_entry):
+                
+        #Download data
+        download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
 
 
