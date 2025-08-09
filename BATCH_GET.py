@@ -662,7 +662,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     {ACCESS_LINK}
     </p>
     <p>
-    Your access code is {BATCH_CODE}
+    Your access code is <b>{BATCH_CODE}</b>
     </p>    
     <p>
     {funder_msg_html}

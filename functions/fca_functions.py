@@ -424,52 +424,11 @@ fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_
 #@st.cache_data(show_spinner = False)
 def fca_meta_judgment_dict(case_info):
     
-    judgment_dict = {'Case name': '',
-                 'Medium neutral citation': '',
-                'Hyperlink to Federal Court Digital Law Library' : '', 
-                #'MNC' : '',  
-                 'Year' : '',  
-                 'Appeal' : '',  
-                 'File_Number' : '',  
-                 'Judge' : '',  
-                 'Judgment_Dated' : '',  
-                 'Catchwords' : '',  
-                 'Subject' : '',  
-                 'Words_Phrases' : '',  
-                 'Legislation' : '',  
-                 'Cases_Cited' : '',  
-                 'Division' : '',  
-                 'NPA' : '',  
-                'Sub_NPA' : '', 
-                 'Pages' : '',  
-                 'All_Parties' : '',  
-                 'Jurisdiction' : '',  
-                 'Reported' : '',  
-                 'Summary' : '',  
-                 'Corrigenda' : '',  
-                 'Parties' : '',  
-                #'FileName' : '',  
-                 #'Asset_ID' : '',  
-                 'Date.published' : '', 
-                'Appeal_to' : '', 
-                'Order': '',
-                'Judgment in PDF': False,
-                'judgment' : ''
-                }
+    judgment_dict = copy.deepcopy(case_info)
     
-    if 'Case name' in case_info.keys():
-        judgment_dict['Case name'] = case_info['Case name']
-
-    if 'Medium neutral citation' in case_info.keys():
-        judgment_dict['Medium neutral citation'] = case_info['Medium neutral citation']
-
-    if 'Judgment in PDF' in case_info.keys():
-        judgment_dict['Judgment in PDF'] = case_info['Judgment in PDF']
-
-    #Attach hyperlink
-
     judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
-    
+
+    #Make hyperlink clickable    
     judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
 
     #Get judgment text
@@ -502,7 +461,7 @@ def fca_meta_judgment_dict(case_info):
                     meta_name = meta_tags[tag_index].get("name")
                     if meta_name in fca_metalabels:
                         meta_content = meta_tags[tag_index].get("content")
-                        judgment_dict[meta_name] = meta_content
+                        judgment_dict.update({meta_name: meta_content})
                         
         except:
             
