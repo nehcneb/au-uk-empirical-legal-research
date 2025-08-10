@@ -1041,6 +1041,46 @@ def get_aws_objects():
 
 
 # %%
+aws_link_expiry_days_to_say = 10
+aws_link_expiry_seconds = (10 + 4)*60*60*24
+
+
+# %%
+#Function for generating a link to a file from aws
+#Based on https://stackoverflow.com/questions/70000112/how-to-generate-s3-presigned-url-with-boto3-resource-instead-of-client
+#Based on https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
+
+def aws_link_to_df(s3_resource, df_name, expiration = aws_link_expiry_seconds):
+    
+    #df_name is a string of the file name of the relevant df to get from aws, WITH the extension (ie csv)
+
+    try:
+
+        #s3_resource = get_aws_s3()
+        
+        #Get link to relevant df from aws
+
+        response = s3_resource.meta.client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': 'lawtodata', 'Key': df_name},
+            ExpiresIn=expiration,
+        )
+
+        print(f"Sucessfully produced link to {df_name} from aws.")
+
+        return response
+
+    except ClientError as e:
+        
+        logging.error(e)
+
+        print(f"Failed to produce link to {df_name} from aws due to error: {e}.")
+
+        return None
+    
+
+
+# %%
 #Function for using aws ses for sending emails
 def get_aws_ses():
     ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)

@@ -79,10 +79,6 @@ from functions.common_functions import convert_df_to_json, convert_df_to_csv, co
 
 
 # %%
-#Testing aws_df_get
-#aws_df_get('all_df_masters.csv')
-
-# %%
 #Initialise 
 
 if 'df_master' not in st.session_state:
@@ -246,14 +242,11 @@ with stylable_container(
 ):
     retrive_button = st.button(label = 'RETRIVE data')
 
-#dete data button
+#delete data button
 if st.button(label = 'DELETE data', type = 'primary', disabled = bool(st.session_state.df_master.loc[0, 'status'] == 'deleted')):
     
     delete_all()
 
-if st.session_state.df_master.loc[0, 'status'] == 'deleted':
-    
-    st.info('Your data has been deleted.')
 
 
 # %% [markdown]
@@ -312,6 +305,16 @@ if retrive_button:
                 
                 st.error(f'The requested data cannot be retrieved due to the following error: {e}')
 
+
+# %% [markdown]
+# # Status reports
+
+# %%
+if batch_id_entry and email_entry and (st.session_state.df_master.loc[0, 'status'] == 'deleted'):
+
+    if( st.session_state['df_master'].loc[0, 'Your email address'] == email_entry) and (st.session_state['df_master'].loc[0, 'batch_id'] == batch_id_entry):
+
+        st.info('Your data has been deleted.')
 
 # %%
 if batch_id_entry and email_entry and (st.session_state.df_master.loc[0, 'status'] != 'deleted') and (len(st.session_state.df_individual) > 0):
