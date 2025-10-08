@@ -53,21 +53,21 @@ from functions.common_functions import own_account_allowed, check_questions_answ
 # %%
 #Dict of available sources
 page_dict = {
-            "pages/HCA.py": "Cases of the High Court of Australia",
-            "pages/FCA.py": "Cases of the Federal Court of Australia", 
-            "pages/NSW.py": "Cases from New South Wales", 
-            #"pages/CA.py": 'Cases of the Canadian courts, boards and tribunals',
-            #"pages/HK.py": "Cases of the Hong Kong courts and tribunals", # (Hong Kong Legal Reference System)
+            "pages/HCA.py": "High Court of Australia cases",
+            "pages/FCA.py": "Federal Court of Australia cases", 
+            "pages/NSW.py": "New South Wales cases", 
+            #"pages/CA.py": 'Canada cases',
+            #"pages/HK.py": "Hong Kong courts and tribunals cases", # (Hong Kong Legal Reference System)
             "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials", # (HKLII)
-            #"pages/UK.py": "Cases from the United Kingdom", 
-            #"pages/BAILII.py": "Cases from England and Wales", 
-              "pages/US.py": "Cases from the United States", 
-            #"pages/AFCA.py": 'Cases of the Australian Financial Complaints Authority', 
-            #"pages/SCTA.py": 'Decisions of the Superannuation Complaints Tribunal of Australia', 
-            #"pages/ER.py": "The English Reports (nearly all English case reports from 1220 to 1866)", 
-            #"pages/KR.py": "The Kercher Reports (cases of the New South Wales superior courts from 1788 to 1899)", 
-            "pages/OWN.py": "Your own files", 
-            'pages/AI.py': "Your own spreadsheet"
+            #"pages/UK.py": "United Kingdom cases", 
+            #"pages/BAILII.py": "England and Wales cases", 
+              "pages/US.py": "United States cases", 
+            #"pages/AFCA.py": 'Australian Financial Complaints Authority cases', 
+            #"pages/SCTA.py": 'Superannuation Complaints Tribunal of Australia cases', 
+            #"pages/ER.py": "English Reports (nearly all English case reports from 1220 to 1866)", 
+            #"pages/KR.py": "Kercher Reports (cases of the New South Wales superior courts from 1788 to 1899)", 
+            "pages/OWN.py": "your own files", 
+            'pages/AI.py': "your own spreadsheet"
             }
 
 #List of pages
@@ -141,7 +141,7 @@ source_entry = st.selectbox(label = "Please select a source of information to co
 
 if source_entry:
 
-    st.warning(f"This app is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry[0].lower()}{source_entry[1:]}. Please confirm that you understand.")
+    st.warning(f"This app is designed to help subject-matter experts who are able to evaluate the quality and accuracy of computer-generated data and/or information about {source_entry}. Please confirm that you understand.")
 
     if source_list.index(source_entry) != list_value_check(page_list, st.session_state.page_from):
 
@@ -149,7 +149,8 @@ if source_entry:
     
     i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
-home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), help = "To use this app, you must select a source of information and tick 'Yes, I understand'.")
+home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), )
+#help = "To use this app, you must select a source of information and tick 'Yes, I understand'."
 
 if source_entry:
 
@@ -159,7 +160,7 @@ if source_entry:
 
             page_from_name = source_list[list_value_check(page_list, st.session_state.page_from)]
 
-            st.warning(f'Pressing NEXT will :red[erase] any earlier entries and data produced. To download such entries or data, please select {page_from_name[0].lower()}{page_from_name[1:]} instead.')
+            st.warning(f"Selecting NEXT will :red[erase] any earlier entries and data produced. To download such entries or data, please select :green[{page_from_name}] instead.")
 
 
 # %% [markdown]
@@ -170,10 +171,10 @@ if home_next_button:
 
     if source_entry == None:
 
-        st.write('You must select a source of information.')
+        st.info('You must select a source of information.')
 
     elif i_unstanding_tick == False:
-        st.write('You must tick "Yes, I understand."')
+        st.warning("You must tick 'Yes, I understand.'")
 
     else:
 
