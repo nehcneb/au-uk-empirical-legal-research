@@ -732,7 +732,9 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
     
                 else:
                     
-                    API_key = st.secrets["openai"]["gpt_api_key"]
+                    #API_key = st.secrets["openai"]["gpt_api_key"]
+                    
+                    from functions.common_functions import API_key
 
                     st.session_state['df_master'].loc[0, 'Maximum number of files'] = st.session_state["judgment_counter_max"]
 

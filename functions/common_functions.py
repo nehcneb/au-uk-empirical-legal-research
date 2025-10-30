@@ -950,7 +950,9 @@ try:
     
     SENDER = st.secrets["email_notifications"]["email_sender"]
     RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
-        
+
+    court_listener_token = st.secrets["courtlistener"]["token"]
+
     print('Running locally or on Streamlit')
     
 except:
@@ -963,6 +965,8 @@ except:
     
     SENDER = os.environ['EMAIL_SENDER']
     RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
+
+    court_listener_token = os.environ['COURTLISTENER_TOKEN']
 
     print('Running on GitHub Actions or HuggingFace')
 
@@ -1101,11 +1105,11 @@ def send_notification_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, j
     
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
-    SENDER = st.secrets["email_notifications"]["email_sender"]
+    #SENDER = st.secrets["email_notifications"]["email_sender"]
     
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+    #RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
     
     # The subject line for the email.
     SUBJECT = f"LawtoData: {ULTIMATE_RECIPIENT_NAME} has requested data"
@@ -1163,11 +1167,11 @@ def report_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, jurisd
     
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
-    SENDER = st.secrets["email_notifications"]["email_sender"]
+    #SENDER = st.secrets["email_notifications"]["email_sender"]
     
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
+    #RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
 
     #Entries
     entries_string = f'jurisdiction_page: {jurisdiction_page}\r\n'

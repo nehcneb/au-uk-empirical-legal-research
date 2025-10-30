@@ -1872,7 +1872,9 @@ def batch_request_function():
         
                     else:
                         
-                        API_key = st.secrets["openai"]["gpt_api_key"]
+                        #API_key = st.secrets["openai"]["gpt_api_key"]
+
+                        from functions.common_functions import API_key
                         
                         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = st.session_state["judgment_counter_max"]
 
