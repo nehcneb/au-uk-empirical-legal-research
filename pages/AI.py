@@ -159,7 +159,9 @@ def check_prompt(prompt = '', own_account_entry = False, check = True):
         
             else:
                 
-                API_key = st.secrets["openai"]["gpt_api_key"]
+                #API_key = st.secrets["openai"]["gpt_api_key"]
+
+                from functions.common_functions import API_key
             
             openai.api_key = API_key
         
@@ -270,7 +272,9 @@ def check_code(code = '', own_account_entry = False, prompt_safe = True, check =
             
                 else:
                     
-                    API_key = st.secrets["openai"]["gpt_api_key"]
+                    #API_key = st.secrets["openai"]["gpt_api_key"]
+    
+                    from functions.common_functions import API_key
                 
                 openai.api_key = API_key
             
@@ -336,13 +340,22 @@ from functions.gpt_functions import question_characters_bound
 # %%
 #Initialize default GPT settings
 
+if 'gpt_model' not in st.session_state:
+    st.session_state['gpt_model'] = basic_model
+    
+#Initialize API key
 if 'gpt_api_key' not in st.session_state:
-    st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
 
+    from functions.common_functions import API_key
+
+    st.session_state['gpt_api_key'] = API_key
+    
+
+
+# %%
 #Initialize key validity check
 if 'gpt_api_key_validity' not in st.session_state:
     st.session_state['gpt_api_key_validity'] = False
-
 
 # %%
 #Default choice of AI

@@ -252,7 +252,11 @@ if 'gpt_model' not in st.session_state:
 #Initialize API key
 if 'gpt_api_key' not in st.session_state:
 
-    st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
+    from functions.common_functions import API_key
+
+    st.session_state['gpt_api_key'] = API_key
+    
+
 
 # %%
 #Define system role content for GPT
@@ -334,8 +338,9 @@ def own_run_function():
     
                 else:
                     
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-    
+                    #API_key = st.secrets["openai"]["gpt_api_key"]
+                    from functions.common_functions import API_key
+                
                 openai.api_key = API_key
                 
                 df_individual = run_own(df_master, uploaded_docs, uploaded_images)
@@ -430,8 +435,9 @@ def run_b64_function():
     
                 else:
                     
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-    
+                    #API_key = st.secrets["openai"]["gpt_api_key"]
+                    from functions.common_functions import API_key
+
                 openai.api_key = API_key
                 
                 df_individual = run_b64_own(df_master, uploaded_images)

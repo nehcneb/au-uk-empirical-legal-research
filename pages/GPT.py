@@ -107,21 +107,18 @@ from functions.gpt_functions import questions_check_system_instruction, GPT_ques
 
 
 # %%
-#Module, costs and upperbounds
-
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
     st.session_state['gpt_model'] = basic_model
-
+    
 #Initialize API key
 if 'gpt_api_key' not in st.session_state:
 
-    st.session_state['gpt_api_key'] = st.secrets["openai"]["gpt_api_key"]
+    from functions.common_functions import API_key
 
-#if 'judgments_counter_bound' not in st.session_state:
-    #st.session_state['judgments_counter_bound'] = default_judgment_counter_bound
-
+    st.session_state['gpt_api_key'] = API_key
+    
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -240,8 +237,10 @@ def gpt_run_function():
     
                 else:
                     
-                    API_key = st.secrets["openai"]["gpt_api_key"]
-                
+                    #API_key = st.secrets["openai"]["gpt_api_key"]
+                    
+                    from functions.common_functions import API_key
+
                 openai.api_key = API_key
     
                 #Produce data
@@ -340,7 +339,9 @@ def er_run_b64_function():
     
                 else:
                     
-                    API_key = st.secrets["openai"]["gpt_api_key"]
+                    #API_key = st.secrets["openai"]["gpt_api_key"]
+                    
+                    from functions.common_functions import API_key
                 
                 openai.api_key = API_key
 
