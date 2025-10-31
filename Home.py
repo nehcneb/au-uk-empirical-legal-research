@@ -30,7 +30,7 @@ st.set_page_config(
 )
 
 # %%
-from functions.common_functions import own_account_allowed, check_questions_answers, batch_mode_allowed, list_value_check
+from functions.common_functions import own_account_allowed, check_questions_answers, batch_mode_allowed, list_value_check, ai_allowed
 
 #if own_account_allowed() > 0:
     #print(f'By default, users are allowed to use their own account.')
@@ -67,8 +67,11 @@ page_dict = {
             #"pages/ER.py": "English Reports (nearly all English case reports from 1220 to 1866)", 
             #"pages/KR.py": "Kercher Reports (cases of the New South Wales superior courts from 1788 to 1899)", 
             "pages/OWN.py": "your own files", 
-            'pages/AI.py': "your own spreadsheet"
             }
+
+if ai_allowed() > 0:
+    
+    page_dict.update({'pages/AI.py': "your own spreadsheet"})
 
 #List of pages
 page_list = [*page_dict.keys()]

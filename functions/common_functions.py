@@ -41,6 +41,11 @@ def immediate_b64():
 
 
 # %%
+def ai_allowed():
+    return 0
+
+
+# %%
 #Default judgment counter bound
 default_judgment_counter_bound = 10
 
@@ -773,8 +778,10 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             file_name= output_name + '.json', 
             mime= "application/json", 
         )
-    
-        st.page_link('pages/AI.py', label=f"ANALYSE your {previous_str}data with an AI", icon = '🤔')
+
+        if ai_allowed() > 0:
+            
+            st.page_link('pages/AI.py', label=f"ANALYSE your {previous_str}data with an AI", icon = '🤔')
 
     #For noting a lack of data
     if ((not saving) and (len(df_individual) == 0)):

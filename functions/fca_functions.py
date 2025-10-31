@@ -531,7 +531,7 @@ def fca_meta_judgment_dict(case_info):
     judgment_text = ''
     
     #Check if not taken to a PDF
-    if not bool(case_info['Judgment in PDF']): #or if '.pdf' not in judgment_url.lower():
+    if not bool(case_info['Judgment in PDF']):
     
         try:
             
@@ -583,8 +583,34 @@ def fca_meta_judgment_dict(case_info):
         #Get judgment pdf text
         try:
             
-            judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
-                        
+            #judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
+
+            browser = get_driver()
+            browser.get(judgment_url)
+            
+            pdf_file = judgment_url.split('/')[-1]    
+
+            pdf_file = urllib.parse.unquote(pdf_file)
+            
+            pdf_path = f"{download_dir}/{pdf_file.upper()}.pdf"
+
+            #Limiting waiting time for downloading PDF to 1 min
+            
+            waiting_counter = 0
+            
+            while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
+                pause.seconds(5)
+                waiting_counter += 1
+                            
+            print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
+
+            judgment_text = pdf_judgment(url_or_path = pdf_path, url_given = False)
+                                                                
+            #MUST remove pdf from download folder automatically or manually
+            os.remove(pdf_path)
+
+            browser.quit()
+            
         except Exception as e:
             
             print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")

@@ -712,7 +712,7 @@ class hca_search_tool:
                 pause.seconds(5)
                 waiting_counter += 1
                             
-            #print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
+            print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
 
             if ('2000' in self.collection) or ('Single' in self.collection):
 

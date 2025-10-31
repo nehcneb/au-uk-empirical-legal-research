@@ -9,7 +9,7 @@ numpy==1.26.4
 openai==2.6.1
 openpyxl==3.1.5
 pandas==1.5.3
-#pandasai==3.0.0
+#pandasai==2.4.2 #NOT compatible with openai==2.6.1
 pause==0.3
 pdf2image==1.17.0
 pillow==10.4.0
@@ -21,8 +21,8 @@ PyYAML==6.0.1
 pydeck==0.8.1b0
 pytesseract==0.3.13
 pyxlsb==1.0.10
-scikit-learn==1.6.1
-scipy==1.11.4
+#scikit-learn==1.6.1
+#scipy==1.11.4
 selenium==4.30.0
 selenium-stealth==1.0.6
 streamlit==1.40.2
