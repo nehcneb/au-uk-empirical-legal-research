@@ -541,20 +541,28 @@ def fca_meta_judgment_dict(case_info):
 
             browser = get_driver()
             browser.get(judgment_url)
-
-            soup = BeautifulSoup(browser.page_source, "lxml")
     
             #Wait until judgment present
             loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='judgment_content']")))
+
+            soup = BeautifulSoup(browser.page_source, "lxml")
             
             browser.quit()
             
             #Attach judgment
             try:
-                
-                judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
 
-                #st.write(judgment_text)
+                #judgment_text_list_raw = soup.find_all("div", {"class": "judgment_content"})
+
+                #print(f"{judgment_dict['Case name']}: judgment_text_list_raw == {judgment_text_list_raw}")
+
+                #judgment_text_list = [x.get_text(separator="\n", strip=True) for x in judgment_text_list_raw]
+
+                #judgment_text = '\n'.join(judgment_text_list)
+
+                judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
+                
+                #print(f"{judgment_dict['Case name']}: judgment_text == {judgment_text}")
                 
             except:
                 

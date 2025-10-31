@@ -66,6 +66,7 @@ import tiktoken
 from pandasai import SmartDataframe
 from pandasai import Agent
 from pandasai.llm.openai import OpenAI
+#from pandasai_litellm.litellm import LiteLLM ##for pandasai==3.0.0
 import pandasai as pai
 from pandasai.responses.streamlit_response import StreamlitResponse
 from pandasai.helpers.openai_info import get_openai_callback as pandasai_get_openai_callback
@@ -379,6 +380,8 @@ def llm_setting(ai_choice, key, gpt_model_choice):
         
         llm = OpenAI(api_token=key, model = gpt_model_choice)
 
+        #llm = LiteLLM(model=gpt_model_choice, api_token=key) for pandasai==3.0.0
+
     if ai_choice == 'LangChain': 
 
         llm = ChatOpenAI(model_name = gpt_model_choice, temperature=0.2, openai_api_key=key, streaming = False)
@@ -407,7 +410,7 @@ def agent(ai_choice, key, gpt_model_choice, instructions_bound, df):
         agent = Agent(df, 
                       config={"llm": llm, 
                               "verbose": True, 
-                              "response_parser": StreamlitResponse, 
+                              #"response_parser": StreamlitResponse, 
                               "custom_whitelisted_dependencies": ["ast", "seaborn", "scikit-learn", "sklearn", "scipy"], 
                               'enable_cache': True, 
                               'use_error_correction_framework': True, 
