@@ -32,8 +32,10 @@ from datetime import datetime, timedelta
 import sys
 import pause
 import requests
-from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
+import urllib
+from urllib.request import urlretrieve
+from bs4 import BeautifulSoup, SoupStrainer
 import os
 #import pypdf
 import io
@@ -101,6 +103,76 @@ npa_dict = {'All': '',
     }
 
 npa_list = list(npa_dict.keys())
+
+# %%
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import ActionChains
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait as Wait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
+from selenium_stealth import stealth
+
+if 'Users/Ben' not in os.getcwd(): 
+
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+#For downloading judgments
+download_dir = os.getcwd() + '/FCA_PDFs'
+
+#@st.cache_resource(show_spinner = False, ttl=600)
+def get_driver():
+
+    options = Options()
+    
+    #For automation
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    
+    #For downloading judgments
+    options.add_experimental_option('prefs', {
+    "download.default_directory": download_dir, #Change default directory for downloads
+    "download.prompt_for_download": False, #To auto download the file
+    "download.directory_upgrade": True,
+    "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
+    })
+    
+    browser = webdriver.Chrome(options=options)
+
+    browser.implicitly_wait(15)
+    browser.set_page_load_timeout(30)
+
+    stealth(browser,
+    
+            languages=["en-US", "en"],
+    
+            vendor="Google Inc.",
+    
+            platform="Win32",
+    
+            webgl_vendor="Intel Inc.",
+    
+            renderer="Intel Iris OpenGL Engine",
+    
+            webdriver=False,
+    
+            fix_hairline=True)
+    
+    if 'Users/Ben' in os.getcwd():
+        browser.minimize_window()
+    
+    return browser
+
 
 
 # %%
@@ -171,23 +243,36 @@ def fca_search(court = '',
               'meta_CasesCited' : cases_cited, 
               'meta_Catchwords' : catchwords}
     
-    response = requests.get(base_url, params=params)
-    response.raise_for_status()
-    # Process the response (e.g., extract relevant information)
-    # Your code here...
-
+    #response = requests.get(base_url, params=params)
+    #response.raise_for_status()
     #Get search url
-    results_url = response.url
+    #results_url = response.url
 
+    #Update results_url
+    params_for_selenium = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+    results_url = base_url + '&' + params_for_selenium
+    
     #st.write(f"results_url == {results_url}")
     
-    #Get the number of search results
+    #Initialise the number of search results
     results_count = int(0)
 
+    #Initialise default soup
+    soup = ''
+    
     try:
-        soup = BeautifulSoup(response.content, "lxml")
+        #soup = BeautifulSoup(response.content, "lxml")
 
+        browser = get_driver()
+        
+        browser.get(results_url)
+        
         #print(f"soup == {soup}")
+
+        #Wait until number of search results present
+        loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//p[@class='txarial']")))
+
+        soup = BeautifulSoup(browser.page_source, "lxml")
         
         results_num_raw = soup.find('p', {'class': 'txarial'})
 
@@ -205,12 +290,11 @@ def fca_search(court = '',
 
         results_count = int(float(results_count))
 
-    except:
+        browser.quit()
+    
+    except Exception as e:
         
-        print("Can't get the number of search results")
-
-    #Get soup
-    soup = BeautifulSoup(response.content, "lxml")
+        print(f"Can't get search results due to error: {e}")
 
     return {'soup': soup, 'results_url': results_url, 'results_count': results_count}
 
@@ -327,8 +411,20 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
             pause.seconds(np.random.randint(5, 15))
 
             url_next_page = url_search_results + '&start_rank=' + f"{ending}"
-            page_judgment_next_page = requests.get(url_next_page)
-            soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
+            
+            #page_judgment_next_page = requests.get(url_next_page)
+            #soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
+
+            browser = get_driver()
+            
+            browser.get(url_next_page)
+    
+            #Wait until any search results present
+            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='result']")))
+            
+            soup_judgment_next_page = BeautifulSoup(browser.page_source, "lxml")
+
+            browser.quit()
 
             #print(f"Searching url_next_page == {url_next_page}")
             
@@ -439,15 +535,27 @@ def fca_meta_judgment_dict(case_info):
     
         try:
             
-            page = requests.get(judgment_url)
+            #page = requests.get(judgment_url)
             
-            soup = BeautifulSoup(page.content, "lxml")
+            #soup = BeautifulSoup(page.content, "lxml")
 
+            browser = get_driver()
+            browser.get(judgment_url)
+
+            soup = BeautifulSoup(browser.page_source, "lxml")
+    
+            #Wait until judgment present
+            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='judgment_content']")))
+            
+            browser.quit()
+            
             #Attach judgment
             try:
                 
                 judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
 
+                #st.write(judgment_text)
+                
             except:
                 
                 judgment_text = soup.get_text(separator="\n", strip=True)
