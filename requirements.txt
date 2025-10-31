@@ -21,8 +21,8 @@ PyYAML==6.0.1
 pydeck==0.8.1b0
 pytesseract==0.3.13
 pyxlsb==1.0.10
-#scikit-learn==1.6.1
-#scipy==1.11.4
+scikit-learn==1.6.1
+scipy==1.11.4
 selenium==4.30.0
 selenium-stealth==1.0.6
 streamlit==1.40.2
