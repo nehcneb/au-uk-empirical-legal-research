@@ -953,9 +953,9 @@ try:
     
     API_key = st.secrets["openai"]["gpt_api_key"]
     
-    #AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
-    #AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-    #AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+    AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
+    AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
     
     SENDER = st.secrets["email_notifications"]["email_sender"]
     RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
@@ -968,16 +968,16 @@ except:
     
     API_key = os.environ['GPT_API_KEY']
     
-    AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
-    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    #AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+    #AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+    #AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
     
     SENDER = os.environ['EMAIL_SENDER']
     RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
 
     court_listener_token = os.environ['COURTLISTENER_TOKEN']
 
-    print('Running on GitHub Actions or HuggingFace')
+    print('Running on AWS EC2, GitHub Actions or HuggingFace')
 
 
 # %%
