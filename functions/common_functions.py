@@ -967,8 +967,11 @@ try:
 except:
     
     API_key = os.environ['GPT_API_KEY']
-    
-    #AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+
+    #Must include if want to run on AWS EC2, GitHub Actions or HuggingFace
+    AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
+
+    #Uncomment the followlong if want to run on GitHub Actions or HuggingFace. No need for AWS EC2 given relevant role permits access to S3 and SES.
     #AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
     #AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
     
@@ -1109,7 +1112,9 @@ def get_aws_ses():
     #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
 
     try:
-        ses = boto3.client('ses')
+        #Try without credentials first, which works on AWS EC2. Must specify a region (unlike for S3).
+
+        ses = boto3.client('ses', region_name = AWS_DEFAULT_REGION)
 
         print('aws ses initialised without credentials.')
 
