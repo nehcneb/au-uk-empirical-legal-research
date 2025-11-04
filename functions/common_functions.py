@@ -991,12 +991,12 @@ def get_aws_s3():
         #Try without credentials first, which works on AWS EC2
         s3_resource = boto3.resource('s3')
         
-        print('s3_resource initialised without credentials.')
+        print('aws s3_resource initialised without credentials.')
 
     except:
         
         s3_resource = boto3.resource('s3', region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
-        print('s3_resource initialised with credentials.')
+        print('aws s3_resource initialised with credentials.')
     
     return s3_resource
 
@@ -1109,15 +1109,15 @@ def get_aws_ses():
     #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
 
     try:
-        ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+        ses = boto3.client('ses')
 
-        print('ses initialised without credentials.')
+        print('aws ses initialised without credentials.')
 
     except:
         
         ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
 
-        print('ses initialised with credentials.')
+        print('aws ses initialised with credentials.')
     
     return ses
 
