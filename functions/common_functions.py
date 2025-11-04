@@ -61,25 +61,7 @@ default_page_bound = 100
 
 # %%
 huggingface = True
-
-#if depends on director
-huggingface_directory = 0
-
-if huggingface_directory > 1:
     
-    current_dir = ''
-    
-    try:
-        current_dir = os.getcwd()
-        print(f"current_dir == {current_dir}")
-        
-    except Exception as e:
-        print(f"current_dir not generated.")
-        print(e)
-    
-    if 'Users/Ben' not in current_dir: #If running on Huggingface or Github Actions
-        huggingface = True
-        
 print(f'huggingface == {huggingface}')
 
 
@@ -122,6 +104,17 @@ from streamlit.components.v1 import html
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
+
+# %%
+current_dir = ''
+
+try:
+    current_dir = os.getcwd()
+    print(f"current_dir == {current_dir}")
+    
+except Exception as e:
+    print(f"current_dir not generated.")
+    print(e)
 
 
 # %% [markdown]
@@ -990,7 +983,7 @@ def get_aws_s3():
     
     #Initiate aws s3
     
-    if 'AWS_ACCESS_KEY_ID' not in locals():
+    if '/home/ubuntu' in current_dir:
         
         #Try without credentials first, which works on AWS EC2
         s3_resource = boto3.resource('s3')
@@ -1112,7 +1105,7 @@ def aws_link_to_df(s3_resource, df_name, expiration = aws_link_expiry_seconds):
 def get_aws_ses():
     #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
 
-    if 'AWS_ACCESS_KEY_ID' not in locals():
+    if '/home/ubuntu' in current_dir:
         #Try without credentials first, which works on AWS EC2. Must specify a region (unlike for S3).
 
         ses = boto3.client('ses', region_name = AWS_DEFAULT_REGION)
