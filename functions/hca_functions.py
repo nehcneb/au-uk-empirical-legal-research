@@ -161,7 +161,7 @@ hca_df = hca_load_data(hca_data_url)
 # %%
 #Collections available
 hca_collections_dict = {
-'Judgments 2000-present': 'judgments-2000-current',
+'Judgments 1998-present': 'judgments-1998-current',
 'Commonwealth Law Reports, volumes 1-100': '1-clr-100-clr',
 'Single Justice Judgments': 'single-justice-judgments',
 'Unreported Judgments': 'unreported-judgments'
@@ -169,7 +169,7 @@ hca_collections_dict = {
 
 
 hca_collections_years_dict = {
-'Judgments 2000-present': [str(x) for x in range(datetime.now().year, 2000-1, -1)],
+'Judgments 1998-present': [str(x) for x in range(datetime.now().year, 1998-1, -1)],
 'Commonwealth Law Reports, volumes 1-100': [str(x) for x in range(1903, 1958 + 1)],
 'Single Justice Judgments': [str(x) for x in range(datetime.now().year, 2024-1, -1)],
 'Unreported Judgments': [str(x) for x in (list(range(1994, 1921-1, -1)) + ['1906'])],
@@ -191,7 +191,7 @@ hca_meta_labels_droppable = ['Date', 'Case number', 'Before', 'Catchwords']
 #judges_dict = {}
 #years_dict = {}
 
-#search_url = 'https://www.hcourt.gov.au/cases-and-judgments/judgments/judgments-2000-current?'
+#search_url = 'https://www.hcourt.gov.au/cases-and-judgments/judgments/judgments-1998-current?'
 #search_url = 'https://www.hcourt.gov.au/cases-and-judgments/judgments/single-justice-judgments?'#For single judges
 #search_url = 'https://www.hcourt.gov.au/cases-and-judgments/judgments/unreported-judgments'#For unreported judgments
 #search_page = requests.get(search_url)
@@ -296,7 +296,7 @@ all_judges_dict = judges_dict | single_judges_dict | unreported_judges_dict
 
 # %%
 hca_collections_judges_dict = {
-'Judgments 2000-present': hca_judges,
+'Judgments 1998-present': hca_judges,
 'Commonwealth Law Reports, volumes 1-100': None,
 'Single Justice Judgments': single_hca_judges,
 'Unreported Judgments': unreported_hca_judges,
@@ -304,7 +304,7 @@ hca_collections_judges_dict = {
 
 # %%
 hca_search_methods_dict = {
-'Judgments 2000-present': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],
+'Judgments 1998-present': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],
 'Commonwealth Law Reports, volumes 1-100': ["Keywords, CLR volumn or year"], #["Keywords", "CLR volumn or year"],
 'Single Justice Judgments': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],
 'Unreported Judgments': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],    
@@ -429,6 +429,10 @@ class hca_search_tool:
 
         #Click apply button and load
         apply_button = Wait(browser, 20).until(EC.visibility_of_element_located((By.ID, 'edit-submit-judgments--2')))
+
+        #Scroll to buttom of page to see apply button
+        browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                
         apply_button.click()
 
         #Wait until any search results present       
@@ -689,6 +693,9 @@ class hca_search_tool:
         
         try:
 
+            #Scroll to buttom of page to see pdf button
+            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            
             #Stat downloading judgment pdf
             pdf_link_present.click()
                 
@@ -714,7 +721,7 @@ class hca_search_tool:
                             
             print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
 
-            if ('2000' in self.collection) or ('Single' in self.collection):
+            if ('1998' in self.collection) or ('Single' in self.collection):
 
                 judgment_text = pdf_judgment(url_or_path = pdf_path, url_given = False)
                                                                 

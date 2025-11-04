@@ -990,13 +990,14 @@ def get_aws_s3():
     
     #Initiate aws s3
     
-    try:
+    if 'AWS_ACCESS_KEY_ID' not in locals():
+        
         #Try without credentials first, which works on AWS EC2
         s3_resource = boto3.resource('s3')
         
         print('aws s3_resource initialised without credentials.')
 
-    except:
+    else:
         
         s3_resource = boto3.resource('s3', region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
         print('aws s3_resource initialised with credentials.')
@@ -1111,14 +1112,14 @@ def aws_link_to_df(s3_resource, df_name, expiration = aws_link_expiry_seconds):
 def get_aws_ses():
     #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
 
-    try:
+    if 'AWS_ACCESS_KEY_ID' not in locals():
         #Try without credentials first, which works on AWS EC2. Must specify a region (unlike for S3).
 
         ses = boto3.client('ses', region_name = AWS_DEFAULT_REGION)
 
         print('aws ses initialised without credentials.')
 
-    except:
+    else:
         
         ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
 
