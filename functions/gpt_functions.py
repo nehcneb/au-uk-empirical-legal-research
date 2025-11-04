@@ -64,7 +64,7 @@ import openpyxl
 from pyxlsb import open_workbook as open_xlsb
 
 # %%
-from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, get_aws_ses, send_notification_email, search_error_display
+from functions.common_functions import check_questions_answers, pop_judgment, default_judgment_counter_bound, truncation_note, search_error_note, spinner_text, streamlit_timezone, get_aws_s3, aws_df_get, aws_df_put, send_notification_email, search_error_display
 
 # %% [markdown]
 # # GPT functions and variables

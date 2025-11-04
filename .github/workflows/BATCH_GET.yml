@@ -5,10 +5,13 @@ on:
   #push:
     #branches:
       #- main
-  #schedule:
+  schedule:
     #- cron: '42 */6 * * *' # Run every 6 hour
+    #- cron: '42 0,12 * * *' # At 00,12:42 UTC/19,20:42 Sydney time everyday
+    #- cron: '47 12 * * 1,2,3,4,5' # At 12:42 UTC/20:42 Sydney time on workdays
+    - cron: '47 12 * * 1,3,5' # At 12:42 UTC/20:42 Sydney time on Monday, Wednesday and Friday
 
-#see https://jasonet.co/posts/scheduled-actions/
+#see https://crontab.guru
 
 jobs:
   build:

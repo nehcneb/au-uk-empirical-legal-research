@@ -943,6 +943,8 @@ def report_error(error_msg, jurisdiction_page, df_master):
 # %%
 #Get credentials
 
+#If running on AWS EC2, then '/home/ubuntu' in current_dir
+
 #If running on Github Actions, then '/home/runner/' in current_dir
 
 #Try local or streamlit first
@@ -951,9 +953,9 @@ try:
     
     API_key = st.secrets["openai"]["gpt_api_key"]
     
-    AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
-    AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-    AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+    #AWS_DEFAULT_REGION=st.secrets["aws"]["AWS_DEFAULT_REGION"]
+    #AWS_ACCESS_KEY_ID=st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+    #AWS_SECRET_ACCESS_KEY=st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
     
     SENDER = st.secrets["email_notifications"]["email_sender"]
     RECIPIENT = st.secrets["email_notifications"]["email_receiver_work"]
@@ -984,8 +986,18 @@ except:
 def get_aws_s3():
     
     #Initiate aws s3
-    s3_resource = boto3.resource('s3', region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+    
+    try:
+        #Try without credentials first, which works on AWS EC2
+        s3_resource = boto3.resource('s3')
+        
+        print('s3_resource initialised without credentials.')
 
+    except:
+        
+        s3_resource = boto3.resource('s3', region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+        print('s3_resource initialised with credentials.')
+    
     return s3_resource
 
 
@@ -1094,8 +1106,19 @@ def aws_link_to_df(s3_resource, df_name, expiration = aws_link_expiry_seconds):
 # %%
 #Function for using aws ses for sending emails
 def get_aws_ses():
-    ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
     #ses is based on the following upon substitutiong 'ses' for 's3', https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#guide-credentials
+
+    try:
+        ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+
+        print('ses initialised without credentials.')
+
+    except:
+        
+        ses = boto3.client('ses',region_name = AWS_DEFAULT_REGION, aws_access_key_id = AWS_ACCESS_KEY_ID, aws_secret_access_key = AWS_SECRET_ACCESS_KEY)
+
+        print('ses initialised with credentials.')
+    
     return ses
 
 
