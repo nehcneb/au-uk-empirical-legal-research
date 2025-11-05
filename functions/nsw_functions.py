@@ -296,22 +296,24 @@ def nsw_search_preview(df_master):
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
     
-    df_master.loc[0, 'SearchCriteria']=[search_dict]
+    df_master.at[0, 'SearchCriteria'] = [search_dict]
+
+    #st.write(f"df_master.loc[0, 'SearchCriteria'] == {df_master.loc[0, 'SearchCriteria']}")
 
     #Conduct search
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
+                   body = df_master.loc[0, "SearchCriteria"][0]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"][0]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"][0]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"][0]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"][0]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"][0]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"][0]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"][0]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"][0]['casesCited'],
                    pause = 0
                   )
 
@@ -389,22 +391,22 @@ def nsw_search_url(df_master):
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
     
-    df_master.loc[0, 'SearchCriteria']=[search_dict]
+    df_master.loc[0, 'SearchCriteria'] = [search_dict]
 
     #Conduct search
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
+                   body = df_master.loc[0, "SearchCriteria"][0]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"][0]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"][0]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"][0]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"][0]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"][0]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"][0]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"][0]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"][0]['casesCited'],
                    pause = 0
                   )    
     return query.url
@@ -587,23 +589,23 @@ def nsw_run_direct(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria']=[search_dict]
+    df_master.loc[0, 'SearchCriteria'] = [search_dict]
 
     #Conduct search
     
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
+                   body = df_master.loc[0, "SearchCriteria"][0]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"][0]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"][0]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"][0]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"][0]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"][0]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"][0]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"][0]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"][0]['casesCited'],
                    pause = 0
                   )
 
@@ -727,23 +729,23 @@ def nsw_run(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria']=[search_dict]
+    df_master.loc[0, 'SearchCriteria'] = [search_dict]
 
     #Conduct search
     
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
+                   body = df_master.loc[0, "SearchCriteria"][0]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"][0]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"][0]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"][0]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"][0]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"][0]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"][0]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"][0]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"][0]['casesCited'],
                    pause = 0
                   )
 
@@ -937,23 +939,23 @@ def nsw_batch(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria']=[search_dict]
+    df_master.loc[0, 'SearchCriteria'] = [search_dict]
 
     #Conduct search
     
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
                    tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
+                   body = df_master.loc[0, "SearchCriteria"][0]['body'], 
+                   title = df_master.loc[0, "SearchCriteria"][0]['title'], 
+                   before = df_master.loc[0, "SearchCriteria"][0]['before'], 
+                   catchwords = df_master.loc[0, "SearchCriteria"][0]['catchwords'], 
+                   party = df_master.loc[0, "SearchCriteria"][0]['party'], 
+                   mnc = df_master.loc[0, "SearchCriteria"][0]['mnc'], 
+                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['startDate']), 
+                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"][0]['endDate']),
+                   fileNumber = df_master.loc[0, "SearchCriteria"][0]['fileNumber'], 
+                   legislationCited  = df_master.loc[0, "SearchCriteria"][0]['legislationCited'], 
+                   casesCited = df_master.loc[0, "SearchCriteria"][0]['casesCited'],
                    pause = 0
                   )
 
