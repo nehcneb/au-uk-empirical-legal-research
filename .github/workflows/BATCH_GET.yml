@@ -34,11 +34,12 @@ jobs:
 
       - name: execute BATCH_GET.py
         env:
-          GPT_API_KEY: ${{ secrets.GPT_API_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          COURTLISTENER_TOKEN: ${{ COURTLISTENER_TOKEN }}
           EMAIL_RECEIVER_WORK: ${{ secrets.EMAIL_RECEIVER_WORK }}
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          GPT_API_KEY: ${{ secrets.GPT_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: python BATCH_GET.py
