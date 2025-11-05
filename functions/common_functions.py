@@ -964,9 +964,11 @@ except:
     #Must include if want to run on AWS EC2, GitHub Actions or HuggingFace
     AWS_DEFAULT_REGION = os.environ['AWS_DEFAULT_REGION']
 
-    #Uncomment the followlong if want to run on GitHub Actions or HuggingFace. No need for AWS EC2 given relevant role permits access to S3 and SES.
-    #AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-    #AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    if '/home/ubuntu' not in current_dir:
+        
+        #The follwing are for running on GitHub Actions or HuggingFace. No need for AWS EC2 given relevant role permits access to S3 and SES.
+        AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+        AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
     
     SENDER = os.environ['EMAIL_SENDER']
     RECIPIENT = os.environ['EMAIL_RECEIVER_WORK']
