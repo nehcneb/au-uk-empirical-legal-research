@@ -270,13 +270,11 @@ def link(x):
 
 # %%
 #Define function for judgment link containing PDF
-def pdf_judgment(url_or_path, url_given = True):
+def pdf_judgment(url_or_path, url_given = True, headers = {'User-Agent': 'whatever'}):
 
     #If the str given is url
     if url_given == True:
-    
-        headers = {'User-Agent': 'whatever'}
-        
+            
         r = requests.get(url_or_path, headers=headers, allow_redirects = True)
     
         remote_file_bytes = io.BytesIO(r.content)
@@ -298,13 +296,11 @@ def pdf_judgment(url_or_path, url_given = True):
 
 # %%
 #Define function for judgment link containing PDF images
-def pdf_image_judgment(url_or_path = '', url_given = True):
+def pdf_image_judgment(url_or_path = '', url_given = True, headers = {'User-Agent': 'whatever'}):
 
     #If the str given is url
     if url_given == True:
-    
-        headers = {'User-Agent': 'whatever'}
-    
+        
         r = requests.get(url_or_path, headers=headers, allow_redirects = True)
         
         remote_file_bytes = r.content

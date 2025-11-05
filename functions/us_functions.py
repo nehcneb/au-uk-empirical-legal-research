@@ -1019,8 +1019,8 @@ class us_search_tool:
     def __init__(self, token, judgment_counter_bound = default_judgment_counter_bound):
 
         self.token = token
-        self.headers = {'Authorization': self.token,
-        }
+        self.headers = {'Authorization': f'Token {self.token}', 'User-Agent': 'whatever'}
+
         self.judgment_counter_bound = judgment_counter_bound
 
         #Essential keys to rename, then drop
@@ -1393,7 +1393,10 @@ class us_search_tool:
         opinion_page = requests.get(opinion_url, headers=headers)
         opinion_json = opinion_page.json()
 
-
+        #st.write(f"headers == {headers}")
+        
+        #st.write(f"opinion_json == {opinion_json}")
+        
         #Placeholders        
         opinion_snippet = ''
         opinion_type = ''
@@ -1430,7 +1433,7 @@ class us_search_tool:
         if (len(opinion_text) == 0) and ('local_path' in opinion_json.keys()):
             if '.pdf' in str(opinion_json['local_path']).lower():
                 pdf_url = 'https://storage.courtlistener.com/' + opinion_json['local_path']
-                opinion_text = pdf_judgment(url_or_path = pdf_url, url_given = True)
+                opinion_text = pdf_judgment(url_or_path = pdf_url, url_given = True, headers = self.headers)
 
         #st.write(opinion_json.keys())
         
@@ -1500,13 +1503,14 @@ class us_search_tool:
     #Define function for getting PDF from one link
     #@st.cache_data(show_spinner = False)
     def clean_doc_json(_self, recap_document, headers):
-
-        headers.update({'User-Agent': 'whatever'})
     
         if ('filepath_local' in recap_document.keys()) and ('is_available' in recap_document.keys()):
+            
             if (('.pdf' in str(recap_document['filepath_local']).lower()) and (str(recap_document['is_available']).lower() == 'true')):
-                pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']    
-                recap_document['file_content'] = pdf_judgment(url_or_path = pdf_url, url_given = True)
+                
+                pdf_url = 'https://storage.courtlistener.com/' + recap_document['filepath_local']
+                
+                recap_document['file_content'] = pdf_judgment(url_or_path = pdf_url, url_given = True, headers = self.headers)
         
         return recap_document
 
@@ -1582,7 +1586,7 @@ def us_search_function(token,
                 atty_name,
                 available_only
                 ):
-
+    
     #Conduct search
 
     us_search = us_search_tool(token = token, judgment_counter_bound = judgment_counter_bound)
