@@ -62,7 +62,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, list_value_check, list_range_check, save_input, pdf_judgment, str_to_int
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -83,20 +83,20 @@ us_collections = {'Opinions of Federal, State and Territory Courts': 'o',
 
 # %%
 us_order_by = {
+'Relevance': "score desc",
 'Newest Cases First': "dateFiled desc",
 'Oldest Cases First': "dateFiled asc",
 'Most Cited First': "citeCount desc",
 'Least Cited First': "citeCount asc", 
-'Relevance': "score desc", #Putting relevance last because the API search results are not the same as those from using their website
 }
 
 # %%
 us_pacer_order_by = {
+'Relevance': "score desc", 
 'Newest Cases First': "dateFiled desc",
 'Oldest Cases First': "dateFiled asc",
 'Newest Documents First': "entry_date_filed desc",
 'Oldest Documents First': "entry_date_filed asc", 
-'Relevance': "score desc", #Putting relevance last because the API search results are not the same as those from using their website
 }
 
 # %%
@@ -1047,6 +1047,7 @@ class us_search_tool:
              bankr_courts = [], 
             state_courts = [], 
             more_courts = [], 
+               semantic = False, 
              q = '', 
               order_by = list(us_order_by.keys())[0], 
                precedential_status = [list(us_precedential_status.keys())[0]], 
@@ -1079,11 +1080,17 @@ class us_search_tool:
 
         #Params for both opinions and PACER docs
         params_raw = [
-            ('type', self.doc_type_value),
+            #('type', self.doc_type_value),
             ('q', q), 
             ('type', self.doc_type_value),
         ]
 
+        semantic_param = str_to_int(semantic)
+        if semantic_param == 1:
+            params_raw.append(('semantic', 'true'))
+
+            print(f"Using semantic search")
+        
         if filed_after:
             if len(filed_after) > 0:
                 params_raw.append(('filed_after', filed_after))
@@ -1286,8 +1293,15 @@ class us_search_tool:
 
         #st.write(f"self.results_url is {self.results_url}")
 
-        #Save url to search results for the non-API page
-        self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
+        #Define search results link for preview
+        if semantic_param == 1:
+            #The following shows the search results for API page
+            #As of 6 Nov 2025, their non-API page does not permit semantic search
+            self.results_url_to_show = self.results_url
+
+        else:
+            #The following shows the search results for the non-API page
+            self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
 
         try:
             #page_json = json.loads(self.page.content.decode('utf-8')) 
@@ -1564,6 +1578,7 @@ def us_search_function(token,
                 bankr_courts,
                 state_courts,
                 more_courts,
+                semantic,
                 q,
                 order_by,
                 precedential_status,
@@ -1598,6 +1613,7 @@ def us_search_function(token,
              bankr_courts = bankr_courts,
              state_courts = state_courts,
              more_courts = more_courts,
+            semantic = semantic, 
              q = q,
              order_by = order_by,
              precedential_status = precedential_status,
@@ -1649,6 +1665,7 @@ def us_search_preview(df_master):
                 bankr_courts = df_master.loc[0, 'Bankruptcy Courts'], 
                 state_courts = df_master.loc[0, 'State and Territory Courts'], 
                 more_courts = df_master.loc[0, 'More Courts'] , 
+                semantic = df_master.loc[0, 'Use semantic search'], 
                 q = df_master.loc[0, 'Search'], 
                 order_by = df_master.loc[0, 'Search results order'], 
                 precedential_status = df_master.loc[0, 'Precedential status'], 
@@ -1743,6 +1760,7 @@ def us_run(df_master):
                 bankr_courts = df_master.loc[0, 'Bankruptcy Courts'], 
                 state_courts = df_master.loc[0, 'State and Territory Courts'], 
                 more_courts = df_master.loc[0, 'More Courts'] , 
+                semantic = df_master.loc[0, 'Use semantic search'], 
                 q = df_master.loc[0, 'Search'], 
                 order_by = df_master.loc[0, 'Search results order'], 
                 precedential_status = df_master.loc[0, 'Precedential status'], 
@@ -1857,7 +1875,8 @@ def us_batch(df_master):
                 fed_hist_courts = df_master.loc[0, 'Federal Historical Courts'], 
                 bankr_courts = df_master.loc[0, 'Bankruptcy Courts'], 
                 state_courts = df_master.loc[0, 'State and Territory Courts'], 
-                more_courts = df_master.loc[0, 'More Courts'] , 
+                more_courts = df_master.loc[0, 'More Courts'], 
+                semantic = df_master.loc[0, 'Use semantic search'],         
                 q = df_master.loc[0, 'Search'], 
                 order_by = df_master.loc[0, 'Search results order'], 
                 precedential_status = df_master.loc[0, 'Precedential status'], 

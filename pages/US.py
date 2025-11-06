@@ -175,6 +175,13 @@ def us_create_df():
         more_courts = more_courts_entry
 
     #Entries common to both opinions and PACER records
+    try:
+        
+        semantic = semantic_entry
+    except:
+        
+        semantic = False
+        
     q = q_entry
 
     order_by = order_by_entry
@@ -287,6 +294,7 @@ def us_create_df():
            'Bankruptcy Courts': bankr_courts, 
            'State and Territory Courts': state_courts, 
            'More Courts': more_courts, 
+            'Use semantic search': semantic, 
             'Search': q_entry, 
             'Search results order': order_by, 
             'Case name': case_name,
@@ -351,7 +359,7 @@ if 'gpt_api_key' not in st.session_state:
     from functions.common_functions import API_key
 
     st.session_state['gpt_api_key'] = API_key
-    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -398,6 +406,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Bankruptcy Courts'] = ['All']
     st.session_state['df_master'].loc[0, 'State and Territory Courts'] = ['All']
     st.session_state['df_master'].loc[0, 'More Courts'] = ['All']
+    st.session_state['df_master'].loc[0, 'Use semantic search'] = False
     st.session_state['df_master'].loc[0, 'Search'] = None
     st.session_state['df_master'].loc[0, 'Search results order'] = list(us_order_by.keys())[0] 
     st.session_state['df_master'].loc[0, 'Precedential status'] = [list(us_precedential_status.keys())[0]]
@@ -579,6 +588,16 @@ st.subheader("Your search terms")
 
 st.markdown("""For search tips, please visit [CourtListener](https://www.courtlistener.com/help/search-operators/). This section largely mimics their advanced search function.
 """)
+
+semantic_entry = st.toggle(label = 'Use semantic search', value = st.session_state['df_master'].loc[0, 'Use semantic search'])
+
+if semantic_entry == False:
+    
+    st.warning("By default, this app will use CourtListener's [keyword search](https://www.courtlistener.com/help/citegeist/#keyword-search) engine.")
+
+else:
+    
+    st.success("This app will use CourtListener's [semantic search](https://www.courtlistener.com/help/citegeist/#semantic-search) engine.")
 
 q_entry = st.text_input(label = 'Search', value = st.session_state['df_master'].loc[0, 'Search'])
 
