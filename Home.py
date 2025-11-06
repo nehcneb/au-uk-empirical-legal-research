@@ -57,8 +57,8 @@ page_dict = {
             "pages/FCA.py": "Federal Court of Australia cases", 
             "pages/NSW.py": "New South Wales cases", 
             #"pages/CA.py": 'Canada cases',
-            #"pages/HK.py": "Hong Kong courts and tribunals cases", # (Hong Kong Legal Reference System)
-            "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials", # (HKLII)
+            "pages/HK.py": "Hong Kong cases from the Hong Kong Legal Reference System", 
+            "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials from HKLII",
             #"pages/UK.py": "United Kingdom cases", 
             #"pages/BAILII.py": "England and Wales cases", 
               "pages/US.py": "United States cases", 
@@ -66,7 +66,7 @@ page_dict = {
             #"pages/SCTA.py": 'Superannuation Complaints Tribunal of Australia cases', 
             #"pages/ER.py": "English Reports (nearly all English case reports from 1220 to 1866)", 
             #"pages/KR.py": "Kercher Reports (cases of the New South Wales superior courts from 1788 to 1899)", 
-            "pages/OWN.py": "your own files", 
+            "pages/OWN.py": "Your own files", 
             }
 
 if ai_allowed() > 0:
