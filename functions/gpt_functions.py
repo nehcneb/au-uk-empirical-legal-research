@@ -2015,6 +2015,12 @@ def gpt_run(jurisdiction_page, df_master):
         
         run = copy.copy(uk_run)
 
+    if jurisdiction_page == 'pages/AUSTLII.py':
+                
+        from functions.austlii_functions import austlii_run
+        
+        run = copy.copy(austlii_run)
+
     if jurisdiction_page == 'pages/BAILII.py':
                 
         from functions.bailii_functions import bailii_run

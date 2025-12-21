@@ -130,6 +130,9 @@ def kr_selenium_judgment_text(case_info):
     #Get search results
     browser.get(url)
 
+    #Wait until all judgment text is shown
+    judgment_text_present = Wait(browser, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "footer.closing ul.closing-tertiary")))
+    
     soup = BeautifulSoup(browser.page_source, "lxml")
 
     text = soup.get_text()

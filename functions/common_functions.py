@@ -212,7 +212,7 @@ def split_title_mnc(full_title):
     #Get mnc
     mnc = ''
     
-    mnc_list = re.findall(r'\[\d{4}\]\s\D+\s\d+', full_title)
+    mnc_list = re.findall(r'\[\d{4}\]\s\D+\d?\D+\s\d+', full_title)
 
     if len(mnc_list) > 0:
         

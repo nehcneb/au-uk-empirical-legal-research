@@ -352,7 +352,7 @@ class bailii_search_tool:
                 
             except:
                 
-                self.highlight = True
+                self.highlight = int(bool(True))
                 
                 print(f"Can't get highlight param. Kept default {self.highlight}.")
     

@@ -60,6 +60,7 @@ page_dict = {
             "pages/HK.py": "Hong Kong cases from the Hong Kong Legal Reference System", 
             "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials from HKLII",
             #"pages/UK.py": "United Kingdom cases", 
+            #"pages/AUSTLII.py": "AustLII", 
             #"pages/BAILII.py": "England and Wales cases", 
               "pages/US.py": "United States cases", 
             #"pages/AFCA.py": 'Australian Financial Complaints Authority cases', 
