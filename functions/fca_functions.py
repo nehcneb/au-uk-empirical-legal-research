@@ -420,7 +420,7 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
             browser.get(url_next_page)
     
             #Wait until any search results present
-            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='result']")))
+            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='search-results']")))
             
             soup_judgment_next_page = BeautifulSoup(browser.page_source, "lxml")
 
@@ -529,9 +529,15 @@ def fca_meta_judgment_dict(case_info):
 
     #Get judgment text
     judgment_text = ''
+
+
+    #Check if getting taken to a PDF
+    if 'Judgment in PDF' not in judgment_dict.keys():
+
+        judgment_dict.update({'Judgment in PDF': False})
     
     #Check if not taken to a PDF
-    if not bool(case_info['Judgment in PDF']):
+    if not bool(judgment_dict['Judgment in PDF']):
     
         try:
             

@@ -343,6 +343,8 @@ class hca_search_tool:
         
         self.page = 1
         
+        self.pre_narrowing_results_count = 0
+        
         self.results_count = 0
 
         self.total_pages = 1
@@ -377,6 +379,25 @@ class hca_search_tool:
         browser = get_driver()
         
         browser.get(self.results_url)
+
+        #Get the number of judgments available before narrowing down
+        loaded_pre_narrowing_results_num = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
+                
+        self.soup = BeautifulSoup(browser.page_source, "lxml")
+
+        if 'displaying' in self.soup.text.lower():
+            
+            pre_narrowing_results_count = self.soup.find('div', class_ = 'view-summary')
+            
+            if re.search(r'\d+', pre_narrowing_results_count.text):
+                
+                self.pre_narrowing_results_count = int(re.findall(r'\d+', pre_narrowing_results_count.text)[-1])
+        
+        else:
+            
+            self.pre_narrowing_results_count = 0
+
+        #Start narrowing search results
 
         if len(self.keywords) > 0:
             
@@ -435,6 +456,9 @@ class hca_search_tool:
                 
         apply_button.click()
 
+        #Pause to avoid loading unfiltered number of research results
+        pause.seconds(np.random.randint(10, 15))
+        
         #Wait until any search results present       
         loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
         
@@ -487,6 +511,9 @@ class hca_search_tool:
                         
                         browser.get(self.results_url)
 
+                        #Pause to avoid loading unfiltered number of research results
+                        pause.seconds(np.random.randint(10, 15))
+                        
                         #Wait until any search results present
                         loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
 
@@ -505,6 +532,12 @@ class hca_search_tool:
         
         else:
             
+            self.results_count = 0
+
+        if self.results_count == self.pre_narrowing_results_count:
+
+            print(f"Unable to narrow research results from self.results_url == {self.results_url}")
+
             self.results_count = 0
 
         #Get page count
@@ -527,9 +560,10 @@ class hca_search_tool:
 
                         browser = get_driver()
                         browser.get(self.next_page_url)
-                        #browser.delete_all_cookies() #Don't
-                        #browser.refresh() #Don't
 
+                        #Pause to avoid loading unfiltered number of research results
+                        pause.seconds(np.random.randint(10, 15))
+                        
                         #Wait until search results present, if any
                         loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='views-element-container']")))
 
