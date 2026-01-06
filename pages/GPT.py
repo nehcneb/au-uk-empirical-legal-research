@@ -118,7 +118,7 @@ if 'gpt_api_key' not in st.session_state:
     from functions.common_functions import API_key
 
     st.session_state['gpt_api_key'] = API_key
-    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -693,17 +693,6 @@ else:
         
         st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
 
-        #if gpt_enhancement_entry:
-
-            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
-            
-            #st.session_state.gpt_model = flagship_model
-
-        #else:
-            
-            #st.session_state.gpt_model = basic_model
-            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-
         st.write(f'**:green[You can change the maximum number of cases to process.]**')
         
         judgments_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
@@ -788,7 +777,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = f"PRODUCE data now (up to {int(min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of judgments']))} cases)", 
+    run_button = st.button(label = f"PRODUCE data now (up to {int(st.session_state['judgment_batch_cutoff'])} cases)", 
                            help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
                            disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input))
                           )

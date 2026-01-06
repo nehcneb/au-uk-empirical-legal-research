@@ -125,10 +125,6 @@ def get_driver():
 
 
 # %%
-#Threshold characters count for getting pdf instead of html
-#austlii_pdf_judgment_threshold = 2048
-
-# %%
 #Definitions for search function
 
 austlii_methods_dict = {'Auto search': 'auto',
@@ -140,10 +136,12 @@ austlii_methods_dict = {'Auto search': 'auto',
                        }
 
 austlii_sort_dict = {'Relevance': 'relevance',
-                    'By citation frequency': 'cited-most',
-                    'By database': 'database',
-                    'By date': 'date-latest', 
-                    'By title': 'title', 
+                    'Citation frequency: most often cited': 'cited-most',
+                     'Citation frequency: least often cited': 'cited-least',
+                    'Database': 'database',
+                     'Date: latest first': 'date-latest', 
+                    'Date: earliest first': 'date-earliest', 
+                     'Title': 'title', 
                    }
 
 austlii_highlight_dict = {'Yes': '1', 'No': '0'}
@@ -488,7 +486,7 @@ def austlii_selenium_judgment_text(case_info):
     browser.get(url)
 
     #Wait until all judgment text is shown
-    judgment_text_present = Wait(browser, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "footer.closing ul.closing-tertiary")))
+    judgment_text_present = Wait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "footer.closing ul.closing-tertiary")))
     
     soup = BeautifulSoup(browser.page_source, "lxml")
 
@@ -615,10 +613,6 @@ class austlii_search_tool:
 
             query_list.append(exact_phrase_query)
 
-        #if self.method in ['boolean', 'any', 'all', 'phrase']:
-            
-            #self.query = ' AND '.join(query_list)
-
         print(f"Search terms are as follows: {self.query}")
 
         #Sort param
@@ -683,104 +677,87 @@ class austlii_search_tool:
         
         if self.method != austlii_methods_dict[list(austlii_methods_dict.keys())[0]]:
             
-            method_selected = Wait(browser, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, f"li.sort-item.query-type[data-type-name='{self.method}'][role='tab']")))
+            method_selected = Wait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, f"li.sort-item.query-type[data-type-name='{self.method}'][role='tab']")))
             
             method_selected.click()
 
         #Enter datelow if entered
         if isinstance(self.datelow, datetime):
 
-            datelow_day = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='day1']")))
+            datelow_day = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='day1']")))
 
             datelow_day.send_keys(self.datelow.day)
 
-            datelow_month = Wait(browser, 20).until(EC.element_to_be_clickable((By.XPATH, "//select[@name='month1']")))
+            datelow_month = Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//select[@name='month1']")))
             
             dropdown_datelow_month = Select(datelow_month)
             
             dropdown_datelow_month.select_by_value(self.datelow.strftime("%m"))
 
-            datelow_year = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='year1']")))
+            datelow_year = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='year1']")))
 
             datelow_year.send_keys(self.datelow.year)
 
         #Enter datehigh if entered
         if isinstance(self.datehigh, datetime):
 
-            datehigh_day = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='day2']")))
+            datehigh_day = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='day2']")))
 
             datehigh_day.send_keys(self.datehigh.day)
 
-            datehigh_month = Wait(browser, 20).until(EC.element_to_be_clickable((By.XPATH, "//select[@name='month2']")))
+            datehigh_month = Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//select[@name='month2']")))
             
             dropdown_datehigh_month = Select(datehigh_month)
             
             dropdown_datehigh_month.select_by_value(self.datehigh.strftime("%m"))
 
-            datehigh_year = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='year2']")))
+            datehigh_year = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='year2']")))
 
             datehigh_year.send_keys(self.datehigh.year)
 
         #Select the database(s) to search...
-        #print(f"self.databases == {self.databases}")
         
         if 'All AustLII Databases' not in self.databases:
 
-            Select_the_databases_to_search = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//h2[contains(., 'Select the database(s) to search')]/label")))
+            #Unselect default databses
+            select_the_databases_to_search = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//h2[contains(., 'Select the database(s) to search')]/label")))
     
-            #Need to click twice to unselect
-            Select_the_databases_to_search.click()
-            pause.seconds(np.random.randint(5, 10))
-    
-            Select_the_databases_to_search.click()
-            pause.seconds(np.random.randint(5, 10))
+            select_the_databases_to_search.click()
 
+            #Select 'Show all'
+            show_all = Wait(browser, 30).until(EC.element_to_be_clickable((By.ID, "show-databases")))
+
+            #Scroll to element then click
+            browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", show_all)            
+            
+            show_all.click()
+            
+           #pause.seconds(np.random.randint(5, 10))
+            
             for database in self.databases:
                 
-                database_checkbox = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, f"//input[@type='checkbox' and @name='mask_path' and @value='{austlii_databases_dict[database]}']/parent::label")))
+                database_checkbox = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, f"//input[@type='checkbox' and @name='mask_path' and @value='{austlii_databases_dict[database]}']/parent::label")))
 
+                #Scroll to element then click
+                
+                browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", database_checkbox)            
+                
                 database_checkbox.click()
-
-                pause.seconds(np.random.randint(5, 10))
                     
-        #Select All_Case_Law_Databases
-        #All_Case_Law_Databases = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @name='mask_path' and @value='au/cases']/parent::label")))
-
-        #All_Case_Law_Databases.click()
-        
-        #Unselect all databses except 'All Case Law Databases'
-        #All_AustLII_Databases = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='']")))
-        #All_AustLII_Databases.click()
-
-        #All_Legislation_Databases = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='au/legis']")))
-        #All_Legislation_Databases.click()
-
-        #All_Law_Journals_Databases = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='au/journals']")))
-        #All_Law_Journals_Databases.click()
-
-        #All_Secondary_Materials_Databases = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='au/journals+au/other']")))
-        #All_Secondary_Materials_Databases.click()
-
-        #Commonwealth_All_Primary_Material = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='au/cases/cth au/legis/cth']")))
-        #Commonwealth_All_Primary_Material.click()
-
-        #Commonwealth_All_Legislation = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='au/legis/cth']")))
-        #Commonwealth_All_Legislation.click()
-
-        #Commonwealth_All_Cases = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@type='checkbox' and @value='au/cases/cth']")))
-        #Commonwealth_All_Cases.click()
-
         #Enter your search (do last)
 
-        search_box = Wait(browser, 20).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='query']")))
+        search_box = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, "//input[@name='query']")))
 
+        #Scroll to element then send enter search terms
+
+        browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", search_box)            
+        
         search_box.send_keys(self.query)
 
         search_box.send_keys(Keys.ENTER)
 
         #Wait until search results present
-        #pause.seconds(np.random.randint(10, 15))
-        search_results_num = Wait(browser, 20).until(EC.title_contains("documents found"))
+        search_results_num = Wait(browser, 30).until(EC.title_contains("documents found"))
         
         #Get search results url
         self.results_url = browser.current_url
@@ -791,23 +768,43 @@ class austlii_search_tool:
         self.soup = BeautifulSoup(browser.page_source, "lxml")
 
         #Change sorting if not 'By relevance'
-
-        print(f"self.sort == {self.sort}")
         
         if self.sort != austlii_sort_dict[list(austlii_sort_dict.keys())[0]]: 
+
+            #For 'date-earliest' or 'cited-least', need to choose a tab first then select the relevant option
+            if self.sort == 'date-earliest':
+
+                date_latest =  Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='page-sort']//a[contains(@href, 'view=date-latest')]")))
+    
+                date_latest.click()
+
+                date_earliest =  Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='page-sort-2']//a[contains(@href, 'view=date-earliest')]")))
+    
+                date_earliest.click()
+
+            elif self.sort == 'cited-least':
+
+                cited_most =  Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='page-sort']//a[contains(@href, 'view=cited-most')]")))
+    
+                cited_most.click()
+
+                cited_least =  Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='page-sort-2']//a[contains(@href, 'view=cited-least')]")))
+    
+                cited_least.click()
             
-            sortby_tab =  Wait(browser, 20).until(EC.element_to_be_clickable((By.XPATH, f"//div[@id='page-sort']//a[contains(@href, 'view={self.sort}')]")))
+            else:
+            
+                sortby_tab =  Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, f"//div[@id='page-sort']//a[contains(@href, 'view={self.sort}')]")))
+    
+                sortby_tab.click()
 
-            sortby_tab.click()
-
-            search_results_num = Wait(browser, 20).until(EC.title_contains("documents found"))
+            search_results_num = Wait(browser, 30).until(EC.title_contains("documents found"))
 
             self.soup = BeautifulSoup(browser.page_source, "lxml")
                                                          
         #print(self.soup)
         
-        #number of search results
-        #docs_found_string = re.findall(r'\d+', str(self.soup.find('li', class_='number-docs').text).replace(',', ''))[0]
+        #Get number of search results
         docs_found_string = re.findall(r'\d+', str(self.soup.find('title')).replace(',', ''))[0]
         
         self.results_count = int(float(docs_found_string))
@@ -818,62 +815,47 @@ class austlii_search_tool:
             #Start counter
             counter = 0
 
-            for page in range(1, self.total_pages + 1):
+            #Initialise default results page showing on screen
+            default_results_page = 1
 
+            #print(f"default_results_page == {default_results_page}")
+            
+            for page in range(1, self.total_pages + 1):
+                
                 if counter < min(self.results_count, self.judgment_counter_bound):
 
-                    if page > 1:
+                    #print(f"Trying to obtain search results on page {page} of {self.total_pages}")
+
+                    #Decide whether there is a need to click 'next' to get the next 10 pages
+                    if page >= default_results_page + 10:
+
+                        next_button = Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, '//div[@id="pagination-sort"]//li[@class="next"]/a')))
                         
-                        pause.seconds(np.random.randint(10, 15))
+                        next_button.click()
 
-                        #Get next page buttons from current page
-                        page_buttons = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@id='pagination-sort']//a[contains(@href, '/cgi-bin/sinosrch.cgi?')]")))
+                        #Increase default results page showing on screen
+                        default_results_page += 10
 
-                        #Decide whether there is a need to click 'next' to get the next 10 pages
-                        need_to_click_next = True
+                    #Click on relevant page button if not showing on screen already
+                    if page > default_results_page:
                         
-                        for page_button in page_buttons:
+                        page_button = Wait(browser, 30).until(EC.element_to_be_clickable((By.XPATH, f'//div[@id="pagination-sort"]//a[text()="{page}"]')))
+                        
+                        page_button.click()
 
-                            if page_button.text == str(page):
+                    #Wait until results showing
+                    results_div = Wait(browser, 30).until(EC.presence_of_element_located((By.XPATH, '//div[@class="card"]//li[@data-count]')))
 
-                                need_to_click_next = False
+                    #Update self.soup
+                    self.soup = BeautifulSoup(browser.page_source, "lxml")
 
-                                page_button.click()
-
-                                break
-
-                        #If there is a need to click 'next' to get the next 10 pages 
-                        if need_to_click_next == True:
-
-                            #Get the next 10 pages
-                            next_button = page_buttons[-1]
-
-                            next_button.click()
-
-                            page_buttons = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@id='pagination-sort']//a[contains(@href, '/cgi-bin/sinosrch.cgi?')]")))
-
-                            for page_button in page_buttons:
-    
-                                if page_button.text == str(page):
-    
-                                    need_to_click_next = False
-    
-                                    page_button.click()
-    
-                                    break
-
-                        #Update self.soup
-                        self.soup = BeautifulSoup(browser.page_source, "lxml")
-
+                    print(f"Obtaining results from page {page} of {self.total_pages}")
+                
                 else:
 
                     break
-
-                print(f"Processing page {page} of {self.total_pages}")
         
                 #Get self.case_infos
-                #hrefs = self.soup.find_all('a', href=True)
-
                 hrefs = self.soup.find_all('a', href=re.compile('/cgi-bin/viewdoc'))
                 
                 for link in hrefs:
@@ -902,10 +884,11 @@ class austlii_search_tool:
                         
                         counter = counter + 1
 
+                #Pause to aovid getting kicked out
+                pause.seconds(np.random.randint(10, 15))
+
         browser.quit()
         
-        #return self.case_infos
-    
     def get_judgments(self):
 
         self.case_infos_w_judgments = []
