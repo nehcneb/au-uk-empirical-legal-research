@@ -696,6 +696,10 @@ else:
         st.write(f'**:green[You can change the maximum number of cases to process.]**')
         
         judgments_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]}', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of judgments']))
+
+        if judgments_counter_bound_entry:
+
+            st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = judgments_counter_bound_entry
         
         if judgments_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
@@ -777,7 +781,7 @@ with stylable_container(
         color: black;
     }""",
 ):
-    run_button = st.button(label = f"PRODUCE data now (up to {int(st.session_state['judgment_batch_cutoff'])} cases)", 
+    run_button = st.button(label = f"PRODUCE data now (up to {int(min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of judgments']))} cases)", 
                            help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
                            disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input))
                           )

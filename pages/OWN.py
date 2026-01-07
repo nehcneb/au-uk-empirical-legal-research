@@ -403,9 +403,6 @@ def run_b64_function():
                 st.error('Your API key is not valid.')
                 st.stop()
                 
-        #st.write('Your results should be available for download soon. The estimated waiting time is 3-5 minutes per 10 judgments.')
-        #st.write('If this app produces an error or an unexpected spreadsheet, please double-check your search terms and try again.')
-
         spinner_text = "In progress..."
 
         with st.spinner(spinner_text):
@@ -840,7 +837,11 @@ else:
         #if file_counter_bound_entry:
             
         #st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
-        
+
+        if file_counter_bound_entry:
+
+            st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
+
         if file_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
             st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} files may need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
