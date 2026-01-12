@@ -55,6 +55,8 @@ judgment_batch_cutoff = 25 #Change this at home
 #max number of judgments under batch mode
 judgment_batch_max = 200
 
+
+
 # %%
 #Default page bound for OWN.py
 default_page_bound = 100
