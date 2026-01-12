@@ -585,7 +585,7 @@ def fca_meta_judgment_dict(case_info):
                         meta_content = meta_tags[tag_index].get("content")
                         judgment_dict.update({meta_name: meta_content})
                         
-        except:
+        except Exception as e:
             
             print(f"{judgment_dict['Case name']}: can't get html judgment or meta due to error {e}.")
             
