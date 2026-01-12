@@ -295,10 +295,12 @@ def nsw_search_preview(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    
-    df_master.at[0, 'SearchCriteria'] = [search_dict]
 
-    #st.write(f"df_master.loc[0, 'SearchCriteria'] == {df_master.loc[0, 'SearchCriteria']}")
+    df_master['SearchCriteria'] = [{}] * len(df_master)
+    
+    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
+    
+    df_master.at[0, 'SearchCriteria'] = search_dict
 
     #Conduct search
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
@@ -390,8 +392,12 @@ def nsw_search_url(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
+
+    df_master['SearchCriteria'] = [{}] * len(df_master)
     
-    df_master.loc[0, 'SearchCriteria'] = [search_dict]
+    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
+    
+    df_master.at[0, 'SearchCriteria'] = search_dict
 
     #Conduct search
     query = nsw_search(courts=df_master.loc[0, 'Courts'], 
@@ -589,7 +595,12 @@ def nsw_run_direct(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria'] = [search_dict]
+
+    df_master['SearchCriteria'] = [{}] * len(df_master)
+    
+    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
+    
+    df_master.at[0, 'SearchCriteria'] = search_dict
 
     #Conduct search
     
@@ -729,7 +740,12 @@ def nsw_run(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria'] = [search_dict]
+
+    df_master['SearchCriteria'] = [{}] * len(df_master)
+    
+    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
+
+    df_master.at[0, 'SearchCriteria'] = search_dict
 
     #Conduct search
     
@@ -939,7 +955,12 @@ def nsw_batch(df_master):
     search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
     search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
     search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    df_master.loc[0, 'SearchCriteria'] = [search_dict]
+    
+    df_master['SearchCriteria'] = [{}] * len(df_master)
+    
+    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
+    
+    df_master.at[0, 'SearchCriteria'] = search_dict
 
     #Conduct search
     
