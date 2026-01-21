@@ -265,7 +265,7 @@ if 'gpt_api_key' not in st.session_state:
     from functions.common_functions import API_key
 
     st.session_state['gpt_api_key'] = API_key
-    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -464,7 +464,7 @@ if method_entry:
 
 st.subheader("Judgment metadata collection")
 
-st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+st.markdown("""Would you like to obtain judgment metadata? Such data include the judge(s), the decision date and so on. 
 
 Case name and medium neutral citation are always included with your results.""")
 

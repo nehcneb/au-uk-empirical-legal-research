@@ -38,7 +38,7 @@ corpus_dir = 'lawtodata/oalc_cases'
 # %%
 #How many times to try to get cases from OALC
 
-try_max = 3
+try_max = 5
 
 
 # %% [markdown]
@@ -255,7 +255,7 @@ def get_judgment_from_oalc(mnc_list):
 
                 try_counter += 1
 
-                pause.seconds(10)
+                pause.seconds(5)
 
         #Remove any blank or very short judgments
         mncs_to_pop = []
