@@ -245,7 +245,7 @@ if 'gpt_api_key' not in st.session_state:
     from functions.common_functions import API_key
 
     st.session_state['gpt_api_key'] = API_key
-    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -347,7 +347,7 @@ st.header("Search :blue[cases from New South Wales]")
 
 st.success(default_msg)
 
-st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to search for and collect cases from [NSW Caselaw](https://www.caselaw.nsw.gov.au/search/advanced). It also sources cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
+st.write(f'This app uses [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) developed by Mike Lynch and Xinwei Luo of Sydney Informatics Hub to collect cases from [NSW Caselaw](https://www.caselaw.nsw.gov.au/search/advanced). It also sources cases from the [Open Australian Legal Corpus](https://huggingface.co/datasets/umarbutler/open-australian-legal-corpus) compiled by Umar Butler.')
  
 st.caption(default_caption)
 

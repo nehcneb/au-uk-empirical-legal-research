@@ -159,13 +159,8 @@ def oalc_filter(dataset,
         }
 
     try:
+        
         response = requests.get(base_url, params=params, headers=headers)
-    
-        #print(response.url)
-    
-        #print(response.content)
-
-        #print('Sucessfully obtained cases from OLAC.')
         
         return response.json()
 
