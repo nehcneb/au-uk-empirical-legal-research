@@ -23,6 +23,8 @@ import streamlit as st
 import requests
 import re
 import pause
+#from bs4 import BeautifulSoup, SoupStrainer
+
 
 
 # %%
@@ -124,7 +126,7 @@ def oalc_filter(dataset,
                 config = 'default', 
                 where = None, 
                 orderby = None, 
-                offset = None, 
+                offset = 0, 
                 length = None
                ):
 
@@ -162,12 +164,18 @@ def oalc_filter(dataset,
         
         response = requests.get(base_url, params=params, headers=headers)
         
+        #print(f"response.json().keys() == {response.json().keys()}")
+
+        #print(f"response.text == {response.text}")
+        
         return response.json()
 
     except Exception as e:
 
-        print(f'Failed to obtain cases from OLAC due to error: {e}')
+        print(f'Failed to get a json from OLAC due to error: {e}')
 
+        print(f"OLAC response.text == {response.text}")
+        
         return {}
         
 
@@ -248,9 +256,11 @@ def get_judgment_from_oalc(mnc_list):
                 
                 print(f"Can't get case from OALC after {try_counter} try due to error: {e}")
 
+                print(f"Response from huggingface = data == {data}")
+
                 try_counter += 1
 
-                pause.seconds(5)
+                pause.seconds(10)
 
         #Remove any blank or very short judgments
         mncs_to_pop = []

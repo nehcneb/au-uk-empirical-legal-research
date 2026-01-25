@@ -656,6 +656,8 @@ def nsw_run_direct(df_master):
             counter +=1
     
             pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+
+            print(f"Scraped {len(judgments_file)}/{judgment_counter_bound} judgments.")
             
         else:
             
@@ -799,7 +801,9 @@ def nsw_run(df_master):
                 #add search results to json
                 judgments_file.append(decision_w_meta)
                 counter +=1
-        
+
+                print(f"Scraped {len(judgments_file)}/{judgment_counter_bound} judgments.")
+                
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
                 
             else:
@@ -840,6 +844,7 @@ def nsw_run(df_master):
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
     
         #Append judgment to judgments_file 
+        decision_counter = 0
         for decision in judgments_file:
             
             #Append judgments from oalc first
@@ -872,7 +877,10 @@ def nsw_run(df_master):
                 #Pause only if need to get judgment from Caselaw NSW
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
 
-
+            decision_counter += 1
+            
+            print(f"Scraped {decision_counter}/{judgment_counter_bound} judgments.")
+    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
