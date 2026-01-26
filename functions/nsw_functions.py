@@ -640,10 +640,11 @@ def nsw_run_direct(df_master):
                 decision.fetch()
     
                 #Attach new info
-                decision_w_meta_judgment = decision.values
-                #for key in decision_w_meta_judgment.keys():
-                    #if key not in decision_w_meta.keys():
-                        #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+                decision_w_meta_judgment = decision.values.copy()
+                
+                for key in decision_w_meta_judgment.keys():
+                    if key not in decision_w_meta.keys():
+                        decision_w_meta.update({key: decision_w_meta_judgment[key]})
     
                 decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
             
@@ -667,7 +668,7 @@ def nsw_run_direct(df_master):
     json_individual = json.dumps(judgments_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
-
+    
     #Check length of judgment text, replace with raw html if smaller than lower boound
     for judgment_index in df_individual.index:
 
@@ -787,10 +788,11 @@ def nsw_run(df_master):
                     decision.fetch()
         
                     #Attach new info
-                    decision_w_meta_judgment = decision.values
-                    #for key in decision_w_meta_judgment.keys():
-                        #if #key not in decision_w_meta.keys():
-                            #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+                    decision_w_meta_judgment = decision.values.copy()
+                    
+                    for key in decision_w_meta_judgment.keys():
+                        if key not in decision_w_meta.keys():
+                            decision_w_meta.update({key: decision_w_meta_judgment[key]})
     
                     decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
 
@@ -857,13 +859,18 @@ def nsw_run(df_master):
                 for case in query.results():
 
                     case_meta = case.values.copy()
-
-                    #st.write(case_meta)
                     
                     if decision['mnc'] in case_meta['title']:
                         try:
                             case.fetch()
                             case_w_meta_jugdment = case.values.copy()
+                            
+                            for key in case_w_meta_jugdment.keys():
+
+                                if key not in decision.keys():
+
+                                    decision.update({key: case_w_meta_jugdment[key]})
+                                
                             decision.update({'judgment': str(case_w_meta_jugdment)})
 
                             print(f"{decision['title']} got judgment from NSW Caselaw directly.")
@@ -885,7 +892,7 @@ def nsw_run(df_master):
     json_individual = json.dumps(judgments_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
-
+    
     #Check length of judgment text, replace with raw html if smaller than lower boound
 
     for judgment_index in df_individual.index:
@@ -1010,10 +1017,11 @@ def nsw_batch(df_master):
                     decision.fetch()
         
                     #Attach new info
-                    decision_w_meta_judgment = decision.values
-                    #for key in decision_w_meta_judgment.keys():
-                        #if #key not in decision_w_meta.keys():
-                            #decision_w_meta.update({key: decision_w_meta_judgment[key]})
+                    decision_w_meta_judgment = decision.values.copy()
+                    
+                    for key in decision_w_meta_judgment.keys():
+                        if key not in decision_w_meta.keys():
+                            decision_w_meta.update({key: decision_w_meta_judgment[key]})
     
                     decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
 
@@ -1084,6 +1092,13 @@ def nsw_batch(df_master):
                         try:
                             case.fetch()
                             case_w_meta_jugdment = case.values.copy()
+
+                            for key in case_w_meta_jugdment.keys():
+
+                                if key not in decision.keys():
+
+                                    decision.update({key: case_w_meta_jugdment[key]})
+                            
                             decision.update({'judgment': str(case_w_meta_jugdment)})
 
                             print(f"{decision['title']} got judgment from NSW Caselaw directly.")

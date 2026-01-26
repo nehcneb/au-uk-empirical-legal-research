@@ -278,6 +278,7 @@ def get_judgment_from_oalc(mnc_list):
 
 
 # %%
+#For testing
 #mnc_list = ['[2015] NSWSC 52', '[2015] NSWSC 186', '[2015] NSWSC 172', '[2021] NSWSC 1406', '[1999] NSWSC 1028']
 #get_judgment_from_oalc(mnc_list)
 
@@ -286,7 +287,7 @@ def get_judgment_from_oalc(mnc_list):
 
 #NOT IN USE
 
-def oalc_search(dataset, split, config = 'default', query = None, orderby = None, offset = None, length = None):
+def oalc_search(dataset, split, config = 'default', query = None, orderby = None, offset = 0, length = None):
 
     base_url = "https://datasets-server.huggingface.co/search"
 
