@@ -65,6 +65,10 @@ from functions.common_functions import own_account_allowed, pop_judgment, conver
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
+#Load oalc
+from functions.oalc_functions import get_judgment_from_oalc
+
+
 # %% [markdown]
 # # High Court of Australia search engine
 
@@ -790,9 +794,6 @@ class hca_search_tool:
         #If huggingface enabled
         if huggingface == True:
 
-            #Load oalc
-            from functions.oalc_functions import load_corpus, get_judgment_from_oalc
-    
             #Create a list of mncs for HuggingFace:
             mnc_list = []
     

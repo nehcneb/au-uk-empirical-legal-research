@@ -69,6 +69,10 @@ from functions.common_functions import own_account_allowed, pop_judgment, conver
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
+#Load oalc
+from functions.oalc_functions import get_judgment_from_oalc
+
+
 
 # %% [markdown]
 # # CaseLaw NSW functions and parameters
@@ -715,7 +719,7 @@ def nsw_run_direct(df_master):
     df_updated = nsw_tidying_up(df_master, df_updated)
     
     return df_updated
-    
+
 
 
 # %%
@@ -776,118 +780,85 @@ def nsw_run(df_master):
 
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
+    #Create a list of mncs
+    mnc_list = []
+
+    #Create list of relevant cases
+    for decision in query.results():
+        
+        if counter < judgment_counter_bound:
+
+            #Append to judgments_file to create df_individual
+            decision_w_meta = decision.values.copy()
+
+            #Create and mnc
+            mnc = split_title_mnc(decision_w_meta['title'])[1]
+            decision_w_meta.update({'mnc': mnc})
+            
+            #add search results to json
+            judgments_file.append(decision_w_meta)
+
+            #Add mnc to list for HuggingFace
+            mnc_list.append(mnc)
+            
+            counter +=1            
+            
+        else:
+            break
+
     if huggingface == False: #If not running on HuggingFace
 
-        for decision in query.results():
-            if counter < judgment_counter_bound:
-                #Get case info from results page
-                decision_w_meta = decision.values.copy()
-
-                try:
-                    #Get case info from individual case  page
-                    decision.fetch()
-        
-                    #Attach new info
-                    decision_w_meta_judgment = decision.values.copy()
-                    
-                    for key in decision_w_meta_judgment.keys():
-                        if key not in decision_w_meta.keys():
-                            decision_w_meta.update({key: decision_w_meta_judgment[key]})
+        mnc_judgment_dict = {}
     
-                    decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
-
-                except:
-                    decision_w_meta.update({'judgment': ''})
-                    print(f'{decision_w_meta["title"]}: judgment text scraping error.')
-                
-                #add search results to json
-                judgments_file.append(decision_w_meta)
-                counter +=1
-
-                print(f"Scraped {len(judgments_file)}/{judgment_counter_bound} judgments.")
-                
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-                
-            else:
-                break
-
-    else: #If running on HuggingFace
-        
-        #Load oalc
-        from functions.oalc_functions import load_corpus, get_judgment_from_oalc
-
-        #Create a list of mncs for HuggingFace:
-        mnc_list = []
-
-        #Create list of relevant cases
-        for decision in query.results():
-            
-            if counter < judgment_counter_bound:
+    else: #If running on HuggingFace    
     
-                #Append to judgments_file to create df_individual
-                decision_w_meta = decision.values.copy()
-    
-                #Create and mnc
-                mnc = split_title_mnc(decision_w_meta['title'])[1]
-                decision_w_meta.update({'mnc': mnc})
-                
-                #add search results to json
-                judgments_file.append(decision_w_meta)
-
-                #Add mnc to list for HuggingFace
-                mnc_list.append(mnc)
-                
-                counter +=1            
-                
-            else:
-                break
-
         #Get judgments from oalc first
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-    
-        #Append judgment to judgments_file 
-        decision_counter = 0
-        for decision in judgments_file:
-            
-            #Append judgments from oalc first
-            if decision['mnc'] in mnc_judgment_dict.keys():
-                decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
-                print(f"{decision['title']} got judgment from OALC.")
-                
-            else: #Get case from Caselaw NSW if can't get from oalc
-                
-                for case in query.results():
 
-                    case_meta = case.values.copy()
+    #Append judgment to judgments_file 
+    decision_counter = 0
+    for decision in judgments_file:
+        
+        #Append judgments from oalc first
+        if decision['mnc'] in mnc_judgment_dict.keys():
+            decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
+            print(f"{decision['title']} got judgment from OALC.")
+            
+        else: #Get case from Caselaw NSW if can't get from oalc
+            
+            for case in query.results():
+
+                case_meta = case.values.copy()
+                
+                if decision['mnc'] == split_title_mnc(case_meta['title'])[1]:
                     
-                    if decision['mnc'] in case_meta['title']:
-                        try:
-                            case.fetch()
-                            case_w_meta_jugdment = case.values.copy()
+                    try:
+                        case.fetch()
+                        case_w_meta_jugdment = case.values.copy()
+                        
+                        for key in case_w_meta_jugdment.keys():
+
+                            if key not in decision.keys():
+
+                                decision.update({key: case_w_meta_jugdment[key]})
                             
-                            for key in case_w_meta_jugdment.keys():
+                        decision.update({'judgment': str(case_w_meta_jugdment)})
 
-                                if key not in decision.keys():
+                        print(f"{decision['title']} got judgment from NSW Caselaw directly.")
+                        
+                    except:
+                        decision.update({'judgment': ''})
+                        print(f'{decision["title"]}: judgment text scraping error.')
 
-                                    decision.update({key: case_w_meta_jugdment[key]})
-                                
-                            decision.update({'judgment': str(case_w_meta_jugdment)})
+                    #break
 
-                            print(f"{decision['title']} got judgment from NSW Caselaw directly.")
-                            
-                        except:
-                            decision.update({'judgment': ''})
-                            print(f'{decision["title"]}: judgment text scraping error.')
+                    #Pause only if need to get judgment from Caselaw NSW
+                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
 
-                        break
+        decision_counter += 1
+        
+        print(f"Scraped {decision_counter}/{min(len(mnc_list), judgment_counter_bound)} judgments.")
 
-                #Pause only if need to get judgment from Caselaw NSW
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-
-            decision_counter += 1
-            
-            print(f"Scraped {decision_counter}/{judgment_counter_bound} judgments.")
-    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
@@ -1004,114 +975,86 @@ def nsw_batch(df_master):
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #st.write(f"judgment_counter_bound == {judgment_counter_bound}")
+
+    #Create a list of mncs
+    mnc_list = []
+
+    #Create list of relevant cases
+    for decision in query.results():
+        
+        if counter < judgment_counter_bound:
+
+            #Append to judgments_file to create df_individual
+            decision_w_meta = decision.values.copy()
+
+            #Create and mnc
+            mnc = split_title_mnc(decision_w_meta['title'])[1]
+            decision_w_meta.update({'mnc': mnc})
+            
+            #add search results to json
+            judgments_file.append(decision_w_meta)
+
+            #Add mnc to list for HuggingFace
+            mnc_list.append(mnc)
+            
+            counter +=1            
+            
+        else:
+            break
     
     if huggingface == False: #If not running on HuggingFace
 
-        for decision in query.results():
-            if counter < judgment_counter_bound:
-                #Get case info from results page
-                decision_w_meta = decision.values.copy()
-
-                try:
-                    #Get case info from individual case  page
-                    decision.fetch()
-        
-                    #Attach new info
-                    decision_w_meta_judgment = decision.values.copy()
-                    
-                    for key in decision_w_meta_judgment.keys():
-                        if key not in decision_w_meta.keys():
-                            decision_w_meta.update({key: decision_w_meta_judgment[key]})
+        mnc_judgment_dict = {}
     
-                    decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
-
-                except:
-                    decision_w_meta.update({'judgment': ''})
-                    print(f'{decision_w_meta["title"]}: judgment text scraping error.')
-                
-                #add search results to json
-                judgments_file.append(decision_w_meta)
-                counter +=1
-        
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-                
-            else:
-                break
-
-    else: #If running on HuggingFace
-        
-        #Load oalc
-        from functions.oalc_functions import load_corpus, get_judgment_from_oalc
-
-        #Create a list of mncs for HuggingFace:
-        mnc_list = []
-
-        #Create list of relevant cases
-        for decision in query.results():
-            
-            if counter < judgment_counter_bound:
+    else: #If running on HuggingFace    
     
-                #Append to judgments_file to create df_individual
-                decision_w_meta = decision.values.copy()
-    
-                #Create and mnc
-                mnc = split_title_mnc(decision_w_meta['title'])[1]
-                decision_w_meta.update({'mnc': mnc})
-                
-                #add search results to json
-                judgments_file.append(decision_w_meta)
-
-                #Add mnc to list for HuggingFace
-                mnc_list.append(mnc)
-                
-                counter +=1            
-                
-            else:
-                break
-
         #Get judgments from oalc first
         mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-    
-        #Append judgment to judgments_file 
-        for decision in judgments_file:
+
+    #Append judgment to judgments_file
+    decision_counter = 0
+    for decision in judgments_file:
+        
+        #Append judgments from oalc first
+        if decision['mnc'] in mnc_judgment_dict.keys():
+            decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
+            print(f"{decision['title']} got judgment from OALC.")
             
-            #Append judgments from oalc first
-            if decision['mnc'] in mnc_judgment_dict.keys():
-                decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
-                print(f"{decision['title']} got judgment from OALC.")
+        else: #Get case from Caselaw NSW if can't get from oalc
+            
+            for case in query.results():
+
+                case_meta = case.values.copy()
+
+                #st.write(case_meta)
                 
-            else: #Get case from Caselaw NSW if can't get from oalc
+                if decision['mnc'] == split_title_mnc(case_meta['title'])[1]:
+                    try:
+                        case.fetch()
+                        case_w_meta_jugdment = case.values.copy()
+
+                        for key in case_w_meta_jugdment.keys():
+
+                            if key not in decision.keys():
+
+                                decision.update({key: case_w_meta_jugdment[key]})
+                        
+                        decision.update({'judgment': str(case_w_meta_jugdment)})
+
+                        print(f"{decision['title']} got judgment from NSW Caselaw directly.")
+                        
+                    except:
+                        decision.update({'judgment': ''})
+                        print(f'{decision["title"]}: judgment text scraping error.')
+
+                    #break
                 
-                for case in query.results():
-
-                    case_meta = case.values.copy()
-
-                    #st.write(case_meta)
-                    
-                    if decision['mnc'] in case_meta['title']:
-                        try:
-                            case.fetch()
-                            case_w_meta_jugdment = case.values.copy()
-
-                            for key in case_w_meta_jugdment.keys():
-
-                                if key not in decision.keys():
-
-                                    decision.update({key: case_w_meta_jugdment[key]})
-                            
-                            decision.update({'judgment': str(case_w_meta_jugdment)})
-
-                            print(f"{decision['title']} got judgment from NSW Caselaw directly.")
-                            
-                        except:
-                            decision.update({'judgment': ''})
-                            print(f'{decision["title"]}: judgment text scraping error.')
-
-                        break
-
-                #Pause only if need to get judgment from Caselaw NSW
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-
+                    #Pause only if need to get judgment from Caselaw NSW
+                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                
+        decision_counter += 1
+        
+        print(f"Scraped {decision_counter}/{min(len(mnc_list), judgment_counter_bound)} judgments.")
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
