@@ -62,7 +62,7 @@ judgment_batch_max = 200 #Change this at home
 default_page_bound = 100
 
 # %%
-huggingface = False
+huggingface = True
     
 print(f'huggingface == {huggingface}')
 
