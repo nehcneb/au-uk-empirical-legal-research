@@ -687,6 +687,8 @@ def nsw_run_direct(df_master):
                 #attach judgment text; judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] is the judgment text
                 df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
 
+                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, scrapped whole judgment from NSW Caselaw again.')
+                
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
         except Exception as e:
@@ -881,6 +883,8 @@ def nsw_run(df_master):
                 df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
 
                 #judgment_type_text[0] has judgment type, eg 'pdf'
+
+                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, scrapped whole judgment from NSW Caselaw again.')
                 
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
@@ -1078,6 +1082,8 @@ def nsw_batch(df_master):
                 df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
 
                 #judgment_type_text[0] has judgment type, eg 'pdf'
+
+                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, scrapped whole judgment from NSW Caselaw again.')
                 
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
