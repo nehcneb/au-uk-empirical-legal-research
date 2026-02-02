@@ -644,6 +644,8 @@ def fca_search_url(df_master):
     df_master = df_master.fillna('')
         
     #Conduct search
+
+    #st.write(df_master)
     
     results_url_num = fca_search(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
@@ -667,6 +669,9 @@ def fca_search_url(df_master):
     results_url = results_url_num['results_url']
     results_count = results_url_num['results_count']
     search_results_soup = results_url_num['soup']
+
+
+    #st.write({'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup})
     
     return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
     
@@ -729,11 +734,13 @@ def fca_run(df_master):
     search_results_soup = search_results_soup_url['soup']
     
     results_url = search_results_soup_url['results_url']
+
+    results_count = search_results_soup_url['results_count']
     
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgment_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, min(results_count, judgment_counter_bound))
 
     #Create judgments file
     judgments_file = []
@@ -867,11 +874,13 @@ def fca_batch(df_master):
     search_results_soup = search_results_soup_url['soup']
     
     results_url = search_results_soup_url['results_url']
+
+    results_count = search_results_soup_url['results_count']
     
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgment_counter_bound)
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, min(results_count, judgment_counter_bound))
 
     #Create judgments file
     judgments_file = []
