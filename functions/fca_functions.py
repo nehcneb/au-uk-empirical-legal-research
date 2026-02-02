@@ -276,7 +276,7 @@ def fca_search(court = '',
         #print(f"soup == {soup}")
 
         #Wait until number of search results present
-        loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//p[@class='txarial']")))
+        loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//p[@class='txarial']")))
 
         soup = BeautifulSoup(browser.page_source, "lxml")
         
@@ -298,7 +298,7 @@ def fca_search(court = '',
 
         browser.quit()
 
-        pause.seconds(np.random.randint(10, 20))
+        pause.seconds(np.random.randint(15, 20))
     
     except Exception as e:
         
@@ -424,7 +424,7 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, results_coun
         
         if counter < min(results_count, judgment_counter_bound):
 
-            pause.seconds(np.random.randint(10, 20))
+            pause.seconds(np.random.randint(15, 20))
 
             url_next_page = url_search_results + '&start_rank=' + f"{ending}"
             
@@ -436,7 +436,7 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, results_coun
             browser.get(url_next_page)
     
             #Wait until any search results present
-            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='search-results']")))
+            loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@class='search-results']")))
             
             soup_judgment_next_page = BeautifulSoup(browser.page_source, "lxml")
 
@@ -565,7 +565,7 @@ def fca_meta_judgment_dict(case_info):
             browser.get(judgment_url)
     
             #Wait until judgment present
-            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='judgment_content']")))
+            loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@class='judgment_content']")))
 
             soup = BeautifulSoup(browser.page_source, "lxml")
             
@@ -761,7 +761,7 @@ def fca_run(df_master):
         
         for case_info in case_infos:
 
-            pause.seconds(np.random.randint(10, 20))
+            pause.seconds(np.random.randint(15, 20))
             
             judgment_dict = fca_meta_judgment_dict(case_info)
 
@@ -803,7 +803,7 @@ def fca_run(df_master):
 
             else: #Get judgment from FCA if can't get from oalc
 
-                pause.seconds(np.random.randint(10, 20))
+                pause.seconds(np.random.randint(15, 20))
                 
                 judgment_dict = fca_meta_judgment_dict(case_info)
         
@@ -905,7 +905,7 @@ def fca_batch(df_master):
         
         for case_info in case_infos:
 
-            pause.seconds(np.random.randint(10, 20))
+            pause.seconds(np.random.randint(15, 20))
             
             judgment_dict = fca_meta_judgment_dict(case_info)
 
@@ -947,7 +947,7 @@ def fca_batch(df_master):
 
             else: #Get judgment from FCA if can't get from oalc
 
-                pause.seconds(np.random.randint(10, 20))
+                pause.seconds(np.random.randint(15, 20))
                 
                 judgment_dict = fca_meta_judgment_dict(case_info)
         
