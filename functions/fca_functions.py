@@ -297,6 +297,8 @@ def fca_search(court = '',
         results_count = int(float(results_count))
 
         browser.quit()
+
+        pause.seconds(np.random.randint(10, 20))
     
     except Exception as e:
         
@@ -310,8 +312,13 @@ def fca_search(court = '',
 
 #@st.cache_data(show_spinner = False, ttl=600)
 def fca_search_results_to_judgment_links(_soup, url_search_results, results_count, judgment_counter_bound):
+
+    #st.write(f"type(_soup) == {type(_soup)}")
     
     #_soup is from scraping per fca_search
+    if not isinstance(_soup, BeautifulSoup):
+
+        _soup = BeautifulSoup(_soup, "lxml")
     
     #Start counter
 
@@ -417,7 +424,7 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, results_coun
         
         if counter < min(results_count, judgment_counter_bound):
 
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(10, 20))
 
             url_next_page = url_search_results + '&start_rank=' + f"{ending}"
             
@@ -754,7 +761,7 @@ def fca_run(df_master):
         
         for case_info in case_infos:
 
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(10, 20))
             
             judgment_dict = fca_meta_judgment_dict(case_info)
 
@@ -796,7 +803,7 @@ def fca_run(df_master):
 
             else: #Get judgment from FCA if can't get from oalc
 
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(10, 20))
                 
                 judgment_dict = fca_meta_judgment_dict(case_info)
         
@@ -898,7 +905,7 @@ def fca_batch(df_master):
         
         for case_info in case_infos:
 
-            pause.seconds(np.random.randint(5, 15))
+            pause.seconds(np.random.randint(10, 20))
             
             judgment_dict = fca_meta_judgment_dict(case_info)
 
@@ -940,7 +947,7 @@ def fca_batch(df_master):
 
             else: #Get judgment from FCA if can't get from oalc
 
-                pause.seconds(np.random.randint(5, 15))
+                pause.seconds(np.random.randint(10, 20))
                 
                 judgment_dict = fca_meta_judgment_dict(case_info)
         

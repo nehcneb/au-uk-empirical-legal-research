@@ -466,7 +466,10 @@ def kr_search(query= '',
 #@st.cache_data(show_spinner = False)
 def kr_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from kr_search
+    if not isinstance(_soup, BeautifulSoup):
 
+        _soup = BeautifulSoup(_soup, "lxml")
+    
     hrefs = _soup.find_all('a', href=True)
     case_link_pairs = []
 

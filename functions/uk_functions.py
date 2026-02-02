@@ -196,7 +196,10 @@ def uk_search(query= '',
 #@st.cache_data(show_spinner = False, ttl=600)
 def uk_search_results_to_judgment_links(_soup, results_url, results_count, judgment_counter_bound):
     #_soup is from scraping per uk_search
+    if not isinstance(_soup, BeautifulSoup):
 
+        _soup = BeautifulSoup(_soup, "lxml")
+        
     #Get total number of pages; 50 results per page
     page_total = math.ceil(results_count/50)
     

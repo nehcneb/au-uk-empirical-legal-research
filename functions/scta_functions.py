@@ -112,6 +112,9 @@ def scta_search(query= '',
 #@st.cache_data(show_spinner = False)
 def scta_search_results_to_case_link_pairs(_soup, url_search_results, judgment_counter_bound):
     #_soup, url_search_results are from scta_search
+    if not isinstance(_soup, BeautifulSoup):
+
+        _soup = BeautifulSoup(_soup, "lxml")
 
     hrefs = _soup.find_all('a', href=True)
     case_link_pairs = []
