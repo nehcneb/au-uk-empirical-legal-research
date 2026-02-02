@@ -144,6 +144,10 @@ def fca_create_df():
 
             on_this_date = str(on_this_date_entry.strftime('%d')) + str(on_this_date_entry.strftime('%B')).lower()[:3] + str(on_this_date_entry.strftime('%Y'))
 
+            if on_this_date[0] == '0':
+                
+                on_this_date = on_this_date[1:]
+        
         except:
             pass
         
@@ -156,6 +160,10 @@ def fca_create_df():
 
             before_date = str(before_date_entry.strftime('%d')) + str(before_date_entry.strftime('%B')).lower()[:3] + str(before_date_entry.strftime('%Y'))
 
+            if before_date[0] == '0':
+                
+                before_date = before_date[1:]
+        
         except:
             pass
 
@@ -166,7 +174,11 @@ def fca_create_df():
         
         try:
             after_date = str(after_date_entry.strftime('%d')) + str(after_date_entry.strftime('%B')).lower()[:3] + str(after_date_entry.strftime('%Y'))
-            
+
+            if after_date[0] == '0':
+                
+                after_date = after_date[1:]
+
         except:
             pass
     
@@ -499,7 +511,6 @@ if preview_button:
         
             else:
                 st.error(no_results_msg)
-
 
         except Exception as e:
 
