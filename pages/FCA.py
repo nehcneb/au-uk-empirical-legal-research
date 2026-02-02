@@ -268,7 +268,7 @@ if 'gpt_api_key' not in st.session_state:
     from functions.common_functions import API_key
 
     st.session_state['gpt_api_key'] = API_key
-    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters
@@ -474,7 +474,7 @@ if preview_button:
                 
                 judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                 
-                case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, judgments_counter_bound)
+                case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgments_counter_bound)
                 
                 for case in case_infos:
                 
@@ -626,7 +626,6 @@ if next_button:
                 print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
-
 
 
 # %% [markdown]

@@ -188,7 +188,6 @@ def get_judgment_from_oalc(mnc_list):
 
     print(f"To obtain from {corpus_dir}: mnc_list == {mnc_list}")
 
-
     #Initialise return value
     mnc_judgment_dict = {}
 
@@ -241,14 +240,14 @@ def get_judgment_from_oalc(mnc_list):
             
                 #print(data)
                                 
-                for case in data["rows"]:
+                for case in data['rows']:
                     citation = case['row']['citation']
                     mnc = split_title_mnc(citation)[1]
                     if mnc in mnc_judgment_dict.keys():
                         judgment = case['row']['text']
                         mnc_judgment_dict[mnc] = judgment
 
-                print(f"Got cases from OALC after {try_counter} try.")
+                print(f"Got up to {len(data['rows'])} cases from OALC after {try_counter} try.")
 
                 try_counter += try_max
             

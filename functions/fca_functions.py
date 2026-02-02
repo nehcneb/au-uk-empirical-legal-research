@@ -41,6 +41,8 @@ import os
 import io
 from io import BytesIO
 import copy
+import math
+
 
 #Streamlit
 import streamlit as st
@@ -307,7 +309,7 @@ def fca_search(court = '',
 #Define function turning search results url to case_infos to judgments
 
 #@st.cache_data(show_spinner = False, ttl=600)
-def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_counter_bound):
+def fca_search_results_to_judgment_links(_soup, url_search_results, results_count, judgment_counter_bound):
     
     #_soup is from scraping per fca_search
     
@@ -400,17 +402,20 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
             #print(counter)
 
     #Go beyond first 20 results
+    #20 results per page. Each page url ends with 20*(page number - 1) + 1
+    page_count = math.ceil(results_count/20)
 
-    #Auxiliary list for getting more pages of search results
     further_page_ending_list = []
-    for i in range(100):
-        further_page_ending = 20 + i
-        if ((str(further_page_ending)[-1] =='1') & (str(further_page_ending)[0] not in ['3', '5', '7', '9', '11'])):
-            further_page_ending_list.append(str(further_page_ending))
+
+    for page in range(2, page_count + 1):
+
+        further_page_ending = 20*(page - 1) + 1
+
+        further_page_ending_list.append(further_page_ending)
     
     for ending in further_page_ending_list:
         
-        if counter < judgment_counter_bound:
+        if counter < min(results_count, judgment_counter_bound):
 
             pause.seconds(np.random.randint(5, 15))
 
@@ -510,8 +515,8 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, judgment_cou
 
                         #print(f'len(case_infos) == {len(case_infos)}')
 
-
     return case_infos
+
 
 # %%
 #Meta labels and judgment combined
@@ -740,7 +745,7 @@ def fca_run(df_master):
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, min(results_count, judgment_counter_bound))
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgment_counter_bound)
 
     #Create judgments file
     judgments_file = []
@@ -748,14 +753,16 @@ def fca_run(df_master):
     if huggingface == False: #If not running on HuggingFace
         
         for case_info in case_infos:
+
+            pause.seconds(np.random.randint(5, 15))
             
             judgment_dict = fca_meta_judgment_dict(case_info)
 
             print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-
-            pause.seconds(np.random.randint(5, 15))
             
             judgments_file.append(judgment_dict)
+
+            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
     
     else: #If running on HuggingFace
 
@@ -788,14 +795,16 @@ def fca_run(df_master):
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
 
             else: #Get judgment from FCA if can't get from oalc
+
+                pause.seconds(np.random.randint(5, 15))
                 
                 judgment_dict = fca_meta_judgment_dict(case_info)
         
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
                 
-                pause.seconds(np.random.randint(5, 15))
-
             judgments_file.append(judgment_dict)
+
+            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
@@ -880,7 +889,7 @@ def fca_batch(df_master):
     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
 
     #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, min(results_count, judgment_counter_bound))
+    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgment_counter_bound)
 
     #Create judgments file
     judgments_file = []
@@ -888,14 +897,16 @@ def fca_batch(df_master):
     if huggingface == False: #If not running on HuggingFace
         
         for case_info in case_infos:
+
+            pause.seconds(np.random.randint(5, 15))
             
             judgment_dict = fca_meta_judgment_dict(case_info)
 
             print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-
-            pause.seconds(np.random.randint(5, 15))
             
             judgments_file.append(judgment_dict)
+
+            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
     
     else: #If running on HuggingFace
 
@@ -928,15 +939,17 @@ def fca_batch(df_master):
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
 
             else: #Get judgment from FCA if can't get from oalc
+
+                pause.seconds(np.random.randint(5, 15))
                 
                 judgment_dict = fca_meta_judgment_dict(case_info)
         
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
                 
-                pause.seconds(np.random.randint(5, 15))
-
             judgments_file.append(judgment_dict)
 
+            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
+    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
 
