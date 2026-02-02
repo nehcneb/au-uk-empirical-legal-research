@@ -278,6 +278,8 @@ def fca_search(court = '',
         #Wait until number of search results present
         loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//p[@class='txarial']")))
 
+        pause.seconds(5)
+        
         soup = BeautifulSoup(browser.page_source, "lxml")
         
         results_num_raw = soup.find('p', {'class': 'txarial'})
@@ -437,6 +439,8 @@ def fca_search_results_to_judgment_links(_soup, url_search_results, results_coun
     
             #Wait until any search results present
             loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@class='search-results']")))
+
+            pause.seconds(5)
             
             soup_judgment_next_page = BeautifulSoup(browser.page_source, "lxml")
 
@@ -567,6 +571,8 @@ def fca_meta_judgment_dict(case_info):
             #Wait until judgment present
             loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@class='judgment_content']")))
 
+            pause.seconds(5)
+            
             soup = BeautifulSoup(browser.page_source, "lxml")
             
             browser.quit()
