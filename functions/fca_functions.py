@@ -75,6 +75,63 @@ from functions.oalc_functions import get_judgment_from_oalc
 # %% [markdown]
 # # Federal Courts search engine
 
+# %% [markdown]
+# ### Definitions
+
+# %%
+#Define format functions for courts choice, and GPT questions
+
+#auxiliary lists and variables
+
+fca_courts = {'All': 'FCA+FCAFC+IRCA+ACOMPT+ACOPYT+ADFDAT+FPDT+ATPT+NFSC',
+              'Federal Court': 'FCA+FCAFC', 
+              'Industrial Relations Court of Australia': 'IRCA', 
+              'Australian Competition Tribunal': 'ACOMPT', 
+              'Copyright Tribunal': 'ACOPYT', 
+              'Defence Force Discipline Appeal Tribunal': 'ADFDAT', 
+              'Federal Police Discipline Tribunal': 'FPDT', 
+              'Trade Practices Tribunal': 'ATPT', 
+              'Supreme Court of Norfolk Island': 'NFSC',
+             }
+
+fca_courts_list = list(fca_courts.keys())
+
+# %%
+npa_dict = {'All': '', 
+    'Admin., Constitutional, Human Rights': 'administrative', 
+  'Admiralty and Maritime': 'admiralty', 
+  'Commercial and Corporations': 'commercial', 
+  'Employment and Industrial Relations': 'employment', 
+  'Federal Crime and Related Proceedings': 'crime', 
+  'Intellectual Property': 'intellectual', 
+  'Native Title': 'native', 
+  'Taxation': 'taxation',
+      'Other Federal Jurisdiction': 'other',
+    }
+
+npa_list = list(npa_dict.keys())
+
+# %%
+sort_dict = {"Relevance": "",
+    "Most Recent": "date",
+    "Least Recent": "adate",
+    "Title Ascending": "metaMNC",
+    "Title Descending": "dmetaMNC",
+    }
+
+
+# %%
+#Meta labels and judgment combined
+#IN USE
+fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to']
+#'MNC', 'FileName', 'Asset_ID', 
+fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to', 'Order']
+#'FileName', 'Asset_ID', 
+
+
+# %% [markdown]
+# ### Search function
+
 # %%
 from functions.common_functions import link, split_title_mnc
 
@@ -136,57 +193,6 @@ def get_driver():
 
     return browser
 
-
-
-# %%
-#Define format functions for courts choice, and GPT questions
-
-#auxiliary lists and variables
-
-fca_courts = {'All': 'FCA+FCAFC+IRCA+ACOMPT+ACOPYT+ADFDAT+FPDT+ATPT+NFSC',
-              'Federal Court': 'FCA+FCAFC', 
-              'Industrial Relations Court of Australia': 'IRCA', 
-              'Australian Competition Tribunal': 'ACOMPT', 
-              'Copyright Tribunal': 'ACOPYT', 
-              'Defence Force Discipline Appeal Tribunal': 'ADFDAT', 
-              'Federal Police Discipline Tribunal': 'FPDT', 
-              'Trade Practices Tribunal': 'ATPT', 
-              'Supreme Court of Norfolk Island': 'NFSC',
-             }
-
-fca_courts_list = list(fca_courts.keys())
-
-# %%
-npa_dict = {'All': '', 
-    'Admin., Constitutional, Human Rights': 'administrative', 
-  'Admiralty and Maritime': 'admiralty', 
-  'Commercial and Corporations': 'commercial', 
-  'Employment and Industrial Relations': 'employment', 
-  'Federal Crime and Related Proceedings': 'crime', 
-  'Intellectual Property': 'intellectual', 
-  'Native Title': 'native', 
-  'Taxation': 'taxation',
-      'Other Federal Jurisdiction': 'other',
-    }
-
-npa_list = list(npa_dict.keys())
-
-# %%
-sort_dict = {"Relevance": "",
-    "Most Recent": "date",
-    "Least Recent": "adate",
-    "Title Ascending": "metaMNC",
-    "Title Descending": "dmetaMNC",
-    }
-
-
-# %%
-#Meta labels and judgment combined
-#IN USE
-fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to']
-#'MNC', 'FileName', 'Asset_ID', 
-fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to', 'Order']
-#'FileName', 'Asset_ID', 
 
 
 # %%
@@ -798,24 +804,6 @@ def fca_search_preview(df_master):
 
 
 
-# %%
-#fca_search = fca_search_tool(court = 'Federal Court',
-                             #phrase = 'class actions', 
-                     #after_date = '1sep2025', 
-                     #catchwords = 'class actions',
-                    #sort = 'Least Recent',
-                             #judgment_counter_bound = 21
-                    #)
-
-# %%
-#fca_search.search()
-
-# %%
-#fca_search.results_count
-
-# %%
-#fca_search.get_judgments()
-
 # %% [markdown]
 # # GPT functions and parameters
 
@@ -970,7 +958,6 @@ def fca_batch(df_master):
     df_individual = pd.read_json(json_individual)
                         
     #Drop metadata if not wanted
-
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in fca_metalabels_droppable:
             if meta_label in df_individual.columns:

@@ -72,7 +72,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # CaseLaw NSW functions and parameters
 
 # %%
-from functions.nsw_functions import nsw_courts, nsw_default_courts, nsw_tribunals, nsw_search_preview, nsw_link
+from functions.nsw_functions import nsw_courts, nsw_default_courts, nsw_tribunals, nsw_search_preview, nsw_tidying_up_pre_gpt
 
 
 # %%
@@ -125,7 +125,7 @@ def nsw_create_df():
         gpt_enhancement = False
     
     #NSW court choices
-
+    
     courts = courts_entry
     
     #NSW tribunals choices    
@@ -179,6 +179,7 @@ def nsw_create_df():
     except:
         print('GPT questions not entered.')
 
+    
     #Create row
     new_row = {'Processed': '',
            'Timestamp': timestamp,
@@ -208,7 +209,8 @@ def nsw_create_df():
           }
     
     df_master_new = pd.DataFrame([new_row])
-        
+
+    
     return df_master_new
 
 
@@ -461,20 +463,15 @@ if preview_button:
                 
                 results_count = search_results_w_count['results_count']
         
-                results_to_show = search_results_w_count['results_to_show']
+                case_infos = search_results_w_count['case_infos']
         
                 results_url = search_results_w_count['results_url']
                     
                 if results_count > 0:
         
-                    df_preview = pd.DataFrame(results_to_show)
-        
-                    #Clean df for display
-                    df_preview['uri'] = df_preview['uri'].apply(nsw_link)
-        
-                    rename_columns_dict = {'title': 'Title', 'uri': 'Hyperlink to NSW Caselaw', 'before': 'Before', 'decisionDate': 'Decision date', 'catchwords': 'Catchwords'}
-        
-                    df_preview.rename(columns=rename_columns_dict, inplace=True)
+                    df_preview = pd.DataFrame(case_infos)
+
+                    df_preview = nsw_tidying_up_pre_gpt(df_master, df_preview)
         
                     #Get display settings
                     display_df_dict = display_df(df_preview)
@@ -620,7 +617,6 @@ if next_button:
 
                 st.session_state['error_msg'] = traceback.format_exc()
                 
-
 
 
 # %% [markdown]

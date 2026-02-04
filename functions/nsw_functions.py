@@ -23,31 +23,31 @@ import json
 import pandas as pd
 import shutil
 import numpy as np
-import re
-import datetime
-from datetime import date
-from dateutil import parser
+#import re
+#import datetime
+#from datetime import date
+#from dateutil import parser
 #from dateutil.relativedelta import *
-from datetime import datetime, timedelta
+#from datetime import datetime, timedelta
 import sys
 import pause
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
-import httplib2
-from urllib.request import urlretrieve
+#import httplib2
+#from urllib.request import urlretrieve
 import os
 #import pypdf
 import io
 from io import BytesIO
 import ast
-
+import copy
 
 #Streamlit
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
-from streamlit.components.v1 import html
+#from streamlit.components.v1 import html
 #import streamlit_ext as ste
-from streamlit_extras.stylable_container import stylable_container
+#from streamlit_extras.stylable_container import stylable_container
 
 #NSWCaseLaw
 from nswcaselaw.search import Search
@@ -76,6 +76,9 @@ from functions.oalc_functions import get_judgment_from_oalc
 
 # %% [markdown]
 # # CaseLaw NSW functions and parameters
+
+# %% [markdown]
+# ### Definitions
 
 # %%
 #Auxiliary lists
@@ -210,11 +213,14 @@ def nsw_link(x):
 
 
 
+# %% [markdown]
+# ### Search function
+
 # %%
 #Define function for short judgments, which checks if judgment is in PDF
 #returns a list of judgment type and judgment text
 
-@st.cache_data(show_spinner = False, ttl=600)
+#@st.cache_data(show_spinner = False, ttl=600)
 def nsw_short_judgment(uri):
     
     html_link = 'https://www.caselaw.nsw.gov.au'+ uri
@@ -242,184 +248,298 @@ def nsw_short_judgment(uri):
 
 
 # %%
-#@st.cache_data(show_spinner = False, ttl=600)
-def nsw_search(courts = [],
-    tribunals = [],
-    body = '',
-    title = '',
-    before = '',
-    catchwords = '',
-    party = '',
-    mnc = '',
-    startDate = '',
-    endDate = '',
-    fileNumber = '',
-    legislationCited = '',
-    casesCited = '',
-    pause = int(0)
-    ):
-    query = Search(courts = nsw_court_choice(courts),
-                    tribunals = nsw_tribunal_choice(tribunals), 
-                    body = body, 
-                    title = title, 
-                    before = before, 
-                    catchwords = catchwords, 
-                    party = party, 
-                    mnc = mnc, 
-                    startDate = startDate, 
-                    endDate = endDate,
-                    fileNumber = fileNumber, 
-                    legislationCited  = legislationCited, 
-                    casesCited = casesCited,
-                    pause = pause
-                    )
-    return query
+class nsw_search_tool:
+
+    def __init__(self,
+                courts = [],
+                tribunals = [],
+                body = '',
+                title = '',
+                before = '',
+                catchwords = '',
+                party = '',
+                mnc = '',
+                startDate = '',
+                endDate = '',
+                fileNumber = '',
+                legislationCited = '',
+                casesCited = '',
+                pause = int(0),
+                 judgment_counter_bound = default_judgment_counter_bound
+                ):
+
+        #Initialise parameters
+        self.courts = courts
+        self.tribunals = tribunals
+        self.body = body
+        self.title = title
+        self.before = before
+        self.catchwords = catchwords
+        self.party = party
+        self.mnc = mnc
+        self.startDate = startDate
+        self.endDate = endDate
+        self.fileNumber = fileNumber
+        self.legislationCited = legislationCited
+        self.casesCited = casesCited
+        self.pause = pause
+
+        #Initialise scraper object
+        self.query = None
+
+        #Initialise other objects to update
+        self.judgment_counter_bound = judgment_counter_bound
+        
+        #self.page = 1
+                
+        self.results_count = 0
+
+        #self.total_pages = 1
+        
+        self.results_url = ''
+
+        #self.results_url_to_show = ''
+        
+        self.soup = None
+        
+        self.case_infos = []
+
+        self.case_infos_w_judgments = []
+        
+        #For getting judgment directly from NSW Caselaw database if can't get from OALC
+        self.case_infos_direct = []
+
+    def search(self):
+
+        #Reset infos of cases found
+        self.case_infos = []
+
+        #Conduct search
+        self.query = Search(courts = nsw_court_choice(self.courts),
+                tribunals = nsw_tribunal_choice(self.tribunals), 
+                body = self.body, 
+                title = self.title, 
+                before = self.before, 
+                catchwords = self.catchwords, 
+                party = self.party, 
+                mnc = self.mnc, 
+                startDate = nsw_date(self.startDate), 
+                endDate = nsw_date(self.endDate),
+                fileNumber = self.fileNumber, 
+                legislationCited  = self.legislationCited, 
+                casesCited = self.casesCited,
+                pause = self.pause
+                )
+
+        #Get url to NSW Caselaw search page
+        self.results_url = self.query.url
+
+        #Check for positive result
+        positive_result = False
+        
+        for decision in self.query.results():
+
+            positive_result = True
+            
+            break
+        
+        #If positive result
+        if positive_result:
+            
+            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+
+            #Get number of results
+            page_html = requests.get(self.query.url)
+            self.soup = BeautifulSoup(page_html.content, "lxml")
+            results_count_raw = self.soup.find('div', {'id': 'paginationcontainer'})
+            results_count_text = results_count_raw.get_text(strip = True)
+            results_count_text = results_count_text.replace(',', '').replace('.', '')
+            self.results_count = int(float(results_count_text.split(' ')[-2]))
+
+            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))            
+            
+            #Get case infos
+            for decision in self.query.results():
+                
+                if len(self.case_infos) < min(self.judgment_counter_bound, self.results_count):
+        
+                    decision_w_meta = copy.deepcopy(decision.values)
+        
+                    self.case_infos.append(decision_w_meta)
+                            
+                else:
+                    
+                    break
+
+    #Function for getting all requested judgments
+    def get_judgments(self):
+
+        self.case_infos_w_judgments = []
+
+        #Search if not done yet
+        if len(self.case_infos) == 0:
+
+            self.search()
+    
+        #Create a list of mncs
+        mnc_list = []
+    
+        for case_info in self.case_infos:
+
+            if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+                
+                mnc = split_title_mnc(case_info['title'])[1]
+                
+                #Add mnc to list for HuggingFace
+                mnc_list.append(mnc)
+    
+        if huggingface == False: #If not running on HuggingFace
+    
+            mnc_judgment_dict = {}
+        
+        else: #If running on HuggingFace    
+        
+            #Get judgments from oalc first
+            mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
+    
+        #Append judgment to self.case_infos_w_judgments 
+        
+        for case_info in self.case_infos:
+            
+            mnc = split_title_mnc(case_info['title'])[1]
+            
+            if mnc in mnc_judgment_dict.keys():
+                
+                case_info.update({'judgment': mnc_judgment_dict[mnc]})
+                
+                print(f"{case_info['title']} got judgment from OALC.")
+
+                #Add case_info to self.case_infos_w_judgments
+                self.case_infos_w_judgments.append(case_info)
+
+            else: #Get case from Caselaw NSW if can't get from oalc
+                
+                for case in self.query.results():
+    
+                    case_meta = copy.deepcopy(case.values)
+                    
+                    if mnc == split_title_mnc(case_meta['title'])[1]:
+                        
+                        try:
+
+                            case_info.update({'judgment': ''})
+                            
+                            case.fetch()
+                                                        
+                            for key in case.values.keys():
+    
+                                if key not in case_info.keys():
+    
+                                    case_info.update({key: case.values[key]})
+                                
+                            case_info.update({'judgment': str(case.values)})
+    
+                            print(f"{case_info['title']} got judgment from NSW Caselaw directly.")
+                            
+                        except:
+                            
+                            case_info.update({'judgment': ''})
+                            
+                            print(f'{case_info["title"]}: judgment text scraping error.')
+
+                        #Add case_info to self.case_infos_w_judgments
+                        self.case_infos_w_judgments.append(case_info)
+                        
+                        #Pause only if need to get judgment from Caselaw NSW
+                        pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                
+            print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.judgment_counter_bound, self.results_count)} judgments.")
+    
+        #Check length of judgment text, replace with text scraped from raw html if smaller than lower boound
+        judgment_dicts_to_remove = []
+        judgment_dicts_to_append = []
+        for judgment_dict in self.case_infos_w_judgments:
+    
+            #Checking if judgment text is too short                
+            judgment_raw_text = str(judgment_dict["judgment"])
+                    
+            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
+
+                judgment_dicts_to_remove.append(judgment_dict)
+
+                judgment_dict_updated = copy.deepcopy(judgment_dict)
+                
+                try:
+
+                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                    
+                    judgment_type_text = nsw_short_judgment(judgment_dict["uri"])
+        
+                    #attach judgment text, judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] the text
+                    judgment_dict_updated["judgment"] = judgment_type_text[1]
+    
+                    print(f'{judgment_dict["title"]}: given judgment tokens < {judgment_text_lower_bound}, scraped whole judgment from raw html.')                        
+                    
+                except Exception as e:
+                    
+                    judgment_dict_updated["judgment"] = ''
+                    print(f'{judgment_dict["title"]}: while judgment tokens < {judgment_text_lower_bound}, cannot scrape whole judgment from raw html due to error: {e}')
+
+                judgment_dicts_to_append.append(judgment_dict_updated)
+
+            for judgment_dict in judgment_dicts_to_remove:
+
+                if judgment_dict in self.case_infos_w_judgments:
+
+                    #print(f'Removing judgment_dict["title"] == {judgment_dict["title"]} of length {len(str(judgment_dict))}')
+
+                    self.case_infos_w_judgments.remove(judgment_dict)
+
+            for judgment_dict_updated in judgment_dicts_to_append:
+
+                if judgment_dict_updated not in self.case_infos_w_judgments:
+
+                    #print(f'Appending judgment_dict_updated["title"] == {judgment_dict_updated["title"]} of length {len(str(judgment_dict_updated))}')
+                    
+                    self.case_infos_w_judgments.append(judgment_dict_updated)
+
 
 
 # %%
 #@st.cache_data(show_spinner = False)
 def nsw_search_preview(df_master):
+    
     df_master = df_master.fillna('')
-    
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
-
-    #Combining search terms into new column
-    
-    search_dict = {'body': df_master.loc[0, 'Free text']}
-    search_dict.update({'title': df_master.loc[0, 'Case name']})
-    search_dict.update({'before': df_master.loc[0, 'Before']})
-    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
-    search_dict.update({'party': df_master.loc[0, 'Party names']})
-    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
-    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
-    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
-    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
-    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
-    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-
-    df_master['SearchCriteria'] = [{}] * len(df_master)
-    
-    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
-    
-    df_master.at[0, 'SearchCriteria'] = search_dict
 
     #Conduct search
-    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
-                   tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
-                   pause = 0
+    nsw_search = nsw_search_tool(courts = df_master.loc[0, 'Courts'], 
+                   tribunals = df_master.loc[0, 'Tribunals'], 
+                   body = df_master.loc[0, 'Free text'], 
+                   title = df_master.loc[0, 'Case name'], 
+                   before = df_master.loc[0, 'Before'], 
+                   catchwords = df_master.loc[0, 'Catchwords'], 
+                   party = df_master.loc[0, 'Party names'],
+                   mnc = df_master.loc[0, 'Medium neutral citation'], 
+                   startDate = df_master.loc[0, 'Decision date from'], 
+                   endDate = df_master.loc[0, 'Decision date to'],
+                   fileNumber = df_master.loc[0, 'File number'], 
+                   legislationCited = df_master.loc[0, 'Legislation cited'], 
+                   casesCited = df_master.loc[0, 'Cases cited'],
+                #pause = 0,
+                 judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                   )
 
-    #Create results to show
-    judgments_file = []
+    nsw_search.search()
     
-    #Counter to limit search results to append
-    counter = 0
-
-    #Go through search results
+    results_count = nsw_search.results_count
     
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+    case_infos = nsw_search.case_infos
+
+    results_url = nsw_search.results_url
+
+    #st.write(results_url)
     
-    #Create list of relevant cases
-    for decision in query.results():
-        
-        if counter < judgment_counter_bound:
-
-            #Append to judgments_file to create df_individual
-            decision_w_meta = decision.values.copy()
-
-            #add search results to json
-            judgments_file.append(decision_w_meta)
-
-            counter +=1            
-            
-        else:
-            break
-                
-    results_to_show = judgments_file
-
-    #Get url to NSW Caselaw search page
-    results_url = query.url
-    
-    #Create total number of results
-    results_count = int(0)
-
-    if len(results_to_show) > 0:
-        
-        pause.seconds(scraper_pause_mean)
-        
-        page_html = requests.get(query.url)
-        soup_html = BeautifulSoup(page_html.content, "lxml")
-        results_count_raw = soup_html.find('div', {'id': 'paginationcontainer'})
-        results_count_text = results_count_raw.get_text(strip = True)
-        results_count_text = results_count_text.replace(',', '').replace('.', '')
-        results_count = int(float(results_count_text.split(' ')[-2]))
-
-    return {'results_to_show': results_to_show, 'results_url': results_url, 'results_count': results_count}
-
-
-
-# %%
-#NOT IN USE
-
-def nsw_search_url(df_master):
-    df_master = df_master.fillna('')
-    
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    #df_master['Courts'] = df_master['Courts'].apply(nsw_court_choice)
-    #df_master['Tribunals'] = df_master['Tribunals'].apply(nsw_tribunal_choice)
-
-    #Combining search terms into new column
-    
-    search_dict = {'body': df_master.loc[0, 'Free text']}
-    search_dict.update({'title': df_master.loc[0, 'Case name']})
-    search_dict.update({'before': df_master.loc[0, 'Before']})
-    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
-    search_dict.update({'party': df_master.loc[0, 'Party names']})
-    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
-    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
-    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
-    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
-    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
-    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-
-    df_master['SearchCriteria'] = [{}] * len(df_master)
-    
-    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
-    
-    df_master.at[0, 'SearchCriteria'] = search_dict
-
-    #Conduct search
-    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
-                   tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
-                   pause = 0
-                  )    
-    return query.url
+    return {'results_url': results_url, 'results_count': results_count, 'case_infos': case_infos}
 
 
 
@@ -440,7 +560,6 @@ from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, 
 from functions.common_functions import check_questions_answers
 
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
 
 
 # %%
@@ -575,156 +694,6 @@ def nsw_tidying_up_pre_gpt(df_master, df_individual):
 
 
 # %%
-#Download directly from Caselaw NSW without looking in OALC first
-#NOT IN USE
-
-@st.cache_data(show_spinner = False, ttl=600)
-def nsw_run_direct(df_master):
-    df_master = df_master.fillna('')
-    
-    #Apply split and format functions for headnotes choice, court choice and GPT questions
-     
-    df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
-    
-    #Do search
-
-    search_dict = {'body': df_master.loc[0, 'Free text']}
-    search_dict.update({'title': df_master.loc[0, 'Case name']})
-    search_dict.update({'before': df_master.loc[0, 'Before']})
-    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
-    search_dict.update({'party': df_master.loc[0, 'Party names']})
-    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
-    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
-    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
-    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
-    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
-    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-
-    df_master['SearchCriteria'] = [{}] * len(df_master)
-    
-    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
-    
-    df_master.at[0, 'SearchCriteria'] = search_dict
-
-    #Conduct search
-    
-    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
-                   tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
-                   pause = 0
-                  )
-
-    #Create judgments file
-    judgments_file = []
-
-    #Counter to limit search results to append
-    counter = 0
-
-    #Go through search results
-    
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-    
-    for decision in query.results():
-        if counter < judgment_counter_bound:
-            #Get case info from results page
-            decision_w_meta = decision.values.copy()
-
-            try:
-                #Get case info from individual case page
-                decision.fetch()
-    
-                #Attach new info
-                decision_w_meta_judgment = decision.values.copy()
-                
-                for key in decision_w_meta_judgment.keys():
-                    if key not in decision_w_meta.keys():
-                        decision_w_meta.update({key: decision_w_meta_judgment[key]})
-    
-                decision_w_meta.update({'judgment': str(decision_w_meta_judgment)})
-            
-            except:
-                decision_w_meta.update({'judgment': ''})
-                print(f'{decision_w_meta["title"]}: judgment text scraping error.')
-
-            #add search results to json
-            judgments_file.append(decision_w_meta)
-            counter +=1
-    
-            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-
-            print(f"Scraped {len(judgments_file)}/{judgment_counter_bound} judgments.")
-            
-        else:
-            
-            break
-
-    #Create and export json file with search results
-    json_individual = json.dumps(judgments_file, indent=2)
-    
-    df_individual = pd.read_json(json_individual)
-    
-    #Check length of judgment text, replace with raw html if smaller than lower boound
-    for judgment_index in df_individual.index:
-
-        #Checking if judgment text has been Scraped or too short
-        try:
-            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
-                    
-            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-                
-                judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
-    
-                #attach judgment text; judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] is the judgment text
-                df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
-
-                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, Scraped whole judgment from NSW Caselaw again.')
-                
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-            
-        except Exception as e:
-            
-            df_individual.loc[judgment_index, "judgment"] = ''
-            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
-            print(e)
-    
-    #Instruct GPT
-    
-    #GPT model
-
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
-    
-    #apply GPT_individual to each respondent's judgment spreadsheet
-    
-    GPT_activation = int(df_master.loc[0, 'Use GPT'])
-    
-    questions_json = df_master.loc[0, 'questions_json']
-
-    system_instruction = df_master.loc[0, 'System instruction']
-    
-    #Engage GPT    
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
-
-    #tidy up
-    df_updated = nsw_tidying_up(df_master, df_updated)
-    
-    return df_updated
-
-
-
-# %%
 #Download from Caselaw NSW if can't find judgment in OALC
 
 @st.cache_data(show_spinner = False, ttl=600)
@@ -736,163 +705,37 @@ def nsw_run(df_master):
      
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
-    #Do search
-
-    search_dict = {'body': df_master.loc[0, 'Free text']}
-    search_dict.update({'title': df_master.loc[0, 'Case name']})
-    search_dict.update({'before': df_master.loc[0, 'Before']})
-    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
-    search_dict.update({'party': df_master.loc[0, 'Party names']})
-    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
-    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
-    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
-    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
-    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
-    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-
-    df_master['SearchCriteria'] = [{}] * len(df_master)
-    
-    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
-
-    df_master.at[0, 'SearchCriteria'] = search_dict
-
-    #Conduct search
-    
-    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
-                   tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
-                   pause = 0
-                  )
-
     #Create judgments file
     judgments_file = []
 
-    #Counter to limit search results to append
-    counter = 0
+    #Conduct search
+    nsw_search = nsw_search_tool(courts = df_master.loc[0, 'Courts'], 
+                   tribunals = df_master.loc[0, 'Tribunals'], 
+                   body = df_master.loc[0, 'Free text'], 
+                   title = df_master.loc[0, 'Case name'], 
+                   before = df_master.loc[0, 'Before'], 
+                   catchwords = df_master.loc[0, 'Catchwords'], 
+                   party = df_master.loc[0, 'Party names'],
+                   mnc = df_master.loc[0, 'Medium neutral citation'], 
+                   startDate = df_master.loc[0, 'Decision date from'], 
+                   endDate = df_master.loc[0, 'Decision date to'],
+                   fileNumber = df_master.loc[0, 'File number'], 
+                   legislationCited = df_master.loc[0, 'Legislation cited'], 
+                   casesCited = df_master.loc[0, 'Cases cited'],
+                #pause = 0,
+                 judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                  )
 
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #Create a list of mncs
-    mnc_list = []
-
-    #Create list of relevant cases
-    for decision in query.results():
-        
-        if counter < judgment_counter_bound:
-
-            #Append to judgments_file to create df_individual
-            decision_w_meta = decision.values.copy()
-
-            #Create and mnc
-            mnc = split_title_mnc(decision_w_meta['title'])[1]
-            decision_w_meta.update({'mnc': mnc})
-            
-            #add search results to json
-            judgments_file.append(decision_w_meta)
-
-            #Add mnc to list for HuggingFace
-            mnc_list.append(mnc)
-            
-            counter +=1            
-            
-        else:
-            break
-
-    if huggingface == False: #If not running on HuggingFace
-
-        mnc_judgment_dict = {}
+    nsw_search.get_judgments()
     
-    else: #If running on HuggingFace    
+    for judgment_json in nsw_search.case_infos_w_judgments:
+
+        judgments_file.append(judgment_json)
     
-        #Get judgments from oalc first
-        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-
-    #Append judgment to judgments_file 
-    decision_counter = 0
-    for decision in judgments_file:
-        
-        #Append judgments from oalc first
-        if decision['mnc'] in mnc_judgment_dict.keys():
-            decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
-            print(f"{decision['title']} got judgment from OALC.")
-            
-        else: #Get case from Caselaw NSW if can't get from oalc
-            
-            for case in query.results():
-
-                case_meta = case.values.copy()
-                
-                if decision['mnc'] == split_title_mnc(case_meta['title'])[1]:
-                    
-                    try:
-                        case.fetch()
-                        case_w_meta_jugdment = case.values.copy()
-                        
-                        for key in case_w_meta_jugdment.keys():
-
-                            if key not in decision.keys():
-
-                                decision.update({key: case_w_meta_jugdment[key]})
-                            
-                        decision.update({'judgment': str(case_w_meta_jugdment)})
-
-                        print(f"{decision['title']} got judgment from NSW Caselaw directly.")
-                        
-                    except:
-                        decision.update({'judgment': ''})
-                        print(f'{decision["title"]}: judgment text scraping error.')
-
-                    #break
-
-                    #Pause only if need to get judgment from Caselaw NSW
-                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-
-        decision_counter += 1
-        
-        print(f"Scraped {decision_counter}/{min(len(mnc_list), judgment_counter_bound)} judgments.")
-
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
-    
-    #Check length of judgment text, replace with raw html if smaller than lower boound
-
-    for judgment_index in df_individual.index:
-
-        #Checking if judgment text has been Scraped or too short
-        try:
-            
-            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
-                    
-            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-
-                judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
-    
-                #attach judgment text
-                df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
-
-                #judgment_type_text[0] has judgment type, eg 'pdf'
-
-                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, Scraped whole judgment from NSW Caselaw again.')
-                
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-            
-        except Exception as e:
-            
-            df_individual.loc[judgment_index, "judgment"] = ''
-            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
-            print(e)
 
     #Instruct GPT
     
@@ -932,167 +775,39 @@ def nsw_batch(df_master):
      
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
-    #Do search
-
-    search_dict = {'body': df_master.loc[0, 'Free text']}
-    search_dict.update({'title': df_master.loc[0, 'Case name']})
-    search_dict.update({'before': df_master.loc[0, 'Before']})
-    search_dict.update({'catchwords': df_master.loc[0, 'Catchwords']})
-    search_dict.update({'party': df_master.loc[0, 'Party names']})
-    search_dict.update({'mnc': df_master.loc[0, 'Medium neutral citation']})
-    search_dict.update({'startDate': df_master.loc[0, 'Decision date from']})
-    search_dict.update({'endDate': df_master.loc[0, 'Decision date to']})
-    search_dict.update({'fileNumber': df_master.loc[0, 'File number']})
-    search_dict.update({'legislationCited': df_master.loc[0, 'Legislation cited']})
-    search_dict.update({'casesCited': df_master.loc[0, 'Cases cited']})
-    
-    df_master['SearchCriteria'] = [{}] * len(df_master)
-    
-    df_master['SearchCriteria'] = df_master['SearchCriteria'].astype(object)
-    
-    df_master.at[0, 'SearchCriteria'] = search_dict
-
-    #Conduct search
-    
-    query = nsw_search(courts=df_master.loc[0, 'Courts'], 
-                   tribunals=df_master.loc[0, 'Tribunals'], 
-                   body = df_master.loc[0, "SearchCriteria"]['body'], 
-                   title = df_master.loc[0, "SearchCriteria"]['title'], 
-                   before = df_master.loc[0, "SearchCriteria"]['before'], 
-                   catchwords = df_master.loc[0, "SearchCriteria"]['catchwords'], 
-                   party = df_master.loc[0, "SearchCriteria"]['party'], 
-                   mnc = df_master.loc[0, "SearchCriteria"]['mnc'], 
-                   startDate = nsw_date(df_master.loc[0, "SearchCriteria"]['startDate']), 
-                   endDate = nsw_date(df_master.loc[0, "SearchCriteria"]['endDate']),
-                   fileNumber = df_master.loc[0, "SearchCriteria"]['fileNumber'], 
-                   legislationCited  = df_master.loc[0, "SearchCriteria"]['legislationCited'], 
-                   casesCited = df_master.loc[0, "SearchCriteria"]['casesCited'],
-                   pause = 0
-                  )
-
     #Create judgments file
     judgments_file = []
 
-    #Counter to limit search results to append
-    counter = 0
-
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #st.write(f"judgment_counter_bound == {judgment_counter_bound}")
-
-    #Create a list of mncs
-    mnc_list = []
-
-    #Create list of relevant cases
-    for decision in query.results():
-        
-        if counter < judgment_counter_bound:
-
-            #Append to judgments_file to create df_individual
-            decision_w_meta = decision.values.copy()
-
-            #Create and mnc
-            mnc = split_title_mnc(decision_w_meta['title'])[1]
-            decision_w_meta.update({'mnc': mnc})
-            
-            #add search results to json
-            judgments_file.append(decision_w_meta)
-
-            #Add mnc to list for HuggingFace
-            mnc_list.append(mnc)
-            
-            counter +=1            
-            
-        else:
-            break
+    #Conduct search
     
-    if huggingface == False: #If not running on HuggingFace
+    nsw_search = nsw_search_tool(courts = df_master.loc[0, 'Courts'], 
+                   tribunals = df_master.loc[0, 'Tribunals'], 
+                   body = df_master.loc[0, 'Free text'], 
+                   title = df_master.loc[0, 'Case name'], 
+                   before = df_master.loc[0, 'Before'], 
+                   catchwords = df_master.loc[0, 'Catchwords'], 
+                   party = df_master.loc[0, 'Party names'],
+                   mnc = df_master.loc[0, 'Medium neutral citation'], 
+                   startDate = df_master.loc[0, 'Decision date from'], 
+                   endDate = df_master.loc[0, 'Decision date to'],
+                   fileNumber = df_master.loc[0, 'File number'], 
+                   legislationCited = df_master.loc[0, 'Legislation cited'], 
+                   casesCited = df_master.loc[0, 'Cases cited'],
+                #pause = 0,
+                 judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+                  )
 
-        mnc_judgment_dict = {}
+    nsw_search.get_judgments()
     
-    else: #If running on HuggingFace    
+    for judgment_json in nsw_search.case_infos_w_judgments:
+
+        judgments_file.append(judgment_json)
     
-        #Get judgments from oalc first
-        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-
-    #Append judgment to judgments_file
-    decision_counter = 0
-    for decision in judgments_file:
-        
-        #Append judgments from oalc first
-        if decision['mnc'] in mnc_judgment_dict.keys():
-            decision.update({'judgment': mnc_judgment_dict[decision['mnc']]})
-            print(f"{decision['title']} got judgment from OALC.")
-            
-        else: #Get case from Caselaw NSW if can't get from oalc
-            
-            for case in query.results():
-
-                case_meta = case.values.copy()
-
-                #st.write(case_meta)
-                
-                if decision['mnc'] == split_title_mnc(case_meta['title'])[1]:
-                    try:
-                        case.fetch()
-                        case_w_meta_jugdment = case.values.copy()
-
-                        for key in case_w_meta_jugdment.keys():
-
-                            if key not in decision.keys():
-
-                                decision.update({key: case_w_meta_jugdment[key]})
-                        
-                        decision.update({'judgment': str(case_w_meta_jugdment)})
-
-                        print(f"{decision['title']} got judgment from NSW Caselaw directly.")
-                        
-                    except:
-                        decision.update({'judgment': ''})
-                        print(f'{decision["title"]}: judgment text scraping error.')
-
-                    #break
-                
-                    #Pause only if need to get judgment from Caselaw NSW
-                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-                
-        decision_counter += 1
-        
-        print(f"Scraped {decision_counter}/{min(len(mnc_list), judgment_counter_bound)} judgments.")
-
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
     df_individual = pd.read_json(json_individual)
-
-    #Check length of judgment text, replace with raw html if smaller than lower boound
-
-    for judgment_index in df_individual.index:
-
-        #Checking if judgment text has been Scraped or too short
-        try:
-            
-            judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
-                    
-            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-
-                judgment_type_text = nsw_short_judgment(df_individual.loc[judgment_index, "uri"])
     
-                #attach judgment text
-                df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
-
-                #judgment_type_text[0] has judgment type, eg 'pdf'
-
-                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, Scraped whole judgment from NSW Caselaw again.')
-                
-                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-            
-        except Exception as e:
-            
-            df_individual.loc[judgment_index, "judgment"] = ''
-            print(f'{df_individual.loc[judgment_index, "title"]}: judgment text scraping error.')
-            print(e)
-
     #Instruct GPT
     
     #GPT model
