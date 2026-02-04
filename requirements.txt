@@ -24,7 +24,7 @@ pyxlsb==1.0.10
 #scikit-learn==1.6.1
 #scipy==1.10.1
 selenium==4.30.0
-selenium-stealth==1.0.6
+#selenium-stealth==1.0.6
 streamlit==1.51.0
 streamlit-extras==0.5.0
 requests==2.32.5

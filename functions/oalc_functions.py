@@ -255,11 +255,13 @@ def get_judgment_from_oalc(mnc_list):
                 
                 print(f"Can't get case from OALC after {try_counter} try due to error: {e}")
 
-                print(f"Response from huggingface = data == {data}")
+                print(f"data == {data}")
 
                 try_counter += 1
 
-                pause.seconds(20)
+                if try_counter < try_max:
+
+                    pause.seconds(20)
 
         #Remove any blank or very short judgments
         mncs_to_pop = []

@@ -92,7 +92,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
-from selenium_stealth import stealth
+import undetected_chromedriver as uc
 
 if 'Users/Ben' not in os.getcwd(): 
 
@@ -104,47 +104,36 @@ if 'Users/Ben' not in os.getcwd():
 #For downloading judgments
 download_dir = os.getcwd() + '/FCA_PDFs'
 
-#@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
+    # Use uc options (ChromeOptions compatible)
+    options = uc.ChromeOptions()
 
-    options = Options()
-    
-    #For automation
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-    
-    #For downloading judgments
-    options.add_experimental_option('prefs', {
-    "download.default_directory": download_dir, #Change default directory for downloads
-    "download.prompt_for_download": False, #To auto download the file
-    "download.directory_upgrade": True,
-    "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
-    })
-    
-    browser = webdriver.Chrome(options=options)
+    # ---- Download prefs ----
+    prefs = {
+        "download.default_directory": download_dir,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True
+    }
+    options.add_experimental_option("prefs", prefs)
+
+    # Good practice flags (esp. on CI/containers)
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    # Create undetected driver
+    browser = uc.Chrome(
+        options=options,
+        # If you want uc to try to manage the driver automatically:
+        use_subprocess=True,
+    )
 
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(30)
 
-    stealth(browser,
-    
-            languages=["en-US", "en"],
-    
-            vendor="Google Inc.",
-    
-            platform="Win32",
-    
-            webgl_vendor="Intel Inc.",
-    
-            renderer="Intel Iris OpenGL Engine",
-    
-            webdriver=False,
-    
-            fix_hairline=True)
-    
-    if 'Users/Ben' in os.getcwd():
-        browser.minimize_window()
-    
+    #if 'Users/Ben' in os.getcwd():
+        #browser.minimize_window()
+
     return browser
 
 
