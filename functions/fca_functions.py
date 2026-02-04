@@ -79,38 +79,6 @@ from functions.oalc_functions import get_judgment_from_oalc
 from functions.common_functions import link, split_title_mnc
 
 # %%
-#Define format functions for courts choice, and GPT questions
-
-#auxiliary lists and variables
-
-fca_courts = {'Federal Court': 'FCA+FCAFC', 
-              'Industrial Relations Court of Australia': 'IRCA', 
-              'Australian Competition Tribunal': 'ACOMPT', 
-              'Copyright Tribunal': 'ACOPYT', 
-              'Defence Force Discipline Appeal Tribunal': 'ADFDAT', 
-              'Federal Police Discipline Tribunal': 'FPDT', 
-              'Trade Practices Tribunal': 'ATPT', 
-              'Supreme Court of Norfolk Island': 'NFSC',
-             'All': 'FCA+FCAFC+IRCA+ACOMPT+ACOPYT+ADFDAT+FPDT+ATPT+NFSC'}
-
-fca_courts_list = list(fca_courts.keys())
-
-# %%
-npa_dict = {'All': '', 
-    'Admin., Constitutional, Human Rights': 'administrative', 
-  'Admiralty and Maritime': 'admiralty', 
-  'Commercial and Corporations': 'commercial', 
-  'Employment and Industrial Relations': 'employment', 
-  'Federal Crime and Related Proceedings': 'crime', 
-  'Intellectual Property': 'intellectual', 
-  'Native Title': 'native', 
-  'Taxation': 'taxation',
-      'Other Federal Jurisdiction': 'other',
-    }
-
-npa_list = list(npa_dict.keys())
-
-# %%
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -182,351 +150,45 @@ def get_driver():
 
 
 # %%
-#Function turning search terms to search results url
+#Define format functions for courts choice, and GPT questions
 
-#@st.cache_data(show_spinner = False)
-def fca_search(court = '', 
-               case_name_mnc= '', 
-               judge ='', 
-               reported_citation ='', 
-               file_number ='', 
-               npa = '', 
-               with_all_the_words = '', 
-               with_at_least_one_of_the_words = '', 
-               without_the_words = '', 
-               phrase = '', 
-               proximity = '', 
-               on_this_date = '', 
-               after_date = '', 
-               before_date = '', 
-               legislation = '', 
-               cases_cited = '', 
-               catchwords = ''):
+#auxiliary lists and variables
 
-    #If only searching FCA
-    #base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2Ffca"
+fca_courts = {'All': 'FCA+FCAFC+IRCA+ACOMPT+ACOPYT+ADFDAT+FPDT+ATPT+NFSC',
+              'Federal Court': 'FCA+FCAFC', 
+              'Industrial Relations Court of Australia': 'IRCA', 
+              'Australian Competition Tribunal': 'ACOMPT', 
+              'Copyright Tribunal': 'ACOPYT', 
+              'Defence Force Discipline Appeal Tribunal': 'ADFDAT', 
+              'Federal Police Discipline Tribunal': 'FPDT', 
+              'Trade Practices Tribunal': 'ATPT', 
+              'Supreme Court of Norfolk Island': 'NFSC',
+             }
 
-    #If allowing users to search which court
-    #base_url = "https://search2.fedcourt.gov.au/s/search.html?collection=judgments&sort=date&meta_v_phrase_orsand=judgments%2FJudgments%2F" + fca_courts[court]
-
-    #New base_url as of 20250415
-    #base_url = "https://search.judgments.fedcourt.gov.au/s/search.html"
-
-    base_url = 'https://search.judgments.fedcourt.gov.au/s/search.html?collection=fca~sp-judgments-internet&profile=judgments-internet&sort=date&meta_CourtID_orsand=' + fca_courts[court] 
-    
-    #Tidy up dates for batch mode
-    if '-' in str(after_date):
-        after_date = str(after_date).replace('-', '')
-
-    if '/' in str(after_date):
-        after_date = str(after_date).replace('/', '')
-    
-    if '-' in str(before_date):
-        before_date = str(before_date).replace('-', '')
-
-    if '/' in str(after_date):
-        before_date = str(before_date).replace('/', '')
-    
-    params = {
-        #'collection': 'fca~sp-judgments-internet', 
-        #'profile': 'judgments-internet',
-        #'sort': 'date', 
-        #'meta_CourtID_orsand': fca_courts[court], 
-        'meta_MNC' : case_name_mnc, 
-              'meta_Judge' : judge, 
-              'meta_Reported' : reported_citation, 
-              'meta_FileNumber' : file_number, 
-              'meta_NPA_phrase_orsand' : npa_dict[npa], 
-              'query_sand' : with_all_the_words, 
-              'query_or' : with_at_least_one_of_the_words, 
-              'query_not' : without_the_words, 
-              'query_phrase' : phrase, 
-              'query_prox' : proximity, 
-              'meta_d' : on_this_date, 
-              'meta_d1' : after_date, 
-              'meta_d2' : before_date, 
-              'meta_Legislation' : legislation, 
-              'meta_CasesCited' : cases_cited, 
-              'meta_Catchwords' : catchwords}
-    
-    #response = requests.get(base_url, params=params)
-    #response.raise_for_status()
-    #Get search url
-    #results_url = response.url
-
-    #Update results_url
-    params_for_selenium = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
-    results_url = base_url + '&' + params_for_selenium
-    
-    #st.write(f"results_url == {results_url}")
-    
-    #Initialise the number of search results
-    results_count = int(0)
-
-    #Initialise default soup
-    soup = ''
-    
-    try:
-        #soup = BeautifulSoup(response.content, "lxml")
-
-        browser = get_driver()
-        
-        browser.get(results_url)
-        
-        #print(f"soup == {soup}")
-
-        #Wait until number of search results present
-        loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//p[@class='txarial']")))
-
-        pause.seconds(5)
-        
-        soup = BeautifulSoup(browser.page_source, "lxml")
-        
-        results_num_raw = soup.find('p', {'class': 'txarial'})
-
-        #print(f"results_num_raw == {results_num_raw}")
-
-        results_num_raw_text = results_num_raw.get_text(strip = True)
-
-        #print(f"results_num_raw_text == {results_num_raw_text}")
-        
-        results_count = results_num_raw_text.split('\n')[0].split(' ')[-1]
-        
-        results_count = results_count.replace(',', '').replace('.', '')
-
-        #print(f"results_count == {results_count}")
-
-        results_count = int(float(results_count))
-
-        browser.quit()
-
-        pause.seconds(np.random.randint(15, 20))
-    
-    except Exception as e:
-        
-        print(f"Can't get search results due to error: {e}")
-
-    return {'soup': soup, 'results_url': results_url, 'results_count': results_count}
-
+fca_courts_list = list(fca_courts.keys())
 
 # %%
-#Define function turning search results url to case_infos to judgments
+npa_dict = {'All': '', 
+    'Admin., Constitutional, Human Rights': 'administrative', 
+  'Admiralty and Maritime': 'admiralty', 
+  'Commercial and Corporations': 'commercial', 
+  'Employment and Industrial Relations': 'employment', 
+  'Federal Crime and Related Proceedings': 'crime', 
+  'Intellectual Property': 'intellectual', 
+  'Native Title': 'native', 
+  'Taxation': 'taxation',
+      'Other Federal Jurisdiction': 'other',
+    }
 
-#@st.cache_data(show_spinner = False, ttl=600)
-def fca_search_results_to_judgment_links(_soup, url_search_results, results_count, judgment_counter_bound):
+npa_list = list(npa_dict.keys())
 
-    #st.write(f"type(_soup) == {type(_soup)}")
-    
-    #_soup is from scraping per fca_search
-    if not isinstance(_soup, BeautifulSoup):
-
-        _soup = BeautifulSoup(_soup, "lxml")
-    
-    #Start counter
-
-    counter = 0
-    
-    # Get case_infos of first 20 results
-    
-    case_infos = []
-
-    results_list = _soup.find_all('div', attrs={'class' : 'result'})
-
-    #print(f'At initial , len(results_list) == {len(results_list)}')
-    
-    for result in results_list:
-        
-        if counter < judgment_counter_bound:
-
-            #Initialise default values
-            title = ''
-            case_name = ''
-            mnc = ''
-            link_to_case = ''
-            date = ''
-            judge = ''
-            catchwords = ''
-            subject = ''
-            
-            #Get full title
-            
-            title = result.h3.get_text(strip = True)
-
-            #Get PDF status
-            pdf_status = False
-            
-            if '(pdf' in title.lower():
-                
-                pdf_status = True
-            
-            #Get case name and mnc
-            case_name_mnc = split_title_mnc(title)
-            
-            case_name = case_name_mnc[0]
-            
-            mnc = case_name_mnc[1]
-            
-            if '(PDF' in mnc:
-                mnc = mnc.replace('(PDF', '')
-            
-            #Get link to case
-            link_to_case = result.h3.find('a').get('href')
-
-            #Get decision date, subject area, judge
-            date_area_court_str = str(result.find('p', attrs={'class' : 'meta'}))
-            date_area_court_raw = str(date_area_court_str).split('<span class="divide"></span>')
-
-            date = date_area_court_raw[0].replace('<p class="meta">', '')
-            
-            if len(date) > 0:
-                if date[-1] == ' ':
-                    date = date[: -1]
-            
-            judge = date_area_court_raw[-1].replace('</p>', '')
-            
-            subject = result.find('p', attrs={'class' : 'meta'}).text.replace(date, '').replace(judge, '')
-            
-            if len(subject) > 0:
-                if subject[0] == ' ':
-                    subject = subject[1:]
-
-            #Get catchwords
-            catchwords = ''
-            try:
-                catchwords = result.find('p', attrs={'class' : 'summary'}).get_text(strip = True)
-            except:
-                print(f"{case_name}: can't get catchwords")
-            
-            case_info = {'Case name': case_name,
-                 'Medium neutral citation': mnc,
-                'Hyperlink to Federal Court Digital Law Library' : link_to_case,
-                'Judge': judge,
-                 'Judgment_Dated' : date,  
-                 'Catchwords' : catchwords,  
-                 'Subject' : subject,
-                'Judgment in PDF': pdf_status
-                        }
-            case_infos.append(case_info)
-            counter = counter + 1
-            #print(counter)
-
-    #Go beyond first 20 results
-    #20 results per page. Each page url ends with 20*(page number - 1) + 1
-    page_count = math.ceil(results_count/20)
-
-    further_page_ending_list = []
-
-    for page in range(2, page_count + 1):
-
-        further_page_ending = 20*(page - 1) + 1
-
-        further_page_ending_list.append(further_page_ending)
-    
-    for ending in further_page_ending_list:
-        
-        if counter < min(results_count, judgment_counter_bound):
-
-            pause.seconds(np.random.randint(15, 20))
-
-            url_next_page = url_search_results + '&start_rank=' + f"{ending}"
-            
-            #page_judgment_next_page = requests.get(url_next_page)
-            #soup_judgment_next_page = BeautifulSoup(page_judgment_next_page.content, "lxml")
-
-            browser = get_driver()
-            
-            browser.get(url_next_page)
-    
-            #Wait until any search results present
-            loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@class='search-results']")))
-
-            pause.seconds(5)
-            
-            soup_judgment_next_page = BeautifulSoup(browser.page_source, "lxml")
-
-            browser.quit()
-
-            #print(f"Searching url_next_page == {url_next_page}")
-            
-            results_list = soup_judgment_next_page.find_all('div', attrs={'class' : 'result'})
-
-            #print(f'At page ending {ending}, len(results_list) == {len(results_list)}')
-
-            #Check if stll more results
-            if len(results_list) == 0:
-                break
-                
-            else:
-                for result in results_list:
-                    if counter < judgment_counter_bound:
-            
-                        #Initialise default values
-                        title = ''
-                        case_name = ''
-                        mnc = ''
-                        link_to_case = ''
-                        date = ''
-                        judge = ''
-                        catchwords = ''
-                        subject = ''
-                        
-                        #Get full title
-                        
-                        title = result.h3.get_text(strip = True)
-            
-                        #Get case name and mnc
-                        case_name_mnc = split_title_mnc(title)
-                        
-                        case_name = case_name_mnc[0]
-                        
-                        mnc = case_name_mnc[1]
-                        
-                        if '(PDF' in mnc:
-                            mnc = mnc.replace('(PDF', '')
-                        
-                        #Get link to case
-                        link_to_case = result.h3.find('a').get('href')
-            
-                        #Get decision date, subject area, judge
-                        date_area_court_str = str(result.find('p', attrs={'class' : 'meta'}))
-                        date_area_court_raw = str(date_area_court_str).split('<span class="divide"></span>')
-            
-                        date = date_area_court_raw[0].replace('<p class="meta">', '')
-                        
-                        if len(date) > 0:
-                            if date[-1] == ' ':
-                                date = date[: -1]
-                        
-                        judge = date_area_court_raw[-1].replace('</p>', '')
-                        
-                        subject = result.find('p', attrs={'class' : 'meta'}).text.replace(date, '').replace(judge, '')
-                        
-                        if len(subject) > 0:
-                            if subject[0] == ' ':
-                                subject = subject[1:]
-            
-                        #Get catchwords
-                        catchwords = ''
-                        try:
-                            catchwords = result.find('p', attrs={'class' : 'summary'}).get_text(strip = True)
-                        except:
-                            print(f"{case_name}: can't get catchwords")
-                            
-                        case_info = {'Case name': case_name,
-                             'Medium neutral citation': mnc,
-                            'Hyperlink to Federal Court Digital Law Library' : link_to_case,
-                            'Judge': judge,
-                             'Judgment_Dated' : date,  
-                             'Catchwords' : catchwords,  
-                             'Subject' : subject,  
-                                    }
-                        case_infos.append(case_info)
-                        counter = counter + 1
-                        #print(counter)
-
-                        #print(f'len(case_infos) == {len(case_infos)}')
-
-    return case_infos
+# %%
+sort_dict = {"Relevance": "",
+    "Most Recent": "date",
+    "Least Recent": "adate",
+    "Title Ascending": "metaMNC",
+    "Title Descending": "dmetaMNC",
+    }
 
 
 # %%
@@ -537,135 +199,583 @@ fca_metalabels = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'C
 fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_Dated', 'Catchwords', 'Subject', 'Words_Phrases', 'Legislation', 'Cases_Cited', 'Division', 'NPA', 'Sub_NPA', 'Pages', 'All_Parties', 'Jurisdiction', 'Reported', 'Summary', 'Corrigenda', 'Parties', 'Date.published', 'Appeal_to', 'Order']
 #'FileName', 'Asset_ID', 
 
-#@st.cache_data(show_spinner = False)
-def fca_meta_judgment_dict(case_info):
-    
-    judgment_dict = copy.deepcopy(case_info)
-    
-    judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
 
-    #Make hyperlink clickable    
-    judgment_dict['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
+# %%
+class fca_search_tool:
 
-    #Get judgment text
-    judgment_text = ''
+    def __init__(self,
+                court = list(fca_courts.keys())[0], 
+                case_name_mnc= None, 
+                judge =None, 
+                reported_citation =None, 
+                file_number =None, 
+                npa = list(npa_dict.keys())[0], 
+                with_all_the_words = None, 
+                with_at_least_one_of_the_words = None, 
+                without_the_words = None, 
+                phrase = None, 
+                proximity = None, 
+                on_this_date = None, 
+                after_date = None, 
+                before_date = None, 
+                legislation = None, 
+                cases_cited = None, 
+                catchwords = None,
+                 sort = list(sort_dict.keys())[0], 
+                judgment_counter_bound = default_judgment_counter_bound
+                ):
 
+        #Initialise parameters
+        self.court = court
+        self.case_name_mnc= case_name_mnc
+        self.judge =judge
+        self.reported_citation =reported_citation
+        self.file_number =file_number
+        self.npa = npa
+        self.with_all_the_words = with_all_the_words
+        self.with_at_least_one_of_the_words = with_at_least_one_of_the_words
+        self.without_the_words = without_the_words
+        self.phrase = phrase
+        self.proximity = proximity
+        self.on_this_date = on_this_date
+        self.after_date = after_date
+        self.before_date = before_date
+        self.legislation = legislation
+        self.cases_cited = cases_cited
+        self.catchwords = catchwords
+        self.sort = sort
 
-    #Check if getting taken to a PDF
-    if 'Judgment in PDF' not in judgment_dict.keys():
-
-        judgment_dict.update({'Judgment in PDF': False})
-    
-    #Check if not taken to a PDF
-    if not bool(judgment_dict['Judgment in PDF']):
-    
-        try:
-            
-            #page = requests.get(judgment_url)
-            
-            #soup = BeautifulSoup(page.content, "lxml")
-
-            browser = get_driver()
-            browser.get(judgment_url)
-    
-            #Wait until judgment present
-            loaded = Wait(browser, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@class='judgment_content']")))
-
-            pause.seconds(5)
-            
-            soup = BeautifulSoup(browser.page_source, "lxml")
-            
-            browser.quit()
-            
-            #Attach judgment
-            try:
-
-                #judgment_text_list_raw = soup.find_all("div", {"class": "judgment_content"})
-
-                #print(f"{judgment_dict['Case name']}: judgment_text_list_raw == {judgment_text_list_raw}")
-
-                #judgment_text_list = [x.get_text(separator="\n", strip=True) for x in judgment_text_list_raw]
-
-                #judgment_text = '\n'.join(judgment_text_list)
-
-                judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
-                
-                #print(f"{judgment_dict['Case name']}: judgment_text == {judgment_text}")
-                
-            except:
-                
-                judgment_text = soup.get_text(separator="\n", strip=True)
-
-            #Attach meta tags
-            meta_tags = soup.find_all("meta")
+        self.judgment_counter_bound = judgment_counter_bound
         
-            #Attach meta tags
-            if len(meta_tags)>0:
-                for tag_index in range(len(meta_tags)):
-                    meta_name = meta_tags[tag_index].get("name")
-                    if meta_name in fca_metalabels:
-                        meta_content = meta_tags[tag_index].get("content")
-                        judgment_dict.update({meta_name: meta_content})
+        self.page = 1
+                
+        self.results_count = 0
+
+        self.total_pages = 1
+        
+        self.results_url = ''
+
+        self.results_url_to_show = ''
+        
+        self.soup = None
+        
+        self.case_infos = []
+
+        self.case_infos_w_judgments = []
+        
+        #For getting judgment directly from FCA database if can't get from OALC
+        self.case_infos_direct = []
+
+    #Function for getting case infos from search results page
+    def get_case_infos(self):
+        
+        results_list = self.soup.find_all('div', attrs={'class' : 'result'})
+            
+        for result in results_list:
+            
+            if len(self.case_infos) < min(self.judgment_counter_bound, self.results_count):
+    
+                #Initialise default values
+                title = ''
+                case_name = ''
+                mnc = ''
+                link_to_case = ''
+                date = ''
+                judge = ''
+                catchwords = ''
+                subject = ''
+                
+                #Get full title
+                
+                title = result.h3.get_text(strip = True)
+    
+                #Get PDF status
+                pdf_status = False
+                
+                if '(pdf' in title.lower():
+                    
+                    pdf_status = True
+                
+                #Get case name and mnc
+                case_name_mnc = split_title_mnc(title)
+                
+                case_name = case_name_mnc[0]
+                
+                mnc = case_name_mnc[1]
+                
+                if '(PDF' in mnc:
+                    mnc = mnc.replace('(PDF', '')
+                
+                #Get link to case
+                link_to_case = result.h3.find('a').get('href')
+    
+                #Get decision date, subject area, judge
+                date_area_court_str = str(result.find('p', attrs={'class' : 'meta'}))
+                date_area_court_raw = str(date_area_court_str).split('<span class="divide"></span>')
+    
+                date = date_area_court_raw[0].replace('<p class="meta">', '')
+                
+                if len(date) > 0:
+                    if date[-1] == ' ':
+                        date = date[: -1]
+                
+                judge = date_area_court_raw[-1].replace('</p>', '')
+                
+                subject = result.find('p', attrs={'class' : 'meta'}).text.replace(date, '').replace(judge, '')
+                
+                if len(subject) > 0:
+                    if subject[0] == ' ':
+                        subject = subject[1:]
+    
+                #Get catchwords
+                catchwords = ''
+                try:
+                    catchwords = result.find('p', attrs={'class' : 'summary'}).get_text(strip = True)
+                except:
+                    print(f"{case_name}: can't get catchwords")
+                
+                case_info = {'Case name': case_name,
+                     'Medium neutral citation': mnc,
+                    'Hyperlink to Federal Court Digital Law Library' : link_to_case,
+                    'Judge': judge,
+                     'Judgment_Dated' : date,  
+                     'Catchwords' : catchwords,  
+                     'Subject' : subject,
+                    'Judgment in PDF': pdf_status
+                            }
+                self.case_infos.append(case_info)
+    
+    #Function for getting search results
+    def search(self):
+
+        #Reset infos of cases found
+        self.case_infos = []
+        
+        params_raw = []
+        
+        base_url = 'https://www.fedcourt.gov.au/digital-law-library/judgments/search'
+
+        #Url for selenium to start
+
+        self.results_url = base_url
+        
+        #Before entering year, justice or CLR, must enter keywords or case number first, then load
+
+        browser = get_driver()
+        
+        browser.get(self.results_url)
+
+        #Clear form first
+        clear_form = Wait(browser, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a.clear-form")))
+        clear_form.click()
+        
+        # Wait for the Court dropdown
+        court_select_el = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "scope")))
+        court_select = Select(court_select_el)
+        
+        if self.court != list(fca_courts.keys())[0]:
+            
+            court_select.select_by_value(fca_courts[self.court])
+        
+        # Wait for the NPA dropdown
+        npa_select_el = Wait(browser, 15).until(EC.presence_of_element_located((By.ID, "NPA")))
+        npa_select = Select(npa_select_el)
+        
+        if self.npa != list(npa_dict.keys())[0]:
+            npa_select.select_by_visible_text(npa_dict[self.npa])
+        
+        # Case Name / MNC
+        case_name = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "caseName")))
+        
+        if (not pd.isna(self.case_name_mnc)) and (not self.case_name_mnc == None) and (not str(self.case_name_mnc) == 'None'):
+            
+            case_name.send_keys(self.case_name_mnc)
+        
+        # Judge
+        judge = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "searchJudge")))
+        
+        if (not pd.isna(self.judge)) and (not self.judge == None) and (not str(self.judge) == 'None'):
+        
+            judge.send_keys(self.judge)
+        
+        # Reported Citation
+        reported = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "searchReportedCitation")))
+        
+        if (not pd.isna(self.reported_citation)) and (not self.reported_citation == None) and (not str(self.reported_citation) == 'None'):
+            
+            reported.send_keys(self.reported_citation)
+        
+        # File number
+        file_no = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "searchFileNumber")))
+        
+        if (not pd.isna(self.file_number)) and (not self.file_number == None) and (not str(self.file_number) == 'None'):
+            
+            file_no.send_keys(self.file_number)
+            
+        #Click the "Full Text & Proximity" accordion full_text_tab
+        full_text_tab = Wait(browser, 15).until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, 'h2.accordion a[href="#fulltext"]')
+        ))
+        full_text_tab.click()
+        
+        # Wait for a field inside the section to be visible (means it's "opened")
+        Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "allWords")))
+        
+        #With ALL the words, With at least one of the words, Without the words, Phrase, and Proximity
+        all_words = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "allWords")))
+        
+        if (not pd.isna(self.with_all_the_words)) and (not self.with_all_the_words == None) and (not str(self.with_all_the_words) == 'None'):
+        
+            all_words.send_keys(self.with_all_the_words)
+        
+        one_word = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "oneWord")))
+        
+        if (not pd.isna(self.with_at_least_one_of_the_words)) and (not self.with_at_least_one_of_the_words == None) and (not str(self.with_at_least_one_of_the_words) == 'None'):
+            
+            one_word.send_keys(self.with_at_least_one_of_the_words)
+        
+        without_words = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "withoutWords")))
+        
+        if (not pd.isna(self.without_the_words)) and (not self.without_the_words == None) and (not str(self.without_the_words) == 'None'):
+            
+            without_words.clear()
+            without_words.send_keys(self.without_the_words)
+        
+        phrase = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "phrase")))
+        
+        if (not pd.isna(self.phrase)) and (not self.phrase == None) and (not str(self.phrase) == 'None'):
+            
+            phrase.send_keys(self.phrase)
+        
+        proximity = Wait(browser, 15).until(EC.element_to_be_clickable((By.ID, "proximity")))
+        
+        if (not pd.isna(self.proximity)) and (not self.proximity == None) and (not str(self.proximity) == 'None'):
+            
+            proximity.send_keys(self.proximity)
+        
+        
+        #Click the Date tab
+        date_tab = Wait(browser, 15).until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, 'h2.accordion a[href="#date"]')
+        ))
+        date_tab.click()
+        
+        # Wait until a field inside the Date section is visible
+        Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "date-specific")))
+        
+        #On this date, After and Before
+        on_this_date = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "date-specific")))
+        
+        if (not pd.isna(self.on_this_date)) and (not self.on_this_date == None) and (not str(self.on_this_date) == 'None'):
+            
+            on_this_date.send_keys(self.on_this_date)
+        
+        date_from = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "date-from")))
+        
+        if (not pd.isna(self.after_date)) and (not self.after_date == None) and (not str(self.after_date) == 'None'):
+            
+            date_from.send_keys(self.after_date)
+        
+        date_to = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "date-to")))
+        
+        if (not pd.isna(self.before_date)) and (not self.before_date == None) and (not str(self.before_date) == 'None'):
+
+            date_to.send_keys(self.before_date)
+        
+        # Click the Legislation accordion tab
+        leg_tab = Wait(browser, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'h2.accordion a[href="#legislation"]')))
+        leg_tab.click()
+        
+        #Legislation, Cases Cited, and Catchwords?
+        
+        legislation = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "searchLegislation")))
+        
+        if (not pd.isna(self.legislation)) and (not self.legislation == None) and (not str(self.legislation) == 'None'):
+            
+            legislation.send_keys(self.legislation)
+        
+        cases_cited = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "searchCasesCited")))
+        
+        if (not pd.isna(self.cases_cited)) and (not self.cases_cited == None) and (not str(self.cases_cited) == 'None'):
+            
+            cases_cited.send_keys(self.cases_cited)
+        
+        catchwords = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, "searchCatchwords")))
+        
+        if (not pd.isna(self.catchwords)) and (not self.catchwords == None) and (not str(self.catchwords) == 'None'):
                         
-        except Exception as e:
-            
-            print(f"{judgment_dict['Case name']}: can't get html judgment or meta due to error {e}.")
-            
-    #Check if gets taken to a PDF
-    else:
+            catchwords.send_keys(self.catchwords)
+
+        #Submit
+        search_button = Wait(browser, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'fieldset.actions input[type="submit"][value="Search"]')))
+        search_button.click()
+
+        #Wait until number of search results present
+        RESULT_CARD    = (By.CSS_SELECTOR, "#fb-results .result")
+        NO_RESULTS_BOX = (By.ID, "fb-no-results")
         
-        print(f"{judgment_dict['Case name']}: trying to get pdf judgment")
-        
-        #Get judgment pdf text
-        try:
-            
-            #judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
-
-            browser = get_driver()
-            browser.get(judgment_url)
-            
-            pdf_file = judgment_url.split('/')[-1]    
-
-            pdf_file = urllib.parse.unquote(pdf_file)
-            
-            pdf_path = f"{download_dir}/{pdf_file.upper()}.pdf"
-
-            #Limiting waiting time for downloading PDF to 1 min
-            
-            waiting_counter = 0
-            
-            while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
-                pause.seconds(5)
-                waiting_counter += 1
-                            
-            print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
-
-            judgment_text = pdf_judgment(url_or_path = pdf_path, url_given = False)
-                                                                
-            #MUST remove pdf from download folder automatically or manually
-            os.remove(pdf_path)
-
-            browser.quit()
-            
-        except Exception as e:
-            
-            print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
-
-    judgment_dict['judgment'] = judgment_text
+        Wait(browser, 15).until(EC.any_of(
+            EC.presence_of_element_located(RESULT_CARD),
+            EC.presence_of_element_located(NO_RESULTS_BOX),
+        ))
     
-    return judgment_dict
+        #If positive results found
+        if browser.find_elements(*RESULT_CARD):
+    
+            summary = Wait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".tools p.txarial")))
+            m = re.search(r"\bof\s+([\d,]+)\b", summary.text)
+            results_count = int(m.group(1).replace(",", "")) if m else 0
+    
+            #Update self.results_count
+            self.results_count = results_count
+
+        #Update self.results_url
+        self.results_url = browser.current_url
+
+        print(f"There are {self.results_count} search results from self.results_url == {self.results_url}")
+        
+        #If at least 1 result
+        if self.results_count > 0:
+
+            #Get page count
+            #20 results per page. Each page url ends with 20*(page number - 1) + 1
+            self.total_pages = math.ceil(self.results_count/20)
+
+            #Sort results
+            # Wait until the select exists
+            sort_select_el = Wait(browser, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, "form.updateSort select[name='sort']")))
+            sort_select = Select(sort_select_el)
+            
+            if self.sort != list(sort_dict.keys())[0]:
+    
+                sort_select.select_by_value(sort_dict[self.sort])
+                
+                # Click Sort button
+                sort_button = Wait(browser, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, "form.updateSort input[type='submit']")))
+                sort_button.click()
+                
+                # Wait for navigation to complete (URL contains sort=adate)
+                Wait(browser, 15).until(lambda d: f"sort={sort_dict[self.sort]}" in d.current_url)
+
+            #Wait search results present
+            loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#fb-results .result h3 a")))
+            
+            #Update self.soup
+            self.soup = BeautifulSoup(browser.page_source, "lxml")
+
+            for page in range(0, self.total_pages):
+
+                if len(self.case_infos) < min(self.results_count, self.judgment_counter_bound):
+                    
+                    #Update self.soup from new page if necessary
+                    if page > 0:
+    
+                        #Pause to avoid getting kicked out
+                        pause.seconds(np.random.randint(10, 15))
+
+                        next20 = Wait(browser, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[rel="next"].fb-next-result-page')))
+                        next20.click()
+                        
+                        #Wait until search results present, if any
+                        loaded = Wait(browser, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#fb-results .result h3 a")))
+
+                        #Update self.soup
+                        self.soup = BeautifulSoup(browser.page_source, "lxml")
+
+                    print(f"Getting results from page {page} (0 denotes first page)")
+    
+                #Get search results from current page
+                self.get_case_infos()
+
+        browser.quit()
+
+    #Function for attaching judgment text to case_info dict
+    def attach_judgment(self, case_info):
+
+        judgment_dict = copy.deepcopy(case_info)
+        
+        judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
+    
+        #Get judgment text
+        judgment_text = ''
+    
+        #Check if getting taken to a PDF
+        if 'Judgment in PDF' not in judgment_dict.keys():
+    
+            judgment_dict.update({'Judgment in PDF': False})
+        
+        #Check if not taken to a PDF
+        if not bool(judgment_dict['Judgment in PDF']):
+        
+            try:
+    
+                browser = get_driver()
+                browser.get(judgment_url)
+        
+                #Wait until judgment present
+                loaded = Wait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.judgment_content")))
+
+                #Wait until end of judgment
+                top_link = Wait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.top-link-wrapper a.top-link")))
+
+                #pause.seconds(10)
+                
+                soup = BeautifulSoup(browser.page_source, "lxml")
+                
+                browser.quit()
+                
+                #Attach judgment
+                try:
+                    
+                    judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
+                                    
+                except:
+                    
+                    judgment_text = soup.get_text(separator="\n", strip=True)
+    
+                #Attach meta tags
+                meta_tags = soup.find_all("meta")
+            
+                #Attach meta tags
+                if len(meta_tags)>0:
+                    for tag_index in range(len(meta_tags)):
+                        meta_name = meta_tags[tag_index].get("name")
+                        if meta_name in fca_metalabels:
+                            meta_content = meta_tags[tag_index].get("content")
+                            judgment_dict.update({meta_name: meta_content})
+                            
+            except Exception as e:
+                
+                print(f"{judgment_dict['Case name']}: can't get html judgment or meta due to error {e}.")
+                
+        #Check if gets taken to a PDF
+        else:
+            
+            print(f"{judgment_dict['Case name']}: trying to get pdf judgment")
+            
+            #Get judgment pdf text
+            try:
+                
+                #judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
+    
+                browser = get_driver()
+                browser.get(judgment_url)
+                
+                pdf_file = judgment_url.split('/')[-1]    
+    
+                pdf_file = urllib.parse.unquote(pdf_file)
+                
+                pdf_path = f"{download_dir}/{pdf_file.upper()}.pdf"
+    
+                #Limiting waiting time for downloading PDF to 1 min
+                
+                waiting_counter = 0
+                
+                while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
+                    pause.seconds(10)
+                    waiting_counter += 1
+                                
+                print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
+    
+                judgment_text = pdf_judgment(url_or_path = pdf_path, url_given = False)
+                                                                    
+                #MUST remove pdf from download folder automatically or manually
+                os.remove(pdf_path)
+    
+                browser.quit()
+                
+            except Exception as e:
+                
+                print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
+    
+        judgment_dict['judgment'] = judgment_text
+        
+        return judgment_dict
+
+    #Function for getting all requested judgments
+    def get_judgments(self):
+
+        self.case_infos_w_judgments = []
+
+        #Search if not done yet
+        if len(self.case_infos) == 0:
+
+            self.search()
+
+        #If huggingface enabled
+        if huggingface == True:
+
+            #Create a list of mncs for HuggingFace:
+            mnc_list = []
+    
+            for case_info in self.case_infos:
+
+                if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+                    
+                    #Add mnc to list for HuggingFace
+                    mnc_list.append(case_info['Medium neutral citation'])
+    
+            #Get judgments from oalc first
+            mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
+        
+            #Append OALC judgment 
+            for case_info in self.case_infos:
+                
+                #Append judgments from oalc first
+                if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
+                    
+                    case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
+
+                    #Make link clickable
+                    judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
+                    case_info.update({'Hyperlink to Federal Court Digital Law Library': link(judgment_url)})
+
+                    #Add case_info to self.case_infos_w_judgments
+                    self.case_infos_w_judgments.append(case_info)
+    
+                    print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
+    
+                else:
+                    
+                    #To get from FCA database directly if can't get from OALC
+                    self.case_infos_direct.append(case_info)
+
+            print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
+
+        else:
+            
+            #If huggingface not enabled
+            self.case_infos_direct = copy.deepcopy(self.case_infos)
+        
+        #Get judgments from FCA database directly
+        for case_info in self.case_infos_direct:
+
+            if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+
+                #Pause to avoid getting kicked out
+                pause.seconds(np.random.randint(10, 15))
+    
+                case_info = self.attach_judgment(case_info)
+    
+                #Make link clickable
+                judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
+                case_info.update({'Hyperlink to Federal Court Digital Law Library': link(judgment_url)})
+    
+                #Add case_info to self.case_infos_w_judgments
+    
+                self.case_infos_w_judgments.append(case_info)
+                
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from FCA directly")
+                
+                print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
 
 
 # %%
-#@st.cache_data(show_spinner = False)
-def fca_search_url(df_master):
+def fca_search_preview(df_master):
+    
     df_master = df_master.fillna('')
         
-    #Conduct search
-
-    #st.write(df_master)
-    
-    results_url_num = fca_search(court = df_master.loc[0, 'Courts'], 
+    fca_search = fca_search_tool(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -681,19 +791,41 @@ def fca_search_url(df_master):
                      before_date = df_master.loc[0, 'Decision date is before'], 
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
-                     catchwords = df_master.loc[0, 'Catchwords'] 
+                     catchwords = df_master.loc[0, 'Catchwords'],
+                    sort = df_master.loc[0, 'Sort'],
                     )
 
-    results_url = results_url_num['results_url']
-    results_count = results_url_num['results_count']
-    search_results_soup = results_url_num['soup']
-
-
-    #st.write({'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup})
+    fca_search.search()
     
-    return {'results_url': results_url, 'results_count': results_count, 'soup': search_results_soup}
+    results_count = fca_search.results_count
     
+    case_infos = fca_search.case_infos
 
+    results_url = fca_search.results_url
+
+    #st.write(results_url)
+    
+    return {'results_url': results_url, 'results_count': results_count, 'case_infos': case_infos}
+
+
+
+# %%
+#fca_search = fca_search_tool(court = 'Federal Court',
+                             #phrase = 'class actions', 
+                     #after_date = '1sep2025', 
+                     #catchwords = 'class actions',
+                    #sort = 'Least Recent',
+                             #judgment_counter_bound = 21
+                    #)
+
+# %%
+#fca_search.search()
+
+# %%
+#fca_search.results_count
+
+# %%
+#fca_search.get_judgments()
 
 # %% [markdown]
 # # GPT functions and parameters
@@ -728,9 +860,12 @@ def fca_run(df_master):
     #Apply split and format functions for headnotes choice, court choice and GPT questions
      
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
+
+    #Create judgments file
+    judgments_file = []
     
     #Conduct search    
-    search_results_soup_url = fca_search(court = df_master.loc[0, 'Courts'], 
+    fca_search = fca_search_tool(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -746,83 +881,19 @@ def fca_run(df_master):
                      before_date = df_master.loc[0, 'Decision date is before'], 
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
-                     catchwords = df_master.loc[0, 'Catchwords'] 
+                     catchwords = df_master.loc[0, 'Catchwords'],
+                     sort = df_master.loc[0, 'Sort'],
+                     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                     )
     
-    search_results_soup = search_results_soup_url['soup']
+    fca_search.get_judgments()
     
-    results_url = search_results_soup_url['results_url']
+    for judgment_json in fca_search.case_infos_w_judgments:
 
-    results_count = search_results_soup_url['results_count']
-    
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
-    #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgment_counter_bound)
-
-    #Create judgments file
-    judgments_file = []
-    
-    if huggingface == False: #If not running on HuggingFace
-        
-        for case_info in case_infos:
-
-            pause.seconds(np.random.randint(15, 20))
-            
-            judgment_dict = fca_meta_judgment_dict(case_info)
-
-            print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-            
-            judgments_file.append(judgment_dict)
-
-            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
-    
-    else: #If running on HuggingFace
-
-        #Create a list of mncs for HuggingFace:
-        mnc_list = []
-
-        for case in case_infos:
-
-            #Add mnc to list for HuggingFace
-            mnc_list.append(case['Medium neutral citation'])
-
-        #Get judgments from oalc first
-        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-            
-        #Append judgment to judgments_file 
-        for case_info in case_infos:
-            
-            #Append judgments from oalc first
-            if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
-                
-                case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
-
-                #Make judgment_link clickable
-                clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-                case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
-
-                #Create judgment_dict with oalc judgment text
-                judgment_dict = copy.deepcopy(case_info)
-                
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
-
-            else: #Get judgment from FCA if can't get from oalc
-
-                pause.seconds(np.random.randint(15, 20))
-                
-                judgment_dict = fca_meta_judgment_dict(case_info)
-        
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-                
-            judgments_file.append(judgment_dict)
-
-            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
+        judgments_file.append(judgment_json)
 
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
-
-#    df_individual = pd.DataFrame(judgments_file)
     
     df_individual = pd.read_json(json_individual)
     
@@ -873,8 +944,11 @@ def fca_batch(df_master):
      
     df_master['questions_json'] = df_master['Enter your questions for GPT'].apply(GPT_label_dict)
     
+    #Create judgments file
+    judgments_file = []
+
     #Conduct search    
-    search_results_soup_url = fca_search(court = df_master.loc[0, 'Courts'], 
+    fca_search = fca_search_tool(court = df_master.loc[0, 'Courts'], 
                      case_name_mnc = df_master.loc[0, 'Case name or medium neutral citation'],
                      judge = df_master.loc[0, 'Judge'], 
                      reported_citation = df_master.loc[0, 'Reported citation'],
@@ -890,83 +964,19 @@ def fca_batch(df_master):
                      before_date = df_master.loc[0, 'Decision date is before'], 
                      legislation = df_master.loc[0, 'Legislation'], 
                      cases_cited = df_master.loc[0, 'Cases cited'], 
-                     catchwords = df_master.loc[0, 'Catchwords'] 
+                     catchwords = df_master.loc[0, 'Catchwords'],
+                     sort = df_master.loc[0, 'Sort'],
+                     judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                     )
     
-    search_results_soup = search_results_soup_url['soup']
+    fca_search.get_judgments()
     
-    results_url = search_results_soup_url['results_url']
+    for judgment_json in fca_search.case_infos_w_judgments:
 
-    results_count = search_results_soup_url['results_count']
-    
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
+        judgments_file.append(judgment_json)
 
-    #Get relevant cases
-    case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgment_counter_bound)
-
-    #Create judgments file
-    judgments_file = []
-    
-    if huggingface == False: #If not running on HuggingFace
-        
-        for case_info in case_infos:
-
-            pause.seconds(np.random.randint(15, 20))
-            
-            judgment_dict = fca_meta_judgment_dict(case_info)
-
-            print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-            
-            judgments_file.append(judgment_dict)
-
-            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
-    
-    else: #If running on HuggingFace
-
-        #Create a list of mncs for HuggingFace:
-        mnc_list = []
-
-        for case in case_infos:
-
-            #Add mnc to list for HuggingFace
-            mnc_list.append(case['Medium neutral citation'])
-
-        #Get judgments from oalc first
-        mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-            
-        #Append judgment to judgments_file 
-        for case_info in case_infos:
-            
-            #Append judgments from oalc first
-            if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
-                
-                case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
-
-                #Make judgment_link clickable
-                clickable_link = link(case_info['Hyperlink to Federal Court Digital Law Library'])
-                case_info.update({'Hyperlink to Federal Court Digital Law Library': clickable_link})
-
-                #Create judgment_dict with oalc judgment text
-                judgment_dict = copy.deepcopy(case_info)
-                
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
-
-            else: #Get judgment from FCA if can't get from oalc
-
-                pause.seconds(np.random.randint(15, 20))
-                
-                judgment_dict = fca_meta_judgment_dict(case_info)
-        
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from the Federal Court directly")
-                
-            judgments_file.append(judgment_dict)
-
-            print(f"Scrapped {len(judgments_file)}/{min(results_count, judgment_counter_bound)} judgments.")
-    
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
-
-#    df_individual = pd.DataFrame(judgments_file)
     
     df_individual = pd.read_json(json_individual)
                         

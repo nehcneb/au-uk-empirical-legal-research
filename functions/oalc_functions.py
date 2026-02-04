@@ -259,7 +259,7 @@ def get_judgment_from_oalc(mnc_list):
 
                 try_counter += 1
 
-                pause.seconds(10)
+                pause.seconds(20)
 
         #Remove any blank or very short judgments
         mncs_to_pop = []

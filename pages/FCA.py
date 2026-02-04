@@ -70,7 +70,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # Federal Courts search engine
 
 # %%
-from functions.fca_functions import fca_courts, fca_courts_list, npa_dict, npa_list, fca_search, fca_search_url, fca_search_results_to_judgment_links, fca_metalabels, fca_metalabels_droppable, fca_meta_judgment_dict
+from functions.fca_functions import fca_courts, fca_courts_list, npa_dict, npa_list, sort_dict, fca_search_preview, fca_search_tool, fca_metalabels, fca_metalabels_droppable
 #fca_link_to_doc
 
 
@@ -136,7 +136,7 @@ def fca_create_df():
     
     on_this_date = ''
 
-    if on_this_date_entry != 'None':
+    if on_this_date_entry not in [None, 'None']:
 
         try:
 
@@ -154,7 +154,7 @@ def fca_create_df():
     
     before_date = ''
 
-    if before_date_entry != 'None':
+    if before_date_entry not in [None, 'None']:
 
         try:
 
@@ -170,7 +170,7 @@ def fca_create_df():
     
     after_date = ''
 
-    if after_date_entry != 'None':
+    if after_date_entry not in [None, 'None']:
         
         try:
             after_date = str(after_date_entry.strftime('%d')) + str(after_date_entry.strftime('%B')).lower()[:3] + str(after_date_entry.strftime('%Y'))
@@ -195,7 +195,9 @@ def fca_create_df():
     proximity = proximity_entry
     legislation = legislation_entry
     cases_cited = cases_cited_entry
-    catchwords = catchwords_entry 
+    catchwords = catchwords_entry
+    sort = sort_entry
+
     
     #GPT choice and entry
     try:
@@ -236,7 +238,8 @@ def fca_create_df():
             'Decision date is before': before_date,
             'Legislation': legislation,
             'Cases cited': cases_cited,
-            'Catchwords' : catchwords, 
+            'Catchwords' : catchwords,
+               'Sort': sort,
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': gpt_questions, 
@@ -263,9 +266,7 @@ from functions.gpt_functions import question_characters_bound, default_msg, defa
 # %%
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
-
 from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
 
 
 # %%
@@ -319,12 +320,12 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Example'] = ''
 
     #Jurisdiction specific
-    st.session_state['df_master'].loc[0, 'Courts'] = 'Federal Court'
+    st.session_state['df_master'].loc[0, 'Courts'] = list(fca_courts.keys())[0]
     st.session_state['df_master'].loc[0, 'Case name or medium neutral citation'] = None
     st.session_state['df_master'].loc[0, 'Judge'] = None
     st.session_state['df_master'].loc[0, 'Reported citation'] = None
     st.session_state['df_master'].loc[0, 'File number'] = None
-    st.session_state['df_master'].loc[0, 'National practice area'] = 'All'
+    st.session_state['df_master'].loc[0, 'National practice area'] = list(npa_dict.keys())[0]
     st.session_state['df_master'].loc[0, 'With all the words'] = None
     st.session_state['df_master'].loc[0, 'With at least one of the words'] = None
     st.session_state['df_master'].loc[0, 'Without the words'] = None
@@ -336,7 +337,8 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Legislation'] = None
     st.session_state['df_master'].loc[0, 'Cases cited'] = None
     st.session_state['df_master'].loc[0, 'Catchwords']  = None
-
+    st.session_state['df_master'].loc[0, 'Sort']  = list(sort_dict.keys())[0]
+    
     #Generally applicable
     st.session_state['df_master'] = st.session_state['df_master'].replace({np.nan: None})
     
@@ -425,12 +427,12 @@ date_col1, date_col2 = st.columns(2)
 with date_col1:
 
     after_date_entry = st.date_input(label = 'Decision date is after', value = date_parser(st.session_state.df_master.loc[0, 'Decision date is after']), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
-
-
+        
 with date_col2:
 
     before_date_entry = st.date_input(label = 'Decision date is before', value = date_parser(st.session_state.df_master.loc[0, 'Decision date is before'] ), format="DD/MM/YYYY", min_value = date(1976, 1, 1), max_value = datetime.now(), help = "If you cannot change this date entry, please press :red[RESET] and try again.")
 
+st.write('For date range search, enter one day before and one day after.')
 
 st.caption('This app will not collect catchwords or other metadata from judgments published before 1995 (given their [PDF](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) format).')
 
@@ -440,6 +442,8 @@ st.caption('This app will not collect catchwords or other metadata from judgment
 
 #Case name and medium neutral citation are always included with your results.
 #""")
+
+sort_entry = st.selectbox(label = 'Sort', options = list(sort_dict.keys()), index = list(sort_dict.keys()).index(st.session_state.df_master.loc[0, 'Sort']))
 
 #meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
 meta_data_entry = True
@@ -463,62 +467,58 @@ with stylable_container(
 
 # %%
 if preview_button:
+
+    all_search_terms = str(catchwords_entry) + str(legislation_entry) + str(cases_cited_entry) + str(case_name_mnc_entry) + str(judge_entry) + str(reported_citation_entry) + str(file_number_entry) + str(npa_entry) + str(with_all_the_words_entry) + str(with_at_least_one_of_the_words_entry) + str(without_the_words_entry) + str(phrase_entry) + str(proximity_entry) + str(on_this_date_entry) + str(after_date_entry) + str(before_date_entry)
     
-    with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
+    if all_search_terms.replace('None', '') == "":
 
-        try:
-            
-            df_master = fca_create_df()
-            
-            results_url_num = fca_search_url(df_master)
+        st.warning('You must enter some search terms.')
                 
-            results_count = results_url_num['results_count']
-        
-            results_url = results_url_num['results_url']
-        
-            search_results_soup = results_url_num['soup']
-        
-            if results_count > 0:
-            
-                #Get relevant cases
-                
-                judgments_file = []
-                
-                judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-                
-                case_infos = fca_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgments_counter_bound)
-                
-                for case in case_infos:
-                
-                    #add search results to json
-                    judgments_file.append(case)
-        
-                df_preview = pd.DataFrame(judgments_file)
-        
-                #Get display settings
-                display_df_dict = display_df(df_preview)
-        
-                df_preview = display_df_dict['df']
-        
-                link_heading_config = display_df_dict['link_heading_config']
-        
-                #Display search results
-                st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
-                            
-                st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-        
-                st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-        
-            else:
-                st.error(no_results_msg)
+    else:
+    
+        with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
 
-        except Exception as e:
-
-            st.error(search_error_display)
+            try:
             
-            print(traceback.format_exc())
+                df_master = fca_create_df()
+        
+                search_results_w_count = fca_search_preview(df_master)
+                
+                results_count = search_results_w_count['results_count']
+        
+                case_infos = search_results_w_count['case_infos']
+        
+                results_url = search_results_w_count['results_url']
+        
+                if results_count > 0:
+        
+                    df_preview = pd.DataFrame(case_infos)
+        
+                    #Get display settings
+                    display_df_dict = display_df(df_preview)
+        
+                    df_preview = display_df_dict['df']
+        
+                    link_heading_config = display_df_dict['link_heading_config']
+        
+                    #Display search results
+                    st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                                
+                    st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+        
+                    st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
+            
+                else:
+                    
+                    st.error(no_results_msg)
 
-            st.session_state['error_msg'] = traceback.format_exc()
+            except Exception as e:
+
+                st.error(search_error_display)
+                
+                print(traceback.format_exc())
+
+                st.session_state['error_msg'] = traceback.format_exc()
 
 
 # %% [markdown]
@@ -604,32 +604,32 @@ if next_button:
     if all_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
-    
+        
     else:
     
         df_master = fca_create_df()
-
+        
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
 
             try:
-                
-                results_url_num = fca_search_url(df_master)
-                    
-                results_count = results_url_num['results_count']
 
+                search_results_w_count = fca_search_preview(df_master)
+                
+                results_count = search_results_w_count['results_count']
+                
                 if results_count == 0:
                     
                     st.error(no_results_msg)
-
-                else:
     
+                else:
+                    
                     save_input(df_master)
     
                     st.session_state["page_from"] = 'pages/FCA.py'
                     
                     st.switch_page('pages/GPT.py')
-                    
+
             except Exception as e:
 
                 st.error(search_error_display)

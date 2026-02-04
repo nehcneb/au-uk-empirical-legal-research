@@ -676,7 +676,7 @@ def nsw_run_direct(df_master):
     #Check length of judgment text, replace with raw html if smaller than lower boound
     for judgment_index in df_individual.index:
 
-        #Checking if judgment text has been scrapped or too short
+        #Checking if judgment text has been Scraped or too short
         try:
             judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
                     
@@ -687,7 +687,7 @@ def nsw_run_direct(df_master):
                 #attach judgment text; judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] is the judgment text
                 df_individual.loc[judgment_index, "judgment"] = judgment_type_text[1]
 
-                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, scrapped whole judgment from NSW Caselaw again.')
+                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, Scraped whole judgment from NSW Caselaw again.')
                 
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
@@ -870,7 +870,7 @@ def nsw_run(df_master):
 
     for judgment_index in df_individual.index:
 
-        #Checking if judgment text has been scrapped or too short
+        #Checking if judgment text has been Scraped or too short
         try:
             
             judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
@@ -884,7 +884,7 @@ def nsw_run(df_master):
 
                 #judgment_type_text[0] has judgment type, eg 'pdf'
 
-                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, scrapped whole judgment from NSW Caselaw again.')
+                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, Scraped whole judgment from NSW Caselaw again.')
                 
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             
@@ -1069,7 +1069,7 @@ def nsw_batch(df_master):
 
     for judgment_index in df_individual.index:
 
-        #Checking if judgment text has been scrapped or too short
+        #Checking if judgment text has been Scraped or too short
         try:
             
             judgment_raw_text = str(df_individual.loc[judgment_index, "judgment"])
@@ -1083,7 +1083,7 @@ def nsw_batch(df_master):
 
                 #judgment_type_text[0] has judgment type, eg 'pdf'
 
-                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, scrapped whole judgment from NSW Caselaw again.')
+                print(f'{df_individual.loc[judgment_index, "title"]}: given judgment tokens < {judgment_text_lower_bound}, Scraped whole judgment from NSW Caselaw again.')
                 
                 pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
             

@@ -361,6 +361,8 @@ class hca_search_tool:
         
         self.case_infos = []
 
+        self.case_infos_w_judgments = []
+        
         #For getting judgment directly from HCA database if can't get from OALC
         self.case_infos_direct = []
 
@@ -798,9 +800,11 @@ class hca_search_tool:
             mnc_list = []
     
             for case_info in self.case_infos:
-    
-                #Add mnc to list for HuggingFace
-                mnc_list.append(case_info['Medium neutral citation'])
+
+                if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+                        
+                    #Add mnc to list for HuggingFace
+                    mnc_list.append(case_info['Medium neutral citation'])
     
             #Get judgments from oalc first
             mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
@@ -827,7 +831,7 @@ class hca_search_tool:
                     #To get from HCA database directly if can't get from OALC
                     self.case_infos_direct.append(case_info)
 
-            print(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
+            print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
 
         else:
             
@@ -837,23 +841,25 @@ class hca_search_tool:
         #Get judgments from HCA database directly
         for case_info in self.case_infos_direct:
 
-            #Pause to avoid getting kicked out
-            pause.seconds(np.random.randint(10, 15))
-
-            case_info = self.attach_judgment(case_info)
-
-            #Make link clickable
-            judgment_url = case_info['Hyperlink to High Court Judgments Database']
-            case_info.update({'Hyperlink to High Court Judgments Database': link(judgment_url)})
-
-            #Add case_info to self.case_infos_w_judgments
-
-            self.case_infos_w_judgments.append(case_info)
-            
-            print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
-            
-            print(f"Scrapped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
-
+            if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
+                
+                #Pause to avoid getting kicked out
+                pause.seconds(np.random.randint(10, 15))
+    
+                case_info = self.attach_judgment(case_info)
+    
+                #Make link clickable
+                judgment_url = case_info['Hyperlink to High Court Judgments Database']
+                case_info.update({'Hyperlink to High Court Judgments Database': link(judgment_url)})
+    
+                #Add case_info to self.case_infos_w_judgments
+    
+                self.case_infos_w_judgments.append(case_info)
+                
+                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
+                
+                print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
+    
 
 
 # %%
@@ -927,8 +933,6 @@ def hca_run(df_master):
     judgments_file = []
     
     #Conduct search
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
     hca_search = hca_search_tool(collection = df_master.loc[0, 'Collection'], 
                                  method = df_master.loc[0, 'Search method'], 
                    keywords = df_master.loc[0, 'Keyword search'],
@@ -1008,8 +1012,6 @@ def hca_batch(df_master):
     judgments_file = []
 
     #Conduct search
-    judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-
     hca_search = hca_search_tool(collection = df_master.loc[0, 'Collection'], 
                                  method = df_master.loc[0, 'Search method'], 
                    keywords = df_master.loc[0, 'Keyword search'],
