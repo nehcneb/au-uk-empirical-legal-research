@@ -275,7 +275,7 @@ def image_to_text(uploaded_image, language, page_bound):
 #Import functions
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, gpt_batch_input, engage_GPT_json, GPT_questions_check
 #Import variables
-from functions.gpt_functions import questions_check_system_instruction, basic_model, flagship_model
+from functions.gpt_functions import questions_check_system_instruction, basic_model#, flagship_model
 
 
 # %%
@@ -337,10 +337,16 @@ def run_own(df_master, uploaded_docs, uploaded_images):
 
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's file spreadsheet
     
@@ -351,8 +357,7 @@ def run_own(df_master, uploaded_docs, uploaded_images):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT    
-    #df_updated = engage_GPT_json_own(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     if (pop_judgment() > 0) and ('extracted_text' in df_updated.columns):
         df_updated.pop('extracted_text')
@@ -486,10 +491,16 @@ def batch_b64_own(df_master, uploaded_images):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
 
@@ -498,7 +509,7 @@ def batch_b64_own(df_master, uploaded_images):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #apply GPT_individual to each respondent's file spreadsheet    
-    df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
     
     #Remove redundant columns
 
@@ -552,13 +563,18 @@ def run_b64_own(df_master, uploaded_images):
     df_individual = pd.read_json(json_individual)
 
     #Instruct GPT
-
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's file spreadsheet
     
@@ -569,7 +585,7 @@ def run_b64_own(df_master, uploaded_images):
     system_instruction = df_master.loc[0, 'System instruction']
 
     #apply GPT_individual to each respondent's file spreadsheet    
-    df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_b64_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
     
     #Remove redundant columns
 
@@ -646,10 +662,16 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
 
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's file spreadsheet
     
@@ -660,7 +682,7 @@ def batch_own(df_master, uploaded_docs, uploaded_images):
     system_instruction = df_master.loc[0, 'System instruction']
         
     #Engage GPT
-    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     #Remove before text before saving to aws
     if (pop_judgment() > 0) and ('extracted_text' in df_individual.columns):
@@ -735,17 +757,20 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                     #API_key = st.secrets["openai"]["gpt_api_key"]
                     
                     from functions.common_functions import API_key
-
+                    
+                    #Must keep the following to ensure that if not using own account, then judgment_counter_max is applied
                     st.session_state['df_master'].loc[0, 'Maximum number of files'] = st.session_state["judgment_counter_max"]
 
                 #Check questions for potential privacy violation
                 openai.api_key = API_key
 
-                if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                    gpt_model = flagship_model
-                else:        
-                    gpt_model = basic_model
+                #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+                    #gpt_model = flagship_model
+                #else:        
+                    #gpt_model = basic_model
 
+                gpt_model = df_master.loc[0, 'gpt_model']
+                
                 questions_checked_dict = GPT_questions_check(df_master.loc[0, 'Enter your questions for GPT'], gpt_model, questions_check_system_instruction)
 
                 #Use checked questions
@@ -793,7 +818,9 @@ def own_batch_request_function(df_master, uploaded_docs, uploaded_images):
                         #body = obj.get()['Body'].read()
                         #all_df_masters = pd.read_csv(BytesIO(body), index_col=0)
                         #break
-                        
+
+                #st.write(df_master)
+                
                 #Add df_master to all_df_masters 
                 all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
 

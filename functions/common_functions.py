@@ -46,6 +46,10 @@ def ai_allowed():
 
 
 # %%
+#For checking whether locally. Enter part of the chosen local directory.
+running_locally_dir = 'Users/Ben'
+
+# %%
 #Default judgment counter bound
 default_judgment_counter_bound = 10
 
@@ -54,7 +58,6 @@ judgment_batch_cutoff = 25 #Change this at home
 
 #max number of judgments under batch mode
 judgment_batch_max = 200 #Change this at home
-
 
 
 # %%
@@ -85,6 +88,7 @@ from io import StringIO
 import pause
 import re
 import mammoth
+import sys
 
 #PDF images
 import pdf2image
@@ -473,6 +477,9 @@ keys_to_carry_over = ['Your name',
                     'Use GPT', 
                     'Use own account', 
                     'Use flagship version of GPT', 
+                      'gpt_model',
+                      'temperature',
+                      'reasoning_effort',
                     'System',
                     'Consent', 
                      'submission_time', 
@@ -556,6 +563,215 @@ truncation_note = "The full file is too long for GPT. It was (or will be) trunca
 # Programmaticaly produced GPT headings
 own_gpt_headings = ['Hyperlink', 'in tokens (up to', 'GPT cost estimate', 'GPT time estimate']
 
+# %% [markdown]
+# # Undectected Chromedriver
+
+# %%
+import shutil
+import subprocess
+import undetected_chromedriver as uc
+
+# -----------------------------
+# Cross-platform Chrome locator
+# -----------------------------
+def _run(cmd):
+    """Return stdout (stripped) or None."""
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True).strip()
+    except Exception:
+        return None
+
+def find_chrome_binary():
+    """
+    Returns path to a Chrome/Chromium executable if found, else None.
+
+    Priority:
+      1) env var CHROME_BINARY (explicit override)
+      2) common OS-specific locations
+      3) PATH lookups for common binary names (esp. Linux/CI/Docker)
+    """
+    # 1) Explicit override for CI/Docker
+    env_path = os.environ.get("CHROME_BINARY")
+    if env_path and os.path.exists(env_path):
+        return env_path
+
+    platform = sys.platform.lower()
+
+    # 2) OS-specific common locations
+    candidates = []
+
+    if platform == "darwin":
+        # macOS: typical .app bundle executable paths
+        candidates += [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            os.path.expanduser("~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+            os.path.expanduser("~/Applications/Chromium.app/Contents/MacOS/Chromium"),
+        ]
+
+    elif platform.startswith("win"):
+        # Windows: typical installation paths
+        local_app = os.environ.get("LOCALAPPDATA", "")
+        program_files = os.environ.get("PROGRAMFILES", "")
+        program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
+
+        candidates += [
+            os.path.join(local_app, r"Google\Chrome\Application\chrome.exe"),
+            os.path.join(program_files, r"Google\Chrome\Application\chrome.exe"),
+            os.path.join(program_files_x86, r"Google\Chrome\Application\chrome.exe"),
+            # Some environments use Chromium
+            os.path.join(local_app, r"Chromium\Application\chrome.exe"),
+            os.path.join(program_files, r"Chromium\Application\chrome.exe"),
+            os.path.join(program_files_x86, r"Chromium\Application\chrome.exe"),
+        ]
+
+    else:
+        # Linux: many CI/Docker images install these packages
+        # We'll mainly resolve by PATH, but keep placeholders for completeness
+        candidates += [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+            "/snap/bin/chromium",
+        ]
+
+    for p in candidates:
+        if p and os.path.exists(p):
+            return p
+
+    # 3) PATH lookup (very important on Linux/CI and some mac/win setups)
+    path_names = [
+        "google-chrome",
+        "google-chrome-stable",
+        "chrome",
+        "chromium",
+        "chromium-browser",
+        "Google Chrome",      # sometimes resolvable on macOS via PATH
+        "chrome.exe",         # windows if on PATH
+    ]
+    for name in path_names:
+        p = shutil.which(name)
+        if p:
+            return p
+
+    return None
+
+# -----------------------------
+# Cross-platform version detect
+# -----------------------------
+def detect_chrome_version(binary_path=None):
+    """
+    Returns full version like '122.0.6261.129' if found, else None.
+
+    Strategy:
+      - If binary_path is known: run '<binary> --version' and parse
+      - Otherwise: locate binary and try again
+      - Windows fallback: read version from registry if needed
+    """
+    if not binary_path:
+        binary_path = find_chrome_binary()
+
+    if binary_path:
+        out = _run([binary_path, "--version"])
+        if out:
+            # Examples:
+            # 'Google Chrome 122.0.6261.129'
+            # 'Chromium 122.0.6261.94'
+            m = re.search(r"(\d+\.\d+\.\d+\.\d+)", out)
+            if m:
+                return m.group(1)
+
+    # Windows registry fallback (useful if binary isn't easily located)
+    if sys.platform.lower().startswith("win"):
+        try:
+            import winreg
+            reg_keys = [
+                (winreg.HKEY_CURRENT_USER, r"Software\Google\Chrome\BLBeacon", "version"),
+                (winreg.HKEY_LOCAL_MACHINE, r"Software\Google\Chrome\BLBeacon", "version"),
+                (winreg.HKEY_LOCAL_MACHINE, r"Software\WOW6432Node\Google\Chrome\BLBeacon", "version"),
+            ]
+            for root, path, name in reg_keys:
+                try:
+                    with winreg.OpenKey(root, path) as k:
+                        v, _ = winreg.QueryValueEx(k, name)
+                        if v:
+                            return str(v).strip()
+                except OSError:
+                    continue
+        except Exception:
+            pass
+
+    return None
+
+def detect_chrome_major(binary_path=None):
+    """Returns major version as int (e.g., 122) or None."""
+    v = detect_chrome_version(binary_path=binary_path)
+    if not v:
+        return None
+    try:
+        return int(v.split(".")[0])
+    except Exception:
+        return None
+
+# -----------------------------
+# Your driver factory
+# -----------------------------
+def get_uc_driver(download_dir = os.getcwd(), headless = False):
+    """
+    Create a UC Chrome driver with:
+      - detected Chrome binary (if found)
+      - detected Chrome major version (if found)
+      - download preferences
+    """
+    chrome_bin = find_chrome_binary()
+    chrome_ver = detect_chrome_version(chrome_bin) if chrome_bin else detect_chrome_version()
+    chrome_major = int(chrome_ver.split(".")[0]) if chrome_ver else None
+
+    #if chrome_bin:
+        #print(f"[Chrome] Binary: {chrome_bin}")
+    #else:
+        #print("[Chrome] Binary not found (will rely on UC defaults / system).")
+
+    #if chrome_ver:
+        #print(f"[Chrome] Version: {chrome_ver} (major={chrome_major})")
+    #else:
+        #print("[Chrome] Version not detected (will rely on UC auto-detect).")
+
+    options = uc.ChromeOptions()
+
+    # Download prefs
+    prefs = {
+        "download.default_directory": download_dir,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True,
+    }
+    options.add_experimental_option("prefs", prefs)
+
+    # Good practice flags (CI/containers)
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    #Headlessness
+    if headless == True:
+        options.add_argument("--headless=new")
+    
+    # If we found an actual binary path, set it explicitly (helps in CI)
+    if chrome_bin:
+        options.binary_location = chrome_bin
+
+    # Build kwargs for UC
+    uc_kwargs = dict(options=options, use_subprocess=True)
+    if chrome_major:
+        uc_kwargs["version_main"] = chrome_major
+
+    driver = uc.Chrome(**uc_kwargs)
+    driver.implicitly_wait(15)
+    driver.set_page_load_timeout(30)
+    return driver
+
+
 
 # %% [markdown]
 # # Streamlit
@@ -637,7 +853,7 @@ funder_msg_html = "I developed <em>LawtoData</em> with a view to promoting and a
 
 # %%
 #Cost
-gpt_cost_msg = r"This app uses a costly GPT service. For the default model, Ben's own experience suggests that it costs approximately USD \$0.01 (excl GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given ex-post cost estimates."
+gpt_cost_msg = r"This app uses a costly GPT service. For the default model, Ben's own experience suggests that it costs approximately USD \$0.01 (+GST) per file. The [exact cost](https://openai.com/api/pricing/) for answering a question about a file depends on the length of the question, the length of the file, and the length of the answer produced. You will be given cost estimates."
 
 
 # %%
@@ -674,10 +890,18 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
     #Enable the saving argument if want to allow saving of entries
     #Enable the previous argument if want to allow saving of last produced results
     #Default df_individual is empty to ensure no buttons for downloading data is shown
-    
+
     #Create a copy of df_master to avoid exposing secrets
     df_master_to_show = df_master.copy(deep = True)
 
+    #intialise the begining of output name 
+    if 'Your name' in df_master_to_show.columns:
+
+        responses_output_name_begining = f"{str(df_master_to_show.loc[0, 'Your name'])}_{str(today_in_nums)}"
+
+    else:
+        responses_output_name_begining = f"anonymous_{str(today_in_nums)}"
+    
     #For downloading entries
     if saving:
 
@@ -698,7 +922,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             
             st.info('Your entries are now available for download.')
         
-        responses_output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_entries'
+        responses_output_name = responses_output_name_begining + '_entries'
         
         xlsx = convert_df_to_excel(df_master_to_show)
         
@@ -742,7 +966,7 @@ def download_buttons(df_master, df_individual = [], saving = False, previous = F
             st.success("Your data is now available for download. Thank you for using *LawtoData*!")
 
         #Produce output spreadsheets
-        output_name = str(df_master_to_show.loc[0, 'Your name']) + '_' + str(today_in_nums) + '_output'
+        output_name = responses_output_name_begining + '_output'
 
         excel_xlsx = convert_df_to_excel(df_individual)
         

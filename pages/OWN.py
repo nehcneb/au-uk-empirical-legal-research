@@ -85,7 +85,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display, tips
 
 
 # %% [markdown]
@@ -156,11 +156,38 @@ def own_create_df():
         print('GPT enhancement not entered')
         gpt_enhancement = False
 
-    if gpt_enhancement:
-        st.session_state.gpt_model = flagship_model
-    else:
-        st.session_state.gpt_model = basic_model
+    #if gpt_enhancement:
+        #st.session_state.gpt_model = flagship_model
+    #else:
+        #st.session_state.gpt_model = basic_model
+
+    try:
+        gpt_model = gpt_model_entry
+
+    except:
         
+        print('gpt_model not entered')
+
+        gpt_model = basic_model
+    
+    try:
+        temperature = temperature_entry
+
+    except:
+
+        print('temperature not entered')
+
+        temperature = default_temperature
+
+    try:
+        reasoning_effort = reasoning_effort_entry
+
+    except:
+
+        print('reasoning_effort not entered')
+
+        reasoning_effort = default_reasoning_effort
+
     #GPT choice and entry
     try:
         gpt_activation_status = gpt_activation_entry
@@ -188,7 +215,6 @@ def own_create_df():
     #Language choice
 
     language = language_entry
-
 
     #System instruction
     try:
@@ -222,6 +248,9 @@ def own_create_df():
            'Enter your questions for GPT': gpt_questions, 
             'Use own account': own_account,
             'Use flagship version of GPT': gpt_enhancement,
+            'gpt_model': gpt_model,
+           'temperature': temperature,
+           'reasoning_effort': reasoning_effort,
             'System instruction': system_instruction,
             'Example': df_example, 
             'Consent': consent
@@ -240,7 +269,8 @@ def own_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
-from functions.gpt_functions import question_characters_bound, system_characters_bound, basic_model, flagship_model, gpt_system_msg
+from functions.gpt_functions import question_characters_bound, system_characters_bound, basic_model, flagship_model, gpt_system_msg, default_temperature, default_reasoning_effort, gpt_models_list, gpt_reasoning_models_list, reasoning_effort_list
+#, intro_for_GPT
 
 
 # %%
@@ -270,12 +300,74 @@ if 'gpt_api_key' not in st.session_state:
 from functions.gpt_functions import get_image_dims, calculate_image_token_cost
 from functions.own_functions import image_to_b64_own, run_b64_own#, #GPT_b64_json_own, engage_GPT_b64_json_own
 
+
 # %% [markdown]
 # # Streamlit form, functions and parameters
 
+# %% [markdown]
+# ### Function for saving entries for own account to session state
+
 # %%
-#Import functions and variables
-from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
+#Function for saving entries for own account:
+
+def own_account_entries_function():
+
+    if own_account_allowed() > 0:
+
+        st.session_state['df_master'].loc[0, 'Use own account'] = own_account_entry
+
+        if st.session_state['df_master'].loc[0, 'Use own account']:
+            
+            st.session_state['df_master'].loc[0, 'Your name'] = name_entry
+    
+            st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
+    
+            st.session_state['df_master'].loc[0, 'Your GPT API key'] = gpt_api_key_entry
+
+            #Legacy as of 5 Feb 2026. Keeping this just to avoid coding inconsistency.
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = gpt_enhancement_entry
+    
+            #if st.session_state['df_master'].loc[0, 'Use flagship version of GPT']:
+            
+                #st.session_state.gpt_model = flagship_model
+    
+            #else:
+                
+                #st.session_state.gpt_model = basic_model
+
+            st.session_state.gpt_model = gpt_model_entry
+
+            st.session_state['df_master'].loc[0, 'gpt_model'] = gpt_model_entry
+
+            st.session_state['df_master'].loc[0, 'reasoning_effort'] = reasoning_effort_entry
+
+            st.session_state['df_master'].loc[0, 'temperature'] = temperature_entry
+            
+            st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
+
+            st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = page_bound_entry
+        
+        else:
+            
+            st.session_state['df_master'].loc[0, 'Use own account'] = False
+            
+            #Legacy as of 5 Feb 2026. Keeping this just to avoid coding inconsistency.
+            st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+
+            st.session_state.gpt_model = basic_model
+
+            st.session_state['df_master'].loc[0, 'gpt_model'] = basic_model
+            
+            st.session_state['df_master'].loc[0, 'reasoning_effort'] = default_reasoning_effort
+
+            st.session_state['df_master'].loc[0, 'temperature'] = default_temperature
+            
+            st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
+        
+            st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+    
+    st.session_state.estimated_waiting_secs = min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])*30
+
 
 
 # %% [markdown]
@@ -514,6 +606,18 @@ if 'df_master' not in st.session_state:
     
     st.session_state['df_master'] = pd.DataFrame([df_master_dict])
 
+if 'gpt_model' not in st.session_state.df_master.columns:
+
+     st.session_state['df_master'].loc[0, 'gpt_model'] = basic_model
+
+if 'temperature' not in st.session_state.df_master.columns:
+
+     st.session_state['df_master'].loc[0, 'temperature'] = default_temperature
+
+if 'reasoning_effort' not in st.session_state.df_master.columns:
+
+     st.session_state['df_master'].loc[0, 'reasoning_effort'] = default_reasoning_effort
+
 if 'System instruction' not in st.session_state.df_master.columns:
         
     st.session_state['df_master'].loc[0, 'System instruction'] = role_content_own
@@ -541,7 +645,7 @@ if own_account_allowed() > 0:
 else:
     st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
-#Maximum number of judgments to process under any mode
+#Maximum number of files to process under any mode
 if "judgment_counter_max" not in st.session_state:
 
     st.session_state["judgment_counter_max"] = judgment_batch_cutoff
@@ -555,6 +659,12 @@ if batch_mode_allowed() > 0:
     else:
 
         st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+
+#For displaying on page maximum number to process under batch mode
+if "judgment_counter_batch" not in st.session_state:
+
+    st.session_state["judgment_counter_batch"] = st.session_state["judgment_counter_max"]
+
 
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:
@@ -654,7 +764,7 @@ GPT will also provide references for its responses.
 
 gpt_questions_entry = st.text_area(label = f"Your questions (up to {question_characters_bound} characters)", height= 250, max_chars=question_characters_bound, value = st.session_state['df_master'].loc[0, 'Enter your questions for GPT']) 
 
-st.caption(f"By default, this app will use model {basic_model}. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
+st.caption(f"This app uses model {basic_model} by default. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each file.")
 
 #if st.toggle('See tips for using GPT'):
 with st.expander("See tips for using GPT"):
@@ -778,7 +888,7 @@ else:
     
     st.header(':orange[Enhance app capabilities]')
     
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum number of files to process? You can do so with your own GPT account.
+    st.markdown("""Would you like to improve the quality and accuracy of answers from GPT, or increase the maximum number of files to process? You can do so with your own GPT account.
     """)
     
     own_account_entry = st.toggle(label = 'Use my own GPT account',  disabled = st.session_state.disable_input, value = st.session_state['df_master'].loc[0, 'Use own account'])
@@ -789,8 +899,7 @@ else:
         
         #st.session_state["own_account"] = True
     
-        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
-    """)
+        st.markdown("""**You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup).** You can then create and find your API key [here](https://platform.openai.com/api-keys).""")
         
         name_entry = st.text_input(label = "Your name", value = st.session_state['df_master'].loc[0, 'Your name'])
 
@@ -814,61 +923,81 @@ else:
                 
                 st.warning('This key is not valid.')
                 
-        st.markdown(f"""**:green[You can use the flagship GPT model ({flagship_model}),]** which is :red[significantly more expensive] than the default model ({basic_model}).""")  
+        #st.markdown(f"""**:green[You can use the flagship GPT model ({flagship_model}),]** which is :red[significantly more expensive] than the default model ({basic_model}).""")  
         
-        gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
-        
-        st.caption('Click [here](https://openai.com/api/pricing) for pricing information on different GPT models.')
+        #gpt_enhancement_entry = st.checkbox('Use the flagship GPT model', value = st.session_state['df_master'].loc[0, 'Use flagship version of GPT'])
 
-        #if gpt_enhancement_entry == True:
-        
-            #st.session_state.gpt_model = flagship_model
-            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = True
+        #Legacy as of 5 Feb 2026. Keeping this just to avoid coding inconsistency
+        gpt_enhancement_entry = False
 
-        #else:
+        st.write(f'**:blue[You can choose a GPT model and modify its parameters.]**')
+        
+        gpt_model_entry = st.selectbox(label = 'GPT model', options = gpt_models_list, index = gpt_models_list.index(st.session_state.df_master.loc[0, 'gpt_model']))
+        
+        st.caption('Click [here](https://platform.openai.com/docs/models/compare) for guidance on different GPT models.')
+
+        temperature_entry = st.slider(label = 'Temperature', min_value = float(0), max_value = float(1), step = 0.01, value = float(st.session_state['df_master'].loc[0, 'temperature']), disabled = bool(gpt_model_entry in gpt_reasoning_models_list))
+
+        st.caption('Click [here](https://platform.openai.com/docs/api-reference/responses/create#responses_create-temperature) for guidance on the temperature parameter.')
+    
+        reasoning_effort_entry = st.pills(label = 'Reasoning effort', options = reasoning_effort_list, default = st.session_state.df_master.loc[0, 'reasoning_effort'], disabled = bool(gpt_model_entry not in gpt_reasoning_models_list))
+
+        st.caption('Click [here](https://platform.openai.com/docs/guides/reasoning) for guidance on reasoning effort.')
+        
+        if gpt_model_entry in gpt_reasoning_models_list:
+        
+            #No need to set to None given this entry will be ignored
+            temperature_entry = default_temperature
+
+            st.info(f"Given {gpt_model_entry} is a reasoning model, the temperature parameter will be ignored.")
             
-            #st.session_state.gpt_model = basic_model
-            #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
-        
+        else:
+
+            #No need to set to None given this entry will be ignored
+            reasoning_effort_entry = default_reasoning_effort
+
+            st.info(f"Given {gpt_model_entry} is not a reasoning model, the reasoning effort parameter will be ignored.")
+            
         st.write(f'**:green[You can change the maximum number of files to process.]**')
 
         file_counter_bound_entry = st.slider(label = f'Up to {st.session_state["judgment_counter_max"]} files', min_value = 1, max_value = st.session_state["judgment_counter_max"], step = 1, value = str_to_int(st.session_state['df_master'].loc[0, 'Maximum number of files']))
-
-        #if file_counter_bound_entry:
-            
-        #st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
 
         if file_counter_bound_entry:
 
             st.session_state['df_master'].loc[0, 'Maximum number of files'] = file_counter_bound_entry
 
+            st.session_state["judgment_counter_batch"] = file_counter_bound_entry
+
         if file_counter_bound_entry > st.session_state["judgment_batch_cutoff"]:
     
-            st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} files may need to be processes, this app will send your requested data to your nominated email address in about **2 business days**.")
+            st.warning(f"Given more than {st.session_state['judgment_batch_cutoff']} files may need to be processed, this app will send your requested data to your nominated email address in about **2 business days**.")
 
         st.write(f'**:orange[You can change the maximum number of pages per file to process.]**')
         
         page_bound_entry = st.slider(label = f'Up to {default_page_bound} pages', min_value = 1, max_value = default_page_bound, step = 1, value = str_to_int_page(st.session_state['df_master'].loc[0, 'Maximum number of pages per file']))
-
-        #if page_bound_entry:
-            
-        #st.session_state['df_master'].loc[0, 'Maximum number of pages per file'] = page_bound_entry
-        
-        #st.write(f"*GPT model {st.session_state.gpt_model} will answer any questions based on up to approximately {int(round(tokens_cap(st.session_state.gpt_model)*3/4))} words from the first  {int(st.session_state['df_master'].loc[0,'Maximum number of pages per file'])} page(s) of each file, for up to {int(st.session_state['df_master'].loc[0, 'Maximum number of files'])} file(s).*")
     
     else:
+        st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound
+        
+        st.session_state["judgment_counter_batch"] = st.session_state["judgment_counter_max"]
         
         #st.session_state["own_account"] = False
 
-        st.session_state['df_master'].loc[0, 'Use own account'] = False
+        #st.session_state['df_master'].loc[0, 'Use own account'] = False
     
-        st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
+        #st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     
         #st.session_state.gpt_model = basic_model
 
-        st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
+        #st.session_state['df_master'].loc[0, 'gpt_model'] = basic_model
 
-        st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
+        #st.session_state['df_master'].loc[0, 'temperature'] = default_temperature
+
+        #st.session_state['df_master'].loc[0, 'reasoning_effort'] = default_reasoning_effort
+                
+        #st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound #st.session_state["judgment_batch_cutoff"]
+
+        #st.session_state['df_master'].loc[0,'Maximum number of pages per file'] = default_page_bound
 
 
 # %% [markdown]
@@ -906,12 +1035,11 @@ st.header("Next steps")
 #Calculate estimating waiting time
 
 #Instructions
-st.markdown(f"""You can now press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {int(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files']))} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])*30/60} minute(s)**.
+st.markdown(f"""Press :green[PRODUCE data] to obtain a spreadsheet which hopefully has the data you seek. This app will immediately process up to {int(min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files']))} cases. The estimated waiting time is **{min(st.session_state["judgment_batch_cutoff"], st.session_state['df_master'].loc[0, 'Maximum number of files'])*30/60} minute(s)**.
 """)
 
 if batch_mode_allowed() > 0:
-    st.markdown(f"""Alternatively, you can press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_max"]} files. Your requested data will be sent to your nominated email address in about **2 business days**. 
-""")
+    st.markdown(f"""Alternatively, press :orange[REQUEST data] to process up to {st.session_state["judgment_counter_batch"]} files. Your requested data will be sent to your nominated email address in about **2 business days**. """)
 
 reset_button = st.button(label='REMOVE data', type = 'primary', disabled = not bool(st.session_state.need_resetting))
 
@@ -924,7 +1052,7 @@ if batch_mode_allowed() > 0:
             color: black;
         }""",
     ):
-        batch_button = st.button(label = f"REQUEST data (up to {st.session_state['judgment_counter_max']} files)", 
+        batch_button = st.button(label = f"REQUEST data (up to {st.session_state['judgment_counter_batch']} files)", 
                                   help = 'You can only :orange[REQUEST] data once per session.', 
                                  disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
                                 )
@@ -949,7 +1077,7 @@ if ((own_account_entry == True) and (uploaded_images)):
     
         st.markdown("""By default, this app will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
         
-Alternatively, you can send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach.
+Alternatively, you can send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but is *significantly* slower and costlier than the default approach.
 """)
     
         run_button_b64 = st.button(label = f"SEND images to GPT directly now (up to {min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of files'])} files)", 
@@ -961,7 +1089,7 @@ Alternatively, you can send images directly to GPT. This alternative approach ma
 
         st.markdown("""By default, this app will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
         
-Alternatively, you can request to send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but tends to be slower and costlier than the default approach. Your request data will be sent to your nominated email address in about **2 business days**.
+Alternatively, you can request to send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but is *significantly* slower and costlier than the default approach. Your request data will be sent to your nominated email address in about **2 business days**.
 """)
         
         batch_button_b64 = st.button(label = f"REQUEST to send images to GPT directly (up to {st.session_state['judgment_counter_max']} files)", 
@@ -1049,9 +1177,10 @@ if (batch_mode_allowed() > 0) and ((own_account_entry) and (uploaded_images)):
 
 # %%
 if run_button:
-            
-    own_run_function()
 
+    own_account_entries_function()
+    
+    own_run_function()
 
 
 # %%
@@ -1063,6 +1192,8 @@ if immediate_b64() > 0:
         
         if run_button_b64:
 
+            own_account_entries_function()
+            
             run_b64_function()
 
 
@@ -1079,6 +1210,8 @@ if keep_button:
             
     else:
 
+        own_account_entries_function()
+        
         df_master = own_create_df()
     
         st.session_state["df_master"] = df_master
@@ -1091,6 +1224,8 @@ if return_button:
 
     try:
 
+        own_account_entries_function()
+        
         df_master = own_create_df()
     
         save_input(df_master)
@@ -1110,7 +1245,7 @@ if reset_button:
     
     st.session_state['need_resetting'] = 0
     
-    st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
+    #st.session_state['df_master'].loc[0, 'Maximum number of files'] = default_judgment_counter_bound
     
     st.rerun()
 
@@ -1141,6 +1276,8 @@ if batch_mode_allowed() > 0:
 
         else:
 
+            own_account_entries_function()
+            
             #Create spreadsheet of responses
             df_master = own_create_df()
 

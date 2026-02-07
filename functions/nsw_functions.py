@@ -550,7 +550,7 @@ def nsw_search_preview(df_master):
 #Import functions
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
 #Import variables
-from functions.gpt_functions import basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model#, flagship_model#, role_content
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
 
@@ -741,10 +741,16 @@ def nsw_run(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -755,7 +761,7 @@ def nsw_run(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT    
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     #tidy up
     df_updated = nsw_tidying_up(df_master, df_updated)
@@ -812,10 +818,16 @@ def nsw_batch(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
     
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -829,7 +841,7 @@ def nsw_batch(df_master):
     df_individual = nsw_tidying_up_pre_gpt(df_master, df_individual)
 
     #Engage GPT
-    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
     
     return batch_record_df_individual
 

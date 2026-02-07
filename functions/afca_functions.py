@@ -67,11 +67,27 @@ from functions.common_functions import today_in_nums, today, errors_list, scrape
 # # AFCA search engine
 
 # %%
-#Scrape javascript
+from functions.common_functions import running_locally_dir, get_uc_driver
 
+#For downloading judgments
+download_dir = f"{os.getcwd()}/AFCA_PDFs"
+
+#Headless mode?
+if running_locally_dir in os.getcwd(): 
+
+    headless = False
+
+else:
+    
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+# %%
+#Get uc modules
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
@@ -80,69 +96,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
-import undetected_chromedriver as uc
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
 
-#For post June 2024
-options = uc.ChromeOptions()
-download_dir = os.getcwd() + '/AFCA_PDFs'
 
-#options.headless = True
-
-#options = Options()
-#options.add_argument("--disable-gpu")
-#options.add_argument("--headless")
-#options.add_argument('--no-sandbox')  
-#options.add_argument('--disable-dev-shm-usage')  
-
-#@st.cache_resource(show_spinner = False, ttl=600)
-def get_driver():
-    return uc.Chrome(options = options)
-    #return webdriver.Chrome(options=options)
-
-try:
-    browser = get_driver()
-    #browser.implicitly_wait(5)
-    #browser.set_page_load_timeout(30)
-
-    browser.minimize_window()#set_window_position(-2000,0)
-    
-except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    print(e)
-    quit()
-
-#For pre June 2024
-#Only works if running locally at the moment
-
-if streamlit_timezone() == True:
-        
-    #For headlessness, see https://github.com/ultrafunkamsterdam/undetected-chromedriver/discussions/1768
-    options_old = uc.ChromeOptions()
-    options_old.add_experimental_option('prefs', {
-    "download.default_directory": download_dir, #Change default directory for downloads
-    "download.prompt_for_download": False, #To auto download the file
-    "download.directory_upgrade": True,
-    "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
-    })
-    
-    #@st.cache_resource(show_spinner = False, ttl=600)
-    def get_driver_old():
-        
-        return uc.Chrome(options = options_old)
-    
-    try:
-        
-        browser_old = get_driver_old()
-        
-        #browser_old.implicitly_wait(5)
-        #browser_old.set_page_load_timeout(60)
-        
-        browser_old.minimize_window()#set_window_position(-2000,0)
-    
-    except Exception as e:
-        st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-        st.exception(e)
-        quit()
+# %%
 
 # %%
 #Pre June 2024 only works if running locally at the moment
@@ -294,7 +253,9 @@ def afca_old_search(
     date_to_input, 
     judgment_counter_bound
 ):
-    #Open browser
+    #Open browser_old
+    browser_old = get_uc_driver(download_dir = download_dir, headless = headless)
+    
     browser_old.get('https://service02.afca.org.au/fossic_search/')
     browser_old.delete_all_cookies()
     browser_old.refresh()
@@ -508,7 +469,7 @@ def afca_old_search(
 
                         break
 
-    #browser_old.close()
+    browser_old.quit()
     
     return {'case_sum': case_sum, 'case_sum_message': case_sum_msg, 'case_list': case_list}
     
@@ -524,6 +485,9 @@ def afca_old_pdf_judgment(case_meta):
     try:
         url = case_meta['Hyperlink to AFCA Portal']
         pdf_file = url.split('/')[-1]    
+
+        browser_old = get_uc_driver(download_dir = download_dir, headless = headless)
+        
         browser_old.get(url)
         
         pdf_file = urllib.parse.unquote(pdf_file)
@@ -549,7 +513,7 @@ def afca_old_pdf_judgment(case_meta):
     
         judgment_text = str(text_list)
 
-        #browser_old.close()
+        browser_old.quit()
     
     except Exception as e:
         print(f"{case_meta['Case name']}: judgment not scrapped")
@@ -1195,6 +1159,8 @@ def afca_search(keywordsearch_input, #= '',
                 ):
 
     #Open browser
+    browser = get_uc_driver(download_dir = download_dir, headless = headless)
+
     browser.get('https://my.afca.org.au/searchpublisheddecisions/')
     browser.delete_all_cookies()
     browser.refresh()
@@ -1366,7 +1332,7 @@ def afca_search(keywordsearch_input, #= '',
         #print('Search terms returned no results.')
         #print(e)
 
-    #browser.close()
+    browser.quit()
     
     return {'case_sum': len(case_list), 'case_list': case_list, 'urls': urls}
 
@@ -1378,6 +1344,8 @@ def afca_meta_judgment_dict(judgment_url):
 
     judgment_dict = {'Case name': '', 'Hyperlink to AFCA Portal': link(judgment_url), 'Case number': '', 'Financial firm': '', 'Date': '', 'judgment': ''}
 
+    browser = get_uc_driver(download_dir = download_dir, headless = headless)
+    
     try:
         #headers = {'User-Agent': 'whatever'}
         #page = requests.get(judgment_url, headers=headers)
@@ -1486,7 +1454,7 @@ def afca_meta_judgment_dict(judgment_url):
         print(f"{judgment_url}: judgment not scrapped")
         print(e)
 
-    #browser.close()
+    browser.quit()
     
     return judgment_dict
 
@@ -1501,7 +1469,7 @@ afca_meta_labels_droppable = ["Case number", "Financial firm", 'Date']
 #Import functions
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json  
 #Import variables
-from functions.gpt_functions import basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model#, flagship_model#, role_content
 
 
 
@@ -1587,10 +1555,16 @@ def afca_old_run(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -1601,7 +1575,7 @@ def afca_old_run(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
         df_updated.pop('judgment')
@@ -1687,10 +1661,16 @@ def afca_new_run(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -1701,7 +1681,7 @@ def afca_new_run(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
         df_updated.pop('judgment')

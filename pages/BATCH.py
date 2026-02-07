@@ -278,12 +278,12 @@ if retrive_button:
         with st.spinner('Retrieving your data...'):
 
             #pause.seconds(3)
-            
+
+            #Get relevant df_individual
             try:
-                #Get relevant df_individual
                 st.session_state.df_individual = aws_df_get(s3_resource, f'{batch_id_entry}.csv')
         
-                #Update df_master
+                #Also update df_master
                 batch_index = st.session_state.all_df_masters.index[st.session_state.all_df_masters['batch_id'] == batch_id_entry].tolist()[0]
                 for col in st.session_state.all_df_masters.columns:
                     st.session_state['df_master'].loc[0, col] = st.session_state.all_df_masters.loc[batch_index, col]
@@ -306,6 +306,7 @@ if retrive_button:
                 st.error(f'The requested data cannot be retrieved due to the following error: {e}')
 
 
+
 # %% [markdown]
 # # Status reports
 
@@ -321,7 +322,11 @@ if batch_id_entry and email_entry and (st.session_state.df_master.loc[0, 'status
 
     if( st.session_state['df_master'].loc[0, 'Your email address'] == email_entry) and (st.session_state['df_master'].loc[0, 'batch_id'] == batch_id_entry):
                 
-        #Download data
+        #Download output
         download_buttons(df_master = st.session_state.df_master, df_individual = st.session_state.df_individual)
+        
+        #Download entries
+        df_master_to_show = st.session_state.df_master.dropna(axis=1, how='all')
+        download_buttons(df_master = df_master_to_show, df_individual = [], saving = True)
 
 

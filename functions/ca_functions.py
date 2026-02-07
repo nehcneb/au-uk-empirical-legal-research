@@ -73,57 +73,6 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # %%
 from functions.common_functions import link
 
-# %%
-#Scrape javascript
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver import ActionChains
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.ui import WebDriverWait as Wait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import ElementClickInterceptedException
-import undetected_chromedriver as uc
-
-if 'Users/Ben' not in os.getcwd(): 
-
-    from pyvirtualdisplay import Display
-    
-    display = Display(visible=0, size=(1200, 1600))  
-    display.start()
-
-#@st.cache_resource(show_spinner = False, ttl=600)
-def get_driver():
-
-    options = uc.ChromeOptions()
-        
-    browser = uc.Chrome(options = options)
-
-    browser.implicitly_wait(15)
-    browser.set_page_load_timeout(30)
-
-    #Window can be minimised
-    if 'Users/Ben' in os.getcwd():
-        browser.minimize_window()
-    
-    return browser
-
-#try:
-    #browser = get_driver()
-
-    #browser.minimize_window()#set_window_position(-2000,0)
-    
-#except Exception as e:
-    #st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    #print(e)
-    #quit()
-
-
-
 # %% [markdown]
 # ## Definitions
 
@@ -642,9 +591,43 @@ ca_meta_dict = {
  'Keywords': 'lbh-keywords',
  'Subjects': 'lbh-subjects'}
 
-
 # %% [markdown]
 # ## Search engine
+
+# %%
+from functions.common_functions import running_locally_dir, get_uc_driver
+
+#For downloading judgments
+download_dir = f"{os.getcwd()}/CA_PDFs"
+
+#Headless mode?
+if running_locally_dir in os.getcwd(): 
+
+    headless = False
+
+else:
+    
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+# %%
+#Get uc modules
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import ActionChains
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait as Wait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
+
 
 # %%
 #Function turning search terms to search results url
@@ -785,7 +768,7 @@ class ca_search_tool:
         
         #Load page
             
-        self.browser = get_driver()
+        self.browser = get_uc_driver(download_dir = download_dir, headless = headless)
 
         self.browser.get(self.results_url)
 
@@ -1155,7 +1138,7 @@ def ca_search_preview(df_master):
 #Import functions
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_batch_input
 #Import variables
-from functions.gpt_functions import basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model#, flagship_model#, role_content
 
 
 # %%
@@ -1212,10 +1195,16 @@ def ca_run(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -1226,7 +1215,7 @@ def ca_run(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     #Drop judgment if wanted to
     if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
@@ -1289,10 +1278,16 @@ def ca_batch(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
 
@@ -1308,6 +1303,6 @@ def ca_batch(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Send batch input to gpt
-    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
     
     return batch_record_df_individual

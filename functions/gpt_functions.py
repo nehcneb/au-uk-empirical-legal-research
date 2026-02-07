@@ -73,9 +73,41 @@ from functions.common_functions import check_questions_answers, pop_judgment, de
 # ## Preliminary functions and variables
 
 # %%
-#GPT models to use
+#Get spreadsheet of gpt pricing, tokens and reasoning status
+
+try:
+    gpt_stats = pd.read_csv(f'{os.getcwd()}/gpt_stats.csv')
+
+except:
+
+    gpt_stats_url = 'https://raw.githubusercontent.com/nehcneb/au-uk-empirical-legal-research/main/gpt_stats.csv'
+    gpt_stats = pd.read_csv(gpt_stats_url)
+
+gpt_stats.set_index("MODEL", inplace = True)
+
+gpt_stats.sort_index(ascending=True, inplace = True)
+
+gpt_stats['REASONING'] = gpt_stats['REASONING'].apply(lambda x: bool(ast.literal_eval(str(x))))
+
+gpt_models_list = list(gpt_stats.index)
+
+gpt_reasoning_models_list = list(gpt_stats[gpt_stats['REASONING']].index)
+
+# %%
+#GPT default model to use
 basic_model = 'gpt-4.1-mini'
-flagship_model = 'gpt-4.1'
+
+#Legacy as of 5 Feb 2026. Keeping it just to avoid coding inconsistency.
+flagship_model = 'gpt-4.1-mini'
+
+# %%
+default_temperature = 0.1
+
+
+# %%
+reasoning_effort_list = ['low', 'medium', 'high']
+
+default_reasoning_effort = reasoning_effort_list[0]
 
 # %%
 #Upperbound on the length of questions for GPT
@@ -95,7 +127,7 @@ def split_by_line(x):
         if len(i) == 0:
             y.remove(i)
     return y
-    
+
 
 
 # %%
@@ -142,8 +174,7 @@ def is_api_key_valid(key_to_check):
     
     try:
         completion = openai.chat.completions.create(
-            #model="gpt-3.5-turbo-0125",
-            model = basic_model, 
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": 'Hi'}], 
             max_tokens = 1
         )
@@ -154,124 +185,55 @@ def is_api_key_valid(key_to_check):
 
 
 # %%
-#Define input and output costs, token caps and maximum characters
-#each token is about 4 characters
+#Convert costs from per 1m tokens to per token
+def convert_gpt_pricing(cost_str):
 
-def tokens_cap(gpt_model):
-    #This is the global cap for each model, which will be shown to users
-    #Leaving 1000 tokens to spare
-    
-    if gpt_model == "gpt-3.5-turbo-0125":
+    if '$' in str(cost_str):
+
+        cost_per_1m_tokens = float(str(cost_str).replace('$', ''))
         
-        tokens_cap = int(16385 - (question_characters_bound + system_characters_bound)/4) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
-    
-    elif "gpt-4o-mini" in gpt_model:
-        tokens_cap = int(128000 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
+        cost_per_token = 1/1000000*cost_per_1m_tokens
 
-    elif "gpt-4o" in gpt_model:
-        tokens_cap = int(128000 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
+    else:
+        cost_per_token = 0
 
-    elif "gpt-4.1-mini" in gpt_model:
-        tokens_cap = int(1047576 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+    return cost_per_token
 
-    elif "gpt-4.1-nano" in gpt_model:
-        tokens_cap = int(1047576 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
 
-    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
-        tokens_cap = int(1047576 - (question_characters_bound + system_characters_bound)/4) #For gpt-4o-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
-    
+
+# %%
+def tokens_cap(gpt_model):
+
+    tokens_cap = int(gpt_stats.loc[gpt_model, 'context_window'] - (question_characters_bound + system_characters_bound)/4)
+
     return tokens_cap
 
+def max_output(gpt_model, messages_for_GPT):
+    
+    max_output_tokens = int(gpt_stats.loc[gpt_model, 'context_window'] - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
+
+    output_limit = gpt_stats.loc[gpt_model, 'max_output_tokens']
+    
+    return int(min(output_limit, abs(max_output_tokens)))
+    
 def gpt_input_cost(gpt_model):
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_input_cost = 1/1000000*0.5
 
-    elif "gpt-4o-mini" in gpt_model:
-        gpt_input_cost = 1/1000000*0.15
-    
-    elif "gpt-4o" in gpt_model:
-        gpt_input_cost = 1/1000000*2.5
+    input_cost = convert_gpt_pricing(gpt_stats.loc[gpt_model, 'INPUT'])
 
-    elif "gpt-4.1-mini" in gpt_model:
-        gpt_input_cost = 1/1000000*0.4
-        
-    elif "gpt-4.1-nano" in gpt_model:
-        gpt_input_cost = 1/1000000*0.1
-    
-    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
-
-        gpt_input_cost = 1/1000000*2
-    
-    return gpt_input_cost
+    return input_cost
 
 def gpt_output_cost(gpt_model):
-    if gpt_model == "gpt-3.5-turbo-0125":
-        gpt_output_cost = 1/1000000*1.5
-        
-    elif "gpt-4o-mini" in gpt_model:
-        gpt_output_cost = 1/1000000*0.6
 
-    elif "gpt-4o" in gpt_model:
-        gpt_output_cost = 1/1000000*10
+    output_cost = convert_gpt_pricing(gpt_stats.loc[gpt_model, 'OUTPUT'])
 
-    elif "gpt-4.1-mini" in gpt_model:
-        gpt_output_cost = 1/1000000*1.6
-        
-    elif "gpt-4.1-nano" in gpt_model:
-        gpt_output_cost = 1/1000000*0.4
-    
-    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
-
-        gpt_output_cost = 1/1000000*8
-    
-    return gpt_output_cost
-    
-def max_output(gpt_model, messages_for_GPT):
-
-    if gpt_model == "gpt-3.5-turbo-0125":
-        
-        max_output_tokens = int(16385 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For GPT-3.5-turbo, token limit covering BOTH input and output is 16385,  while the output limit is 4096.
-
-        output_limit = 4096
-    
-    elif gpt_model == "gpt-4o-mini":
-        
-        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o-mini, token limit covering both BOTH and output is 128000, while the output limit is 16384.
-
-        output_limit = 16384
-    
-    elif "gpt-4o" in gpt_model:
-        
-        max_output_tokens = int(128000 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4o, token limit covering both BOTH and output is 128000, while the output limit is 16384.
-
-        output_limit = 16384
-    
-    elif "gpt-4.1-mini" in gpt_model:
-
-        max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1-mini, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
-
-        output_limit = 32768
-        
-    elif "gpt-4.1-nano" in gpt_model:
-
-        max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1-nano, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
-
-        output_limit = 32768
-    
-    else: #("gpt-4.1" in gpt_model) and ('nano' not in gpt_model) and ('mini' not in gpt_model):
-
-        max_output_tokens = int(1047576 - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
-
-        output_limit = 32768
-    
-    return min(output_limit, abs(max_output_tokens))
+    return output_cost
 
 
 
 # %%
 default_msg = f'Please enter your search terms.'
 
-default_caption = f'By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(tokens_cap(basic_model)*3/4)} words per case. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or process more words per case.'
+default_caption = f"By default, this app will collect (ie scrape) up to {default_judgment_counter_bound} cases, and process up to approximately {round(gpt_stats.loc[basic_model, 'context_window']*3/4)} words per case. Please reach out to Ben Chen at ben.chen@sydney.edu.au should you wish to cover more cases or process more words per case."
 
 
 # %%
@@ -366,6 +328,47 @@ If you cannot answer the questions based on the judgment, record or metadata, do
 #Guidance on system role
 gpt_system_msg = "The following system instruction provides context, rules and logic for GPT. [It takes priority over your questions.](https://model-spec.openai.com/) **Do not edit this** unless you know what you are doing."
 
+
+# %%
+#Function for using response API from OpenAI
+
+def gpt_response(gpt_model = basic_model, temperature = default_temperature, reasoning_effort = default_reasoning_effort, messages_for_GPT = [{"role": "user", "content": 'Say hello in JSON'}]):
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    #Decide params based on the kind of model
+    
+    if gpt_stats.loc[gpt_model, 'REASONING']:
+
+        temperature = None
+
+    else:
+
+        reasoning_effort = None
+
+    #print(f'temperature == {temperature}')
+
+    #print(f'reasoning_effort == {reasoning_effort}')
+    
+    #Get response
+    response = openai.responses.create(
+        model= gpt_model,
+        instructions= None,
+        input= messages_for_GPT,
+        text = {"format": { "type": "json_object" }},
+        reasoning = {"effort": reasoning_effort},
+        temperature = temperature,
+        max_output_tokens = max_output(gpt_model, messages_for_GPT),
+        store = False
+    )
+    
+    return response
+
+
 # %% [markdown]
 # ## Privacy
 
@@ -414,35 +417,30 @@ def GPT_questions_label(_questions_json, gpt_model, questions_check_system_instr
     
     intro_for_GPT = [{"role": "developer", "content": questions_check_system_instruction}]
     messages_for_GPT = intro_for_GPT + json_direction + question_to_check
-    
-#   return messages_for_GPT
 
-    #os.environ["OPENAI_API_KEY"] = API_key
+    #Decide params based on the kind of model
 
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
+    if gpt_stats.loc[gpt_model, 'REASONING']:
+
+        temperature = None
+
+    else:
+
+        reasoning_effort = None
     
     try:
-        #completion = client.chat.completions.create(
-        completion = openai.chat.completions.create(
-            model = gpt_model,
-            messages = messages_for_GPT, 
-            response_format = {"type": "json_object"}, 
-            max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.1, 
-            #top_p = 0.1
-        )
-        
-#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
+
+        response = gpt_response(gpt_model = gpt_model, messages_for_GPT = messages_for_GPT)
         
         #To obtain a json directly, use below
-        labels_dict = json.loads(completion.choices[0].message.content)
+        labels_dict = json.loads(response.output_text)
         
         #Obtain tokens
-        output_tokens = completion.usage.completion_tokens
+        response_json = json.loads(response.to_json())
         
-        prompt_tokens = completion.usage.prompt_tokens
+        output_tokens = response_json['usage']['output_tokens']
+        
+        prompt_tokens = response_json['usage']['input_tokens']
         
         return [labels_dict, output_tokens, prompt_tokens]
 
@@ -718,34 +716,21 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
     
     intro_for_GPT = [{"role": "developer", "content": answers_check_system_instruction}]
     messages_for_GPT = intro_for_GPT + json_direction + question_to_check
-
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
     
     try:
-        #completion = client.chat.completions.create(
-        completion = openai.chat.completions.create(
-            model = gpt_model,
-            messages = messages_for_GPT, 
-            response_format = {"type": "json_object"}, 
-            max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.1, 
-            #top_p = 0.1
-        )
-        
-#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
-        
+        response = gpt_response(gpt_model = gpt_model, messages_for_GPT = messages_for_GPT)
+
         #To obtain a json directly, use below
-        redacted_answers_dict = json.loads(completion.choices[0].message.content)
+        redacted_answers_dict = json.loads(response.output_text)
         
         #Obtain tokens
-        redacted_answers_output_tokens = completion.usage.completion_tokens
+        response_json = json.loads(response.to_json())
         
-        redacted_answers_prompt_tokens = completion.usage.prompt_tokens
+        redacted_answers_output_tokens = response_json['usage']['output_tokens']
+        
+        redacted_answers_prompt_tokens = response_json['usage']['input_tokens']
 
+        
         print('Answers checked.')
 
     except Exception as error:
@@ -773,7 +758,7 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
 #IN USE
 
 @st.cache_data(show_spinner = False)
-def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instruction):
+def GPT_json(questions_json, df_example, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
@@ -820,35 +805,20 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
     intro_for_GPT = [{"role": "developer", "content": system_instruction}]
     messages_for_GPT = intro_for_GPT + judgment_for_GPT + json_direction + question_for_GPT
     
-#   return messages_for_GPT
 
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
-    
     try:
-        
-        #completion = client.chat.completions.create(
-        completion = openai.chat.completions.create(
-            model = gpt_model,
-            messages = messages_for_GPT, 
-            response_format = {"type": "json_object"}, 
-            max_tokens = max_output(gpt_model, messages_for_GPT), 
-            temperature = 0.1, 
-            #top_p = 0.1
-        )
-        
-#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
+
+        response = gpt_response(gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, messages_for_GPT = messages_for_GPT)
         
         #To obtain a json directly
-        answers_dict = json.loads(completion.choices[0].message.content)
+        answers_dict = json.loads(response.output_text)
 
         #Obtain tokens
-        output_tokens = completion.usage.completion_tokens
+        response_json = json.loads(response.to_json())
+
+        output_tokens = response_json['usage']['output_tokens']
         
-        prompt_tokens = completion.usage.prompt_tokens
+        prompt_tokens = response_json['usage']['input_tokens']
         
         return [answers_dict, output_tokens, prompt_tokens]
 
@@ -863,7 +833,6 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
         return [answers_json, 0, 0]
 
 
-
 # %%
 #Define GPT function for each respondent's dataframe, index by judgment then question, with input and output tokens given by GPT itself
 #IN USE
@@ -872,7 +841,7 @@ def GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instru
     # To so check, active line marked as #*
 
 @st.cache_data(show_spinner = False)
-def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, temperature, reasoning_effort, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -881,12 +850,6 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
         # 'GPT cost estimate (USD excl GST)'
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
-
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
 
     #Check questions for privacy violation
 
@@ -969,7 +932,7 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_output_list = GPT_json(questions_json, df_example, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = GPT_json(questions_json, df_example, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
             #Check answers for potential policy violation
@@ -1136,7 +1099,7 @@ def calculate_image_token_cost(image, detail="auto"):
 #For vision
 
 @st.cache_data(show_spinner = False)
-def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction):
+def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
@@ -1224,33 +1187,17 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
 
     intro_for_GPT = [{"role": "developer", "content": system_instruction + language_content}] 
     messages_for_GPT = intro_for_GPT + file_for_GPT + question_for_GPT
-    
-#   return messages_for_GPT
 
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
     
     try:
-        #completion = client.chat.completions.create(
-        completion = openai.chat.completions.create(
-            model=gpt_model,
-            messages=messages_for_GPT, 
-            response_format={"type": "json_object"}, 
-            temperature = 0.2, 
-            top_p = 0.2
-        )
-        
-#        return completion.choices[0].message.content #This gives answers as a string containing a dictionary
-                                
-        answers_dict = json.loads(completion.choices[0].message.content)
+        response = gpt_response(gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, messages_for_GPT = messages_for_GPT)
+                                        
+        answers_dict = json.loads(response.output_text)
         
         #Obtain tokens
-        output_tokens = completion.usage.completion_tokens
+        output_tokens = response_json['usage']['output_tokens']
         
-        prompt_tokens = completion.usage.prompt_tokens
+        prompt_tokens = response_json['usage']['input_tokens']
         
         #return [answers_dict, output_tokens, prompt_tokens]
 
@@ -1305,7 +1252,7 @@ def GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_in
     # To so check, active line marked as #*
 
 @st.cache_data(show_spinner = False)
-def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
+def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activation, gpt_model, temperature, reasoning_effort, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
@@ -1315,11 +1262,6 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
         # 'GPT time estimate (seconds)'
         # GPT questions/answers
 
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
 
     #Check questions for privacy violation
     if check_questions_answers() > 0:
@@ -1389,7 +1331,7 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
 
         if ((int(GPT_activation) > 0) and (text_error == False)):
-            GPT_output_list = GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
+            GPT_output_list = GPT_b64_json(questions_json, df_example, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction) #Gives [answers as a JSON, output tokens, input tokens]
             answers_dict = GPT_output_list[0]
 
             if check_questions_answers() > 0:
@@ -1503,7 +1445,6 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
         df_individual.loc[judgment_index, 'GPT cost estimate (USD excl GST)'] = GPT_cost
     
     return df_individual
-    
 
 
 # %% [markdown]
@@ -1557,7 +1498,7 @@ def gpt_get_custom_id(judgment_json):
 #Define function for creating custom id and one line of jsonl file for batching
 #Returns a dictionary of custom id and one line
 
-def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model, system_instruction):
+def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction):
     #'question_json' variable is a json of questions to GPT
     #'jugdment' variable is a judgment_json   
 
@@ -1633,19 +1574,29 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
     #Format for one line in batch input file is
     #{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-3.5-turbo-0125", "messages": [{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello world!"}],"max_tokens": 1000}}
 
-    body = {"model": gpt_model, 
-            "messages": messages_for_GPT, 
-            "response_format": {"type": "json_object"}, 
-            "max_tokens": max_output(gpt_model, messages_for_GPT), 
-            "temperature": 0.1, 
-            #"top_p" = 0.1
-           }
+    if gpt_stats.loc[gpt_model, 'REASONING']:
 
+        temperature = None
+
+    else:
+
+        reasoning_effort = None
+
+    body = {"model": gpt_model, 
+        "instructions" : None,
+        "input" : messages_for_GPT,
+        "text" : {"format": { "type": "json_object" }},
+        "reasoning" : {"effort": reasoning_effort},
+        "temperature" : temperature,
+        "max_output_tokens" : max_output(gpt_model, messages_for_GPT),
+        "store" : False
+        }
+    
     custom_id = gpt_get_custom_id(judgment_json)
     
     oneline = {"custom_id": custom_id, 
               "method": "POST", 
-              "url": "/v1/chat/completions", 
+              "url": "/v1/responses", 
               "body": body
              }
 
@@ -1656,16 +1607,10 @@ def gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model
 # %%
 #Define function for creating jsonl file for batching together with df_individual with custom id inserted
 
-def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, gpt_model, system_instruction):
+def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, gpt_model, temperature, reasoning_effort, system_instruction):
     # Variable questions_json refers to the json of questions
     # Variable df_individual refers to each respondent's df
     # Variable activation refers to status of GPT activation (real or test)
-
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
 
     #Create list for conversion to jsonl
 
@@ -1713,7 +1658,7 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
         #Depending on activation status, apply GPT_json function to each judgment, gives answers as a string containing a dictionary
         if ((int(GPT_activation) > 0) and (text_error == False)):
 
-            get_id_oneline = gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model, system_instruction)
+            get_id_oneline = gpt_batch_input_id_line(questions_json, df_example, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction)
             
             df_individual.loc[judgment_index, 'custom_id'] = get_id_oneline['custom_id']
 
@@ -1753,7 +1698,7 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
     
     batch_record = openai.batches.create(
         input_file_id=batch_input_file_id,
-        endpoint="/v1/chat/completions",
+        endpoint = "/v1/responses",
         completion_window="24h", 
             #metadata={
       #"name":
@@ -1875,17 +1820,20 @@ def batch_request_function():
                         #API_key = st.secrets["openai"]["gpt_api_key"]
 
                         from functions.common_functions import API_key
-                        
+
+                        #Must keep the following to ensure that if not using own account, then judgment_counter_max is applied
                         st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = st.session_state["judgment_counter_max"]
 
                     #Check questions for potential privacy violation
                     openai.api_key = API_key
 
-                    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-                        gpt_model = flagship_model
-                    else:        
-                        gpt_model = basic_model
+                    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+                        #gpt_model = flagship_model
+                    #else:        
+                        #gpt_model = basic_model
 
+                    gpt_model = df_master.loc[0, 'gpt_model']
+                    
                     #Check system instruction and questions for privacy violation
                     if check_questions_answers() > 0:
 
@@ -1915,7 +1863,9 @@ def batch_request_function():
                             #body = obj.get()['Body'].read()
                             #all_df_masters = pd.read_csv(BytesIO(body), index_col=0)
                             #break
-                            
+
+                    #st.write(df_master)
+                    
                     #Add df_master to all_df_masters 
                     all_df_masters = pd.concat([all_df_masters, df_master], ignore_index=True)
     

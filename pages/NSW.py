@@ -179,7 +179,6 @@ def nsw_create_df():
     except:
         print('GPT questions not entered.')
 
-    
     #Create row
     new_row = {'Processed': '',
            'Timestamp': timestamp,
@@ -210,7 +209,6 @@ def nsw_create_df():
     
     df_master_new = pd.DataFrame([new_row])
 
-    
     return df_master_new
 
 

@@ -68,10 +68,8 @@ from functions.common_functions import today_in_nums, today, errors_list, scrape
 # # AFCA search engine
 
 # %%
-from functions.afca_functions import browser, collection_options, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable
+from functions.afca_functions import collection_options, product_line_options, product_category_options, product_name_options, issue_type_options, issue_options, afca_search, afca_meta_judgment_dict,  afca_meta_labels_droppable, afca_old_pdf_judgment, afca_old_element_meta, afca_old_search, afca_old_meta_labels_droppable, afca_meta_labels_droppable
 
-if streamlit_timezone() == True:
-    from functions.afca_functions import browser_old
 
 
 # %%
@@ -329,7 +327,7 @@ if 'gpt_api_key' not in st.session_state:
     from functions.common_functions import API_key
 
     st.session_state['gpt_api_key'] = API_key
-    
+
 
 # %% [markdown]
 # # Streamlit form, functions and parameters

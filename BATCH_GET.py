@@ -375,17 +375,17 @@ for index in all_df_masters.index:
             openai.api_key = API_key
         
             batch_id = all_df_masters.loc[index, 'batch_id']
+
+            gpt_model = all_df_masters.loc[index, 'gpt_model']
         
-            gpt_model = basic_model
-            if all_df_masters.loc[index, 'Use flagship version of GPT'] == True:
-                gpt_model = flagship_model
-            else:        
-                gpt_model = basic_model
+            #gpt_model = basic_model
+            #if all_df_masters.loc[index, 'Use flagship version of GPT'] == True:
+                #gpt_model = flagship_model
+            #else:        
+                #gpt_model = basic_model
                 
             #Get batch record
             batch_record = openai.batches.retrieve(batch_id)
-
-            #st.write(f"{batch_id}: batch_record == {batch_record}")
             
             output_file_id = ''
         
@@ -412,8 +412,6 @@ for index in all_df_masters.index:
             if status == 'completed':
                 
                 batch_response = openai.files.content(output_file_id)
-
-                #st.write(f"batch_response == {batch_response}")
         
                 df_batch_response = pd.read_json(batch_response.text, lines=True)
         
@@ -496,8 +494,12 @@ for df_batch_response in df_batch_id_response_list:
             
             #Get gpt specific answers            
             try:
-                
-                answers_string = df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content']
+                #The following is for Completion API
+                #answers_string = df_batch_response.loc[gpt_index, 'response']['body']['choices'][0]['message']['content']
+
+                #The following is for Response API for both reasoning and non-reasoning models
+                answers_string = next(o for o in df_batch_response.loc[gpt_index, 'response']["body"]["output"] if o.get("type") == "message")["content"][0]["text"]
+
                 answers_dict = json.loads(answers_string)
 
             except Exception as e:
@@ -509,9 +511,13 @@ for df_batch_response in df_batch_id_response_list:
                 
                 st.error(f"{batch_id}: GPT did not produce a valid JSON.")
 
-            input_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['prompt_tokens']
+            #The following is for Completion API
+            #input_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['prompt_tokens']
+            #output_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['completion_tokens']
 
-            output_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['completion_tokens']
+            #The following is for Response API
+            input_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['input_tokens']
+            output_tokens = df_batch_response.loc[gpt_index, 'response']['body']['usage']['output_tokens']
 
             #Check GPT answers
             if check_questions_answers() > 0:

@@ -133,9 +133,28 @@ fca_metalabels_droppable = ['Year', 'Appeal', 'File_Number', 'Judge', 'Judgment_
 # ### Search function
 
 # %%
-from functions.common_functions import link, split_title_mnc
+from functions.common_functions import running_locally_dir, get_uc_driver
+
+#For downloading judgments
+download_dir = f"{os.getcwd()}/FCA_PDFs"
+
+#Headless mode?
+if running_locally_dir in os.getcwd(): 
+
+    headless = False
+
+else:
+
+    headless = False
+    
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
 
 # %%
+#Get uc modules
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -149,50 +168,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
-import undetected_chromedriver as uc
 
-if 'Users/Ben' not in os.getcwd(): 
 
-    from pyvirtualdisplay import Display
-    
-    display = Display(visible=0, size=(1200, 1600))  
-    display.start()
-
-#For downloading judgments
-download_dir = os.getcwd() + '/FCA_PDFs'
-
-def get_driver():
-    # Use uc options (ChromeOptions compatible)
-    options = uc.ChromeOptions()
-
-    # ---- Download prefs ----
-    prefs = {
-        "download.default_directory": download_dir,
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True
-    }
-    options.add_experimental_option("prefs", prefs)
-
-    # Good practice flags (esp. on CI/containers)
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    # Create undetected driver
-    browser = uc.Chrome(
-        options=options,
-        # If you want uc to try to manage the driver automatically:
-        use_subprocess=True,
-    )
-
-    browser.implicitly_wait(15)
-    browser.set_page_load_timeout(30)
-
-    #if 'Users/Ben' in os.getcwd():
-        #browser.minimize_window()
-
-    return browser
-
+# %%
+from functions.common_functions import link, split_title_mnc
 
 
 # %%
@@ -356,7 +335,7 @@ class fca_search_tool:
         
         #Before entering year, justice or CLR, must enter keywords or case number first, then load
 
-        browser = get_driver()
+        browser = get_uc_driver(download_dir = download_dir, headless = headless)
         
         browser.get(self.results_url)
 
@@ -604,7 +583,7 @@ class fca_search_tool:
         
             try:
     
-                browser = get_driver()
+                browser = get_uc_driver(download_dir = download_dir, headless = headless)
                 browser.get(judgment_url)
         
                 #Wait until judgment present
@@ -652,8 +631,8 @@ class fca_search_tool:
             try:
                 
                 #judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
-    
-                browser = get_driver()
+
+                browser = get_uc_driver(download_dir = download_dir, headless = headless)
                 browser.get(judgment_url)
                 
                 pdf_file = judgment_url.split('/')[-1]    
@@ -811,7 +790,7 @@ def fca_search_preview(df_master):
 #Import functions
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_batch_input
 #Import variables
-from functions.gpt_functions import basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model#, flagship_model#, role_content
 
 
 # %%
@@ -878,10 +857,16 @@ def fca_run(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -892,7 +877,7 @@ def fca_run(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     #Pop jugdment
     if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
@@ -967,10 +952,16 @@ def fca_batch(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -981,7 +972,7 @@ def fca_batch(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Send batch input to gpt
-    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
     
     return batch_record_df_individual
 

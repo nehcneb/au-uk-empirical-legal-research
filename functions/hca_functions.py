@@ -18,7 +18,7 @@
 
 # %%
 #Preliminary modules
-import base64 
+#import base64 
 import json
 import pandas as pd
 import shutil
@@ -33,9 +33,9 @@ import sys
 import pause
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
-import httplib2
+#import httplib2
 import urllib
-from urllib.request import urlretrieve
+#from urllib.request import urlretrieve
 import os
 import io
 from io import BytesIO
@@ -45,9 +45,9 @@ import math
 #Streamlit
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
-from streamlit.components.v1 import html
+#from streamlit.components.v1 import html
 #import streamlit_ext as ste
-from streamlit_extras.stylable_container import stylable_container
+#from streamlit_extras.stylable_container import stylable_container
 
 #OpenAI
 import openai
@@ -58,6 +58,8 @@ import tiktoken
 
 #Excel
 from pyxlsb import open_workbook as open_xlsb
+
+# %%
 
 # %%
 #Import functions
@@ -73,68 +75,7 @@ from functions.oalc_functions import get_judgment_from_oalc
 # # High Court of Australia search engine
 
 # %%
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver import ActionChains
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.ui import WebDriverWait as Wait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import ElementClickInterceptedException
-import undetected_chromedriver as uc
-
-if 'Users/Ben' not in os.getcwd(): 
-
-    from pyvirtualdisplay import Display
-    
-    display = Display(visible=0, size=(1200, 1600))  
-    display.start()
-
-#For downloading judgments
-download_dir = os.getcwd() + '/HCA_PDFs'
-
-def get_driver():
-    # Use uc options (ChromeOptions compatible)
-    options = uc.ChromeOptions()
-
-    # ---- Download prefs ----
-    prefs = {
-        "download.default_directory": download_dir,
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True
-    }
-    options.add_experimental_option("prefs", prefs)
-
-    # Good practice flags (esp. on CI/containers)
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    # Create undetected driver
-    browser = uc.Chrome(
-        options=options,
-        # If you want uc to try to manage the driver automatically:
-        use_subprocess=True,
-    )
-
-    browser.implicitly_wait(15)
-    browser.set_page_load_timeout(30)
-
-    #if 'Users/Ben' in os.getcwd():
-        #browser.minimize_window()
-
-    return browser
-
-
-
-# %%
 #Load hca_data
-
 @st.cache_resource(show_spinner = False)
 def hca_load_data(url):
     df = pd.read_csv(url)
@@ -303,9 +244,46 @@ hca_search_methods_dict = {
 'Unreported Judgments': ["Keywords, case number, Justices, year or Citation"], #["Keywords or case number", "Justices or year", "Citation"],    
 }
 
-
 # %% [markdown]
 # ## Search engine
+
+# %%
+from functions.common_functions import running_locally_dir, get_uc_driver
+
+#For downloading judgments
+download_dir = f"{os.getcwd()}/HCA_PDFs"
+
+#Headless mode?
+if running_locally_dir in os.getcwd(): 
+
+    headless = True
+
+else:
+
+    headless = False
+    
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
+
+# %%
+#Get uc modules
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import ActionChains
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait as Wait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
+
 
 # %%
 class hca_search_tool:
@@ -371,7 +349,7 @@ class hca_search_tool:
         
         #Before entering year, justice or CLR, must enter keywords or case number first, then load
 
-        browser = get_driver()
+        browser = get_uc_driver(download_dir = download_dir, headless = headless)
         
         browser.get(self.results_url)
 
@@ -396,14 +374,14 @@ class hca_search_tool:
 
         if len(self.keywords) > 0:
             
-            keywords_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-keywords--2"]')))
+            keywords_input = Wait(browser, 15).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-keywords--2"]')))
             keywords_input.send_keys(self.keywords)
 
             params_raw.append(('keywords', self.keywords))
 
         if len(self.case_number) > 0:
 
-            case_number_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
+            case_number_input = Wait(browser, 15).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
             keywords_input.send_keys(self.case_number)
 
             params_raw.append(('case_number', self.case_number))
@@ -432,19 +410,19 @@ class hca_search_tool:
 
                         print(f"Inferred case_number == {case_number} from self.citation == {self.citation}")
 
-            case_number_input = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
+            case_number_input = Wait(browser, 15).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
             keywords_input.send_keys(case_number)
 
             params_raw.append(('case_number', case_number))
 
         #Select 100 results per page
-        items_per_page_menu = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'edit-items-per-page--2')))
+        items_per_page_menu = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, 'edit-items-per-page--2')))
         items_per_page_menu_input = Select(items_per_page_menu)
         
         items_per_page_menu_input.select_by_value('100')
 
         #Click apply button and load
-        apply_button = Wait(browser, 20).until(EC.visibility_of_element_located((By.ID, 'edit-submit-judgments--2')))
+        apply_button = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, 'edit-submit-judgments--2')))
 
         #Scroll to buttom of page to see apply button
         browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -551,10 +529,16 @@ class hca_search_tool:
                         #Pause to avoid getting kicked out
                         pause.seconds(np.random.randint(10, 15))
 
-                        next_page_url = self.results_url + f"&page={page}"
+                        #next_page_url = self.results_url + f"&page={page}"
 
-                        browser = get_driver()
+                        #browser = get_uc_driver(download_dir = download_dir, headless = headless)
                         browser.get(self.next_page_url)
+
+                        #Alternative method suggested by Copliot
+                        #first_row = browser.find_element(By.CSS_SELECTOR, ".view-judgments .views-row")
+                        #next_btn = Wait(browser, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "nav.pager a.pager__link[rel='next']")))
+                        #next_btn.click()
+                        #Wait(browser, 15).until(EC.staleness_of(first_row))
 
                         #Pause to avoid loading unfiltered number of research results
                         pause.seconds(np.random.randint(10, 15))
@@ -564,7 +548,7 @@ class hca_search_tool:
 
                         self.soup = BeautifulSoup(browser.page_source, "lxml")
 
-                        browser.quit()
+                        #browser.quit()
         
                     print(f"Getting results from page {page} (0 denotes first page)")
                     
@@ -695,7 +679,7 @@ class hca_search_tool:
         
         judgment_url = case_info['Hyperlink to High Court Judgments Database']
 
-        browser = get_driver()
+        browser = get_uc_driver(download_dir = download_dir, headless = headless)
     
         browser.get(judgment_url)
         #browser.delete_all_cookies() #Don't
@@ -889,7 +873,7 @@ def hca_search_preview(df_master):
 #Import functions
 from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, gpt_batch_input
 #Import variables
-from functions.gpt_functions import basic_model, flagship_model#, role_content
+from functions.gpt_functions import basic_model#, flagship_model#, role_content
 
 
 # %%
@@ -964,10 +948,16 @@ def hca_run(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
 
@@ -978,7 +968,7 @@ def hca_run(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
     
     #Engage GPT
-    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    df_updated = engage_GPT_json(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
 
     if (pop_judgment() > 0) and ('judgment' in df_updated.columns):
         df_updated.pop('judgment')
@@ -1043,10 +1033,16 @@ def hca_batch(df_master):
     
     #GPT model
 
-    if df_master.loc[0, 'Use flagship version of GPT'] == True:
-        gpt_model = flagship_model
-    else:        
-        gpt_model = basic_model
+    #if df_master.loc[0, 'Use flagship version of GPT'] == True:
+        #gpt_model = flagship_model
+    #else:        
+        #gpt_model = basic_model
+
+    gpt_model = df_master.loc[0, 'gpt_model']
+
+    temperature = df_master.loc[0, 'temperature']
+
+    reasoning_effort = df_master.loc[0, 'reasoning_effort']
         
     #apply GPT_individual to each respondent's judgment spreadsheet
     
@@ -1057,7 +1053,7 @@ def hca_batch(df_master):
     system_instruction = df_master.loc[0, 'System instruction']
 
     #Send batch input to gpt
-    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, system_instruction = system_instruction)
+    batch_record_df_individual = gpt_batch_input(questions_json = questions_json, df_example = df_master.loc[0, 'Example'], df_individual = df_individual, GPT_activation = GPT_activation, gpt_model = gpt_model, temperature = temperature, reasoning_effort = reasoning_effort, system_instruction = system_instruction)
     
     return batch_record_df_individual
 
