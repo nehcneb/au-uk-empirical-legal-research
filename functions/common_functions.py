@@ -57,7 +57,14 @@ default_judgment_counter_bound = 10
 judgment_batch_cutoff = 25 #Change this at home
 
 #max number of judgments under batch mode
-judgment_batch_max = 200 #Change this at home
+if own_account_allowed() > 0:
+
+    judgment_batch_max = 200 #Change this at home
+
+else:
+    
+    judgment_batch_max = 100
+
 
 
 # %%

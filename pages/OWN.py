@@ -637,34 +637,22 @@ if 'df_individual' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
-#default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max
+#default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max/4
 
 #Instant mode max/batch mode threshold
-if own_account_allowed() > 0:
+if "judgment_batch_cutoff" not in st.session_state:
+    
     st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
-else:
-    st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
 #Maximum number of files to process under any mode
 if "judgment_counter_max" not in st.session_state:
 
-    st.session_state["judgment_counter_max"] = judgment_batch_cutoff
-
-if batch_mode_allowed() > 0:
-
-    if own_account_allowed() > 0:
-
-        st.session_state["judgment_counter_max"] = judgment_batch_max
-
-    else:
-
-        st.session_state["judgment_counter_max"] = judgment_batch_cutoff
+    st.session_state["judgment_counter_max"] = judgment_batch_max
 
 #For displaying on page maximum number to process under batch mode
 if "judgment_counter_batch" not in st.session_state:
 
     st.session_state["judgment_counter_batch"] = st.session_state["judgment_counter_max"]
-
 
 #Initalize for the purpuse of disabling multiple submissions of batch requests
 if "batch_submitted" not in st.session_state:

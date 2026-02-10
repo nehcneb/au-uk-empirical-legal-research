@@ -470,22 +470,15 @@ if 'df_individual' not in st.session_state:
 if 'disable_input' not in st.session_state:
     st.session_state["disable_input"] = True
 
-
-#default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max/2
+#default_judgment_counter_bound < judgment_batch_cutoff < judgment_batch_max/4
 #Instant mode max/batch mode threshold
 if "judgment_batch_cutoff" not in st.session_state:
-#if own_account_allowed() > 0:
+    
     st.session_state["judgment_batch_cutoff"] = judgment_batch_cutoff
-#else:
-    #st.session_state["judgment_batch_cutoff"] = default_judgment_counter_bound
 
-#Maximum number of judgments to process under any mode
+#Maximum number of files to process under any mode
 if "judgment_counter_max" not in st.session_state:
 
-    st.session_state["judgment_counter_max"] = judgment_batch_cutoff
-
-if ((batch_mode_allowed() > 0) and (st.session_state.jurisdiction_page in pages_w_batch)):
-        
     st.session_state["judgment_counter_max"] = judgment_batch_max
 
 #For displaying on page maximum number to process under batch mode

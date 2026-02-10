@@ -2023,7 +2023,7 @@ def gpt_run(jurisdiction_page, df_master):
 # # GPT batch run
 
 # %%
-pages_w_batch = ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/HKLII.py', 'pages/US.py', 'pages/CA.py']
+pages_w_batch = ['pages/HCA.py', 'pages/FCA.py', 'pages/NSW.py', 'pages/HK.py', 'pages/HKLII.py', 'pages/US.py', 'pages/OWN.py',] # 'pages/CA.py'
 
 
 # %%
