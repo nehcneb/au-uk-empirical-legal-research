@@ -301,7 +301,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
     st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
-    st.session_state['df_master'].loc[0, 'Use GPT'] = False
+    st.session_state['df_master'].loc[0, 'Use GPT'] = True
     st.session_state['df_master'].loc[0, 'Use own account'] = False
     st.session_state['df_master'].loc[0, 'Use flagship version of GPT'] = False
     st.session_state['df_master'].loc[0, 'Example'] = ''

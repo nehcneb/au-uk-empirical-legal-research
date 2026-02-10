@@ -596,7 +596,7 @@ if 'df_master' not in st.session_state:
     'Maximum number of pages per file': default_page_bound,
     'Language choice': 'English',
     'Enter your questions for GPT': '',
-    'Use GPT': False,
+    'Use GPT': True,
     'Use own account': False,
     'Use flagship version of GPT': False,
     'System instruction': role_content_own,

@@ -368,7 +368,7 @@ if 'df_master' not in st.session_state:
     'Metadata inclusion': True, 
     'Maximum number of judgments': default_judgment_counter_bound, 
     'Enter your questions for GPT': '', 
-    'Use GPT': False, 
+    'Use GPT': True, 
     'Use own account': False, 
     'Use flagship version of GPT': False,
     'Example': ''
