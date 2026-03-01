@@ -1645,14 +1645,18 @@ def us_search_preview(df_master):
     df_master = df_master.fillna('')
 
     court_listener_token = df_master.loc[0, 'CourtListener API token']
-
+    
     #Use own token if user hasn't entered a valid one
-    if len(str(df_master.loc[0, 'CourtListener API token'])) < 20:
-        
-        #court_listener_token = st.secrets["courtlistener"]["token"]
+    if not df_master.loc[0, 'CourtListener API token']:
         
         from functions.common_functions import court_listener_token
-        
+
+    elif isinstance(df_master.loc[0, 'CourtListener API token'], str):
+
+        if len(df_master.loc[0, 'CourtListener API token']) < 20:
+
+            from functions.common_functions import court_listener_token
+    
     #Conduct search
     
     us_search = us_search_function(

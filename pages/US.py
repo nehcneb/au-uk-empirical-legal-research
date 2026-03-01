@@ -178,6 +178,7 @@ def us_create_df():
     try:
         
         semantic = semantic_entry
+        
     except:
         
         semantic = False
@@ -212,7 +213,11 @@ def us_create_df():
 
     docket_number = docket_number_entry
 
-    token = token_entry
+    token = None    
+    try:
+        token = token_entry
+    except:
+        print('Court listener token not entered')
 
     #Initialise source specific values
     precedential_status = [list(us_precedential_status.keys())[0]]
