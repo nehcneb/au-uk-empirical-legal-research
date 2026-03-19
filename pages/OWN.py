@@ -269,7 +269,7 @@ def own_create_df():
 #Import functions
 from functions.gpt_functions import split_by_line, GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string  
 #Import variables
-from functions.gpt_functions import question_characters_bound, system_characters_bound, basic_model, flagship_model, gpt_system_msg, default_temperature, default_reasoning_effort, gpt_models_list, gpt_reasoning_models_list, reasoning_effort_list
+from functions.gpt_functions import question_characters_bound, system_characters_bound, basic_model, flagship_model, gpt_system_msg, default_temperature, default_reasoning_effort, gpt_models_list, gpt_reasoning_models_list, reasoning_effort_list, gpt_stats
 #, intro_for_GPT
 
 
@@ -924,27 +924,37 @@ else:
         
         st.caption('Click [here](https://platform.openai.com/docs/models/compare) for guidance on different GPT models.')
 
-        temperature_entry = st.slider(label = 'Temperature', min_value = float(0), max_value = float(1), step = 0.01, value = float(st.session_state['df_master'].loc[0, 'temperature']), disabled = bool(gpt_model_entry in gpt_reasoning_models_list))
-
-        st.caption('Click [here](https://platform.openai.com/docs/api-reference/responses/create#responses_create-temperature) for guidance on the temperature parameter.')
-    
-        reasoning_effort_entry = st.pills(label = 'Reasoning effort', options = reasoning_effort_list, default = st.session_state.df_master.loc[0, 'reasoning_effort'], disabled = bool(gpt_model_entry not in gpt_reasoning_models_list))
-
-        st.caption('Click [here](https://platform.openai.com/docs/guides/reasoning) for guidance on reasoning effort.')
-        
         if gpt_model_entry in gpt_reasoning_models_list:
-        
+
+            model_specific_reasoning_effort_list = gpt_stats.loc[gpt_model_entry, 'REASONING_EFFORTS']
+
+            if st.session_state.df_master.loc[0, 'reasoning_effort'] in model_specific_reasoning_effort_list:
+            
+                model_specific_defalt_reasoning_effort = st.session_state.df_master.loc[0, 'reasoning_effort']
+
+            else:
+
+                model_specific_defalt_reasoning_effort = model_specific_reasoning_effort_list[0]
+            
+            reasoning_effort_entry = st.pills(label = 'Reasoning effort', options = model_specific_reasoning_effort_list, default = model_specific_defalt_reasoning_effort, disabled = bool(gpt_model_entry not in gpt_reasoning_models_list))
+    
+            st.caption('Click [here](https://platform.openai.com/docs/guides/reasoning) for guidance on reasoning effort.')
+
             #No need to set to None given this entry will be ignored
             temperature_entry = default_temperature
 
-            st.info(f"Given {gpt_model_entry} is a reasoning model, the temperature parameter will be ignored.")
+            #st.info(f"Given {gpt_model_entry} is a reasoning model, the temperature parameter will be ignored.")
             
         else:
 
+            temperature_entry = st.slider(label = 'Temperature', min_value = float(0), max_value = float(1), step = 0.01, value = float(st.session_state['df_master'].loc[0, 'temperature']), disabled = bool(gpt_model_entry in gpt_reasoning_models_list))
+    
+            st.caption('Click [here](https://platform.openai.com/docs/api-reference/responses/create#responses_create-temperature) for guidance on the temperature parameter.')       
+                        
             #No need to set to None given this entry will be ignored
             reasoning_effort_entry = default_reasoning_effort
 
-            st.info(f"Given {gpt_model_entry} is not a reasoning model, the reasoning effort parameter will be ignored.")
+            #st.info(f"Given {gpt_model_entry} is not a reasoning model, the reasoning effort parameter will be ignored.")
             
         st.write(f'**:green[You can change the maximum number of files to process.]**')
 

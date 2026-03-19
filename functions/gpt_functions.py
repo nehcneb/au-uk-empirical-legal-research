@@ -43,6 +43,7 @@ from io import StringIO
 import copy
 #import time
 import traceback
+from functools import reduce
 
 #OpenAI
 import openai
@@ -89,6 +90,8 @@ gpt_stats.sort_index(ascending=True, inplace = True)
 
 gpt_stats['REASONING'] = gpt_stats['REASONING'].apply(lambda x: bool(ast.literal_eval(str(x))))
 
+gpt_stats['REASONING_EFFORTS'] = gpt_stats['REASONING_EFFORTS'].apply(lambda x: ast.literal_eval(x) if (not pd.isna(x)) else [])
+
 gpt_models_list = list(gpt_stats.index)
 
 gpt_reasoning_models_list = list(gpt_stats[gpt_stats['REASONING']].index)
@@ -97,7 +100,7 @@ gpt_reasoning_models_list = list(gpt_stats[gpt_stats['REASONING']].index)
 #GPT default model to use
 basic_model = 'gpt-4.1-mini'
 
-#Legacy as of 5 Feb 2026. Keeping it just to avoid coding inconsistency.
+#Legacy as of 5 Feb 2026. Not used anymore. Keeping it just to avoid coding inconsistency.
 flagship_model = 'gpt-4.1-mini'
 
 # %%
@@ -105,7 +108,11 @@ default_temperature = 0.1
 
 
 # %%
-reasoning_effort_list = ['low', 'medium', 'high']
+#These are the finest intersection of reasoning efforts for all reasoning models
+reasoning_effort_col = gpt_stats.loc[gpt_stats.index.isin(gpt_reasoning_models_list), 'REASONING_EFFORTS']
+reasoning_effort_list = list(reduce(set.intersection, map(set, reasoning_effort_col)))
+
+#reasoning_effort_list = ['low', 'medium', 'high']
 
 default_reasoning_effort = reasoning_effort_list[0]
 
@@ -327,47 +334,6 @@ If you cannot answer the questions based on the judgment, record or metadata, do
 # %%
 #Guidance on system role
 gpt_system_msg = "The following system instruction provides context, rules and logic for GPT. [It takes priority over your questions.](https://model-spec.openai.com/) **Do not edit this** unless you know what you are doing."
-
-
-# %%
-#Function for using response API from OpenAI
-
-def gpt_response(gpt_model = basic_model, temperature = default_temperature, reasoning_effort = default_reasoning_effort, messages_for_GPT = [{"role": "user", "content": 'Say hello in JSON'}]):
-
-    #os.environ["OPENAI_API_KEY"] = API_key
-
-    #openai.api_key = API_key
-    
-    #client = OpenAI()
-    
-    #Decide params based on the kind of model
-    
-    if gpt_stats.loc[gpt_model, 'REASONING']:
-
-        temperature = None
-
-    else:
-
-        reasoning_effort = None
-
-    #print(f'temperature == {temperature}')
-
-    #print(f'reasoning_effort == {reasoning_effort}')
-    
-    #Get response
-    response = openai.responses.create(
-        model= gpt_model,
-        instructions= None,
-        input= messages_for_GPT,
-        text = {"format": { "type": "json_object" }},
-        reasoning = {"effort": reasoning_effort},
-        temperature = temperature,
-        max_output_tokens = max_output(gpt_model, messages_for_GPT),
-        store = False
-    )
-    
-    return response
-
 
 # %% [markdown]
 # ## Privacy
@@ -752,6 +718,46 @@ def GPT_answers_check(_answers_to_check_json, gpt_model, answers_check_system_in
 
 # %% [markdown]
 # ## GPT instant response
+
+# %%
+#Function for using response API from OpenAI
+
+def gpt_response(gpt_model = basic_model, temperature = default_temperature, reasoning_effort = default_reasoning_effort, messages_for_GPT = [{"role": "user", "content": 'Say hello in JSON'}]):
+
+    #os.environ["OPENAI_API_KEY"] = API_key
+
+    #openai.api_key = API_key
+    
+    #client = OpenAI()
+    
+    #Decide params based on the kind of model
+    
+    if gpt_stats.loc[gpt_model, 'REASONING']:
+
+        temperature = None
+
+    else:
+
+        reasoning_effort = None
+
+    #print(f'temperature == {temperature}')
+
+    #print(f'reasoning_effort == {reasoning_effort}, of type {type(reasoning_effort)}')
+    
+    #Get response
+    response = openai.responses.create(
+        model= gpt_model,
+        instructions= None,
+        input= messages_for_GPT,
+        text = {"format": { "type": "json_object" }},
+        reasoning = {"effort": reasoning_effort},
+        temperature = temperature,
+        max_output_tokens = max_output(gpt_model, messages_for_GPT),
+        store = False
+    )
+    
+    return response
+
 
 # %%
 #Define GPT answer function for answers in json form, YES TOKENS
