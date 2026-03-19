@@ -209,9 +209,8 @@ def get_judgment_from_oalc(mnc_list):
         where_list = []
     
         for mnc in mnc_list:
-            search_str = f""""citation" ILIKE '%{mnc}'"""
             
-            #search_str = search_str.replace('%', '\%').replace(']', '\]') + " ESCAPE '\\'"
+            search_str = f""""citation" ILIKE '%{mnc}'"""
 
             search_str = f"({search_str})"
             
@@ -219,7 +218,7 @@ def get_judgment_from_oalc(mnc_list):
 
         where_str = ' OR '.join(where_list)
 
-        print(f"where_str == {where_str}")
+        #print(f"where_str == {where_str}")
         
         #Create dict of mncs and judgments
         for mnc in mnc_list:
