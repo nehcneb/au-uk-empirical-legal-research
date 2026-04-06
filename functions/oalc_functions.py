@@ -134,10 +134,14 @@ def oalc_filter(dataset,
 
     try: #If running locally
         HF_TOKEN = st.secrets["huggingface"]["hf_token"]
+
+        print(f"Got hf_token locally or from Streamlit Cloud")
         
     except: #If running on Huggingface or Github Actions
         HF_TOKEN = os.environ['HF_TOKEN']
 
+        print(f"Got hf_token locally or from os.environ")
+    
     if 'lawtodata' in dataset:
         
         split = 'train'
@@ -230,6 +234,9 @@ def get_judgment_from_oalc(mnc_list):
         while try_counter <= try_max:
             
             try:
+
+                #Default data
+                data = {}
         
                 #Get judgments from corpus online
                 data = oalc_filter(dataset = corpus_dir, 
