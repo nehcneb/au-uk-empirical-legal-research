@@ -326,8 +326,8 @@ def judgment_prompt_json(judgment_json, gpt_model):
 # %%
 #For modern judgments, define system role content for GPT
 role_content = """You are a legal research assistant helping an academic researcher to answer questions about a public judgment and court record. You will be provided with the judgment, record and the associated metadata in JSON form. 
-Please answer questions based only on information contained in the judgment, record and metadata. Where your answer comes from specific paragraphs, pages or sections of the judgment, record or metadata, include a reference to those paragraphs, pages or sections. 
-If you cannot answer the questions based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'."""
+You must answer the questions based only on information contained in the judgment, record or metadata. Where your answers come from specific paragraphs, pages or sections of the judgment, record or metadata, you must include references to those paragraphs, pages or sections. You must also explain the reasoning, assumptions, and any external knowledge used for your answers.
+If you cannot answer a question based on the judgment, record or metadata, do not make up information, but instead write 'answer not found'."""
 #Respond in JSON form. In your response, produce as many keys as you need. 
 
 
@@ -344,7 +344,7 @@ gpt_system_msg = "The following system instruction provides context, rules and l
 questions_check_system_instruction = """
 You are a compliance officer helping a human ethics committee to ensure that no personally identifiable information will be exposed. 
 You will be given questions to check in JSON form. Please provide labels for these questions based only on information contained in the JSON.
-Where a question seeks information about a person's birth or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
+Where a question seeks information about a person's date of birth or address, you label "1". If a question does not seek such information, you label "0". If you are not sure, label "unclear".
 For example, the question "What's the plaintiff's date of birth?" should be labelled "1".
 For example, the question "What's the defendant's address?" should be labelled "1".
 For example, the question "What's the victim's date of death?" should be labelled "0".
@@ -740,7 +740,7 @@ def gpt_response(gpt_model = basic_model, temperature = default_temperature, rea
 
         reasoning_effort = None
 
-    #print(f'temperature == {temperature}')
+    #print(f'temperature == {temperature}, of type {type(temperature)}')
 
     #print(f'reasoning_effort == {reasoning_effort}, of type {type(reasoning_effort)}')
     
@@ -2001,7 +2001,7 @@ def gpt_run(jurisdiction_page, df_master):
 
     if jurisdiction_page == 'pages/KR.py':
 
-        system_instruction = role_content
+        #system_instruction = role_content
                 
         from functions.kr_functions import kr_run
         

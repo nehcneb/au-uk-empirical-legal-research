@@ -281,14 +281,11 @@ from functions.gpt_functions import questions_check_system_instruction, basic_mo
 # %%
 #Define system role content for GPT
 role_content_own = """You are a legal research assistant helping an academic researcher to answer questions about a file. The file may be a document or an image. You will be provided with the file. 
-Please answer questions based only on information contained in the file. Where your answer comes from a part of the file, include a reference to that part of the file. 
+You must answer the questions based only on information contained in the file. Where your answers come from a part of the file, you must include a reference to that part of the file. You must also explain the reasoning, assumptions, and any external knowledge used for your answers.
 If you cannot answer the questions based on the file, do not make up information, but instead write "answer not found"."""
 
 #Respond in JSON form. In your response, produce as many keys as you need. 
 
-#system_instruction = role_content_own
-
-#intro_for_GPT = [{"role": "system", "content": system_instruction}]
 
 # %%
 #Obtain GPT output

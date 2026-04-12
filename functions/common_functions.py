@@ -262,7 +262,7 @@ scraper_pause_mean = int(10)
 
 # %%
 #Lowerbound on length of judgment text to proccess without trying to download directly from official database, in tokens
-judgment_text_lower_bound = 4000 #~3000 words
+judgment_text_lower_bound = 2000 #~1500 words
 
 
 # %%
