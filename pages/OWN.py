@@ -1018,16 +1018,6 @@ else:
 
 
 # %% [markdown]
-# ## Save entries
-
-# %%
-keep_button = st.button(label = 'DOWNLOAD entries')
-
-if keep_button:
-    
-    st.success('Scroll down to download your entries.')
-
-# %% [markdown]
 # ## Consent
 
 # %%
@@ -1042,6 +1032,16 @@ st.session_state['df_master'].loc[0, 'Consent'] = consent_entry
 
 st.markdown("""If you do not agree, then please feel free to close this app. """)
 
+
+# %% [markdown]
+# ## Save entries
+
+# %%
+keep_button = st.button(label = 'DOWNLOAD entries')
+
+if keep_button:
+    
+    st.success('Scroll down to download your entries.')
 
 # %% [markdown]
 # ## Next steps

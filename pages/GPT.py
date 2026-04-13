@@ -837,8 +837,6 @@ if gpt_keep_button:
 # ## Next steps
 
 # %%
-
-# %%
 st.header("Next steps")
 
 #Calculate estimating waiting time
