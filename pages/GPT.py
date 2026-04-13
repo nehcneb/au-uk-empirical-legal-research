@@ -550,6 +550,11 @@ st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = gpt_quest
 
 st.caption(f"This app uses model {basic_model} by default. This model will read up to approximately {round(tokens_cap(basic_model)*3/4)} words from each case.")
 
+if check_questions_answers() > 0:
+    
+    st.warning("Please do not try to obtain personally identifiable information. Your questions/instructions and GPT's answers will be checked for potential privacy violation.")
+
+
 #if st.toggle('See tips for using GPT'):
 with st.expander("See tips for using GPT"):
     tips()
@@ -602,10 +607,6 @@ with st.expander("See/edit the system instruction for GPT (advanced users only)"
 
     st.session_state['df_master'].loc[0, 'System instruction'] = gpt_system_entry
 
-if check_questions_answers() > 0:
-    
-    st.warning("Please do not try to obtain personally identifiable information. Your questions/instructions and GPT's answers will be checked for potential privacy violation.")
-
 #Disable toggles while prompt is not entered or the same as the last processed prompt
 if gpt_activation_entry:
     
@@ -622,73 +623,75 @@ else:
 
 #Upload example
 
-st.subheader("Share an exemplar (optional)")
+#st.subheader("Share an exemplar (optional)")
 
-st.markdown("""This app will produce a spreadsheet with rows of cases and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example for GPT to follow.""")
+with st.expander("Share an exemplar (optional)"):
 
-#Button for removing example
-if st.button(label = 'REMOVE any uploaded example', type = 'primary'):
-
-    st.session_state.df_example_key += '1'
-
-    st.session_state.df_example_to_show = pd.DataFrame([])
-
-    st.session_state.df_master.loc[0, 'Example'] = ''
-
-    #st.rerun()
-
-    #st.write(st.session_state.df_example_key)
-
-uploaded_file = st.file_uploader(label = "Upload an example", 
-                                 type=['csv', 'xlsx', 'json'], 
-                                 accept_multiple_files=False, 
-                                  key = st.session_state["df_example_key"]
-                                )
-
-if uploaded_file:
-
-    try:
+    st.markdown("""This app will produce a spreadsheet with rows of cases and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example for GPT to follow.""")
     
-        df_example_to_show = uploaded_file_to_df(uploaded_file)
+    #Button for removing example
+    if st.button(label = 'REMOVE any uploaded example', type = 'primary'):
+    
+        st.session_state.df_example_key += '1'
+    
+        st.session_state.df_example_to_show = pd.DataFrame([])
+    
+        st.session_state.df_master.loc[0, 'Example'] = ''
+    
+        #st.rerun()
+    
+        #st.write(st.session_state.df_example_key)
+    
+    uploaded_file = st.file_uploader(label = "Upload an example", 
+                                     type=['csv', 'xlsx', 'json'], 
+                                     accept_multiple_files=False, 
+                                      key = st.session_state["df_example_key"]
+                                    )
+    
+    if uploaded_file:
+    
+        try:
         
-        indice = df_example_to_show.index.tolist()
-    
-        if len(indice) > 0:
-    
-            for index in indice [1: ]:
-    
-                df_example_to_show.drop(index, axis=0, inplace = True)
-
-        #Create copy to show before dropping GPT stats headings
-        st.session_state.df_example_to_show = df_example_to_show.copy(deep = True)
-
-        #Drop any GPT stats headings and add example to df_master as a string of a json
-        columns = df_example_to_show.columns.tolist()
-
-        for col in columns:
+            df_example_to_show = uploaded_file_to_df(uploaded_file)
             
-            for gpt_col in own_gpt_headings:
+            indice = df_example_to_show.index.tolist()
+        
+            if len(indice) > 0:
+        
+                for index in indice [1: ]:
+        
+                    df_example_to_show.drop(index, axis=0, inplace = True)
+    
+            #Create copy to show before dropping GPT stats headings
+            st.session_state.df_example_to_show = df_example_to_show.copy(deep = True)
+    
+            #Drop any GPT stats headings and add example to df_master as a string of a json
+            columns = df_example_to_show.columns.tolist()
+    
+            for col in columns:
                 
-                if ((gpt_col.lower() in col.lower()) and (col in df_example_to_show.columns)):
+                for gpt_col in own_gpt_headings:
                     
-                    df_example_to_show.drop(col, axis=1, inplace = True)
-                            
-        st.session_state.df_master.loc[0, 'Example'] = json.dumps(df_example_to_show.loc[0].to_json(default_handler=str))
-        
-    except Exception as e:
-        
-        st.error(f'Sorry, this app is unable to follow the selected example.')
-
-        print(traceback.format_exc())
-
-        st.session_state['error_msg'] = traceback.format_exc()
-        
-if len(st.session_state.df_example_to_show) > 0:
-        
-    st.success('For each case, GPT will *try* to produce something like the following:')
-
-    st.dataframe(st.session_state.df_example_to_show)
-
+                    if ((gpt_col.lower() in col.lower()) and (col in df_example_to_show.columns)):
+                        
+                        df_example_to_show.drop(col, axis=1, inplace = True)
+                                
+            st.session_state.df_master.loc[0, 'Example'] = json.dumps(df_example_to_show.loc[0].to_json(default_handler=str))
+            
+        except Exception as e:
+            
+            st.error(f'Sorry, this app is unable to follow the selected example.')
+    
+            print(traceback.format_exc())
+    
+            st.session_state['error_msg'] = traceback.format_exc()
+            
+    if len(st.session_state.df_example_to_show) > 0:
+            
+        st.success('For each case, GPT will *try* to produce something like the following:')
+    
+        st.dataframe(st.session_state.df_example_to_show)
+    
 
 
 # %% [markdown]
