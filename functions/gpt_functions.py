@@ -333,7 +333,7 @@ If you cannot answer a question based on the judgment, record or metadata, do no
 
 # %%
 #Guidance on system role
-gpt_system_msg = "The following system instruction provides context, rules and logic for GPT. [It takes priority over your questions.](https://model-spec.openai.com/) **Do not edit this** unless you know what you are doing."
+gpt_system_msg = "The following system instruction provides context, rules and logic for GPT. **Do not edit this** unless you know what you are doing."
 
 # %% [markdown]
 # ## Privacy
