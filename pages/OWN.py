@@ -670,7 +670,11 @@ if 'df_example_to_show' not in st.session_state:
 
 #Initalize df_example_key for the purpose of removing uploaded spreadsheets programatically
 if "df_example_key" not in st.session_state:
-    st.session_state["df_example_key"] = 0
+    st.session_state["df_example_key"] = 'df_example_key_'
+
+#Initalize system_instruction_key for the purpose of resetting system instruction programatically
+if "system_instruction_key" not in st.session_state:
+    st.session_state["system_instruction_key"] = 'system_instruction_key_'
 
 #Initialise waiting time
 if 'estimated_waiting_secs' not in st.session_state:
@@ -765,13 +769,24 @@ with st.expander("See/edit the system instruction for GPT (advanced users only)"
 
     if st.button(label = 'RESET the system instruction', type="primary"):
 
-        if 'System instruction' in st.session_state.df_master.columns:
+        st.session_state.system_instruction_key += '1'
+        
+        st.session_state['df_master'].loc[0, 'System instruction'] = role_content_own
+
+        #st.write(st.session_state.system_instruction_key)
+        
+        #if 'System instruction' in st.session_state.df_master.columns:
+        
+            #st.session_state.df_master.pop('System instruction')
+
+        #st.rerun()                
     
-            st.session_state.df_master.pop('System instruction')
-    
-        st.rerun()
-    
-    gpt_system_entry = st.text_area(label = f"System instruction (up to {system_characters_bound} characters)", height= 250, max_chars=system_characters_bound, value = st.session_state['df_master'].loc[0, 'System instruction']) 
+    gpt_system_entry = st.text_area(label = f"System instruction (up to {system_characters_bound} characters)", 
+                                    height= 250, 
+                                    max_chars=system_characters_bound, 
+                                    key = st.session_state["system_instruction_key"], 
+                                    value = st.session_state['df_master'].loc[0, 'System instruction']
+                                   ) 
 
     st.session_state['df_master'].loc[0, 'System instruction'] = gpt_system_entry
 
@@ -799,6 +814,20 @@ else:
 st.subheader("Share an exemplar (optional)")
 
 st.markdown("""This app will produce a spreadsheet with rows of files and columns of answers to your questions. If you have a preferred layout, please feel free to upload an example for GPT to follow.""")
+
+#Button for removing example
+if st.button(label = 'REMOVE any uploaded example', type = 'primary'):
+
+    st.session_state.df_example_key += '1'
+
+    st.session_state.df_example_to_show = pd.DataFrame([])
+
+    st.session_state.df_master.loc[0, 'Example'] = ''
+
+    #st.rerun()
+
+    #st.write(st.session_state.df_example_key)
+
 
 uploaded_file = st.file_uploader(label = "Upload an example", 
                                  type=['csv', 'xlsx', 'json'], 
@@ -850,16 +879,6 @@ if len(st.session_state.df_example_to_show) > 0:
 
     st.dataframe(st.session_state.df_example_to_show)
 
-    #Button for removing example
-    if st.button(label = 'REMOVE the uploaded example', type = 'primary'):
-    
-        st.session_state.df_example_key += 1
-    
-        st.session_state.df_example_to_show = pd.DataFrame([])
-    
-        st.session_state.df_master.loc[0, 'Example'] = ''
-    
-        st.rerun()
 
 
 # %% [markdown]
