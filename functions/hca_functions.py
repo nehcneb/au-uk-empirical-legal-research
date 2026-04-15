@@ -41,6 +41,7 @@ import io
 from io import BytesIO
 from io import StringIO
 import math
+import copy
 
 #Streamlit
 import streamlit as st
@@ -118,7 +119,8 @@ hca_collections = list(hca_collections_dict.keys())
 
 # %%
 #Meta labels and judgment combined
-hca_meta_labels_droppable = ['Date', 'Case number', 'Before', 'Catchwords']
+hca_meta_labels_droppable = ['Case number', 'Catchwords']
+#['Date', 'Case number', 'Before', 'Catchwords']
 
 # %%
 #Get judges and years dicts
@@ -877,13 +879,6 @@ from functions.gpt_functions import basic_model#, flagship_model#, role_content
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Jurisdiction specific instruction
 #hca_role_content = 'You are a legal research assistant helping an academic researcher to answer questions about a public judgment. You will be provided with the judgment and metadata in JSON form. Please answer questions based only on information contained in the judgment and metadata. Where your answer comes from specific paragraphs, pages or sections, provide the paragraph or page numbers or section names as part of your answer. If you cannot answer the questions based on the judgment or metadata, do not make up information, but instead write "answer not found". '
 
@@ -931,7 +926,7 @@ def hca_run(df_master):
     #Drop metadata if not wanted
 
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
-        for meta_label in hca_metalabels_droppable:
+        for meta_label in hca_meta_labels_droppable:
             try:
                 df_individual.pop(meta_label)
             except Exception as e:
@@ -1016,7 +1011,7 @@ def hca_batch(df_master):
     #Drop metadata if not wanted
 
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
-        for meta_label in hca_metalabels_droppable:
+        for meta_label in hca_meta_labels_droppable:
             try:
                 df_individual.pop(meta_label)
             except Exception as e:

@@ -280,7 +280,7 @@ def us_create_df():
 
     #metadata choice
 
-    meta_data_choice = True
+    meta_data_choice = get_metadata()
     try:
         meta_data_choice = meta_data_entry
     except:
@@ -346,13 +346,6 @@ from functions.gpt_functions import question_characters_bound, default_msg, defa
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
@@ -371,7 +364,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, tips, clear_cache, list_value_check
+from functions.common_functions import open_page, tips, clear_cache, list_value_check, get_metadata
 
 
 # %% [markdown]
@@ -394,7 +387,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Your name'] = ''
     st.session_state['df_master'].loc[0, 'Your email address'] = ''
     st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = get_metadata()
     st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
     st.session_state['df_master'].loc[0, 'Use GPT'] = True
@@ -594,7 +587,7 @@ st.subheader("Your search terms")
 st.markdown("""For search tips, please visit [CourtListener](https://www.courtlistener.com/help/search-operators/). This section largely mimics their advanced search function.
 """)
 
-semantic_entry = st.toggle(label = 'Use semantic search', value = st.session_state['df_master'].loc[0, 'Use semantic search'])
+semantic_entry = st.toggle(label = 'Enable/disable semantic search', value = st.session_state['df_master'].loc[0, 'Use semantic search'])
 
 if semantic_entry == False:
     
@@ -666,6 +659,7 @@ You will always obtain case names and citations.
 """)
 
 meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = get_metadata()
 
 st.info("""You can preview the results returned by your search terms.""")
 

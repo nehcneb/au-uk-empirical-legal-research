@@ -1405,7 +1405,16 @@ class us_search_tool:
         opinion_id = opinion_raw['id']
         opinion_url = f"https://www.courtlistener.com/api/rest/v4/opinions/{opinion_id}/"
         opinion_page = requests.get(opinion_url, headers=headers)
-        opinion_json = opinion_page.json()
+
+        #Initialise opinion_json
+        opinion_json = {}
+        try:
+        
+            opinion_json = opinion_page.json()
+
+        except Exception as e:
+
+            print(f"{opinion_id}: Can't get opinion text and metadata")
 
         #st.write(f"headers == {headers}")
         
@@ -1507,7 +1516,7 @@ class us_search_tool:
                     if ((key not in self.renamed_keys) and (key not in self.results_w_opinions[result_index].keys())):
                         self.results_w_opinions[result_index][key] = result[key]
                         self.metadata_droppable.append(key)
-    
+                
                 scraping_counter += 1
                 
                 print(f"Scrapped {scraping_counter}/{len(self.results)} docs.")
@@ -1717,13 +1726,6 @@ from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, 
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Jurisdiction specific instruction and functions
 
 #system_instruction = role_content
@@ -1852,13 +1854,12 @@ def us_run(df_master):
         df_updated.pop('recap_documents')
 
     #Drop metadata if not wanted
-
+    #print(f'us_search.metadata_droppable == {us_search.metadata_droppable}')
+    
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in us_search.metadata_droppable:
-            try:
+            if meta_label in df_updated.columns:
                 df_updated.pop(meta_label)
-            except:
-                pass
     
     return df_updated
 
@@ -1940,14 +1941,12 @@ def us_batch(df_master):
     df_individual = pd.read_json(json_individual)
 
     #Drop metadata if not wanted
+    #print(f'us_search.metadata_droppable == {us_search.metadata_droppable}')
 
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
         for meta_label in us_search.metadata_droppable:
-            try:
-                df_updated.pop(meta_label)
-            except Exception as e:
-                print(f'{meta_label} not popped.')
-                print(e)
+            if meta_label in df_individual.columns:
+                df_individual.pop(meta_label)
 
     #Need to convert date column to string
 

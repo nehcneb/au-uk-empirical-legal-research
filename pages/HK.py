@@ -262,7 +262,7 @@ def hk_create_df():
         print('GPT questions not entered.')
 
     #metadata choice
-    meta_data_choice = True
+    meta_data_choice = meta_data_entry
         
     new_row = {
         'Processed': '',
@@ -287,6 +287,7 @@ def hk_create_df():
         'Reported citation': reported_citation,
         'Database(s)': databases,
         'Sort by': sortby,
+        'Metadata inclusion' : meta_data_choice,
         'Maximum number of judgments': judgments_counter_bound, 
         'Enter your questions for GPT': gpt_questions, 
         'Use GPT': gpt_activation_status,
@@ -309,13 +310,6 @@ from functions.gpt_functions import question_characters_bound, default_msg, defa
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
@@ -334,7 +328,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, tips, clear_cache, list_value_check
+from functions.common_functions import open_page, tips, clear_cache, list_value_check, get_metadata
 
 
 # %% [markdown]
@@ -365,7 +359,7 @@ if 'df_master' not in st.session_state:
     df_master_dict = {'Your name': '', 
     'Your email address': '', 
     'Your GPT API key': '', 
-    'Metadata inclusion': True, 
+    'Metadata inclusion': get_metadata(), 
     'Maximum number of judgments': default_judgment_counter_bound, 
     'Enter your questions for GPT': '', 
     'Use GPT': True, 
@@ -590,16 +584,15 @@ databases_entry = st.multiselect(label = 'Database(s)',
 
 sortby_entry = st.selectbox(label = "Sort by", options = hk_sortby_keys, index = hk_sortby_keys.index(st.session_state['df_master'].loc[0, 'Sort by']))
 
-#st.subheader("Case metadata collection")
+st.subheader("Case metadata collection")
 
-#st.markdown("""Would you like to obtain case metadata? Such data include the judge(s), the filing date and so on. 
+st.markdown("""Would you like to obtain case metadata? Such data include the judge(s), the decision date and so on. 
 
-#You will always obtain case names and citations.
-#""")
+You will always obtain case names and citations.
+""")
 
-#meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
-
-meta_data_entry = True
+meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = get_metadata()
 
 st.info("""You can preview the results returned by your search terms.""")
 

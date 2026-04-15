@@ -713,13 +713,6 @@ from functions.gpt_functions import basic_model#, flagship_model
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, GPT_answers_check, unanswered_questions, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Obtain parameters
 
 @st.cache_data(show_spinner = False, ttl=600)

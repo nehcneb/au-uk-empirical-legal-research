@@ -85,7 +85,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display, tips
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display, tips, gpt_generated_example
 
 
 # %% [markdown]
@@ -748,7 +748,13 @@ st.caption(f"{gpt_cost_msg}")
 
 st.subheader("Tell GPT what to get from each file")
 
-st.success("""In question form, please tell GPT what to get from each file. **Enter one question per paragraph**. """)
+questions_instruction_text = 'In question form, please tell GPT what to get from each file.'
+
+if gpt_generated_example() == 0:
+
+    questions_instruction_text += ' **Enter one question per paragraph**.'
+
+st.success(questions_instruction_text)
 
 st.markdown("""For each file, GPT will respond based only on information from the file itself. This is to minimise the risk of giving incorrect information (ie hallucination).
 GPT will also provide references for its responses.

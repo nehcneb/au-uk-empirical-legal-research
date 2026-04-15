@@ -162,7 +162,6 @@ def nsw_create_df():
     casesCited = casesCited_entry
 
     #metadata choice
-
     meta_data_choice = meta_data_entry
     
     #GPT choice and entry
@@ -252,7 +251,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
+from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips, get_metadata
 
 
 # %% [markdown]
@@ -287,7 +286,7 @@ if 'df_master' not in st.session_state:
     df_master_dict = {'Your name' : '', 
     'Your email address' : '', 
     'Your GPT API key' : '', 
-    'Metadata inclusion' : True, 
+    'Metadata inclusion' : get_metadata(), 
     'Maximum number of judgments' : default_judgment_counter_bound, 
     'Enter your questions for GPT' : '', 
     'Use GPT' : True, 
@@ -411,15 +410,15 @@ casesCited_entry = st.text_input(label = "Cases cited", value = st.session_state
 
 #    headnotes_entry = st.multiselect("Please select", headnotes_choices)
 
-#st.subheader("Judgment metadata collection")
+st.subheader("Case metadata collection")
 
-#st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
+st.markdown("""Would you like to obtain case metadata? Such data include the judge(s), the decision date and so on. 
 
-#Case name and medium neutral citation are always included with your results.
-#""")
+Case name and medium neutral citation are always included with your results.
+""")
 
-#meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
-meta_data_entry = True
+meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = get_metadata()
 
 st.info("""You can preview the results returned by your search terms.""")
 

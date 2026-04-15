@@ -200,7 +200,7 @@ def hca_create_df():
 
     #metadata choice
 
-    meta_data_choice = True
+    meta_data_choice = get_metadata()
 
     try:
 
@@ -247,13 +247,6 @@ from functions.gpt_functions import question_characters_bound, default_msg, defa
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Initialize default GPT settings
 
 if 'gpt_model' not in st.session_state:
@@ -272,7 +265,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips, date_range_check
+from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips, date_range_check, get_metadata
 
 
 # %% [markdown]
@@ -298,7 +291,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Your name'] = ''
     st.session_state['df_master'].loc[0, 'Your email address'] = ''
     st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = get_metadata()
     st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
     st.session_state['df_master'].loc[0, 'Use GPT'] = True
@@ -461,14 +454,15 @@ if method_entry:
 
             last_entry = method_entry
         
+st.subheader("Case metadata collection")
 
-st.subheader("Judgment metadata collection")
-
-st.markdown("""Would you like to obtain judgment metadata? Such data include the judge(s), the decision date and so on. 
+st.markdown("""Would you like to obtain case metadata? Such data include the judge(s), the decision date and so on. 
 
 Case name and medium neutral citation are always included with your results.""")
 
 meta_data_entry = st.checkbox('Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+
+#meta_data_entry = get_metadata()
 
 st.info("""You can preview the results returned by your search terms.""")
 

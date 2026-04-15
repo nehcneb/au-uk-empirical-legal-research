@@ -445,10 +445,13 @@ class hklii_search_tool:
         browser.get(self.results_url)
         #browser.refresh()
 
-        #Get results count
+        #pause.seconds(15)
+        #st.write(browser.page_source)
                     
+        #Get results count
+        
         #Wait until results are present on page
-        result_elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, '//p[@class="resultcontent"]|//span[contains(text(), "No results matched")]')))
+        result_elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, '//p[@class="resultcontent"]|//td[starts-with(text(), "No results")]')))
 
         #results_count_raw = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, '//div[@class="v-data-footer__pagination"]')))
 
@@ -642,18 +645,11 @@ def hklii_search_preview(df_master):
 
 # %%
 #Import functions
-from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json
+from functions.gpt_functions import GPT_label_dict, is_api_key_valid, gpt_input_cost, gpt_output_cost, tokens_cap, max_output, num_tokens_from_string, judgment_prompt_json, GPT_json, engage_GPT_json, role_content
 #Import variables
 from functions.gpt_functions import basic_model#, flagship_model
 #For batch mode
 from functions.gpt_functions import gpt_get_custom_id, gpt_batch_input_id_line, gpt_batch_input
-
-
-# %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction, role_content
 
 
 # %%

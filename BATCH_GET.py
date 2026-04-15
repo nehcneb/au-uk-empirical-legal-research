@@ -628,7 +628,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     
     f"Dear {ULTIMATE_RECIPIENT_NAME}\r\n\r\n"
     
-    "Thank you for using LawtoData. You can now download your requested data from the following website:\r\n"
+    "Thank you for using LawtoData. You can now download your requested data from the following webpage:\r\n"
     f"{ACCESS_LINK}\r\n\r\n"
     
     f"Your access code is {BATCH_CODE}\r\n\r\n"
@@ -644,8 +644,8 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     "Ben Chen | Associate Professor\r\n"
     "The University of Sydney Law School\r\n"
     " \r\n"
-    "Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)\r\n"
-    "Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html\r\n"
+    "Email: ben.chen@sydney.edu.au\r\n"
+    "Webpage: https://profiles.sydney.edu.au/ben.chen\r\n"
     "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
     )
 
@@ -662,7 +662,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     Dear {ULTIMATE_RECIPIENT_NAME}
     </p>
     <p>
-    Thank you for using <em>LawtoData</em>. You can now download your requested data from the following website:
+    Thank you for using <em>LawtoData</em>. You can now download your requested data from the following webpage:
     </p>
     <p>
     {ACCESS_LINK}
@@ -688,10 +688,10 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     The University of Sydney Law School
     </p>
     <p>
-    Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)
+    Email: ben.chen@sydney.edu.au
     </p>
     <p>
-    Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html
+    Webpage: https://profiles.sydney.edu.au/ben.chen
     </p>
     <p>
     Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006
@@ -788,8 +788,8 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     "Ben Chen | Associate Professor\r\n"
     "The University of Sydney Law School\r\n"
     " \r\n"
-    "Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)\r\n"
-    "Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html\r\n"
+    "Email: ben.chen@sydney.edu.au\r\n"
+    "Webpage: https://profiles.sydney.edu.au/ben.chen\r\n"
     "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
     )
 
@@ -825,10 +825,10 @@ def send_error_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_L
     The University of Sydney Law School
     </p>
     <p>
-    Email: ben.chen@sydney.edu.au | Phone: + 61 2 8627 6887 (by appointment)
+    Email: ben.chen@sydney.edu.au
     </p>
     <p>
-    Webpage: https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html
+    Webpage: https://profiles.sydney.edu.au/ben.chen
     </p>
     <p>
     Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006

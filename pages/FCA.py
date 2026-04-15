@@ -288,7 +288,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
+from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips, get_metadata
 
 
 # %% [markdown]
@@ -311,7 +311,7 @@ if 'df_master' not in st.session_state:
     st.session_state['df_master'].loc[0, 'Your name'] = ''
     st.session_state['df_master'].loc[0, 'Your email address'] = ''
     st.session_state['df_master'].loc[0, 'Your GPT API key'] = ''
-    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = True
+    st.session_state['df_master'].loc[0, 'Metadata inclusion'] = get_metadata()
     st.session_state['df_master'].loc[0, 'Maximum number of judgments'] = default_judgment_counter_bound
     st.session_state['df_master'].loc[0, 'Enter your questions for GPT'] = ''
     st.session_state['df_master'].loc[0, 'Use GPT'] = True
@@ -436,17 +436,17 @@ st.write('For date range search, enter one day before and one day after.')
 
 st.caption('This app will not collect catchwords or other metadata from judgments published before 1995 (given their [PDF](https://www.fedcourt.gov.au/digital-law-library/judgments/judgments-faq) format).')
 
-#st.subheader("Judgment metadata collection")
-
-#st.markdown("""Would you like to obtain judgment metadata? Such data include the name of the judge, the decision date and so on. 
-
-#Case name and medium neutral citation are always included with your results.
-#""")
-
 sort_entry = st.selectbox(label = 'Sort', options = list(sort_dict.keys()), index = list(sort_dict.keys()).index(st.session_state.df_master.loc[0, 'Sort']))
 
-#meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
-meta_data_entry = True
+st.subheader("Case metadata collection")
+
+st.markdown("""Would you like to obtain judgment metadata? Such data include the judge(s), the decision date and so on. 
+
+Case name and medium neutral citation are always included with your results.
+""")
+
+meta_data_entry = st.checkbox(label = 'Include metadata', value = st.session_state['df_master'].loc[0, 'Metadata inclusion'])
+#meta_data_entry = get_metadata()
 
 st.info("""You can preview the results returned by your search terms.""")
 

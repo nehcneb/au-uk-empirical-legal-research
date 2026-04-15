@@ -36,6 +36,11 @@ def pop_judgment():
 
 
 # %%
+def gpt_generated_example():
+    return 1
+
+
+# %%
 def immediate_b64():
     return 0
 
@@ -44,6 +49,16 @@ def immediate_b64():
 def ai_allowed():
     return 0
 
+
+# %%
+def get_metadata():
+    return False
+
+
+# %%
+huggingface = True
+    
+print(f'huggingface == {huggingface}')
 
 # %%
 #For checking whether locally. Enter part of the chosen local directory.
@@ -66,15 +81,11 @@ else:
     judgment_batch_max = 100
 
 
-
 # %%
 #Default page bound for OWN.py
 default_page_bound = 100
 
 # %%
-huggingface = True
-    
-print(f'huggingface == {huggingface}')
 
 
 # %%
@@ -554,7 +565,7 @@ def reverse_link(x):
 # %%
 #Display error for scraping
 #search_error_display = 'The database from which this app sources cases is not responding. Please try again in a few hours.'
-search_error_display = 'Sorry, an error has occurred. Please change your entries or wait a few hours, and try again.'
+search_error_display = 'Sorry, an error has occurred or there are no search results. Please change your search terms or wait a few hours, and try again.'
 
 
 # %%

@@ -79,7 +79,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, streamlit_timezone, save_input, download_buttons, send_notification_email, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg, search_error_display
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg, search_error_display, gpt_generated_example
 
 
 # %%
@@ -103,7 +103,6 @@ from functions.gpt_functions import question_characters_bound, system_characters
 #For checking questions and answers
 from functions.common_functions import check_questions_answers
 
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
 
 
 # %%
@@ -538,7 +537,13 @@ st.caption(f"{gpt_cost_msg}")
 
 st.subheader("Tell GPT what to get from each case")
 
-st.success("""In question form, please tell GPT what to get from each case. **Enter one question per paragraph**. """)
+questions_instruction_text = 'In question form, please tell GPT what to get from each case.'
+
+if gpt_generated_example() == 0:
+
+    questions_instruction_text += ' **Enter one question per paragraph**.'
+
+st.success(questions_instruction_text)
 
 st.markdown("""For each case, GPT will respond based only on information from the case itself. This is to minimise the risk of giving incorrect information (ie hallucination).
 GPT will also provide references for its responses.

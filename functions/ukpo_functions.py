@@ -543,13 +543,6 @@ from functions.gpt_functions import basic_model#, flagship_model#, role_content
 
 
 # %%
-#For checking questions and answers
-from functions.common_functions import check_questions_answers
-
-from functions.gpt_functions import questions_check_system_instruction, GPT_questions_check, checked_questions_json, answers_check_system_instruction
-
-
-# %%
 #Jurisdiction specific instruction and functions
 
 #system_instruction = role_content
