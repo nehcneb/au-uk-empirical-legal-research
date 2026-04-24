@@ -943,7 +943,7 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
     
     #Check questions for privacy violation
 
-    if check_questions_answers() > 0:
+    if (int(GPT_activation) > 0) and (check_questions_answers() > 0):
 
         #Check system instruction
         system_instruction_checked_response = GPT_str_json_check(system_instruction, gpt_model, check_string_system_instruction)
@@ -981,8 +981,10 @@ def engage_GPT_json(questions_json, df_example, df_individual, GPT_activation, g
     answers_json = {}
     answers_output_tokens = 0
     answers_input_tokens = 0
+
+    #print(f'df_example == {df_example}, type(df_example) == {type(df_example)}, len(df_example) == {len(df_example)}')
     
-    if len(df_example.replace('"', '')) > 0:
+    if len(df_example) > 0:
 
         try:
             
@@ -1294,7 +1296,7 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
     default_answer_json = default_example(questions_json)
     
     #Check questions for privacy violation
-    if check_questions_answers() > 0:
+    if (int(GPT_activation) > 0) and (check_questions_answers() > 0):
 
         #Check system instruction
         system_instruction_checked_response = GPT_str_json_check(system_instruction, gpt_model, check_string_system_instruction)
@@ -1333,7 +1335,7 @@ def engage_GPT_b64_json(questions_json, df_example, df_individual, GPT_activatio
     answers_output_tokens = 0
     answers_input_tokens = 0
     
-    if len(df_example.replace('"', '')) > 0:
+    if len(df_example) > 0:
 
         try:
             
@@ -1596,7 +1598,7 @@ def gpt_batch_input(questions_json, df_example, df_individual, GPT_activation, g
     #Initialise answer example and tokens
     answers_json = {}
     
-    if len(df_example.replace('"', '')) > 0:
+    if len(df_example) > 0:
 
         try:
             
@@ -2243,7 +2245,7 @@ def GPT_json_default_eg(questions_json, df_example, judgment_json, gpt_model, te
     
     q_keys = [*questions_json]
 
-    if len(df_example.replace('"', '')) > 0:
+    if len(df_example) > 0:
 
         try:
             
@@ -2324,7 +2326,7 @@ def engage_GPT_json_default_eg(questions_json, df_example, df_individual, GPT_ac
 
     #Check questions for privacy violation
 
-    if check_questions_answers() > 0:
+    if (int(GPT_activation) > 0) and (check_questions_answers() > 0):
 
         #Check system instruction
         system_instruction_checked_dict = GPT_system_check(system_instruction, gpt_model, system_instruction_check_system_instruction)
@@ -2572,7 +2574,7 @@ def GPT_b64_json_default_eg(questions_json, df_example, judgment_json, gpt_model
 
     q_keys = [*questions_json]
     
-    if len(df_example.replace('"', '')) > 0:
+    if len(df_example) > 0:
 
         try:
             
@@ -2686,7 +2688,7 @@ def engage_GPT_b64_json_default_eg(questions_json, df_example, df_individual, GP
         # GPT questions/answers
 
     #Check questions for privacy violation
-    if check_questions_answers() > 0:
+    if (int(GPT_activation) > 0) and (check_questions_answers() > 0):
 
         #Check system instruction
         system_instruction_checked_dict = GPT_system_check(system_instruction, gpt_model, system_instruction_check_system_instruction)
@@ -2914,7 +2916,7 @@ def gpt_batch_input_id_line_default_eg(questions_json, df_example, judgment_json
 
     q_keys = [*questions_json]
     
-    if len(df_example.replace('"', '')) > 0:
+    if len(df_example) > 0:
 
         try:
             

@@ -1534,7 +1534,7 @@ def afca_old_run(df_master):
 
 #    df_individual = pd.DataFrame(judgments_file)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
     
     #Rename column titles
     
@@ -1648,7 +1648,7 @@ def afca_new_run(df_master):
 
 #    df_individual = pd.DataFrame(judgments_file)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
                     
     #Instruct GPT
     

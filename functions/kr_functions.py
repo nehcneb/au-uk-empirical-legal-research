@@ -658,7 +658,7 @@ def kr_run(df_master):
     
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
 
     #For KR, convert date to string so as to avoid Excel producing random numbers for dates
     df_individual['Date'] = df_individual['Date'].astype(str)

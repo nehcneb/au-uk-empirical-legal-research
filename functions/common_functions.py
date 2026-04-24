@@ -69,12 +69,12 @@ running_locally_dir = 'Users/Ben'
 default_judgment_counter_bound = 10
 
 #Cutoff for requiring batch mode
-judgment_batch_cutoff = 25 #Change this at home
+judgment_batch_cutoff = 25 #Change both this and below at home
 
 #max number of judgments under batch mode
 if own_account_allowed() > 0:
 
-    judgment_batch_max = 200 #Change this at home
+    judgment_batch_max = 200 #Change both and above at home
 
 else:
     
@@ -84,9 +84,6 @@ else:
 # %%
 #Default page bound for OWN.py
 default_page_bound = 100
-
-# %%
-
 
 # %%
 #Preliminaries
@@ -579,7 +576,34 @@ truncation_note = "The full file is too long for GPT. It was (or will be) trunca
 
 # %%
 # Programmaticaly produced GPT headings
-own_gpt_headings = ['Hyperlink', 'in tokens (up to', 'GPT cost estimate', 'GPT time estimate']
+own_gpt_headings = ['Hyperlink to', 'File length in tokens', 'GPT cost estimate', 'GPT time estimate']
+
+
+# %%
+#Function to drop programmaticaly produced GPT headings
+def drop_own_gpt_headings(df, headings_to_drop = own_gpt_headings):
+    #headings_to_drop is a list of strings to drop
+    #df is pandas dataframe
+
+    try:
+        columns = df.columns.tolist()
+        
+        for col in columns:
+                
+            for gpt_col in headings_to_drop:
+
+                pattern = fr'\b{str(gpt_col)}\b'
+        
+                if re.search(pattern, str(col)) and (col in df.columns):
+                
+                    df.drop(col, axis=1, inplace = True)
+
+    except Exception as e:
+
+        print(f'Unable to drop headings due to error: {e}')
+
+    return df
+
 
 # %% [markdown]
 # # Undectected Chromedriver
@@ -1135,14 +1159,12 @@ def uploaded_file_to_df(uploaded_file):
         df = pd.read_csv(uploaded_file)
 
     if extension == 'xlsx':
-        
-        #df = pd.read_excel(uploaded_file)
-        
+                
         df = excel_to_df_w_links(uploaded_file)
 
     if extension == 'json':
         
-        df = pd.read_json(uploaded_file)
+        df = pd.read_json(uploaded_file, convert_dates = False)
 
     return df
     

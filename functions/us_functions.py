@@ -1817,7 +1817,7 @@ def us_run(df_master):
 
 #    df_individual = pd.DataFrame(judgments_file)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
 
     #st.dataframe(df_individual)
     #Instruct GPT
@@ -1938,7 +1938,7 @@ def us_batch(df_master):
 
 #    df_individual = pd.DataFrame(judgments_file)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
 
     #Drop metadata if not wanted
     #print(f'us_search.metadata_droppable == {us_search.metadata_droppable}')

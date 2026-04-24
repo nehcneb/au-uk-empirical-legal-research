@@ -729,7 +729,7 @@ def nsw_run(df_master):
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
 
     #Instruct GPT
     
@@ -806,7 +806,7 @@ def nsw_batch(df_master):
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
     
     #Instruct GPT
     

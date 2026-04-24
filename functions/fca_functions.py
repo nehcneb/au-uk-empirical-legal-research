@@ -844,7 +844,7 @@ def fca_run(df_master):
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
     
     #Instruct GPT
     
@@ -933,7 +933,7 @@ def fca_batch(df_master):
     #Create and export json file with search results
     json_individual = json.dumps(judgments_file, indent=2)
     
-    df_individual = pd.read_json(json_individual)
+    df_individual = pd.read_json(json_individual, convert_dates = False)
                         
     #Drop metadata if not wanted
     if int(float(df_master.loc[0, 'Metadata inclusion'])) == 0:
