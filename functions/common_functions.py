@@ -1101,47 +1101,35 @@ def display_df(df):
 # %%
 #Function for preparing df for display with clickable links with st.write rather than st.dataframe
 
-def make_md_link(url: str, label: str = "Click") -> str:
-    """
-    Convert a URL into a Markdown link for st.table.
-
-    st.table supports GitHub-flavored Markdown in cells, so this becomes clickable. [1](https://docs.streamlit.io/develop/api-reference/data/st.column_config)
-    """
+def make_anchor(url: str, label: str = "Click", new_tab: bool = True) -> str:
+    # Blank / missing -> empty cell
     if pd.isna(url) or str(url).strip() == "":
         return ""
+
     url = str(url).strip()
 
-    # Markdown link syntax
-    return f"[{label}]({url})"
+    # HTML-escape to keep href safe even if url contains quotes etc.
+    safe_url = html.escape(url, quote=True)
+    safe_label = html.escape(label)
 
+    target = ' target="_blank"' if new_tab else ""
+    # Keep security (noopener) but avoid noreferrer to prevent "no-referrer" blocks
+    rel = ' rel="noopener"' if new_tab else ""
 
-def display_df_with_custom_links(
-    df: pd.DataFrame,
-    label: str = "Click",
-    border: bool | str = "horizontal",
-    #height: int | str = 520,
-    #hide_index: bool = True,
-    #hide_header: bool | None = None,
-):
-    """
-    Display a DataFrame using st.table, converting hyperlink columns to Markdown links.
+    # Optional: send only origin as referrer (often enough for strict sites)
+    refpol = ' referrerpolicy="strict-origin-when-cross-origin"'
 
-    st.table is static (no sorting/filtering) but good for small, styled tables. [1](https://docs.streamlit.io/develop/api-reference/data/st.column_config)
-    """
-    link_cols = link_headings_picker(df)  # <-- your existing function
-    df2 = df.copy()
+    return f'<a href="{safe_url}"{target}{rel}{refpol}>{safe_label}</a>'
+
+def display_df_with_custom_links(df: pd.DataFrame):
+    link_cols = link_headings_picker(df)
+    df = df.copy()
 
     for col in link_cols:
-        df2[col] = df2[col].apply(lambda x: make_md_link(x, label=label))
+        df[col] = df[col].apply(make_anchor)
 
-    st.table(
-        df2,
-        border=border,
-        #width="stretch",
-        #height=height,          # set an int height to enable scrolling + sticky headers behavior [1](https://docs.streamlit.io/develop/api-reference/data/st.column_config)
-        #hide_index=hide_index,
-        #hide_header=hide_header,
-    )
+    # Render HTML table (links clickable)
+    st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
 
