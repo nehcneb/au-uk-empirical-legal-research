@@ -328,7 +328,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, tips, clear_cache, list_value_check, get_metadata
+from functions.common_functions import open_page, tips, clear_cache, list_value_check, get_metadata, display_df_with_custom_links
 
 
 # %% [markdown]
@@ -636,23 +636,27 @@ if preview_button:
                 results_url = search_results_w_count['results_url']
         
                 if results_count > 0:
-        
-                    df_preview = pd.DataFrame(case_infos)
-        
-                    #Get display settings
-                    display_df_dict = display_df(df_preview)
-        
-                    df_preview = display_df_dict['df']
-        
-                    link_heading_config = display_df_dict['link_heading_config']
-        
+
                     #Display search results
                     st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                    
+                    df_preview = pd.DataFrame(case_infos)
+        
+                    #The following uses st.dataframe, which produces links that get blocked by HK Legal Reference System
+                    #Get display settings
+                    #display_df_dict = display_df(df_preview)
+        
+                    #df_preview = display_df_dict['df']
+        
+                    #link_heading_config = display_df_dict['link_heading_config']
                                 
-                    st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+                    #st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
+
+                    #The following uses st.write, which produces links that do not get blocked by HK Legal Reference System
+                    display_df_with_custom_links(df_preview.head(default_judgment_counter_bound))
         
                     st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-            
+                    
                 else:
                     st.error(no_results_msg)
 

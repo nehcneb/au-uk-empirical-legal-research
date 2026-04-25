@@ -79,7 +79,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, streamlit_timezone, save_input, download_buttons, send_notification_email, clear_cache, tips, link, uploaded_file_to_df, streamlit_timezone, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, own_gpt_headings, gpt_cost_msg, search_error_display, gpt_generated_example
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, today, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, list_range_check, date_parser, streamlit_cloud_date_format, drop_own_gpt_headings, gpt_cost_msg, search_error_display, gpt_generated_example
 
 
 # %%
@@ -656,32 +656,23 @@ with st.expander("Share an exemplar (optional)"):
     if uploaded_file:
     
         try:
-        
+
+            #Reset copy to show before trying to upload
+            st.session_state["df_example_to_show"] = pd.DataFrame([])
+
+            #Now try upload            
             df_example_to_show = uploaded_file_to_df(uploaded_file)
+
+            #Keep first row only
+            df_example_to_show = df_example_to_show.head(1)
             
-            indice = df_example_to_show.index.tolist()
-        
-            if len(indice) > 0:
-        
-                for index in indice [1: ]:
-        
-                    df_example_to_show.drop(index, axis=0, inplace = True)
-    
-            #Create copy to show before dropping GPT stats headings
-            st.session_state.df_example_to_show = df_example_to_show.copy(deep = True)
-    
             #Drop any GPT stats headings and add example to df_master as a string of a json
-            columns = df_example_to_show.columns.tolist()
-    
-            for col in columns:
-                
-                for gpt_col in own_gpt_headings:
-                    
-                    if ((gpt_col.lower() in col.lower()) and (col in df_example_to_show.columns)):
-                        
-                        df_example_to_show.drop(col, axis=1, inplace = True)
+            df_example_to_show = drop_own_gpt_headings(df = df_example_to_show)
                                 
             st.session_state.df_master.loc[0, 'Example'] = json.dumps(df_example_to_show.loc[0].to_json(default_handler=str))
+
+            #Create copy to show when all done
+            st.session_state.df_example_to_show = df_example_to_show.copy(deep = True).astype("string")
             
         except Exception as e:
             

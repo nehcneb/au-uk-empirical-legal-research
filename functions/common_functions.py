@@ -69,12 +69,12 @@ running_locally_dir = 'Users/Ben'
 default_judgment_counter_bound = 10
 
 #Cutoff for requiring batch mode
-judgment_batch_cutoff = 25 #Change both this and below at home
+judgment_batch_cutoff = 25 #Change this at home
 
 #max number of judgments under batch mode
 if own_account_allowed() > 0:
 
-    judgment_batch_max = 200 #Change both and above at home
+    judgment_batch_max = max(200, judgment_batch_cutoff)
 
 else:
     
@@ -104,6 +104,7 @@ import pause
 import re
 import mammoth
 import sys
+import html
 
 #PDF images
 import pdf2image
@@ -118,7 +119,6 @@ import xlsxwriter
 #Streamlit
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
-from streamlit.components.v1 import html
 #import streamlit_ext as ste
 
 #AWS
@@ -820,13 +820,15 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False):
 
 # %%
 #Function to open url
-def open_page(url):
-    open_script= """
-        <script type="text/javascript">
-            window.open('%s', '_blank').focus();
-        </script>
-    """ % (url)
-    html(open_script)
+
+def open_page(url: str):
+    open_script = f"""
+    <script type="text/javascript">
+        window.open("{url}", "_blank").focus();
+    </script>
+    """
+    st.html(open_script, unsafe_allow_javascript=True)
+
 
 
 # %%
@@ -1094,6 +1096,53 @@ def display_df(df):
 
     return {'df': df, 'link_heading_config': link_heading_config}
     
+
+
+# %%
+#Function for preparing df for display with clickable links with st.write rather than st.dataframe
+
+def make_md_link(url: str, label: str = "Click") -> str:
+    """
+    Convert a URL into a Markdown link for st.table.
+
+    st.table supports GitHub-flavored Markdown in cells, so this becomes clickable. [1](https://docs.streamlit.io/develop/api-reference/data/st.column_config)
+    """
+    if pd.isna(url) or str(url).strip() == "":
+        return ""
+    url = str(url).strip()
+
+    # Markdown link syntax
+    return f"[{label}]({url})"
+
+
+def display_df_with_custom_links(
+    df: pd.DataFrame,
+    label: str = "Click",
+    border: bool | str = "horizontal",
+    #height: int | str = 520,
+    #hide_index: bool = True,
+    #hide_header: bool | None = None,
+):
+    """
+    Display a DataFrame using st.table, converting hyperlink columns to Markdown links.
+
+    st.table is static (no sorting/filtering) but good for small, styled tables. [1](https://docs.streamlit.io/develop/api-reference/data/st.column_config)
+    """
+    link_cols = link_headings_picker(df)  # <-- your existing function
+    df2 = df.copy()
+
+    for col in link_cols:
+        df2[col] = df2[col].apply(lambda x: make_md_link(x, label=label))
+
+    st.table(
+        df2,
+        border=border,
+        #width="stretch",
+        #height=height,          # set an int height to enable scrolling + sticky headers behavior [1](https://docs.streamlit.io/develop/api-reference/data/st.column_config)
+        #hide_index=hide_index,
+        #hide_header=hide_header,
+    )
+
 
 
 # %%
