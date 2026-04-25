@@ -451,7 +451,9 @@ class hklii_search_tool:
         #Get results count
         
         #Wait until results are present on page
-        result_elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, '//p[@class="resultcontent"]|//td[starts-with(text(), "No results")]')))
+        result_elements = Wait(browser, 30).until(
+            EC.presence_of_all_elements_located((By.XPATH, '//p[@class="resultcontent"]'))
+        )
 
         #results_count_raw = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, '//div[@class="v-data-footer__pagination"]')))
 
