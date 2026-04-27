@@ -455,6 +455,9 @@ class hklii_search_tool:
             EC.presence_of_all_elements_located((By.XPATH, '//p[@class="resultcontent"]'))
         )
 
+        #The following doesn't work because their search engine always shows "No results" before showing any results
+        #result_elements = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, '//p[@class="resultcontent"]|//td[starts-with(text(), "No results")]')))
+
         #results_count_raw = Wait(browser, 30).until(EC.visibility_of_element_located((By.XPATH, '//div[@class="v-data-footer__pagination"]')))
 
         #results_count_raw = Wait(browser, 30).until(EC.presence_of_element_located((By.XPATH, '//span[@class="statval darkgrey-text"]')))

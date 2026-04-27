@@ -85,7 +85,7 @@ gpt_stats.set_index("MODEL", inplace = True)
 
 gpt_stats.sort_index(ascending=True, inplace = True)
 
-gpt_stats['REASONING'] = gpt_stats['REASONING'].apply(lambda x: bool(ast.literal_eval(str(x))))
+gpt_stats['REASONING'] = gpt_stats['REASONING'].apply(lambda x: pd.eval(str(x)))
 
 gpt_stats['REASONING_EFFORTS'] = gpt_stats['REASONING_EFFORTS'].apply(lambda x: ast.literal_eval(x) if (not pd.isna(x)) else [])
 
