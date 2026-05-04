@@ -1291,18 +1291,20 @@ class us_search_tool:
         #Save url to search results for the API page
         self.results_url = self.page.url
 
-        #st.write(f"self.results_url is {self.results_url}")
+        #st.write(f"self.results_url == {self.results_url}")
 
         #Define search results link for preview
-        if semantic_param == 1:
-            #The following shows the search results for API page
-            #As of 6 Nov 2025, their non-API page does not permit semantic search
-            self.results_url_to_show = self.results_url
 
-        else:
-            #The following shows the search results for the non-API page
-            self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
+        self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')            
 
+        #As of 6 Nov 2025, their non-API page does not permit semantic search. The following accounts for this.
+        #if semantic_param == 1:
+            #self.results_url_to_show = self.results_url
+        #else:
+            #self.results_url_to_show = self.results_url.replace('/api/rest/v4/search', '')
+
+        #st.write(f"self.results_url_to_show == {self.results_url_to_show}")
+        
         try:
             #page_json = json.loads(self.page.content.decode('utf-8')) 
             page_json = self.page.json()
