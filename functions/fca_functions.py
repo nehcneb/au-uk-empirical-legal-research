@@ -288,18 +288,14 @@ class fca_search_tool:
                 date_area_court_raw = str(date_area_court_str).split('<span class="divide"></span>')
     
                 date = date_area_court_raw[0].replace('<p class="meta">', '')
-                
-                if len(date) > 0:
-                    if date[-1] == ' ':
-                        date = date[: -1]
+
+                date = date.strip()
                 
                 judge = date_area_court_raw[-1].replace('</p>', '')
                 
                 subject = result.find('p', attrs={'class' : 'meta'}).text.replace(date, '').replace(judge, '')
-                
-                if len(subject) > 0:
-                    if subject[0] == ' ':
-                        subject = subject[1:]
+
+                subject = subject.strip()
     
                 #Get catchwords
                 catchwords = ''

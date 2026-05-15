@@ -58,7 +58,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons, report_error
+from functions.common_functions import own_account_allowed, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, date_parser, save_input, search_error_display, display_df, download_buttons, report_error, list_value_check
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound, no_results_msg
 
@@ -67,7 +67,7 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # UK Courts search engine
 
 # %%
-from functions.uk_functions import uk_courts_default_list, uk_courts, uk_courts_list, uk_court_choice, uk_link, uk_search, uk_search_results_to_judgment_links, uk_meta_labels_droppable, uk_meta_judgment_dict, uk_search_url
+from functions.uk_functions import uk_courts_default_list, uk_courts, uk_courts_list, uk_order_dict, uk_search_tool, uk_search_function, uk_search_preview
 
 
 # %%
@@ -158,8 +158,11 @@ def uk_create_df():
 
     #Other entries
     party = party_entry
+    
     judge =  judge_entry
 
+    order = order_entry
+    
     #GPT choice and entry
     try:
         gpt_activation_status = gpt_activation_entry
@@ -193,6 +196,7 @@ def uk_create_df():
             'Courts' : courts_list, 
             'Party' : party,
             'Judge' : judge, 
+            'Order results by': order,
             'Metadata inclusion' : meta_data_choice,
            'Maximum number of judgments': judgments_counter_bound, 
            'Enter your questions for GPT': gpt_questions, 
@@ -244,7 +248,7 @@ if 'gpt_api_key' not in st.session_state:
 
 # %%
 #Import functions and variables
-from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips
+from functions.common_functions import open_page, clear_cache_except_validation_df_master, tips, get_metadata
 
 
 # %% [markdown]
@@ -273,7 +277,7 @@ if 'df_master' not in st.session_state:
     df_master_dict = {'Your name' : '', 
     'Your email address' : '', 
     'Your GPT API key' : '', 
-    'Metadata inclusion' : True, 
+    'Metadata inclusion' : get_metadata(), 
     'Maximum number of judgments' : default_judgment_counter_bound, 
     'Enter your questions for GPT' : '', 
     'Use GPT' : True, 
@@ -292,7 +296,8 @@ if 'df_master' not in st.session_state:
     'To year' : None,
     'Courts' : [],
     'Party' : None,
-    'Judge' : None
+    'Judge' : None,
+    'Order results by': list(uk_order_dict.keys())[0],
     }
 
     #Make into  df
@@ -379,6 +384,11 @@ judge_entry = st.text_input(label = 'Judge name', value = st.session_state.df_ma
 
 party_entry = st.text_input(label = 'Party name', value = st.session_state.df_master.loc[0, 'Party'])
 
+order_entry = st.selectbox(label = 'Order results by', 
+                                      options = [*uk_order_dict.keys()], 
+                                    index = list_value_check([*uk_order_dict.keys()], st.session_state['df_master'].loc[0, "Order results by"]), 
+                                    )
+
 st.subheader("Judgment metadata collection")
 
 st.markdown("""Would you like to obtain judgment metadata? Such data include the judge(s), the parties and so on. 
@@ -411,55 +421,35 @@ if preview_button:
     with st.spinner(r"$\textsf{\normalsize Getting your search results...}$"):
 
         try:
-            
+                            
             df_master = uk_create_df()
-        
-            results_url_num = uk_search_url(df_master)
-                
-            results_count = results_url_num['results_count']
-        
-            results_url = results_url_num['results_url']
-        
-            search_results_soup = results_url_num['soup']
+    
+            search_results_w_count = uk_search_preview(df_master)
             
+            results_count = search_results_w_count['results_count']
+    
+            case_infos = search_results_w_count['case_infos']
+    
+            results_url = search_results_w_count['results_url']
+    
             if results_count > 0:
-            
-                #Get relevant cases
-                
-                judgments_file = []
-                
-                judgments_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
-                
-                case_infos = uk_search_results_to_judgment_links(search_results_soup, results_url, results_count, judgments_counter_bound) 
-                
-                for case in case_infos:
-                
-                    #add search results to json
-                    judgments_file.append(case)
-        
-                #Clean df
-    
-                #st.write(case_infos)
-    
-                df_preview = pd.DataFrame(judgments_file)
-                
-                #Clean df
-                df_preview['Hyperlink to The National Archives'] = df_preview['Hyperlink to The National Archives'].apply(lambda link: link.replace('/data.xml', ''))
-                
-                #Get display settings
-                display_df_dict = display_df(df_preview)
-        
-                df_preview = display_df_dict['df']
-        
-                link_heading_config = display_df_dict['link_heading_config']
-        
+
                 #Display search results
                 st.success(f'Your search terms returned {results_count} result(s). Please see below for the top {min(results_count, default_judgment_counter_bound)} result(s).')
+                
+                df_preview = pd.DataFrame(case_infos)
+    
+                #Get display settings
+                display_df_dict = display_df(df_preview)
+    
+                df_preview = display_df_dict['df']
+    
+                link_heading_config = display_df_dict['link_heading_config']
                             
                 st.dataframe(df_preview.head(default_judgment_counter_bound),  column_config=link_heading_config)
-        
+
                 st.page_link(results_url, label=f"SEE all search results (in a popped up window)", icon = "🌎")
-        
+                
             else:
                 st.error(no_results_msg)
 
@@ -505,9 +495,9 @@ keep_button = st.button('SAVE')
 # %%
 if keep_button:
 
-    all_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
+    uk_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
         
-    if all_search_terms.replace('None', '') == "":
+    if uk_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
 
@@ -545,34 +535,31 @@ if reset_button:
 # %%
 if next_button:
 
-    all_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
-        
-    if all_search_terms.replace('None', '') == "":
+    uk_search_terms = str(query_entry) + str(from_date_entry) + str(to_date_entry) + str(judge_entry) + str(party_entry)
+    
+    if uk_search_terms.replace('None', '') == "":
 
         st.warning('You must enter some search terms.')
-
-    elif len(courts_entry) == 0:
-        
-        st.warning('Please select at least one court to cover.')
     
     else:
-
+            
         df_master = uk_create_df()
-        
+    
         #Check search results
         with st.spinner(r"$\textsf{\normalsize Checking your search terms...}$"):
-            
+
             try:
 
-                results_url_num = uk_search_url(df_master)
-        
-                results_count = results_url_num['results_count']
-    
+                search_results_w_count = uk_search_preview(df_master)
+                
+                results_count = search_results_w_count['results_count']
+                
                 if results_count == 0:
+                    
                     st.error(no_results_msg)
     
                 else:
-    
+                    
                     save_input(df_master)
     
                     st.session_state["page_from"] = 'pages/UK.py'
@@ -586,6 +573,8 @@ if next_button:
                 print(traceback.format_exc())
 
                 st.session_state['error_msg'] = traceback.format_exc()
+
+
 
 
 # %% [markdown]

@@ -220,47 +220,24 @@ errors_list = set()
 #Split title and mnc from full case title
 
 def split_title_mnc(full_title):
+    s = str(full_title).strip()
+    s = re.sub(r"\s+", " ", s)
+
     
-    #Returns a list where first item is full_title and second item mnc
-
-    full_title = str(full_title) #This is to convert any nan float to str
+    MNC_RE = re.compile(r"\[\d{4}\](\s+\d+)?\s+[A-Z]+\s*[A-Z]+\s+\d+\s*(\([A-Z]+\))?", re.IGNORECASE)
     
-    #Get rid of extra spaces
-    while '  ' in full_title:
-        
-        full_title = full_title.replace('  ', ' ')
-
-    #Get mnc
-    mnc = ''
+    m = MNC_RE.search(s)
     
-    mnc_list = re.findall(r'\[\d{4}\]\s\D+\d?\D+\s\d+', full_title)
+    if not m:        
+        return [full_title, full_title]
 
-    if len(mnc_list) > 0:
-        
-        mnc = mnc_list[0]
-        
-        if isinstance(mnc, tuple):
-            
-            mnc = mnc[0]
-    
-    #Get title 
-    if (len(mnc) > 0) and (mnc in full_title):
-        
-        title = full_title.split(mnc)[0]
-
-        if len(title) > 0:
-            
-            while title[0] == ' ':
-                title = title[1:]
-
-            while title[-1] == ' ':
-                title = title[:-1]
-                
     else:
-        title = full_title
-    
-    return [title, mnc]
-
+        
+        mnc = m.group(0).strip()
+        
+        title = s.split(mnc, 1)[0].strip()
+        
+        return [title, mnc]
 
 
 # %%
@@ -430,9 +407,8 @@ def list_range_check(some_list, some_string):
 
         for item in raw_list:
 
-            while item[0] == ' ':
-                item = item[1:]
-            
+            item = item.strip()
+  
             if item in some_list:
                 selected_list.append(item)
 

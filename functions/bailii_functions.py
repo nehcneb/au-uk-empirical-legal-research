@@ -469,15 +469,15 @@ class bailii_search_tool:
                             mnc = ''
                             date = ''
                             reports = ''
-                            link = ''
+                            direct_link = ''
                 
                             try:           
                                 
-                                link = 'https://www.bailii.org' + case_raw.find("a", href = True).get('href')
+                                direct_link = 'https://www.bailii.org' + case_raw.find("a", href = True).get('href')
                             
                             except Exception as e:
                                 
-                                print(f"Can't get link from case_raw == {case_raw}.")
+                                print(f"Can't get direct_link from case_raw == {case_raw}.")
                 
                             #Get all other metas
                             meta_list = case_raw.get_text().split('\n')
@@ -540,13 +540,13 @@ class bailii_search_tool:
 
                                 except Exception as e:
 
-                                    print(f"Can't get some metadata for {link}")
+                                    print(f"Can't get some metadata for {direct_link}")
             
                             case_info = {'Case name': case_name,
                                      'Medium neutral citation' : mnc, 
                                     'Date': date,
                                      'Reports': reports, 
-                                     'Hyperlink to BAILII': link, 
+                                     'Hyperlink to BAILII': direct_link, 
                                     }
                 
                             self.case_infos.append(case_info)
