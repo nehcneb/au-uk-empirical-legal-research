@@ -881,7 +881,7 @@ def GPT_prompt_improver(_questions_system_instruction_string, role_content, temp
 def GPT_json(questions_json, answers_json, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
-    st.write(f'answers_json == {answers_json}, of type {type(answers_json)}')
+    #st.write(f'answers_json == {answers_json}, of type {type(answers_json)}')
     
     judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
 
