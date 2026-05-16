@@ -106,10 +106,13 @@ default_temperature = 0.1
 
 # %%
 #These are the finest intersection of reasoning efforts for all reasoning models
-reasoning_effort_col = gpt_stats.loc[gpt_stats.index.isin(gpt_reasoning_models_list), 'REASONING_EFFORTS']
+reasoning_effort_col = gpt_stats[gpt_stats.index.isin(gpt_reasoning_models_list)]['REASONING_EFFORTS']
 reasoning_effort_list = list(reduce(set.intersection, map(set, reasoning_effort_col)))
 
-#reasoning_effort_list = ['low', 'medium', 'high']
+#st.write(f'reasoning_effort_col == {reasoning_effort_col}')
+#st.write(f'reasoning_effort_list == {reasoning_effort_list}')
+
+#reasoning_effort_list = ['medium', 'high']
 
 default_reasoning_effort = reasoning_effort_list[0]
 
@@ -247,19 +250,19 @@ def max_output(gpt_model, messages_for_GPT):
     
     max_output_tokens = int(gpt_stats.loc[gpt_model, 'context_window'] - num_tokens_from_string(str(messages_for_GPT), "cl100k_base")) #For gpt-4.1, token limit covering both BOTH and output is 1,047,576, while the output limit is 32,768.
 
-    output_limit = gpt_stats.loc[gpt_model, 'max_output_tokens']
+    output_limit = int(gpt_stats.loc[gpt_model, 'max_output_tokens'])
     
     return int(min(output_limit, abs(max_output_tokens)))
     
 def gpt_input_cost(gpt_model):
 
-    input_cost = convert_gpt_pricing(gpt_stats.loc[gpt_model, 'INPUT'])
+    input_cost = int(convert_gpt_pricing(gpt_stats.loc[gpt_model, 'INPUT']))
 
     return input_cost
 
 def gpt_output_cost(gpt_model):
 
-    output_cost = convert_gpt_pricing(gpt_stats.loc[gpt_model, 'OUTPUT'])
+    output_cost = int(convert_gpt_pricing(gpt_stats.loc[gpt_model, 'OUTPUT']))
 
     return output_cost
 
@@ -878,6 +881,8 @@ def GPT_prompt_improver(_questions_system_instruction_string, role_content, temp
 def GPT_json(questions_json, answers_json, judgment_json, gpt_model, temperature, reasoning_effort, system_instruction):
     #'question_json' variable is a json of questions to GPT
 
+    st.write(f'answers_json == {answers_json}, of type {type(answers_json)}')
+    
     judgment_for_GPT = [{"role": "user", "content": judgment_prompt_json(judgment_json, gpt_model)}]
 
     json_direction = [{"role": "user", "content": 'You will be given questions to answer.'}]
@@ -915,6 +920,10 @@ def GPT_json(questions_json, answers_json, judgment_json, gpt_model, temperature
         gpt_error_text = f'GPT failed to produce answers due to error: {error}'
         
         print(gpt_error_text)
+
+        if isinstance(answers_json, str):
+
+            answers_json = json.loads(answers_json)
             
         answers_json.update({'Note': gpt_error_text})
         
