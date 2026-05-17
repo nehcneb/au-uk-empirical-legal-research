@@ -230,10 +230,10 @@ def convert_gpt_pricing(cost_str):
 
         cost_per_1m_tokens = float(str(cost_str).replace('$', ''))
         
-        cost_per_token = 1/1000000*cost_per_1m_tokens
-
     else:
-        cost_per_token = 0
+        cost_per_1m_tokens = float(cost_str)
+
+    cost_per_token = 1/1000000*cost_per_1m_tokens
 
     return cost_per_token
 
@@ -256,13 +256,13 @@ def max_output(gpt_model, messages_for_GPT):
     
 def gpt_input_cost(gpt_model):
 
-    input_cost = int(convert_gpt_pricing(gpt_stats.loc[gpt_model, 'INPUT']))
+    input_cost = convert_gpt_pricing(gpt_stats.loc[gpt_model, 'INPUT'])
 
     return input_cost
 
 def gpt_output_cost(gpt_model):
 
-    output_cost = int(convert_gpt_pricing(gpt_stats.loc[gpt_model, 'OUTPUT']))
+    output_cost = convert_gpt_pricing(gpt_stats.loc[gpt_model, 'OUTPUT'])
 
     return output_cost
 
