@@ -66,7 +66,7 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, date_parser
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, save_input, date_parser, pdf_image_judgment, link
 #Import variables
 from functions.common_functions import today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, no_results_msg, search_error_note
 
@@ -75,7 +75,16 @@ from functions.common_functions import today_in_nums, errors_list, scraper_pause
 # # BAILII search engine
 
 # %%
-from functions.common_functions import link, pdf_image_judgment
+from functions.common_functions import running_locally_dir
+
+#Start display
+if running_locally_dir not in os.getcwd(): 
+    
+    from pyvirtualdisplay import Display
+    
+    display = Display(visible=0, size=(1200, 1600))  
+    display.start()
+
 
 # %%
 #Scrape javascript
@@ -94,7 +103,7 @@ from selenium.common.exceptions import TimeoutException
 
 options = Options()
 options.add_argument("--disable-gpu")
-options.add_argument("--headless")
+#options.add_argument("--headless")
 options.add_argument('--no-sandbox')  
 options.add_argument('--disable-dev-shm-usage')  
 
@@ -102,21 +111,10 @@ options.add_argument('--disable-dev-shm-usage')
 def get_driver():
     return webdriver.Chrome(options=options)
 
-try:
-    browser = get_driver()
-    
-    #browser.implicitly_wait(5)
-    #browser.set_page_load_timeout(15)
 
-    #browser.quit()
-    
-except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    print(e)
-    quit()
 
 # %%
-#Threshold characters count for getting pdf instead of html
+#Threshold characters count below which to get pdf instead of html
 bailii_pdf_judgment_threshold = 2048
 
 # %%
@@ -418,7 +416,19 @@ class bailii_search_tool:
         
         else:
 
+            browser = get_driver()
+            
             browser.get(self.results_url)
+    
+            #Wait until results or no results are present on page
+
+            RESULT_LINKS = (By.CSS_SELECTOR, "ol li a[href*='/cgi-bin/format.cgi']")
+            NO_RESULTS  = (By.XPATH, "//p[contains(normalize-space(.), 'No results found.')]")
+            
+            wait = Wait(browser, 30).until(EC.any_of(
+                EC.presence_of_all_elements_located(RESULT_LINKS),
+                EC.presence_of_element_located(NO_RESULTS),
+            ))
 
             self.soup = BeautifulSoup(browser.page_source, "lxml")
             
@@ -450,6 +460,14 @@ class bailii_search_tool:
                             submit_buttons = Wait(browser, 30).until(EC.presence_of_all_elements_located((By.XPATH, "//input[@type='submit']")))
                             next_button = submit_buttons[-1]
                             next_button.click()
+
+                            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                            
+                            wait = Wait(browser, 30).until(EC.any_of(
+                                EC.presence_of_all_elements_located(RESULT_LINKS),
+                                EC.presence_of_element_located(NO_RESULTS),
+                            ))
+                            
                             self.soup = BeautifulSoup(browser.page_source, "lxml")
     
                     else:
@@ -554,6 +572,8 @@ class bailii_search_tool:
                             counter += 1
                             #print(f"counter == {counter}")
 
+            browser.quit()
+                       
     #Function for getting all requested judgments
     def get_judgments(self):
 
@@ -561,6 +581,8 @@ class bailii_search_tool:
 
         for case_info in self.case_infos:
 
+            #print(f"len(self.case_infos_w_judgments) == {len(self.case_infos_w_judgments)}")
+            
             if len(self.case_infos_w_judgments) < min(self.results_count, self.judgment_counter_bound):
 
                 #Pause to avoid getting kicked out
@@ -574,9 +596,24 @@ class bailii_search_tool:
                 
                 judgment_url = case_info['Hyperlink to BAILII']
                 headers = {'User-Agent': 'whatever'}
+
+                #page = requests.get(judgment_url, headers=headers)
+                #soup = BeautifulSoup(page.content, "lxml")
                 
-                page = requests.get(judgment_url, headers=headers)
-                soup = BeautifulSoup(page.content, "lxml")
+                browser = get_driver()
+            
+                browser.get(judgment_url)
+
+                judgment_present = Wait(browser, 30).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, "(//small[contains(., 'URL:')]//i)[1]")
+                    )
+                )
+                
+                soup = BeautifulSoup(browser.page_source, "lxml")
+
+                browser.quit()
+                
                 text = soup.get_text()
             
                 if '[Help]' in text:
