@@ -46,6 +46,8 @@ import math
 from math import ceil
 import copy
 
+from html import unescape
+
 #Streamlit
 import streamlit as st
 #from streamlit_gsheets import GSheetsConnection
@@ -143,12 +145,14 @@ bailii_courts_default_list = ['House of Lords',
  'High Court Admiralty Court',
  'High Court Chancery Division',
  'High Court Commercial Court',
+'High Court Exchequer Court',
  'High Court Family Division',
- 'High Court Intellectual Property Enterprise Court',
- "High Court King's/Queen's Bench Division",
+'High Court Intellectual Property Enterprise Court',
+"High Court King's Bench Division",
  'High Court Mercantile Court',
  'High Court Patents Court',
- 'High Court Senior Courts Costs Office',
+ "High Court Queen's Bench Division",
+'High Court Senior Courts Costs Office',
  'High Court Technology and Construction Court'
 ]
 
@@ -157,20 +161,23 @@ bailii_courts_default_list = ['House of Lords',
 bailii_courts = {'House of Lords': 'uk/cases/UKHL',
  'Supreme Court': 'uk/cases/UKSC',
  'Privy Council': 'uk/cases/UKPC',
- 'Court of Appeal (Civil Division)': 'ew/cases/EWCA/CIV',
- 'Court of Appeal (Criminal Division)': 'ew/cases/EWCA/CRIM',
- 'High Court Administrative Court': 'ew/cases/EWHC/ADMIN',
- 'High Court Admiralty Court': 'ew/cases/EWHC/ADMLTY',
- 'High Court Chancery Division': 'ew/cases/EWHC/CH',
- 'High Court Commercial Court': 'ew/cases/EWHC/COMM',
- 'High Court Family Division': 'ew/cases/EWHC/FAM',
- 'High Court Intellectual Property Enterprise Court': 'ew/cases/EWHC/IPEC',
- "High Court King's/Queen's Bench Division": 'ew/cases/EWHC/KB',
- 'High Court Mercantile Court': 'ew/cases/EWHC/MERCANTILE',
- 'High Court Patents Court': 'ew/cases/EWHC/PAT',
- 'High Court Senior Courts Costs Office': 'ew/cases/EWHC/SCCO',
- 'High Court Technology and Construction Court': 'ew/cases/EWHC/TCC',
- 'Court of Protection': 'ew/cases/EWCOP',
+ 'Court of Appeal (Civil Division)': 'ew/cases/EWCA/Civ',
+ 'Court of Appeal (Criminal Division)': 'ew/cases/EWCA/Crim',
+ 'High Court Administrative Court': 'ew/cases/EWHC/Admin',
+ 'High Court Admiralty Court': 'ew/cases/EWHC/Admlty',
+ 'High Court Chancery Division': 'ew/cases/EWHC/Ch',
+ 'High Court Commercial Court': 'ew/cases/EWHC/Comm',
+ 'High Court Exchequer Court': 'ew/cases/EWHC/Exch',
+'High Court Family Division': 'ew/cases/EWHC/Fam',
+'High Court Intellectual Property Enterprise Court': 'ew/cases/EWHC/IPEC',
+"High Court King's Bench Division": 'ew/cases/EWHC/KB',
+ 'High Court Mercantile Court': 'ew/cases/EWHC/Mercantile',
+ 'High Court Patents Court': 'ew/cases/EWHC/Patents',
+"High Court Queen's Bench Division": 'ew/cases/EWHC/QB',
+ 'High Court Senior Courts Costs Office': 'ew/cases/EWHC/Costs',
+'High Court Technology and Construction Court': 'ew/cases/EWHC/TCC',
+ 'Patents County Court': 'ew/cases/EWPCC',
+'Court of Protection': 'ew/cases/EWCOP',
  'Family Court (High Court Judges)': 'ew/cases/EWFC/HCJ',
  'Family Court (Other Judges)': 'ew/cases/EWFC/OJ',
  "Magistrates' Court (Family)": 'ew/cases/EWMC/FPC',
@@ -180,19 +187,27 @@ bailii_courts_list = list(bailii_courts.keys())
 
 
 # %%
-def bailii_court_choice(chosen_list):
+def bailii_court_choice(courts):
 
-    chosen_indice = []
+    #Get selected court paths
+    selected_paths = [bailii_courts[court] for court in courts if court in bailii_courts]
 
-    if isinstance(chosen_list, str):
-        chosen_list = ast.literal_eval(chosen_list)
+    #Initialise parent paths
+    parent_paths = []
 
-    for i in chosen_list:
-        
-        chosen_indice.append(bailii_courts[i])
-    
-    return chosen_indice
+    #Add parent EWCA path if any EWCA division selected
+    if any(path.startswith('ew/cases/EWCA/') for path in selected_paths):
+        parent_paths.append('ew/cases/EWCA')
 
+    #Add parent EWHC path if any EWHC division selected
+    if any(path.startswith('ew/cases/EWHC/') for path in selected_paths):
+        parent_paths.append('ew/cases/EWHC')
+
+    #Combine while preserving order
+    all_paths = parent_paths + selected_paths
+
+    #De-duplicate while preserving order
+    return list(dict.fromkeys(all_paths))
 
 
 # %%
@@ -237,7 +252,7 @@ class bailii_search_tool:
         self.soup = None
         
         self.case_infos = []
-        
+            
     #Function for getting url for search results and the soup of first page
     def get_url(self):
     
@@ -247,12 +262,12 @@ class bailii_search_tool:
             findby = 'find_by_citation.cgi?'
     
             base_url = "https://www.bailii.org/cgi-bin/" + findby
-            
+    
             params = {'citation': self.citation}
     
     
         else:
-            
+    
             findby = 'lucy_search_1.cgi?'
     
             base_url = "https://www.bailii.org/cgi-bin/" + findby
@@ -261,8 +276,9 @@ class bailii_search_tool:
             query_list = []
     
             if len(self.case_name) > 0:
-                
-                case_name_query = f'(title:( {self.case_name} ))'
+    
+                case_name = unescape(self.case_name.strip())
+                case_name_query = f'title:("{case_name}")'
     
                 query_list.append(case_name_query)
     
@@ -282,7 +298,8 @@ class bailii_search_tool:
     
             if len(self.exact_phrase) > 0:
     
-                exact_phrase_query = f'("{self.exact_phrase}")'
+                exact_phrase = unescape(self.exact_phrase.strip())
+                exact_phrase_query = f'("{exact_phrase}")'
     
                 query_list.append(exact_phrase_query)
     
@@ -298,70 +315,79 @@ class bailii_search_tool:
     
             if len(self.advanced_query) > 0:
     
-                advanced_query_query = f'({self.advanced_query})'
+                advanced_query = unescape(self.advanced_query.strip())
+                advanced_query_query = f'({advanced_query})'
     
                 query_list.append(advanced_query_query)
-                
+    
             query = ' AND '.join(query_list)
     
             #print(f"Search terms are as follows: {query}")
     
             #Datelow param
             if self.datelow not in [None, '']:
-                
+    
                 self.datelow = date_parser(self.datelow)
-                
+    
                 if isinstance(self.datelow, datetime):
-        
+    
                     self.datelow = self.datelow.strftime('%Y%m%d')
-        
+    
                 else:
-                    
+    
                     print("Can't get datelow param.")
-            
+    
             #Datehigh param
             if self.datehigh not in [None, '']:
-        
+    
                 self.datehigh = date_parser(self.datehigh)
-                
+    
                 if isinstance(self.datehigh, datetime):
-        
+    
                     self.datehigh = self.datehigh.strftime('%Y%m%d')
     
                 else:
-                    
+    
                     print("Can't get datehigh param.")
     
             #Sort param
             try:
-                
+    
                 self.sort = bailii_sort_dict[self.sort]
-                
+    
             except:
-                
+    
                 self.sort = bailii_sort_dict[list(bailii_sort_dict.keys())[0]]
-                
+    
                 print(f"Can't get sort param. Kept default {self.sort}.")
     
             #Highlight param            
             try:
-                
+    
                 self.highlight = int(bool(self.highlight))
-                
+    
             except:
-                
+    
                 self.highlight = int(bool(True))
-                
+    
                 print(f"Can't get highlight param. Kept default {self.highlight}.")
     
             #Choice of courts
-            courts_indices = ' '.join(bailii_court_choice(self.courts))
-    
-            #Limiting to EW cases
-            mask_path = 'ew/cases uk/cases/UKHL uk/cases/UKPC uk/cases/UKSC ' 
+            selected_paths = bailii_court_choice(self.courts)
             
-            mask_path += courts_indices
-    
+            #Limiting to EW cases
+            default_paths = [
+                'ew/cases',
+                'uk/cases/UKHL',
+                'uk/cases/UKPC',
+                'uk/cases/UKSC'
+            ]
+            
+            mask_path_list = default_paths + selected_paths
+            
+            mask_path = ' '.join(mask_path_list)
+
+            #Set params                
             params = {'method': 'boolean',
                       'query': query,
                       'datelow': self.datelow,
@@ -374,7 +400,7 @@ class bailii_search_tool:
         #print(f"params == {params}")
     
         #params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
-        
+    
         #headers = {'User-Agent': 'whatever'}
         #response = requests.get(base_url, params=params, headers=headers)
     
@@ -382,7 +408,7 @@ class bailii_search_tool:
     
         self.results_url = base_url + urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
     
-        #print(f"self.results_url == {self.results_url}")
+        print(f"self.results_url == {self.results_url}")
     
         #return {'results_url': self.results_url, 'soup': self.soup}
 
