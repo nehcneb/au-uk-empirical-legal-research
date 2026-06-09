@@ -65,13 +65,12 @@ from pyxlsb import open_workbook as open_xlsb
 
 # %%
 #Import functions
-from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, date_parser, save_input, split_title_mnc, pdf_image_judgment
+from functions.common_functions import own_account_allowed, pop_judgment, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, clear_cache, date_parser, save_input, split_title_mnc, pdf_image_judgment, get_metadata
 #Import variables
 from functions.common_functions import huggingface, today_in_nums, errors_list, scraper_pause_mean, judgment_text_lower_bound, default_judgment_counter_bound
 
 #Load oalc
 from functions.oalc_functions import get_judgment_from_oalc
-
 
 
 # %% [markdown]
@@ -266,6 +265,7 @@ class nsw_search_tool:
                 legislationCited = '',
                 casesCited = '',
                 pause = int(0),
+                 include_metadata = get_metadata(),
                  judgment_counter_bound = default_judgment_counter_bound
                 ):
 
@@ -284,6 +284,8 @@ class nsw_search_tool:
         self.legislationCited = legislationCited
         self.casesCited = casesCited
         self.pause = pause
+
+        self.include_metadata = include_metadata
 
         #Initialise scraper object
         self.query = None
@@ -430,22 +432,26 @@ class nsw_search_tool:
 
                             case_info.update({'judgment': ''})
                             
-                            case.fetch()
-                                                        
+                            if int(float(self.include_metadata)) > 0:
+                                
+                                case.fetch()
+
+                                pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                                
                             for key in case.values.keys():
     
                                 if key not in case_info.keys():
     
                                     case_info.update({key: case.values[key]})
-
-                            #The following gets judgment using SIH scraper
+                            
+                            #The following gets judgment using SIH scraper. Must do so after case.fetch() regardless of include_metadata status.
                             #case_info.update({'judgment': str(case.values)})
 
                             #The following gets judgment using my own scraper
+                            judgment_type_text = nsw_short_judgment(case_info["uri"])
+
                             pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
                             
-                            judgment_type_text = nsw_short_judgment(case_info["uri"])
-        
                             #judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] the text
                             case_info.update({'judgment': judgment_type_text[1]})                                                           
     
@@ -461,7 +467,6 @@ class nsw_search_tool:
                         self.case_infos_w_judgments.append(case_info)
                         
                         #Pause only if need to get judgment from Caselaw NSW
-                        pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
                 
             print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.judgment_counter_bound, self.results_count)} judgments.")
     
@@ -488,6 +493,7 @@ def nsw_search_preview(df_master):
                    legislationCited = df_master.loc[0, 'Legislation cited'], 
                    casesCited = df_master.loc[0, 'Cases cited'],
                 #pause = 0,
+                include_metadata = df_master.loc[0, 'Metadata inclusion'],                                 
                  judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                   )
 
@@ -678,6 +684,7 @@ def nsw_run(df_master):
                    legislationCited = df_master.loc[0, 'Legislation cited'], 
                    casesCited = df_master.loc[0, 'Cases cited'],
                 #pause = 0,
+                 include_metadata = df_master.loc[0, 'Metadata inclusion'],
                  judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                   )
 
@@ -755,6 +762,7 @@ def nsw_batch(df_master):
                    legislationCited = df_master.loc[0, 'Legislation cited'], 
                    casesCited = df_master.loc[0, 'Cases cited'],
                 #pause = 0,
+                 include_metadata = df_master.loc[0, 'Metadata inclusion'],
                  judgment_counter_bound = int(df_master.loc[0, 'Maximum number of judgments'])
                   )
 
