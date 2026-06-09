@@ -437,8 +437,17 @@ class nsw_search_tool:
                                 if key not in case_info.keys():
     
                                     case_info.update({key: case.values[key]})
-                                
-                            case_info.update({'judgment': str(case.values)})
+
+                            #The following gets judgment using SIH scraper
+                            #case_info.update({'judgment': str(case.values)})
+
+                            #The following gets judgment using my own scraper
+                            pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
+                            
+                            judgment_type_text = nsw_short_judgment(case_info["uri"])
+        
+                            #judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] the text
+                            case_info.update({'judgment': judgment_type_text[1]})                                                           
     
                             print(f"{case_info['title']} got judgment from NSW Caselaw directly.")
                             
@@ -456,54 +465,6 @@ class nsw_search_tool:
                 
             print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.judgment_counter_bound, self.results_count)} judgments.")
     
-        #Check length of judgment text, replace with text scraped from raw html if smaller than lower boound
-        judgment_dicts_to_remove = []
-        judgment_dicts_to_append = []
-        for judgment_dict in self.case_infos_w_judgments:
-    
-            #Checking if judgment text is too short                
-            judgment_raw_text = str(judgment_dict["judgment"])
-                    
-            if num_tokens_from_string(judgment_raw_text, "cl100k_base") < judgment_text_lower_bound:
-
-                judgment_dicts_to_remove.append(judgment_dict)
-
-                judgment_dict_updated = copy.deepcopy(judgment_dict)
-                
-                try:
-
-                    pause.seconds(np.random.randint(scraper_pause_mean - 5, scraper_pause_mean + 5))
-                    
-                    judgment_type_text = nsw_short_judgment(judgment_dict["uri"])
-        
-                    #attach judgment text, judgment_type_text[0] has judgment type, eg 'pdf', while judgment_type_text[1] the text
-                    judgment_dict_updated["judgment"] = judgment_type_text[1]
-    
-                    print(f'{judgment_dict["title"]}: given judgment tokens < {judgment_text_lower_bound}, scraped whole judgment from raw html.')                        
-                    
-                except Exception as e:
-                    
-                    judgment_dict_updated["judgment"] = ''
-                    print(f'{judgment_dict["title"]}: while judgment tokens < {judgment_text_lower_bound}, cannot scrape whole judgment from raw html due to error: {e}')
-
-                judgment_dicts_to_append.append(judgment_dict_updated)
-
-            for judgment_dict in judgment_dicts_to_remove:
-
-                if judgment_dict in self.case_infos_w_judgments:
-
-                    #print(f'Removing judgment_dict["title"] == {judgment_dict["title"]} of length {len(str(judgment_dict))}')
-
-                    self.case_infos_w_judgments.remove(judgment_dict)
-
-            for judgment_dict_updated in judgment_dicts_to_append:
-
-                if judgment_dict_updated not in self.case_infos_w_judgments:
-
-                    #print(f'Appending judgment_dict_updated["title"] == {judgment_dict_updated["title"]} of length {len(str(judgment_dict_updated))}')
-                    
-                    self.case_infos_w_judgments.append(judgment_dict_updated)
-
 
 
 # %%
