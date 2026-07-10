@@ -85,7 +85,7 @@ st.set_page_config(
 from functions.common_functions import own_account_allowed, batch_mode_allowed, immediate_b64, convert_df_to_json, convert_df_to_csv, convert_df_to_excel, str_to_int, str_to_int_page, save_input, download_buttons, uploaded_file_to_df, send_notification_email, report_error
 
 #Import variables
-from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, drop_own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display, tips, gpt_generated_example
+from functions.common_functions import judgment_batch_cutoff, judgment_batch_max, today_in_nums, errors_list, scraper_pause_mean, default_judgment_counter_bound, default_page_bound, drop_own_gpt_headings, check_questions_answers, gpt_cost_msg, search_error_display, search_error_display, tips, gpt_generated_example, pop_judgment
 
 
 # %% [markdown]
@@ -381,7 +381,7 @@ def own_run_function():
 
         st.warning('You must upload some file(s).')
 
-    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)) and (pop_judgment() > 0):
 
         st.warning("You must tick 'Use GPT' and enter some questions.")
         
@@ -477,7 +477,7 @@ def run_b64_function():
 
         st.warning('You must upload some image(s).')
 
-    elif ((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5)):
+    elif (((st.session_state['df_master'].loc[0, 'Use GPT'] == False) or (len(gpt_questions_entry) < 5))) and (pop_judgment() > 0):
 
         st.warning("You must tick 'Use GPT' and enter some questions.")
 
@@ -1220,7 +1220,7 @@ if keep_button:
 
         st.warning('You must upload some file(s).')
 
-    elif len(gpt_questions_entry) < 5:
+    elif (len(gpt_questions_entry) < 5) and (pop_judgment() > 0):
 
         st.warning('You must enter some questions for GPT.')
             
