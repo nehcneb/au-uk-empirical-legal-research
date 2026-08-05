@@ -1174,12 +1174,20 @@ def GPT_b64_json(questions_json, answers_json, judgment_json, gpt_model, tempera
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
 
     #Add images to messages to GPT
-    image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
-
+    #The following is for Completion API
+    #image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+    #The following is for Response API
+    image_content_value = [{"type": "input_text", "text": "Based on the following images:"}]
+    
     for key in ['judgment_b64', 'b64_list']:
         if key in judgment_json.keys():
             for image_b64 in judgment_json[key]:
-                image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                
+                #The following is for Completion API
+                #image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                #The following is for Response API
+                image_message_to_attach = {"type": "input_image", "image_url": image_b64}
+                
                 image_content_value.append(image_message_to_attach)
             break
 
@@ -1274,11 +1282,15 @@ def GPT_b64_json(questions_json, answers_json, judgment_json, gpt_model, tempera
 
     except Exception as error:
         
-        print('GPT failed to produce answers.')
+        gpt_error_text = f'GPT failed to produce answers due to error: {error}'
         
-        for q_index in q_keys:
+        print(gpt_error_text)
+
+        if isinstance(answers_json, str):
+
+            answers_json = json.loads(answers_json)
             
-            answers_json.update({q_index: error})
+        answers_json.update({'Note': gpt_error_text})
         
         return [answers_json, 0, 0]
 
@@ -1532,12 +1544,20 @@ def gpt_batch_input_id_line(questions_json, answers_json, judgment_json, gpt_mod
     else: #If one of b64 key ['judgment_b64', 'b64_list'] in judgment_json.keys():
         
         #Add images to messages to GPT
-        image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+        #The following is for Completion API
+        #image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+        #The following is for Response API
+        image_content_value = [{"type": "input_text", "text": "Based on the following images:"}]
         
         for key in ['judgment', 'b64_list']:
             if key in judgment_json.keys():
                 for image_b64 in judgment_json[key]:
-                    image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                    
+                    #The following is for Completion API
+                    #image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                    #The following is for Response API
+                    image_message_to_attach = {"type": "input_image", "image_url": image_b64}
+                    
                     image_content_value.append(image_message_to_attach)
                     
                 break
@@ -2539,12 +2559,20 @@ def GPT_b64_json_default_eg(questions_json, df_example, judgment_json, gpt_model
     #file_for_GPT = [{"role": "user", "content": file_prompt(file_triple, gpt_model) + 'you will be given questions to answer in JSON form.'}]
 
     #Add images to messages to GPT
-    image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+    #The following is for Completion API
+    #image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+    #The following is for Response API
+    image_content_value = [{"type": "input_text", "text": "Based on the following images:"}]
 
     for key in ['judgment_b64', 'b64_list']:
         if key in judgment_json.keys():
             for image_b64 in judgment_json[key]:
-                image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                
+                #The following is for Completion API
+                #image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                #The following is for Response API
+                image_message_to_attach = {"type": "input_image", "image_url": image_b64}
+                
                 image_content_value.append(image_message_to_attach)
             break
 
@@ -2901,12 +2929,20 @@ def gpt_batch_input_id_line_default_eg(questions_json, df_example, judgment_json
     else: #If one of b64 key ['judgment_b64', 'b64_list'] in judgment_json.keys():
         
         #Add images to messages to GPT
-        image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+        #The following is for Completion API
+        #image_content_value = [{"type": "text", "text": 'Based on the following images:'}]
+        #The following is for Response API
+        image_content_value = [{"type": "input_text", "text": "Based on the following images:"}]
         
         for key in ['judgment', 'b64_list']:
             if key in judgment_json.keys():
                 for image_b64 in judgment_json[key]:
-                    image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                    
+                    #The following is for Completion API
+                    #image_message_to_attach = {"type": "image_url", "image_url": {"url": image_b64,}}
+                    #The following is for Response API
+                    image_message_to_attach = {"type": "input_image", "image_url": image_b64}
+                    
                     image_content_value.append(image_message_to_attach)
                     
                 break
