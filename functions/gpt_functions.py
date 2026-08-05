@@ -1243,6 +1243,8 @@ def GPT_b64_json(questions_json, answers_json, judgment_json, gpt_model, tempera
         answers_dict = json.loads(response.output_text)
         
         #Obtain tokens
+        response_json = json.loads(response.to_json())
+        
         output_tokens = response_json['usage']['output_tokens']
         
         prompt_tokens = response_json['usage']['input_tokens']

@@ -42,7 +42,10 @@ def gpt_generated_example():
 
 # %%
 def immediate_b64():
-    return 0
+
+    return own_account_allowed()
+    
+    #return 0
 
 
 # %%

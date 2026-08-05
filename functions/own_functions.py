@@ -144,127 +144,187 @@ languages_list = list(languages_dict.keys())
 
 
 # %%
-# Function to convert each uploaded file to file name, text
+# Function to convert each uploaded file to file name and text
 
-#@st.cache_data(show_spinner = False)
+# @st.cache_data(show_spinner=False)
 def doc_to_text(uploaded_doc, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'extracted_text': ''} #
+    file_triple = {
+        'File name': '',
+        'Language choice': language,
+        'Page length': '',
+        'extracted_text': ''
+    }
 
     try:
-        #Get file name
-        file_triple['File name']=uploaded_doc.name
-        
-        #Get file data
+        # Get file name
+        file_triple['File name'] = uploaded_doc.name
+
+        # Get file data
         bytes_data = uploaded_doc.getvalue()
-    
-        #Get file extension
+
+        if not bytes_data:
+            raise ValueError("Uploaded file contains no readable bytes.")
+
+        # Get file extension
         extension = file_triple['File name'].split('.')[-1].lower()
-    
-        #Create list of pages
+
+        # Create list of page or document text chunks
         text_list = []
-    
-        #Word format
+
+        # Word format
         if extension == 'docx':
             doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
+
             text_list.append(doc_string)
-    
-            #file_triple['Page length'] = 1
 
-            file_triple['extracted_text'] = str(text_list)
-            
+            # DOCX does not have stable page boundaries without layout rendering
+            file_triple['Page length'] = 1
+
+            file_triple['extracted_text'] = "\n\n".join(text_list)
+
         else:
-             
-            #pdf formats #If want to enable pymupdf4llm. Not useful in my experience.
-            #if extension == 'pdf':
-                #doc = pymupdf.open(stream=bytes_data)
-
-                #max_doc_number=min(len(doc), page_bound)
-
-                #md_text = pymupdf4llm.to_markdown(doc = doc, pages = range(0, max_doc_number), embed_images = True) #Add embed_images = True if want to include images
-                
-                #file_triple['extracted_text'] = str(md_text)
-
-            #Other formats
-            #else:
-                
-            #text formats
+            # Text-like formats
             if extension in ['txt', 'cs', 'xml', 'html', 'json']:
-                doc = pymupdf.open(stream=bytes_data, filetype="txt")
-    
-            #Other formats
-            else:
-                doc = pymupdf.open(stream=bytes_data)
-    
-            max_doc_number=min(len(doc), page_bound)
-            
-            for page_index in list(range(0, max_doc_number)):
-                page = doc.load_page(page_index)
-                text_page = page.get_text() 
-                text_list.append(text_page)
-    
-            file_triple['extracted_text'] = str(text_list)
+                doc = pymupdf.open(
+                    stream=bytes_data,
+                    filetype="txt"
+                )
 
-            #Length of pages
+            # PDF and other formats supported by PyMuPDF
+            else:
+                doc = pymupdf.open(
+                    stream=bytes_data
+                )
+
+            # Length of document pages
             file_triple['Page length'] = len(doc)
-        
+
+            # Handle page_bound safely
+            if page_bound is None:
+                max_doc_number = len(doc)
+            else:
+                try:
+                    page_bound = int(page_bound)
+                except Exception:
+                    page_bound = len(doc)
+
+                page_bound = max(0, page_bound)
+                max_doc_number = min(len(doc), page_bound)
+
+            # Extract text page by page
+            for page_index in range(max_doc_number):
+                page = doc.load_page(page_index)
+                text_page = page.get_text()
+
+                text_list.append(
+                    f"--- Page {page_index + 1} ---\n{text_page}"
+                )
+
+            file_triple['extracted_text'] = "\n\n".join(text_list)
+
+            # Good practice: close PyMuPDF document
+            doc.close()
+
     except Exception as e:
         print(f"{file_triple['File name']}: failed to get text")
         print(e)
-    
+
     return file_triple
 
 
 # %%
-#Function for images to text
+# Function for images to text
 
-#@st.cache_data(show_spinner = False)
+# @st.cache_data(show_spinner=False)
 def image_to_text(uploaded_image, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'Page length': '', 'extracted_text': ''}
+    file_triple = {
+        'File name': '',
+        'Language choice': language,
+        'Page length': '',
+        'extracted_text': ''
+    }
 
     try:
-        #Get file name
-        file_triple['File name']=uploaded_image.name
-    
-        #Get file data
+        # Get file name
+        file_triple['File name'] = uploaded_image.name
+
+        # Reset stream position in case the file was already read
+        try:
+            uploaded_image.seek(0)
+        except Exception:
+            pass
+
+        # Get file data
         bytes_data = uploaded_image.read()
-    
-        #Get file extension
+
+        if not bytes_data:
+            raise ValueError("Uploaded file contains no readable bytes.")
+
+        # Get file extension
         extension = file_triple['File name'].split('.')[-1].lower()
-    
-        #Obtain images from uploaded file
+
+        # Prepare image list
+        images = []
+
+        # Obtain images from uploaded file
         if extension == 'pdf':
             try:
-                images = pdf2image.convert_from_bytes(bytes_data, timeout=30)
+                images = pdf2image.convert_from_bytes(
+                    bytes_data,
+                    timeout=30
+                )
+
             except PDFPopplerTimeoutError as pdf2image_timeout_error:
                 print(f"pdf2image error: {pdf2image_timeout_error}.")
-    
+                images = []
+
         else:
-            images = []
             image_raw = Image.open(BytesIO(bytes_data))
             images.append(image_raw)
-            
-        #Extract text from images
-        text_list = []
-        
-        max_images_number=min(len(images), page_bound)
-    
-        for image in images[ : max_images_number]:
-            try:
-                text_page = pytesseract.image_to_string(image, lang=languages_dict[language], timeout=30)
-                text_list.append(text_page)
-                
-            except RuntimeError as pytesseract_timeout_error:
-                print(f"pytesseract error: {pytesseract_timeout_error}.")
-    
-        file_triple['extracted_text'] = str(text_list)
-    
-        #Length of pages
+
+        # Length of pages
         file_triple['Page length'] = len(images)
-    
+
+        # Handle page_bound safely
+        if page_bound is None:
+            max_images_number = len(images)
+        else:
+            try:
+                page_bound = int(page_bound)
+            except Exception:
+                page_bound = len(images)
+
+            page_bound = max(0, page_bound)
+            max_images_number = min(len(images), page_bound)
+
+        # Extract text from images
+        text_list = []
+
+        for page_index, image in enumerate(images[:max_images_number]):
+            try:
+                text_page = pytesseract.image_to_string(
+                    image,
+                    lang=languages_dict[language],
+                    timeout=30
+                )
+
+                text_list.append(
+                    f"--- Page {page_index + 1} ---\n{text_page}"
+                )
+
+            except RuntimeError as pytesseract_timeout_error:
+                print(
+                    f"pytesseract error on "
+                    f"{file_triple['File name']}, p {page_index}: "
+                    f"{pytesseract_timeout_error}."
+                )
+
+        file_triple['extracted_text'] = "\n\n".join(text_list)
+
     except Exception as e:
         print(f"{file_triple['File name']}: failed to get text")
         print(e)
-        
+
     return file_triple
 
 
@@ -372,75 +432,123 @@ from functions.gpt_functions import get_image_dims, calculate_image_token_cost, 
 
 
 # %%
-#@st.cache_data(show_spinner = False)
+# @st.cache_data(show_spinner=False)
 def image_to_b64_own(uploaded_image, language, page_bound):
-    file_triple = {'File name' : '', 'Language choice': language, 'b64_list': [], 'Dimensions (width, height)' : [],
-                   'Page length': '', 
-                   'tokens_raw': 0
-                  }
+    """
+    Convert an uploaded image or PDF into a list of base64 data URLs.
+
+    For PDFs:
+        - Converts each page to JPEG.
+        - Processes up to `page_bound` pages.
+        - Stores one base64 string per page.
+
+    For images:
+        - Encodes the uploaded image directly.
+        - Stores one base64 string.
+
+    Returns:
+        dict with file name, language, base64 list, dimensions, page count, and token cost.
+    """
+
+    file_triple = {
+        'File name': '',
+        'Language choice': language,
+        'b64_list': [],
+        'Dimensions (width, height)': [],
+        'Page length': '',
+        'tokens_raw': 0
+    }
 
     try:
-        file_triple['File name']=uploaded_image.name
-    
-        #Get file extension
+        # Store file name
+        file_triple['File name'] = uploaded_image.name
+
+        # Get file extension
         extension = file_triple['File name'].split('.')[-1].lower()
-    
+
+        # Reset stream position in case the file was read before
+        try:
+            uploaded_image.seek(0)
+        except Exception:
+            pass
+
+        # Read uploaded file bytes
         bytes_data = uploaded_image.read()
-    
+
         if extension == 'pdf':
-            
-            images = pdf2image.convert_from_bytes(bytes_data, timeout=30, fmt="jpeg")
-    
+            # Convert PDF pages to PIL images
+            images = pdf2image.convert_from_bytes(
+                bytes_data,
+                timeout=30,
+                fmt="jpeg"
+            )
+
             file_triple['Page length'] = len(images)
-    
-            #Get page bound
-            max_images_number=min(len(images), page_bound)
-    
-            for image in images[ : max_images_number]:
-    
+
+            # Make sure page_bound is valid
+            if page_bound is None:
+                max_images_number = len(images)
+            else:
+                max_images_number = min(len(images), int(page_bound))
+
+            # Convert each selected PDF page to base64
+            for image in images[:max_images_number]:
                 output = BytesIO()
+
                 image.save(output, format='JPEG')
                 im_data = output.getvalue()
-                
-                image_data = base64.b64encode(im_data)
-                if not isinstance(image_data, str):
-                    # Python 3, decode from bytes to string
-                    image_data = image_data.decode()
-                data_url = 'data:image/jpg;base64,' + image_data
-    
-                #b64 = base64.b64encode(image_raw).decode('utf-8')
-    
-                b64_to_attach = data_url
-                #b64_to_attach = f"data:image/png;base64,{b64}"
-    
-            file_triple['b64_list'].append(b64_to_attach)
+
+                image_data = base64.b64encode(im_data).decode('utf-8')
+                data_url = f"data:image/jpeg;base64,{image_data}"
+
+                file_triple['b64_list'].append(data_url)
 
         else:
-    
-            #file_triple['Page length'] = 1
-        
+            # Treat non-PDF uploads as image files
+            file_triple['Page length'] = 1
+
             b64 = base64.b64encode(bytes_data).decode('utf-8')
-        
-            b64_to_attach = f"data:image/{extension};base64,{b64}"
-            
+
+            # Normalize common jpg/jpeg extension handling
+            mime_extension = 'jpeg' if extension in ['jpg', 'jpeg'] else extension
+
+            b64_to_attach = f"data:image/{mime_extension};base64,{b64}"
+
             file_triple['b64_list'].append(b64_to_attach)
-            
-        for image_b64 in file_triple['b64_list']:
-    
-            #Get dimensions
+
+        # Get dimensions and token cost for each base64 image
+        for page_index, image_b64 in enumerate(file_triple['b64_list']):
+
             try:
-    
-                file_triple['Dimensions (width, height)'].append(get_image_dims(b64_to_attach))
+                dimensions = get_image_dims(image_b64)
+                file_triple['Dimensions (width, height)'].append(dimensions)
+
             except Exception as e:
-                print(f"Cannot obtain dimensions for {file_triple['File name']}, p {file_triple['b64_list'].index(image_b64)}.")
+                print(
+                    f"Cannot obtain dimensions for "
+                    f"{file_triple['File name']}, p {page_index}."
+                )
                 print(e)
-            
-            file_triple['tokens_raw'] = file_triple['tokens_raw'] + calculate_image_token_cost(image_b64, detail="auto")
+
+            try:
+                file_triple['tokens_raw'] += calculate_image_token_cost(
+                    image_b64,
+                    detail="auto"
+                )
+
+            except Exception as e:
+                print(
+                    f"Cannot calculate token cost for "
+                    f"{file_triple['File name']}, p {page_index}."
+                )
+                print(e)
+
     except Exception as e:
-        print(f"{file_triple['File name']}: failed to get text")
+        print(f"{file_triple['File name']}: failed to process uploaded file")
         print(e)
-        
+
     return file_triple
+
 
 
 # %%
