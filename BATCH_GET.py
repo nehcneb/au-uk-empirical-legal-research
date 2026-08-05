@@ -635,7 +635,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     
     f"{funder_msg} \r\n\r\n"
 
-    "Please don't hesitate to reach out if I could be of assistance.\r\n\r\n"
+    "Please don't hesitate to reach out if I can be of assistance.\r\n\r\n"
     
     "Kind regards\r\n\r\n"
     
@@ -673,7 +673,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     <p>
     {funder_msg_html}
     </p>    
-    <p>Please don't hesitate to reach out if I could be of assistance.</p> 
+    <p>Please don't hesitate to reach out if I can be of assistance.</p> 
     <p>
     Kind regards
     </p> 
@@ -924,10 +924,16 @@ for index in all_df_masters.index:
 
     if ((status in ['completed', 'error', 'failed']) and (sent_to_user not in [True, 1, 'yes', 'Yes', '1'])):
 
-        batch_id = str(all_df_masters.loc[index, 'batch_id'])
-        name = str(all_df_masters.loc[index, 'Your name']).replace('nan', 'anonymous user')
+        name = 'anonymous user'
+
+        if not pd.isna(all_df_masters.loc[index, 'Your name']):
+
+            name = str(all_df_masters.loc[index, 'Your name'])
+                        
         email = str(all_df_masters.loc[index, 'Your email address'])
 
+        batch_id = str(all_df_masters.loc[index, 'batch_id'])
+        
         link = 'https://lawtodata.streamlit.app/BATCH'
 
         try:
