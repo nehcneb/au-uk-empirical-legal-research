@@ -270,62 +270,121 @@ def link(x):
 
 
 # %%
-#Define function for judgment link containing PDF
-def pdf_judgment(url_or_path, url_given = True, headers = {'User-Agent': 'whatever'}):
+def pdf_judgment(
+    url_or_path,
+    url_given=True,
+    headers=None,
+    request_timeout=60,
+):
+    """
+    Extract text from every page of a PDF.
 
-    #If the str given is url
-    if url_given == True:
-            
-        r = requests.get(url_or_path, headers=headers, allow_redirects = True)
-    
-        remote_file_bytes = io.BytesIO(r.content)
+    Returns:
+        str: A string representation of a list of dictionaries.
+    """
+
+    if headers is None:
+        headers = {"User-Agent": "whatever"}
+
+    # If the string given is a URL
+    if url_given:
+        response = requests.get(
+            url_or_path,
+            headers=headers,
+            allow_redirects=True,
+            timeout=request_timeout,
+        )
+        response.raise_for_status()
+
+        remote_file_bytes = io.BytesIO(response.content)
         pdfdoc_remote = pypdf.PdfReader(remote_file_bytes)
 
+    # If the string given is a path to a PDF
     else:
-        #If the str given is path to pdf
-        
         pdfdoc_remote = pypdf.PdfReader(url_or_path)
-    
-    text_list = []
 
-    for page in pdfdoc_remote.pages:
-        text_list.append(page.extract_text())
-    
-    return str(text_list)
+    total_pages = len(pdfdoc_remote.pages)
 
+    if total_pages == 0:
+        raise ValueError("The PDF contains no pages.")
+
+    results = []
+
+    # Process every page
+    for page_number, page in enumerate(pdfdoc_remote.pages, start=1):
+        text = page.extract_text()
+
+        results.append({
+            "page": page_number,
+            "text": text,
+        })
+
+        #print(f"Processed page {page_number} of {total_pages}")
+
+    # Explicitly return a string
+    return str(results)
 
 
 # %%
-#Define function for judgment link containing PDF images
-def pdf_image_judgment(url_or_path = '', url_given = True, headers = {'User-Agent': 'whatever'}):
+def pdf_image_judgment(
+    url_or_path="",
+    url_given=True,
+    headers=None,
+    conversion_timeout=300,
+    ocr_timeout=60,
+):
+    """
+    Convert every PDF page to an image and OCR every page.
 
-    #If the str given is url
-    if url_given == True:
-        
-        r = requests.get(url_or_path, headers=headers, allow_redirects = True)
-        
-        remote_file_bytes = r.content
-    
-        images = pdf2image.convert_from_bytes(remote_file_bytes, timeout=30)
-        
+    Returns:
+        str: A string representation of a list of dictionaries.
+    """
+
+    if headers is None:
+        headers = {"User-Agent": "whatever"}
+
+    if url_given:
+        response = requests.get(
+            url_or_path,
+            headers=headers,
+            allow_redirects=True,
+            timeout=60,
+        )
+        response.raise_for_status()
+
+        images = pdf2image.convert_from_bytes(
+            response.content,
+            timeout=conversion_timeout,
+        )
     else:
-        
-        #If the str given is path to pdf
-        images = pdf2image.convert_from_path(url_or_path, timeout=30)
+        images = pdf2image.convert_from_path(
+            url_or_path,
+            timeout=conversion_timeout,
+        )
 
-    #Extract text from images
-    text_list = []
-    
-    max_images_number = len(images)
+    if not images:
+        raise ValueError(
+            "The PDF contains no pages, or no pages could be converted."
+        )
 
-    for image in images[ : max_images_number]:
-        
-        text_page = pytesseract.image_to_string(image, timeout=30)
-        
-        text_list.append(text_page)
-        
-    return str(text_list)
+    results = []
+    total_pages = len(images)
 
+    for page_number, image in enumerate(images, start=1):
+        text = pytesseract.image_to_string(
+            image,
+            timeout=ocr_timeout,
+        )
+
+        results.append({
+            "page": page_number,
+            "text": text,
+        })
+
+        #print(f"Processed page {page_number} of {total_pages}")
+
+    # Explicitly return a string
+    return str(results)
 
 
 # %%

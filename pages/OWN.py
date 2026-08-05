@@ -567,7 +567,6 @@ def run_b64_function():
                 
 
 
-
 # %% [markdown]
 # ## Initialize session states
 
@@ -1089,29 +1088,23 @@ with stylable_container(
 
 if ((own_account_entry == True) and (uploaded_images)):
 
-    if immediate_b64() > 0:
-    
-        st.markdown("""By default, this app will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
-        
-Alternatively, you can send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but is *significantly* slower and costlier than the default approach.
+    st.markdown("""By default, this app uses an Optical Character Recognition (OCR) engine to extract text from images, and then sends such text to GPT.
+            
+Alternatively, you can request to send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but is *significantly* slower and costlier than the default approach. Your request data will be sent to your nominated email address in about **2 business days**.
 """)
+
+    batch_button_b64 = st.button(label = f"REQUEST to send images to GPT directly (up to {st.session_state['judgment_counter_batch']} files)", 
+                                   help = 'You can only :orange[REQUEST] data once per session.', 
+                             disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
+                                    )
+
+    
+    if immediate_b64() > 0:
     
         run_button_b64 = st.button(label = f"SEND images to GPT directly now (up to {min(st.session_state['judgment_batch_cutoff'], st.session_state['df_master'].loc[0, 'Maximum number of files'])} files)", 
                                   help = 'You must :red[REMOVE] any data previously produced before producing new data.', 
                                    disabled = bool((st.session_state.need_resetting) or (st.session_state.disable_input) or (bool(st.session_state['df_master'].loc[0, 'Maximum number of files'] > st.session_state["judgment_batch_cutoff"])))
                                   )
-    
-    else:
-
-        st.markdown("""By default, this app will use an Optical Character Recognition (OCR) engine to extract text from images, and then send such text to GPT.
-        
-Alternatively, you can request to send images directly to GPT. This alternative approach may produce better responses for "untidy" images, but is *significantly* slower and costlier than the default approach. Your request data will be sent to your nominated email address in about **2 business days**.
-""")
-        
-    batch_button_b64 = st.button(label = f"REQUEST to send images to GPT directly (up to {st.session_state['judgment_counter_batch']} files)", 
-                                   help = 'You can only :orange[REQUEST] data once per session.', 
-                             disabled = bool((st.session_state.batch_submitted) or (st.session_state.disable_input))
-                                    )
 
 #test_button = st.button('Test')
 
