@@ -141,7 +141,7 @@ st.markdown("""You will be asked to
 
 st.subheader(""":green[What would you like to research?]""")
 
-source_entry = st.selectbox(label = "Please select a source of information to collect, code and analyse.", options = source_list, index = list_value_check(page_list, st.session_state.page_from))
+source_entry = st.selectbox(label = "Please select a source of information to research.", options = source_list, index = list_value_check(page_list, st.session_state.page_from))
 
 if source_entry:
 
