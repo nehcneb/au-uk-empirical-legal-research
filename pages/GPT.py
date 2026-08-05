@@ -704,10 +704,10 @@ else:
     
     st.header(':orange[Enhance app capabilities]')
     
-    st.markdown("""Would you like to improve the quality and accuracy of answers from GPT, or change the maximum number of cases to process? You can do so with your own GPT account.
+    st.markdown("""Would you like to improve the quality and accuracy of answers from GPT, or change the maximum number of cases to process? You can do so with your own OpenAI account.
 """)
     
-    own_account_entry = st.toggle(label = 'Use my own GPT account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
+    own_account_entry = st.toggle(label = 'Use my own OpenAI account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
     
     if own_account_entry:
 
@@ -715,7 +715,7 @@ else:
         
         #st.session_state["own_account"] = True
     
-        st.markdown("""**You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup).** You can then create and find your API key [here](https://platform.openai.com/api-keys).""")
+        st.markdown("""**You can sign up for an OpenAI account and pay for your own usage [here](https://platform.openai.com/signup).** You can then create and find your API key [here](https://platform.openai.com/api-keys).""")
         
         name_entry = st.text_input(label = "Your name", value = st.session_state['df_master'].loc[0, 'Your name'])
 
@@ -729,7 +729,7 @@ else:
             
         #st.session_state['df_master'].loc[0, 'Your email address'] = email_entry
         
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
+        gpt_api_key_entry = st.text_input(label = "Your API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
         
         if gpt_api_key_entry:
             

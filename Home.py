@@ -117,7 +117,7 @@ This app can also process your own files or spreadsheets of data.
 #(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
 
 if own_account_allowed() > 0:
-    st.markdown("""**Get started below :green[for free] or :orange[with your own GPT account]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
+    st.markdown("""**Get started below :green[for free] or :orange[with your own OpenAI account]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
 """)
 
 else:

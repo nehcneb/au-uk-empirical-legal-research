@@ -1379,7 +1379,7 @@ else: #if len(st.session_state.df_individual) == 0:
 
 
 # %% [markdown]
-# ## Choice of AI and GPT account
+# ## Choice of AI and OpenAI account
 
 # %%
 if len(ai_list_raw) > 1:
@@ -1415,23 +1415,23 @@ else:
 
     st.subheader(':orange[Enhance app capabilities]')
     
-    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum number of instructions to process? You can do so with your own GPT account.
+    st.markdown("""Would you like to increase the quality and accuracy of answers from GPT, or increase the maximum number of instructions to process? You can do so with your own OpenAI account.
     """)
     
-    own_account_entry = st.toggle(label = 'Use my own GPT account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
+    own_account_entry = st.toggle(label = 'Use my own OpenAI account',  value = st.session_state['df_master'].loc[0, 'Use own account'])
     
     if own_account_entry:
         
         #st.session_state['own_account'] = True
     
-        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for a GPT account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
+        st.markdown("""**:green[Please enter your name, email address and API key.]** You can sign up for an OpenAI account and pay for your own usage [here](https://platform.openai.com/signup). You can then create and find your API key [here](https://platform.openai.com/api-keys).
 """)
             
         name_entry = st.text_input(label = "Your name", value = st.session_state.df_master.loc[0, 'Your name'])
 
         email_entry = st.text_input(label = "Your email address", value = st.session_state.df_master.loc[0, 'Your email address'])
 
-        gpt_api_key_entry = st.text_input(label = "Your GPT API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
+        gpt_api_key_entry = st.text_input(label = "Your API key (mandatory)", value = st.session_state['df_master'].loc[0, 'Your GPT API key'])
 
         if gpt_api_key_entry:
             
