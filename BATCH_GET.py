@@ -42,6 +42,7 @@ from datetime import timedelta
 import ast
 #import copy
 import traceback
+from html import escape
 
 #OpenAI
 import openai
@@ -625,28 +626,28 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
 
     #BODY_TEXT is not in used
     BODY_TEXT = (
+        f"Dear {ULTIMATE_RECIPIENT_NAME}\r\n\r\n"
     
-    f"Dear {ULTIMATE_RECIPIENT_NAME}\r\n\r\n"
+        "Thank you for using LawtoData. You can now download your requested "
+        "data from the following webpage:\r\n"
+        f"{ACCESS_LINK}\r\n\r\n"
     
-    "Thank you for using LawtoData. You can now download your requested data from the following webpage:\r\n"
-    f"{ACCESS_LINK}\r\n\r\n"
+        f"Your access code is {BATCH_CODE}\r\n\r\n"
     
-    f"Your access code is {BATCH_CODE}\r\n\r\n"
+        f"{funder_msg}\r\n\r\n"
     
-    f"{funder_msg} \r\n\r\n"
-
-    "Please don't hesitate to reach out if I can be of assistance.\r\n\r\n"
+        "Please do not hesitate to reach out if I can be of assistance.\r\n\r\n"
     
-    "Kind regards\r\n\r\n"
+        "Kind regards\r\n\r\n"
     
-    "Ben\r\n\r\n\r\n\r\n"
+        "Ben\r\n\r\n"
     
-    "Ben Chen | Associate Professor\r\n"
-    "The University of Sydney Law School\r\n"
-    " \r\n"
-    "Email: ben.chen@sydney.edu.au\r\n"
-    "Webpage: https://profiles.sydney.edu.au/ben.chen\r\n"
-    "Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006\r\n"
+        "Ben Chen | Associate Professor\r\n"
+        "The University of Sydney Law School\r\n"
+        "Email: ben.chen@sydney.edu.au\r\n"
+        "Webpage: https://profiles.sydney.edu.au/ben.chen\r\n"
+        "Address: Room 431, New Law Building (F10), Eastern Ave, "
+        "The University of Sydney, NSW 2006\r\n"
     )
 
     #"Please note that the data produced has been checked to avoid exposing personally identifiable information. \r\n\r\n"
@@ -655,47 +656,63 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     #<h1>LawtoData: an Empirical Legal Research Automator</h1>
 
     # The HTML body of the email.
-    BODY_HTML = f"""<html>
-    <head></head>
+
+    recipient_name_html = escape(str(ULTIMATE_RECIPIENT_NAME))
+    access_link_html = escape(str(ACCESS_LINK), quote=True)
+    batch_code_html = escape(str(BATCH_CODE))
+    
+    BODY_HTML = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+    </head>
     <body>
+    
+    <p>Dear {recipient_name_html},</p>
+    
     <p>
-    Dear {ULTIMATE_RECIPIENT_NAME}
+        Thank you for using <em>LawtoData</em>. You can now download your
+        requested data from the following webpage:
+        <br>
+        {access_link_html}
+        </a>
     </p>
+    
     <p>
-    Thank you for using <em>LawtoData</em>. You can now download your requested data from the following webpage:
+        Your access code is <strong>{batch_code_html}</strong>.
     </p>
-    <p>
-    {ACCESS_LINK}
-    </p>
-    <p>
-    Your access code is <b>{BATCH_CODE}</b>
-    </p>    
-    <p>
+    
     {funder_msg_html}
-    </p>    
-    <p>Please don't hesitate to reach out if I can be of assistance.</p> 
+    
     <p>
-    Kind regards
-    </p> 
-    <p>
-    Ben
-    </p>   
-    <p>
-    </p>   
-    <p>
-    <b>Ben Chen</b> | Associate Professor
-    <p>
-    The University of Sydney Law School
+        Please do not hesitate to reach out if I can be of assistance.
     </p>
+    
     <p>
-    Email: ben.chen@sydney.edu.au
+        Kind regards,
     </p>
+    
     <p>
-    Webpage: https://profiles.sydney.edu.au/ben.chen
+        Ben
     </p>
+    
     <p>
-    Address: Room 431, New Law Building (F10), Eastern Ave, The University of Sydney, NSW 2006
-    </p> 
+        <strong>Ben Chen</strong> | Associate Professor<br>
+        The University of Sydney Law School<br>
+        Email:
+        <a href="mailto:ben.chen@sydney.edu.au">
+            ben.chen@sydney.edu.au
+        </a><br>
+        Webpage:
+        <a href="https://profiles.sydney.edu.au/ben.chen"
+           target="_blank"
+           rel="noopener noreferrer">
+            https://profiles.sydney.edu.au/ben.chen
+        </a><br>
+        Address: Room 431, New Law Building (F10), Eastern Ave,
+        The University of Sydney, NSW 2006
+    </p>
+    
     </body>
     </html>
     """

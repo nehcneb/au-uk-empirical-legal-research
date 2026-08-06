@@ -44,7 +44,8 @@ import pymupdf
 from io import StringIO
 from io import BytesIO
 import pdf2image
-from PIL import Image
+from pdf2image.exceptions import PDFPopplerTimeoutError
+from PIL import Image, ImageOps
 import pytesseract
 import mammoth
 
@@ -144,188 +145,346 @@ languages_list = list(languages_dict.keys())
 
 
 # %%
-# Function to convert each uploaded file to file name and text
+def normalise_page_bound(page_bound, document_length):
+    """
+    Convert page_bound into a safe number of pages to extract.
 
-# @st.cache_data(show_spinner=False)
-def doc_to_text(uploaded_doc, language, page_bound):
-    file_triple = {
-        'File name': '',
-        'Language choice': language,
-        'Page length': '',
-        'extracted_text': ''
-    }
+    None or an invalid value means that all pages will be extracted.
+    Negative values are treated as zero.
+    Values greater than the document length are capped at that length.
+    """
+
+    if page_bound is None:
+        return document_length
 
     try:
-        # Get file name
-        file_triple['File name'] = uploaded_doc.name
+        page_bound = int(page_bound)
+    except (TypeError, ValueError):
+        return document_length
 
-        # Get file data
+    return min(document_length, max(0, page_bound))
+
+
+# %%
+# @st.cache_data(show_spinner=False)
+def doc_to_text(uploaded_doc, language, page_bound):
+    """
+    Convert an uploaded document into document metadata and page-level text.
+
+    The returned 'extracted_text' value is a string with this structure:
+
+        "[{'page': 1, 'text': 'Text on page 1'}, ...]"
+
+    Parameters
+    ----------
+    uploaded_doc:
+        Uploaded file object with a .name attribute and .getvalue() method.
+    language:
+        User-selected language value.
+    page_bound:
+        Maximum number of pages to extract. If None or invalid, all pages
+        are extracted.
+
+    Returns
+    -------
+    dict
+        Document metadata and extracted page-level text.
+    """
+
+    file_triple = {
+        "File name": "",
+        "Language choice": language,
+        "Page length": 0,
+        "extracted_text": "[]",
+    }
+
+    doc = None
+
+    try:
+        # Get and validate the file name
+        file_name = getattr(uploaded_doc, "name", "")
+
+        if not file_name:
+            raise ValueError("The uploaded file does not have a file name.")
+
+        file_triple["File name"] = file_name
+
+        # Get and validate the uploaded file data
         bytes_data = uploaded_doc.getvalue()
 
         if not bytes_data:
             raise ValueError("Uploaded file contains no readable bytes.")
 
-        # Get file extension
-        extension = file_triple['File name'].split('.')[-1].lower()
+        # Get the file extension safely
+        if "." not in file_name:
+            raise ValueError("The uploaded file does not have a file extension.")
 
-        # Create list of page or document text chunks
-        text_list = []
+        extension = file_name.rsplit(".", 1)[-1].lower()
 
-        # Word format
-        if extension == 'docx':
-            doc_string = mammoth.convert_to_html(BytesIO(bytes_data)).value
+        # Each item will have:
+        # {"page": page_number, "text": text_on_that_page}
+        page_records = []
 
-            text_list.append(doc_string)
+        # Handle Word documents
+        if extension == "docx":
+            # DOCX files do not have stable page boundaries unless they are
+            # processed using a layout-rendering engine. Treat the document
+            # as one logical page.
+            result = mammoth.extract_raw_text(BytesIO(bytes_data))
+            document_text = result.value or ""
 
-            # DOCX does not have stable page boundaries without layout rendering
-            file_triple['Page length'] = 1
+            file_triple["Page length"] = 1
 
-            file_triple['extracted_text'] = "\n\n".join(text_list)
+            # Respect a page_bound of 0
+            max_doc_number = normalise_page_bound(
+                page_bound=page_bound,
+                document_length=1,
+            )
+
+            if max_doc_number > 0:
+                page_records.append(
+                    {
+                        "page": 1,
+                        "text": document_text,
+                    }
+                )
 
         else:
             # Text-like formats
-            if extension in ['txt', 'cs', 'xml', 'html', 'json']:
+            if extension in {"txt", "cs", "xml", "html", "json"}:
                 doc = pymupdf.open(
                     stream=bytes_data,
-                    filetype="txt"
+                    filetype="txt",
                 )
 
             # PDF and other formats supported by PyMuPDF
             else:
                 doc = pymupdf.open(
-                    stream=bytes_data
+                    stream=bytes_data,
                 )
 
-            # Length of document pages
-            file_triple['Page length'] = len(doc)
+            document_length = len(doc)
+            file_triple["Page length"] = document_length
 
-            # Handle page_bound safely
-            if page_bound is None:
-                max_doc_number = len(doc)
-            else:
-                try:
-                    page_bound = int(page_bound)
-                except Exception:
-                    page_bound = len(doc)
-
-                page_bound = max(0, page_bound)
-                max_doc_number = min(len(doc), page_bound)
+            max_doc_number = normalise_page_bound(
+                page_bound=page_bound,
+                document_length=document_length,
+            )
 
             # Extract text page by page
             for page_index in range(max_doc_number):
                 page = doc.load_page(page_index)
-                text_page = page.get_text()
+                page_text = page.get_text() or ""
 
-                text_list.append(
-                    f"--- Page {page_index + 1} ---\n{text_page}"
+                page_records.append(
+                    {
+                        "page": page_index + 1,
+                        "text": page_text,
+                    }
                 )
 
-            file_triple['extracted_text'] = "\n\n".join(text_list)
+        # repr() converts the list of dictionaries into a string using
+        # Python-style single quotes, matching the requested format.
+        file_triple["extracted_text"] = repr(page_records)
 
-            # Good practice: close PyMuPDF document
+    except Exception as error:
+        print(
+            f"{file_triple['File name'] or 'Unknown file'}: "
+            "failed to get text"
+        )
+        print(error)
+
+        # Preserve a consistent return type and data structure on failure
+        file_triple["extracted_text"] = "[]"
+
+    finally:
+        # Ensure the PyMuPDF document is closed even if extraction fails
+        if doc is not None:
             doc.close()
-
-    except Exception as e:
-        print(f"{file_triple['File name']}: failed to get text")
-        print(e)
 
     return file_triple
 
 
-# %%
-# Function for images to text
 
+# %%
 # @st.cache_data(show_spinner=False)
 def image_to_text(uploaded_image, language, page_bound):
+    """
+    Extract page-level text from an uploaded image or image-based PDF.
+
+    The returned 'extracted_text' value is a string with this structure:
+
+        "[{'page': 1, 'text': 'Text from page 1'}, ...]"
+
+    Parameters
+    ----------
+    uploaded_image:
+        Uploaded file object with a .name attribute and a .read() method.
+
+    language:
+        User-selected language. It must be a key in languages_dict.
+
+    page_bound:
+        Maximum number of pages or images to process. If None or invalid,
+        all available pages are processed.
+
+    Returns
+    -------
+    dict
+        File metadata and page-level OCR text.
+    """
+
     file_triple = {
-        'File name': '',
-        'Language choice': language,
-        'Page length': '',
-        'extracted_text': ''
+        "File name": "",
+        "Language choice": language,
+        "Page length": 0,
+        "extracted_text": "[]",
     }
 
-    try:
-        # Get file name
-        file_triple['File name'] = uploaded_image.name
+    images = []
 
-        # Reset stream position in case the file was already read
+    try:
+        # Get and validate the file name
+        file_name = getattr(uploaded_image, "name", "")
+
+        if not file_name:
+            raise ValueError("The uploaded file does not have a file name.")
+
+        file_triple["File name"] = file_name
+
+        # Reset the stream position if the file has already been read
         try:
             uploaded_image.seek(0)
-        except Exception:
+        except (AttributeError, OSError):
             pass
 
-        # Get file data
+        # Get and validate the file data
         bytes_data = uploaded_image.read()
 
         if not bytes_data:
             raise ValueError("Uploaded file contains no readable bytes.")
 
-        # Get file extension
-        extension = file_triple['File name'].split('.')[-1].lower()
+        # Get the file extension safely
+        if "." not in file_name:
+            raise ValueError(
+                "The uploaded file does not have a file extension."
+            )
 
-        # Prepare image list
-        images = []
+        extension = file_name.rsplit(".", 1)[-1].lower()
 
-        # Obtain images from uploaded file
-        if extension == 'pdf':
+        # Validate the selected OCR language
+        if language not in languages_dict:
+            raise ValueError(
+                f"Unsupported OCR language selection: {language}"
+            )
+
+        tesseract_language = languages_dict[language]
+
+        # Convert the uploaded file into one or more PIL images
+        if extension == "pdf":
             try:
                 images = pdf2image.convert_from_bytes(
                     bytes_data,
-                    timeout=30
+                    timeout=30,
                 )
 
-            except PDFPopplerTimeoutError as pdf2image_timeout_error:
-                print(f"pdf2image error: {pdf2image_timeout_error}.")
-                images = []
+            except PDFPopplerTimeoutError as error:
+                raise RuntimeError(
+                    f"PDF conversion timed out: {error}"
+                ) from error
 
         else:
-            image_raw = Image.open(BytesIO(bytes_data))
-            images.append(image_raw)
+            with Image.open(BytesIO(bytes_data)) as source_image:
+                # Some image formats, such as TIFF and GIF, can contain
+                # multiple frames. Treat each frame as a separate page.
+                number_of_frames = getattr(source_image, "n_frames", 1)
 
-        # Length of pages
-        file_triple['Page length'] = len(images)
+                for frame_index in range(number_of_frames):
+                    source_image.seek(frame_index)
 
-        # Handle page_bound safely
-        if page_bound is None:
-            max_images_number = len(images)
-        else:
+                    # Copy each frame because the source file is closed
+                    # when the with block ends.
+                    images.append(source_image.copy())
+
+        # Record the total number of pages before applying page_bound
+        file_triple["Page length"] = len(images)
+
+        max_images_number = normalise_page_bound(
+            page_bound=page_bound,
+            document_length=len(images),
+        )
+
+        # Each successful page will have:
+        # {"page": page_number, "text": OCR_text}
+        page_records = []
+
+        for page_index in range(max_images_number):
+            image = images[page_index]
+
             try:
-                page_bound = int(page_bound)
-            except Exception:
-                page_bound = len(images)
+                # Apply EXIF orientation, if available, and convert the
+                # image to RGB for consistent OCR processing.
+                prepared_image = ImageOps.exif_transpose(image).convert("RGB")
 
-            page_bound = max(0, page_bound)
-            max_images_number = min(len(images), page_bound)
+                page_text = pytesseract.image_to_string(
+                    prepared_image,
+                    lang=tesseract_language,
+                    timeout=30,
+                ) or ""
 
-        # Extract text from images
-        text_list = []
-
-        for page_index, image in enumerate(images[:max_images_number]):
-            try:
-                text_page = pytesseract.image_to_string(
-                    image,
-                    lang=languages_dict[language],
-                    timeout=30
+                page_records.append(
+                    {
+                        "page": page_index + 1,
+                        "text": page_text,
+                    }
                 )
 
-                text_list.append(
-                    f"--- Page {page_index + 1} ---\n{text_page}"
-                )
-
-            except RuntimeError as pytesseract_timeout_error:
+            except RuntimeError as error:
                 print(
                     f"pytesseract error on "
-                    f"{file_triple['File name']}, p {page_index}: "
-                    f"{pytesseract_timeout_error}."
+                    f"{file_triple['File name']}, "
+                    f"page {page_index + 1}: {error}."
                 )
 
-        file_triple['extracted_text'] = "\n\n".join(text_list)
+                # Preserve the page number even if OCR fails, so the
+                # resulting page sequence remains consistent.
+                page_records.append(
+                    {
+                        "page": page_index + 1,
+                        "text": "",
+                    }
+                )
 
-    except Exception as e:
-        print(f"{file_triple['File name']}: failed to get text")
-        print(e)
+            finally:
+                # Close the temporary converted image
+                if "prepared_image" in locals():
+                    prepared_image.close()
+                    del prepared_image
+
+        # Convert the list of dictionaries into a Python-style string.
+        # repr() uses single quotes, matching the requested format.
+        file_triple["extracted_text"] = repr(page_records)
+
+    except Exception as error:
+        print(
+            f"{file_triple['File name'] or 'Unknown file'}: "
+            "failed to get text"
+        )
+        print(error)
+
+        # Maintain a consistent return type if processing fails
+        file_triple["extracted_text"] = "[]"
+
+    finally:
+        # Release all PIL image resources
+        for image in images:
+            try:
+                image.close()
+            except Exception:
+                pass
 
     return file_triple
+
 
 
 # %% [markdown]
