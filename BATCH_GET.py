@@ -629,7 +629,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
         f"Dear {ULTIMATE_RECIPIENT_NAME}\r\n\r\n"
     
         "Thank you for using LawtoData. You can now download your requested "
-        "data from the following webpage:\r\n"
+        "data from the following webpage:\r\n\r\n"
         f"{ACCESS_LINK}\r\n\r\n"
     
         f"Your access code is {BATCH_CODE}\r\n\r\n"
@@ -673,9 +673,10 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     <p>
         Thank you for using <em>LawtoData</em>. You can now download your
         requested data from the following webpage:
-        <br>
+    </p>
+
+    <p>
         {access_link_html}
-        </a>
     </p>
     
     <p>
