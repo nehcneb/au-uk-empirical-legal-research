@@ -668,7 +668,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     </head>
     <body>
     
-    <p>Dear {recipient_name_html},</p>
+    <p>Dear {recipient_name_html}</p>
     
     <p>
         Thank you for using <em>LawtoData</em>. You can now download your
@@ -690,7 +690,7 @@ def send_email(ULTIMATE_RECIPIENT_NAME, ULTIMATE_RECIPIENT_EMAIL, ACCESS_LINK, B
     </p>
     
     <p>
-        Kind regards,
+        Kind regards
     </p>
     
     <p>
