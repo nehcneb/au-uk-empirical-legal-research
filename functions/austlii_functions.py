@@ -117,8 +117,8 @@ def get_driver():
     browser.implicitly_wait(15)
     browser.set_page_load_timeout(30)
 
-    if 'Users/Ben' in os.getcwd():
-        browser.minimize_window()
+    #if 'Users/Ben' in os.getcwd():
+        #browser.minimize_window()
     
     return browser
 
