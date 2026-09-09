@@ -108,37 +108,24 @@ file_error_note = 'This app was unable to scrape text from this file. This file 
 #File types and languages for processing
 doc_types = ["pdf", "txt", 'docx', "xps", "epub", "mobi", 'cs', 'xml', 'html', 'json'] #"fb2", "cbz", "svg",
 image_types = ["pdf", "jpg", "jpeg", "png", "bmp", "gif", "tiff"] #, "pnm", "pgm", "pbm", "ppm", "pam", "jxr", "jpx", "jp2", "psd"]
-languages_dict = {'English': 'eng', 
-                  'English, Middle (1100-1500)': 'enm', 
-                  'Chinese - Simplified': 'chi_sim', 
-                  'Chinese - Traditional': 'chi_tra', 
-                  'French': 'fra', 
-                  'German' : 'deu',
-                  'Greek, Modern (1453-)': 'ell', 
-                  'Greek, Ancient (-1453)': 'grc', 
-                  'Hebrew' : 'heb', 
-                  'Hindi' : 'hin', 
-                  'Hungarian': 'hun', 
-                  'Indonesian': 'ind', 
-                  'Italian': 'ita', 
-                  'Italian - Old': 'ita_old', 
-                  'Japanese': 'jpn', 
-                  'Korean': 'kor', 
-                  'Malay': 'msa', 
-                  'Panjabi; Punjabi': 'pan', 
-                  'Polish': 'pol', 
-                  'Portuguese': 'por', 
-                  'Russian': 'rus', 
-                  'Spanish; Castilian': 'spa', 
-                  'Spanish; Castilian - Old': 'spa_old', 
-                  'Swedish': 'swe', 
-                  'Thai': 'tha', 
-                  'Turkish': 'tur', 
-                  'Uighur; Uyghur': 'uig', 
-                  'Ukrainian': 'ukr', 
-                  'Vietnamese': 'vie', 
-                  'Yiddish': 'yid'
-                 }
+languages_dict = {
+    'English': 'eng',
+    'English, Middle (1100-1500)': 'enm',
+    'Latin': 'lat',
+    'Chinese - Simplified': 'chi_sim',
+    'Chinese - Traditional': 'chi_tra',
+    'French': 'fra',
+    'German': 'deu',
+    'Hindi': 'hin',
+    'Italian': 'ita',
+    'Japanese': 'jpn',
+    'Korean': 'kor',
+    'Portuguese': 'por',
+    'Russian': 'rus',
+    'Spanish; Castilian': 'spa',
+    'Arabic': 'ara',
+}
+
 languages_list = list(languages_dict.keys())
 
 #languages_words = ', '.join(languages_list)
