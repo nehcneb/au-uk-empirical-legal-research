@@ -105,16 +105,15 @@ st.markdown("""*LawtoData* is an [open-source](https://github.com/nehcneb/au-uk-
 (1) collect cases from Australia, Hong Kong, and the United States; and
 
 (2) extract and code **your** choice of case data or information, partially using GPT.
-
-This app can also process your own files or spreadsheets of data.
 """)
 
-#(1) collect cases from Australia, Hong Kong, the United Kingdom and the United States; and
+if ai_allowed() > 0:
 
+    st.markdown("""This app can also process your own files or spreadsheets of data.""")
 
-#(1) collect cases of select courts and tribunals from Australia, Canada, the United Kingdom and the United States; and
+else:
 
-#(1) collect cases of select Australian, United Kingdom and United States courts and tribunals; and
+    st.markdown("""This app can also process your own files.""")
 
 if own_account_allowed() > 0:
     st.markdown("""**Get started below :green[for free] or :orange[with your own OpenAI account]!** A spreadsheet which hopefully has the data or information you seek will be available for download.
@@ -125,8 +124,6 @@ else:
 """)
 
 st.caption('The developer [Ben Chen of Sydney Law School](https://www.sydney.edu.au/law/about/our-people/academic-staff/ben-chen.html) acknowledges and greatly appreciates the exemplary technical assistance of Mike Lynch and Xinwei Luo of [Sydney Informatics Hub](https://www.sydney.edu.au/research/facilities/sydney-informatics-hub.html), a Core Research Facility of the University of Sydney. They developed [an open-source Python module](https://github.com/Sydney-Informatics-Hub/nswcaselaw) which this app uses to collect cases from [NSW Caselaw](https://www.caselaw.nsw.gov.au/search/advanced). Please direct any enquiries to Ben at ben.chen@sydney.edu.au.')
-
-#, as well as the financial support provided by a University of Sydney Research Accelerator (SOAR) Prize. 
 
 st.header("Start")
 
@@ -154,7 +151,6 @@ if source_entry:
     i_unstanding_tick = st.checkbox('Yes, I understand.', value = st.session_state.i_understand)
 
 home_next_button = st.button(label = 'NEXT', disabled = not (bool(source_entry)), )
-#help = "To use this app, you must select a source of information and tick 'Yes, I understand'."
 
 if source_entry:
 
