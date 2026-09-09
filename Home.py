@@ -53,12 +53,12 @@ from functions.common_functions import own_account_allowed, check_questions_answ
 # %%
 #Dict of available sources
 page_dict = {
-            "pages/HCA.py": "High Court of Australia cases",
-            "pages/FCA.py": "Federal Court of Australia cases", 
+            #[Just until Debian issue is fixed]"pages/HCA.py": "High Court of Australia cases",
+            #[Just until Debian issue is fixed]"pages/FCA.py": "Federal Court of Australia cases", 
             "pages/NSW.py": "New South Wales cases", 
             #"pages/CA.py": 'Canada cases',
-            "pages/HK.py": "Hong Kong cases from the Hong Kong Legal Reference System", 
-            "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials from HKLII",
+            #[Just until Debian issue is fixed]"pages/HK.py": "Hong Kong cases from the Hong Kong Legal Reference System", 
+            #[Just until Debian issue is fixed]"pages/HKLII.py": "Hong Kong cases, legislation and other legal materials from HKLII",
             #"pages/UK.py": "United Kingdom cases", 
             #"pages/AUSTLII.py": "AustLII", 
             #"pages/BAILII.py": "England and Wales cases", 
@@ -67,7 +67,7 @@ page_dict = {
             #"pages/SCTA.py": 'Superannuation Complaints Tribunal of Australia cases', 
             #"pages/ER.py": "English Reports (nearly all English case reports from 1220 to 1866)", 
             #"pages/KR.py": "Kercher Reports (cases of the New South Wales superior courts from 1788 to 1899)", 
-            "pages/OWN.py": "Your own files", 
+            #[Just until Debian issue is fixed]"pages/OWN.py": "Your own files", 
             }
 
 if ai_allowed() > 0:
