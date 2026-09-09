@@ -3,6 +3,8 @@ chromium-driver
 poppler-utils
 xvfb
 tesseract-ocr-eng
+tesseract-ocr-enm
+tesseract-ocr-lat
 tesseract-ocr-chi-sim
 tesseract-ocr-chi-tra
 tesseract-ocr-fra
