@@ -166,31 +166,6 @@ for source in hklii_dbs_list:
             
     
 
-# %%
-#Function for changing selection menu for type on Streamlit
-
-def dict_value_or_none(some_dict, some_key):
-
-    if (some_key in [None, '']) or (not isinstance(some_dict, dict)):
-
-        return None
-    
-    elif some_key not in some_dict.keys():
-        
-        return None
-    
-    else:
-
-        return_value = some_dict[some_key]
-
-        if isinstance(return_value, dict):
-            
-            return_value = [*return_value.keys()]
-        
-        return return_value
-    
-
-
 # %% [markdown]
 # ## Search engine
 
@@ -410,19 +385,17 @@ class hklii_search_tool:
 
         if len(self.dbs) > 0:                
 
-            if len(self.dbs) > 0:
+            db_ids = []
 
-                db_ids = []
+            for db_name in self.dbs:
 
-                for db_name in self.dbs:
+                db_id = str(hklii_dbs_dict[db_name]['id'])
 
-                    db_id = str(hklii_dbs_dict[db_name]['id'])
+                db_ids.append(db_id)
 
-                    db_ids.append(db_id)
+            db_ids_param = ",".join(db_ids)
 
-                db_ids_param = ",".join(db_ids)
-
-                params_raw.append(('dbs', db_ids_param))        
+            params_raw.append(('dbs', db_ids_param))        
                         
         #Save params
         params = urllib.parse.urlencode(params_raw, quote_via=urllib.parse.quote, safe=',')

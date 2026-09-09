@@ -99,22 +99,11 @@ options.add_argument("--headless")
 options.add_argument('--no-sandbox')  
 options.add_argument('--disable-dev-shm-usage')  
 
-#@st.cache_resource(show_spinner = False, ttl=600)
 def get_driver():
-    return webdriver.Chrome(options=options)
-
-try:
-    browser = get_driver()
-    
-    #browser.implicitly_wait(5)
-    #browser.set_page_load_timeout(15)
-
-    #browser.quit()
-    
-except Exception as e:
-    st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
-    print(e)
-    quit()
+    browser = webdriver.Chrome(options=options)
+    browser.implicitly_wait(5)
+    browser.set_page_load_timeout(15)
+    return browser
 
 # %% [markdown]
 # ## Definitions
@@ -306,6 +295,13 @@ class hk_search_tool:
         self.soup = None
         
         self.case_infos = []
+
+        try:
+            self.browser = get_driver()
+        except Exception as e:
+            st.error('Sorry, your internet connection is not stable enough for this app. Please check or change your internet connection and try again.')
+            print(e)
+            raise
     
     #Function for getting search results
     def search(self):
@@ -539,21 +535,21 @@ class hk_search_tool:
             #Pause to avoid getting kicked out
             pause.seconds(np.random.randint(5, 10))
             
-            browser.get(self.results_url)
-            #browser.delete_all_cookies()
-            browser.refresh()
+            self.browser.get(self.results_url)
+            #self.browser.delete_all_cookies()
+            self.browser.refresh()
     
-            #self.soup = BeautifulSoup(browser.page_source, "lxml")
+            #self.soup = BeautifulSoup(self.browser.page_source, "lxml")
             
-            results_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
+            results_count_list = Wait(self.browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-total")))
             
             self.results_count = int(results_count_list[0].text)
     
-            page_count_list = Wait(browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
+            page_count_list = Wait(self.browser, 10).until(EC.presence_of_all_elements_located((By.ID, "searchresult-totalpages")))
     
             self.total_pages = int(page_count_list[0].text)
                             
-            self.soup = BeautifulSoup(browser.page_source, "lxml")
+            self.soup = BeautifulSoup(self.browser.page_source, "lxml")
     
             #Get case infos from search results page
             
@@ -680,8 +676,8 @@ class hk_search_tool:
     
                     self.case_infos.append(case_info)
     
-            #browser.delete_all_cookies()
-            #browser.close()
+            #self.browser.delete_all_cookies()
+            #self.browser.close()
 
             try_success = True
 
@@ -709,19 +705,19 @@ class hk_search_tool:
 
             judgment_url = case_info['Hyperlink to the Hong Kong Legal Reference System']
 
-            browser.get(judgment_url)
+            self.browser.get(judgment_url)
             
             #Click away potentially multiple alerts
             alert_counter = 1
             while alert_counter <= alert_bound:
                 try:
-                    Wait(browser, 10).until(EC.alert_is_present())
-                    alert += f"{browser.switch_to.alert.text}\n\n"
+                    Wait(self.browser, 10).until(EC.alert_is_present())
+                    alert += f"{self.browser.switch_to.alert.text}\n\n"
                     
                     try:
-                        browser.switch_to.alert.accept()
+                        self.browser.switch_to.alert.accept()
                     except:
-                        browser.switch_to.alert.dismiss()
+                        self.browser.switch_to.alert.dismiss()
                         
                     print(f'{case_number}: clicked away alert {alert_counter}.')
 
@@ -735,9 +731,9 @@ class hk_search_tool:
                 alert_counter += 1
             
             #Get urls for docx, pdf, and Chinese translation/English original if available
-            browser.switch_to.frame("topFrame")
+            self.browser.switch_to.frame("topFrame")
             
-            hrefs = browser.find_elements(By.XPATH, "//a[@href]")
+            hrefs = self.browser.find_elements(By.XPATH, "//a[@href]")
             
             top_buttons_dict = {}
             
@@ -773,19 +769,19 @@ class hk_search_tool:
                 #Pause to avoid getting kicked out
                 pause.seconds(np.random.randint(5, 10))
                 
-                browser.get(judgment_url)
+                self.browser.get(judgment_url)
 
                 #Click away potentially multiple alerts
                 alert_counter = 1
                 while alert_counter <= alert_bound:
                     try:
-                        Wait(browser, 10).until(EC.alert_is_present())
-                        alert += f"{browser.switch_to.alert.text}\n\n"
+                        Wait(self.browser, 10).until(EC.alert_is_present())
+                        alert += f"{self.browser.switch_to.alert.text}\n\n"
                         
                         try:
-                            browser.switch_to.alert.accept()
+                            self.browser.switch_to.alert.accept()
                         except:
-                            browser.switch_to.alert.dismiss()
+                            self.browser.switch_to.alert.dismiss()
                             
                         print(f'{case_number}: clicked away alert {alert_counter}.')
 
@@ -799,9 +795,9 @@ class hk_search_tool:
                     alert_counter += 1
 
                 #Get urls for docx, pdf, and Chinese translation for the English original
-                browser.switch_to.frame("topFrame")
+                self.browser.switch_to.frame("topFrame")
                 
-                hrefs = browser.find_elements(By.XPATH, "//a[@href]")
+                hrefs = self.browser.find_elements(By.XPATH, "//a[@href]")
                 
                 english_top_buttons_dict = {}
                 
@@ -824,15 +820,15 @@ class hk_search_tool:
                     if 'chinese' in key:
                         chinese_url = english_top_buttons_dict[key]
 
-                browser.switch_to.default_content()
+                self.browser.switch_to.default_content()
             
             else:
                 
-                browser.switch_to.default_content()
+                self.browser.switch_to.default_content()
             
-            browser.switch_to.frame("mainFrame")
+            self.browser.switch_to.frame("mainFrame")
 
-            judgment_text = BeautifulSoup(browser.page_source, "lxml").get_text()
+            judgment_text = BeautifulSoup(self.browser.page_source, "lxml").get_text()
 
             print(f"{case_number}: Got judgment from html.")
         
@@ -881,11 +877,11 @@ class hk_search_tool:
 
         #Get appendices (eg corrigendum) if any
         
-        browser.switch_to.default_content()
+        self.browser.switch_to.default_content()
         
-        browser.switch_to.frame("bottomFrame")
+        self.browser.switch_to.frame("bottomFrame")
         
-        hrefs = browser.find_elements(By.XPATH, "//a[@href]")
+        hrefs = self.browser.find_elements(By.XPATH, "//a[@href]")
         
         appendices_dict = {}
         
@@ -906,14 +902,14 @@ class hk_search_tool:
                 pause.seconds(np.random.randint(5, 10))
                 
                 app_url = bottom_buttons_dict[key]
-                browser.get(app_url)
+                self.browser.get(app_url)
                 
-                browser.switch_to.frame("mainFrame")
+                self.browser.switch_to.frame("mainFrame")
 
-                app_text = str(BeautifulSoup(browser.page_source, "lxml"))
+                app_text = str(BeautifulSoup(self.browser.page_source, "lxml"))
                 
                 #Enable to get text instead of all html
-                #app_text = BeautifulSoup(browser.page_source, "lxml").get_text()
+                #app_text = BeautifulSoup(self.browser.page_source, "lxml").get_text()
                 
                 print(f"{case_number}: Got appendix {key} from html.")
         
@@ -988,8 +984,10 @@ class hk_search_tool:
                     
                     print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments.")
     
-        #browser.delete_all_cookies()
-        #browser.close()
+        try:
+            self.browser.quit()
+        except Exception:
+            pass
 
 
 # %%
@@ -1081,6 +1079,11 @@ def hk_search_preview(df_master):
     results_url = hk_search.results_url
 
     #st.write(results_url)
+
+    try:
+        hk_search.browser.quit()
+    except Exception:
+        pass
     
     return {'results_url': results_url, 'results_count': results_count, 'case_infos': case_infos}
 
