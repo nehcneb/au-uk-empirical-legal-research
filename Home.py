@@ -57,7 +57,7 @@ page_dict = {
             "pages/FCA.py": "Federal Court of Australia cases", 
             "pages/NSW.py": "New South Wales cases", 
             #"pages/CA.py": 'Canada cases',
-            "pages/HK.py": "Hong Kong cases from the Hong Kong Legal Reference System", 
+            #"pages/HK.py": "Hong Kong cases from the Hong Kong Legal Reference System", 
             "pages/HKLII.py": "Hong Kong cases, legislation and other legal materials from HKLII",
             #"pages/UK.py": "United Kingdom cases", 
             #"pages/AUSTLII.py": "AustLII", 
