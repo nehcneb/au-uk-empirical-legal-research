@@ -18,7 +18,7 @@
 
 # %%
 #Preliminary modules
-#import base64 
+import base64 
 import json
 import pandas as pd
 import shutil
@@ -254,6 +254,7 @@ from functions.common_functions import running_locally_dir, get_uc_driver
 
 #For downloading judgments
 download_dir = f"{os.getcwd()}/HCA_PDFs"
+os.makedirs(download_dir, exist_ok = True) #Chrome needs this folder to exist from the start
 
 #Headless mode?
 if running_locally_dir in os.getcwd(): 
@@ -381,41 +382,41 @@ class hca_search_tool:
 
             params_raw.append(('keywords', self.keywords))
 
+        #Work out which case number (if any) to search
+        case_number_to_enter = ''
+
         if len(self.case_number) > 0:
 
-            case_number_input = Wait(browser, 15).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
-            keywords_input.send_keys(self.case_number)
+            case_number_to_enter = self.case_number
 
-            params_raw.append(('case_number', self.case_number))
-        
-        elif (len(self.case_number) == 0) and (len(self.citation) > 0):
+        elif len(self.citation) > 0:
 
             print(f"Trying to infer case_number from self.citation == {self.citation}")
-            
-            hca_case_number = hca_df[hca_df['mnc'].isin([self.citation])]
-            
+
+            hca_case_number = hca_df[hca_df['mnc'].isin([self.citation])].reset_index(drop = True)
+
             if len(hca_case_number) > 0:
 
-                hca_case_number.reset_index(inplace = True)
+                inferred = hca_case_number.loc[0, 'case_number']
 
-                case_number = hca_case_number.loc[0, 'case_number']
-                
-                if isinstance(case_number, str):
-    
-                    if len(case_number) > 0:
+                if isinstance(inferred, str) and (len(inferred) > 0):
 
-                        for puncutation in [' ', ',', ';']:
+                    for puncutation in [' ', ',', ';']:
 
-                            if puncutation in case_number:
+                        if puncutation in inferred:
 
-                                case_number = case_number.split(puncutation)[0]
+                            inferred = inferred.split(puncutation)[0]
 
-                        print(f"Inferred case_number == {case_number} from self.citation == {self.citation}")
+                    case_number_to_enter = inferred
+
+                    print(f"Inferred case_number == {case_number_to_enter} from self.citation == {self.citation}")
+
+        if len(case_number_to_enter) > 0:
 
             case_number_input = Wait(browser, 15).until(EC.visibility_of_element_located((By.XPATH, '//input[@id="edit-case-number--2"]')))
-            keywords_input.send_keys(case_number)
+            case_number_input.send_keys(case_number_to_enter)
 
-            params_raw.append(('case_number', case_number))
+            params_raw.append(('case_number', case_number_to_enter))
 
         #Select 100 results per page
         items_per_page_menu = Wait(browser, 15).until(EC.visibility_of_element_located((By.ID, 'edit-items-per-page--2')))
@@ -429,7 +430,7 @@ class hca_search_tool:
         #Scroll to buttom of page to see apply button
         browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 
-        apply_button.click()
+        browser.execute_script("arguments[0].click();", apply_button)
 
         #Pause to avoid loading unfiltered number of research results
         pause.seconds(np.random.randint(10, 15))
@@ -468,7 +469,7 @@ class hca_search_tool:
 
                         #If judge
                         else:
-                            selection = all_judges_dict[selection]
+                            selection = urllib.parse.unquote(all_judges_dict[selection])
                             
                         params_raw.append((f'f[{selection_counter}]', selection))
 
@@ -534,7 +535,7 @@ class hca_search_tool:
                         #next_page_url = self.results_url + f"&page={page}"
 
                         #browser = get_uc_driver(download_dir = download_dir, headless = headless)
-                        browser.get(self.next_page_url)
+                        browser.get(self.results_url + f"&page={page}")
 
                         #Alternative method suggested by Copliot
                         #first_row = browser.find_element(By.CSS_SELECTOR, ".view-judgments .views-row")
@@ -554,7 +555,7 @@ class hca_search_tool:
         
                     print(f"Getting results from page {page} (0 denotes first page)")
                     
-                    results = self.soup.find_all('div', class_ = 'views-row')
+                    results = [r for r in self.soup.select('div.view-judgments div.views-row') if r.find('a', class_ = 'views-row-item-judgement')]
 
                     for result in results:
 
@@ -576,7 +577,7 @@ class hca_search_tool:
                                 print(f"Can't get link")
 
                             try:
-                                case_name = result.find('div', class_ = 'field field--title text-bold').get_text(strip = True)
+                                case_name = '; '.join(dict.fromkeys(result.find('div', class_ = 'field field--title text-bold').get_text(separator = '|', strip = True).split('|')))
                                 case_info['Case name'] = case_name
                             except:
                                 print(f"{case_info['Hyperlink to High Court Judgments Database']}: can't get case_name")
@@ -613,7 +614,7 @@ class hca_search_tool:
 
                             try:
 
-                                #before = ''
+                                before = ''
                                 
                                 if 'field field--name-field-hca-justices field--type-string field--label-above field__item' in str(result):
                                 
@@ -673,7 +674,7 @@ class hca_search_tool:
         browser.quit()
 
     #Function for attaching judgment text to case_info dict
-    def attach_judgment(self, case_info):
+    def attach_judgment(self, case_info, browser = None):
 
         catchwords = ''
         
@@ -681,14 +682,23 @@ class hca_search_tool:
         
         judgment_url = case_info['Hyperlink to High Court Judgments Database']
 
-        browser = get_uc_driver(download_dir = download_dir, headless = headless)
+        #Reuse the given browser if any, otherwise open (and later close) our own
+        own_browser = (browser is None)
+
+        if own_browser:
+            browser = get_uc_driver(download_dir = download_dir, headless = headless)
     
         browser.get(judgment_url)
         #browser.delete_all_cookies() #Don't
         #browser.refresh() #Don't
         
         #Wait until pdf link present
-        pdf_link_present = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//span[@class='file file--mime-application-pdf file--application-pdf']")))
+        pdf_link_present = None
+
+        try:
+            pdf_link_present = Wait(browser, 15).until(EC.presence_of_element_located((By.XPATH, "//span[contains(@class, 'file--mime-application-pdf')]/a")))
+        except TimeoutException:
+            print(f"{case_info['Case name']}: pdf link not found on {judgment_url}")
 
         result_soup = BeautifulSoup(browser.page_source, "lxml")
         
@@ -708,32 +718,87 @@ class hca_search_tool:
         
         try:
 
-            #Scroll to buttom of page to see pdf button
-            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            
-            #Stat downloading judgment pdf
-            pdf_link_present.click()
-                
-            #Get path to most recent downloaded file
-            
-            pdf_link = result_soup.find('span', class_ = 'file file--mime-application-pdf file--application-pdf')
-        
-            pdf_link = 'https://www.hcourt.gov.au' + pdf_link.find('a', href=True)['href']
+            os.makedirs(download_dir, exist_ok = True)
 
-            pdf_file = pdf_link.split('/')[-1]    
+            #Get pdf url
+            pdf_span = result_soup.select_one('span[class*="file--mime-application-pdf"]')
 
-            pdf_file = urllib.parse.unquote(pdf_file)
-            
-            pdf_path = f"{download_dir}/{pdf_file}"
+            pdf_href = pdf_span.find('a', href = True)['href']
 
-            #Limiting waiting time for downloading PDF to 1 min
-            
-            waiting_counter = 0
-            
-            while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
-                pause.seconds(5)
-                waiting_counter += 1
-                            
+            pdf_link = urllib.parse.urljoin('https://www.hcourt.gov.au', pdf_href)
+
+            #Use a safe local filename rather than relying on whatever Chrome saves it as
+            safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', urllib.parse.unquote(pdf_link.split('/')[-1]))
+
+            pdf_path = os.path.join(download_dir, safe_name)
+
+            #Method 1: fetch the pdf from inside the browser session (same cookies, so Akamai is satisfied)
+            pdf_saved = False
+
+            try:
+
+                browser.set_script_timeout(60)
+
+                pdf_b64 = browser.execute_async_script("""
+                    const url = arguments[0];
+                    const done = arguments[arguments.length - 1];
+                    fetch(url, {credentials: 'include'})
+                      .then(r => { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.blob(); })
+                      .then(blob => {
+                          const reader = new FileReader();
+                          reader.onloadend = () => done(reader.result.split(',')[1]);
+                          reader.readAsDataURL(blob);
+                      })
+                      .catch(err => done('ERROR: ' + err));
+                """, pdf_link)
+
+                if isinstance(pdf_b64, str) and (not pdf_b64.startswith('ERROR')):
+
+                    pdf_bytes = base64.b64decode(pdf_b64)
+
+                    if pdf_bytes[:4] == b'%PDF':
+
+                        with open(pdf_path, 'wb') as f:
+                            f.write(pdf_bytes)
+
+                        pdf_saved = True
+
+                else:
+                    print(f"{case_info['Case name']}: in-browser fetch failed: {pdf_b64}")
+
+            except Exception as e:
+
+                print(f"{case_info['Case name']}: in-browser fetch error: {e}")
+
+            #Method 2 (fallback): click the link and detect whichever new file appears
+            if not pdf_saved:
+
+                files_before = set(os.listdir(download_dir))
+
+                browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+                browser.execute_script("arguments[0].click();", pdf_link_present)
+
+                waiting_counter = 0
+
+                new_pdf = None
+
+                while (new_pdf is None) and (waiting_counter < 12):
+
+                    pause.seconds(5)
+
+                    waiting_counter += 1
+
+                    new_files = [f for f in (set(os.listdir(download_dir)) - files_before) if f.lower().endswith('.pdf')]
+
+                    if len(new_files) > 0:
+                        new_pdf = new_files[0]
+
+                if new_pdf is None:
+                    raise FileNotFoundError(f"No pdf downloaded into {download_dir} from {pdf_link}")
+
+                pdf_path = os.path.join(download_dir, new_pdf)
+
             print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
 
             if ('1998' in self.collection) or ('Single' in self.collection):
@@ -754,7 +819,11 @@ class hca_search_tool:
         case_info.update({'Catchwords': catchwords})
         case_info.update({'judgment': judgment_text})
         
-        browser.quit()
+        if own_browser:
+            try:
+                browser.quit()
+            except Exception:
+                pass
         
         return case_info
     
@@ -762,6 +831,8 @@ class hca_search_tool:
     def get_judgments(self):
 
         self.case_infos_w_judgments = []
+
+        self.case_infos_direct = []
 
         #Search if not done yet
         if len(self.case_infos) == 0:
@@ -813,15 +884,49 @@ class hca_search_tool:
             #If huggingface not enabled
             self.case_infos_direct = copy.deepcopy(self.case_infos)
         
-        #Get judgments from HCA database directly
+        #Get judgments from HCA database directly, reusing one browser and reopening it if it dies
+        shared_browser = None
+
         for case_info in self.case_infos_direct:
 
             if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
                 
                 #Pause to avoid getting kicked out
                 pause.seconds(np.random.randint(10, 15))
-    
-                case_info = self.attach_judgment(case_info)
+
+                attached = False
+
+                for attempt in range(3):
+
+                    try:
+
+                        if shared_browser is None:
+                            shared_browser = get_uc_driver(download_dir = download_dir, headless = headless)
+
+                        case_info = self.attach_judgment(case_info, browser = shared_browser)
+
+                        attached = True
+
+                        break
+
+                    except Exception as e:
+
+                        print(f"{case_info['Case name']}: browser error on attempt {attempt + 1}/3: {e}")
+
+                        try:
+                            shared_browser.quit()
+                        except Exception:
+                            pass
+
+                        shared_browser = None
+
+                        pause.seconds(np.random.randint(5, 10))
+
+                if not attached:
+
+                    print(f"{case_info['Case name']}: giving up on getting judgment")
+
+                    case_info.update({'Catchwords': '', 'judgment': ''})
     
                 #Make link clickable
                 judgment_url = case_info['Hyperlink to High Court Judgments Database']
@@ -834,6 +939,12 @@ class hca_search_tool:
                 print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from HCA directly")
                 
                 print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
+
+        if shared_browser is not None:
+            try:
+                shared_browser.quit()
+            except Exception:
+                pass
     
 
 
