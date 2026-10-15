@@ -168,20 +168,81 @@ bailii_courts = {'House of Lords': 'uk/cases/UKHL',
  'High Court Chancery Division': 'ew/cases/EWHC/Ch',
  'High Court Commercial Court': 'ew/cases/EWHC/Comm',
  'High Court Exchequer Court': 'ew/cases/EWHC/Exch',
-'High Court Family Division': 'ew/cases/EWHC/Fam',
-'High Court Intellectual Property Enterprise Court': 'ew/cases/EWHC/IPEC',
-"High Court King's Bench Division": 'ew/cases/EWHC/KB',
+ 'High Court Family Division': 'ew/cases/EWHC/Fam',
+ 'High Court Intellectual Property Enterprise Court': 'ew/cases/EWHC/IPEC',
+ "High Court King's Bench Division": 'ew/cases/EWHC/KB',
  'High Court Mercantile Court': 'ew/cases/EWHC/Mercantile',
  'High Court Patents Court': 'ew/cases/EWHC/Patents',
-"High Court Queen's Bench Division": 'ew/cases/EWHC/QB',
+ "High Court Queen's Bench Division": 'ew/cases/EWHC/QB',
  'High Court Senior Courts Costs Office': 'ew/cases/EWHC/Costs',
-'High Court Technology and Construction Court': 'ew/cases/EWHC/TCC',
+ 'High Court Technology and Construction Court': 'ew/cases/EWHC/TCC',
  'Patents County Court': 'ew/cases/EWPCC',
-'Court of Protection': 'ew/cases/EWCOP',
+ 'Court of Protection': 'ew/cases/EWCOP',
  'Family Court (High Court Judges)': 'ew/cases/EWFC/HCJ',
  'Family Court (Other Judges)': 'ew/cases/EWFC/OJ',
  "Magistrates' Court (Family)": 'ew/cases/EWMC/FPC',
- 'County Court (Family)': 'ew/cases/EWCC/FAM'}
+ 'County Court (Family)': 'ew/cases/EWCC/Fam',
+ #UK tribunals
+ 'Asylum and Immigration Tribunal': 'uk/cases/UKIAT',
+ 'Immigration and Asylum (AIT/IAC) Unreported Judgments': 'uk/cases/UKAITUR',
+ 'Upper Tribunal (Administrative Appeals Chamber)': 'uk/cases/UKUT/AAC',
+ 'Upper Tribunal (Tax and Chancery Chamber)': 'uk/cases/UKUT/TCC',
+ 'Upper Tribunal (Immigration and Asylum Chamber)': 'uk/cases/UKUT/IAC',
+ 'Upper Tribunal (Lands Chamber)': 'uk/cases/UKUT/LC',
+ 'First Tier Tribunal (General Regulatory Chamber)': 'uk/cases/UKFTT/GRC',
+ 'First Tier Tribunal (Health Education and Social Care Chamber)': 'uk/cases/UKFTT/HESC',
+ 'First Tier Tribunal (Tax Chamber)': 'uk/cases/UKFTT/TC',
+ 'First Tier Tribunal (Property Chamber)': 'uk/cases/UKFTT/PC',
+ 'Competition Appeals Tribunal': 'uk/cases/CAT',
+ 'Employment Appeal Tribunal': 'uk/cases/UKEAT',
+ 'Employment Tribunal': 'uk/cases/UKET',
+ 'Financial Services and Markets Tribunals': 'uk/cases/UKFSM',
+ 'Information Tribunal including the National Security Appeals Panel': 'uk/cases/UKIT',
+ 'Nominet UK Dispute Resolution Service': 'uk/cases/DRS',
+ 'Social Security and Child Support Commissioners': 'uk/cases/UKSSCSC',
+ 'Special Commissioners of Income Tax': 'uk/cases/UKSPC',
+ 'Special Immigrations Appeals Commission': 'uk/cases/SIAC',
+ 'VAT & Duties Tribunals': 'uk/cases/UKVAT',
+ 'Care Standards Tribunal': 'ew/cases/EWCST',
+ 'Lands Tribunal': 'ew/cases/EWLands',
+ #Scotland
+ 'Scottish Court of Session': 'scot/cases/ScotCS',
+ 'Scottish High Court of Justiciary': 'scot/cases/ScotHC',
+ 'Scottish Sheriff Court': 'scot/cases/ScotSC',
+ 'Scottish Information Commissioner': 'scot/cases/ScotIC',
+ 'Scottish Sheriff Appeal Court (Criminal Division)': 'scot/cases/ScotSAC/Crim',
+ 'Scottish Sheriff Appeal Court (Civil Division)': 'scot/cases/ScotSAC/Civ',
+ #Northern Ireland
+ 'Court of Appeal in Northern Ireland': 'nie/cases/NICA',
+ 'High Court of Northern Ireland': 'nie/cases/NIHC',
+ 'High Court of Northern Ireland (Chancery Division)': 'nie/cases/NIHC/Ch',
+ 'High Court of Northern Ireland (Family Division)': 'nie/cases/NIHC/Fam',
+ "High Court of Northern Ireland (Queen's Bench Division)": 'nie/cases/NIHC/QB',
+ "High Court of Northern Ireland (Master's Decisions)": 'nie/cases/NIHC/Master',
+ 'Crown Court for Northern Ireland': 'nie/cases/NICC',
+ 'Fair Employment Tribunal Northern Ireland': 'nie/cases/NIFET',
+ 'Industrial Tribunals Northern Ireland': 'nie/cases/NIIT',
+ 'Northern Ireland - Social Security and Child Support Commissioners': 'nie/cases/NISSCSC',
+ #Jersey
+ 'Jersey Unreported Decisions': 'je/cases/UR',
+ 'Jersey Law Reports': 'je/cases/JLR',
+ #Ireland
+ 'Supreme Court of Ireland': 'ie/cases/IESC',
+ 'Irish Court of Appeal': 'ie/cases/IECA',
+ 'Irish Court of Criminal Appeal': 'ie/cases/IECCA',
+ 'High Court of Ireland': 'ie/cases/IEHC',
+ 'Irish Competition Authority': 'ie/cases/IECompA',
+ 'Irish Information Commissioner': 'ie/cases/IEIC',
+ 'Irish Data Protection Commission Case Studies': 'ie/cases/IEDPC',
+ #Europe
+ 'Court of Justice of the European Communities (including Court of First Instance)': 'eu/cases/EUECJ',
+ 'European Court of Human Rights': 'eu/cases/ECHR',
+ #Other jurisdictions
+ 'St Helena Supreme Court': 'sh/cases/SHSC',
+ 'Abu Dhabi Global Market judgments (Court of Appeal)': 'ae/cases/ADGMCA',
+ 'Abu Dhabi Global Market judgments (Court of First Instance)': 'ae/cases/ADGMCFI',
+ 'Qatar International Court': 'qa/cases/QIC',
+ 'Grand Court of the Cayman Islands Financial Services Division': 'ky/cases/GCCI/FSD'}
 
 bailii_courts_list = list(bailii_courts.keys())
 
@@ -189,25 +250,15 @@ bailii_courts_list = list(bailii_courts.keys())
 # %%
 def bailii_court_choice(courts):
 
-    #Get selected court paths
+    #Guard against a single string or empty value
+    if isinstance(courts, str):
+        courts = [courts] if len(courts) > 0 else []
+
+    #Get selected court paths (parent paths are not added, as they would widen the search to the whole court)
     selected_paths = [bailii_courts[court] for court in courts if court in bailii_courts]
 
-    #Initialise parent paths
-    parent_paths = []
-
-    #Add parent EWCA path if any EWCA division selected
-    if any(path.startswith('ew/cases/EWCA/') for path in selected_paths):
-        parent_paths.append('ew/cases/EWCA')
-
-    #Add parent EWHC path if any EWHC division selected
-    if any(path.startswith('ew/cases/EWHC/') for path in selected_paths):
-        parent_paths.append('ew/cases/EWHC')
-
-    #Combine while preserving order
-    all_paths = parent_paths + selected_paths
-
     #De-duplicate while preserving order
-    return list(dict.fromkeys(all_paths))
+    return list(dict.fromkeys(selected_paths))
 
 
 # %%
@@ -364,7 +415,9 @@ class bailii_search_tool:
             #Highlight param            
             try:
     
-                self.highlight = int(bool(self.highlight))
+                highlight_raw = bailii_highlight_dict.get(self.highlight, self.highlight)
+    
+                self.highlight = int(str(highlight_raw).strip().lower() in ['1', 'true'])
     
             except:
     
@@ -375,17 +428,8 @@ class bailii_search_tool:
             #Choice of courts
             selected_paths = bailii_court_choice(self.courts)
             
-            #Limiting to EW cases
-            default_paths = [
-                'ew/cases',
-                'uk/cases/UKHL',
-                'uk/cases/UKPC',
-                'uk/cases/UKSC'
-            ]
-            
-            mask_path_list = default_paths + selected_paths
-            
-            mask_path = ' '.join(mask_path_list)
+            #If no courts are selected, BAILII searches all courts
+            mask_path = ' '.join(selected_paths)
 
             #Set params                
             params = {'method': 'boolean',
@@ -396,6 +440,9 @@ class bailii_search_tool:
                       'highlight': self.highlight,
                       'mask_path': mask_path
                       }
+
+            #Drop empty params (avoids sending e.g. datelow=None)
+            params = {k: v for k, v in params.items() if v not in [None, '']}
     
         #print(f"params == {params}")
     
@@ -658,7 +705,7 @@ class bailii_search_tool:
                     
                     print(f"{case_info['Case name']}: judgment from html is too short, try to get judgment from any pdf.")                        
 
-                    pdf_links_raw = soup.find_all("a", href=re.compile("\.pdf"))
+                    pdf_links_raw = soup.find_all("a", href=re.compile(r"\.pdf"))
 
                     if len(pdf_links_raw) > 0:
 
@@ -676,45 +723,45 @@ class bailii_search_tool:
                         
                         except Exception as e:
 
-                            print(f"{case_info['Case name']}: can't get judgment from pdf due to error: {e}")                        
+                            print(f"{case_info['Case name']}: can't get judgment from pdf due to error: {e}")
 
-                    #Get metadata if not obtained already
+                #Get metadata if not obtained already
 
-                    try:
+                try:
 
-                        if len(case_info['Case name']) == 0:
+                    if len(case_info['Case name']) == 0:
 
-                            case_name = ''
-                            
-                            date = ''
+                        case_name = ''
 
-                            case_name_raw = soup.find('title').get_text()
+                        date = ''
 
-                            if case_info['Medium neutral citation'] in case_name_raw:
+                        case_name_raw = soup.find('title').get_text()
 
-                                case_name = case_name_raw.split(case_info['Medium neutral citation'])[0]
+                        if case_info['Medium neutral citation'] in case_name_raw:
 
-                                date = case_name_raw.split(case_info['Medium neutral citation'])[-1]
+                            case_name = case_name_raw.split(case_info['Medium neutral citation'])[0]
 
-                                while case_name[-1] == ' ':
+                            date = case_name_raw.split(case_info['Medium neutral citation'])[-1]
 
-                                    case_name = case_name[:-1]
+                            while case_name[-1] == ' ':
 
-                                while date[-1] in [' ', ')']:
+                                case_name = case_name[:-1]
 
-                                    date = date[:-1]
+                            while date[-1] in [' ', ')']:
 
-                                while date[0] in [' ', '(']:
-                                    
-                                    date = date[1:]
-                            
-                            case_info_w_judgment.update({'Case name': case_name})
-    
-                            case_info_w_judgment.update({'Date': date})
+                                date = date[:-1]
 
-                    except Exception as e:
-                        
-                        print(f"{case_info['Case name']}: can't get case name or date due to erro: {e}")                        
+                            while date[0] in [' ', '(']:
+
+                                date = date[1:]
+
+                        case_info_w_judgment.update({'Case name': case_name})
+
+                        case_info_w_judgment.update({'Date': date})
+
+                except Exception as e:
+
+                    print(f"{case_info['Case name']}: can't get case name or date due to erro: {e}")                        
                 
                 #Make links clickable
                 for key in case_info_w_judgment:
