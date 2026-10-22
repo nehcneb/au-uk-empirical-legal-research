@@ -416,7 +416,7 @@ if 'page_from' not in st.session_state:
 
 return_button = st.button('RETURN to first page')
 
-st.header(f"Search :blue[cases, legislation and other legal materials from Hong Kong]")
+st.header(f"Search :blue[Hong Kong cases, legislation and other legal materials]")
 
 st.success(default_msg)
 

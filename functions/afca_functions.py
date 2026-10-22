@@ -99,6 +99,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.webdriver.common.print_page_options import PrintOptions  # was used but never imported
+from urllib.parse import urljoin
 
 
 # %%
@@ -122,6 +124,7 @@ def afca_old_element_meta(inner_html):
     soup = BeautifulSoup(inner_html, "lxml")
     
     #Get url
+    url = ''
     try:
         a_hrefs = soup.find_all('a', href=True)
         
@@ -539,7 +542,7 @@ afca_old_meta_labels_droppable = ['Case number', 'Date', 'Finanical firm', 'Page
 
 raw = """"""
 
-primary_keys_raw = re.findall(f'\>.*\<\/option\>', raw)
+primary_keys_raw = re.findall(r'\>.*\<\/option\>', raw)
 
 #Get keys of menu
 primary_keys = []
@@ -557,7 +560,7 @@ for key_raw in primary_keys_raw:
     
 #primary_keys
 #Get 'value' key of the value-dictionary of each key in menu
-values_raw = re.findall(f'value\=\".+\"', raw)
+values_raw = re.findall(r'value\=\".+\"', raw)
 
 values = []
 for value_raw in values_raw:
@@ -568,7 +571,7 @@ for value_raw in values_raw:
         values.append(value)
 
 #Get any data parents
-data_parents_raw = re.findall(f'parent\=\".*\"', raw)
+data_parents_raw = re.findall(r'parent\=\".*\"', raw)
 
 data_parents = []
 for data_parent_raw in data_parents_raw:
@@ -623,7 +626,7 @@ product_category_options = {'Annuity Policy': {'value': '78c2a0cb-93c1-ed11-b597
   'data-parent': '7d9de0b0-93c1-ed11-b597-00224892f893'},
  'Current Accounts': {'value': '6cc2a0cb-93c1-ed11-b597-00224892f893',
   'data-parent': '779de0b0-93c1-ed11-b597-00224892f893'},
- 'Derivatives/hedging': {'value': '64c2a0cb-93c1-ed11-b597-00224892f893',
+ 'Derivatives/Hedging/Digital Assets': {'value': '64c2a0cb-93c1-ed11-b597-00224892f893',
   'data-parent': '759de0b0-93c1-ed11-b597-00224892f893'},
  'Direct Transfer': {'value': '70c2a0cb-93c1-ed11-b597-00224892f893',
   'data-parent': '799de0b0-93c1-ed11-b597-00224892f893'},
@@ -647,6 +650,10 @@ product_category_options = {'Annuity Policy': {'value': '78c2a0cb-93c1-ed11-b597
   'data-parent': '759de0b0-93c1-ed11-b597-00224892f893'},
  'Margin Loans': {'value': '56c2a0cb-93c1-ed11-b597-00224892f893',
   'data-parent': '719de0b0-93c1-ed11-b597-00224892f893'},
+ 'Mutual risk product': {'value': '837dce5f-c74d-f111-bec6-6045bde70d17',
+  'data-parent': '739de0b0-93c1-ed11-b597-00224892f893'},
+ 'Mutual risk product*': {'value': '55cdfee2-cb4d-f111-bec6-6045bde70d17',
+  'data-parent': '7f9de0b0-93c1-ed11-b597-00224892f893'},
  'Non rules': {'value': '74c2a0cb-93c1-ed11-b597-00224892f893',
   'data-parent': '799de0b0-93c1-ed11-b597-00224892f893'},
  'Non-Cash': {'value': '72c2a0cb-93c1-ed11-b597-00224892f893',
@@ -733,9 +740,11 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Debentures': {'value': 'cd139d98-3fc2-ed11-b597-00224892f51a'},
  'Debt Agreement': {'value': 'cf139d98-3fc2-ed11-b597-00224892f51a'},
  'Debt management/credit repair': {'value': 'd1139d98-3fc2-ed11-b597-00224892f51a'},
+ 'Digital Assets': {'value': '460fe3c8-7b05-f111-8406-7ced8da1d3bc'},
  'Direct Debits': {'value': 'd3139d98-3fc2-ed11-b597-00224892f51a'},
  'EFTPOS': {'value': 'd5139d98-3fc2-ed11-b597-00224892f51a'},
  'Electronic Banking': {'value': 'd7139d98-3fc2-ed11-b597-00224892f51a'},
+ 'Employee Entitlement Scheme': {'value': 'b772dd97-9584-f111-ab0e-7ced8da0ff84'},
  'Endowments': {'value': 'd9139d98-3fc2-ed11-b597-00224892f51a'},
  'Enduring Powers of Attorney': {'value': 'db139d98-3fc2-ed11-b597-00224892f51a'},
  'Equity Release': {'value': 'dd139d98-3fc2-ed11-b597-00224892f51a'},
@@ -773,6 +782,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Litigation Funding Scheme': {'value': '19149d98-3fc2-ed11-b597-00224892f51a'},
  'Livestock': {'value': '1b149d98-3fc2-ed11-b597-00224892f51a'},
  'Loss of Profits/ Business Interruption': {'value': '1d149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Low Cost Credit Contracts': {'value': '984c0300-e714-f011-998a-6045bde73664'},
  'Loyalty Programs': {'value': '1f149d98-3fc2-ed11-b597-00224892f51a'},
  'Machinery breakdowns': {'value': '21149d98-3fc2-ed11-b597-00224892f51a'},
  'Managed Discretionary Accounts': {'value': '23149d98-3fc2-ed11-b597-00224892f51a'},
@@ -791,6 +801,8 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Motor Vehicle- Third Party': {'value': '37149d98-3fc2-ed11-b597-00224892f51a'},
  'Motor Vehicle- Third Party Fire and Theft': {'value': '39149d98-3fc2-ed11-b597-00224892f51a'},
  'Motor Vehicle- Uninsured Third Party': {'value': '3b149d98-3fc2-ed11-b597-00224892f51a'},
+ 'Mutual risk product': {'value': '916710a1-cd4d-f111-bec6-6045bde70d17'},
+ 'Mutual risk product*': {'value': '46513732-ca4d-f111-bec6-7ced8da1d6ae'},
  'Non FF Debt': {'value': '3f149d98-3fc2-ed11-b597-00224892f51a'},
  'Non FF debt/Non-financial product deb': {'value': '41149d98-3fc2-ed11-b597-00224892f51a'},
  'Non rules': {'value': '43149d98-3fc2-ed11-b597-00224892f51a'},
@@ -807,6 +819,7 @@ product_name_options = {'Annuities': {'value': '87139d98-3fc2-ed11-b597-00224892
  'Pension': {'value': '4f149d98-3fc2-ed11-b597-00224892f51a'},
  'Pension*': {'value': 'b98e7d7c-278e-ee11-be36-6045bde4a41a'},
  'Pension**': {'value': '58dfd680-2d8e-ee11-be36-6045bde4a41a'},
+ 'Pension***': {'value': 'a5320185-c74d-f111-bec6-6045bde70d17'},
  'Personal and Domestic Property- Caravan': {'value': '51149d98-3fc2-ed11-b597-00224892f51a'},
  'Personal and Domestic Property- Domestic Pet': {'value': '53149d98-3fc2-ed11-b597-00224892f51a'},
  'Personal and Domestic Property- Horse': {'value': '55149d98-3fc2-ed11-b597-00224892f51a'},
@@ -1118,8 +1131,16 @@ issue_options = {'A fee or charge - eg premiums, excesses': {'value': '49170f1f-
   'data-parent': '9579125d-afc1-ed11-83fe-000d3a6ad49b'},
  'Unconscionable conduct': {'value': '8133d755-94c1-ed11-b597-00224892f51a',
   'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'},
- 'Unfair contract terms': {'value': '8333d755-94c1-ed11-b597-00224892f51a',
-  'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'}}
+ 'Failure to acknowledge financial difficulty request': {'value': 'bc366304-ef3d-f111-88b4-7ced8da1d3bc',
+  'data-parent': 'b9b1f969-afc1-ed11-83fe-000d3a6ad49b'},
+ 'Financial hardship information': {'value': '36535cf8-ee3d-f111-88b4-7ced8da1d3bc',
+  'data-parent': '33b6f37b-afc1-ed11-83fe-000d3a6ad49b'},
+ 'I do not agree with the outcome to my financial difficulty request': {'value': '9de1e310-ef3d-f111-88b4-7ced8da1d3bc',
+  'data-parent': 'b9b1f969-afc1-ed11-83fe-000d3a6ad49b'},
+ 'Modified responsible lending': {'value': 'b4f33986-9416-f011-998a-7c1e5262d3c3',
+  'data-parent': 'd4d6fb6f-afc1-ed11-83fe-000d3a6ad49b'},
+ 'Scam \u2013 issue about the bank the funds were sent to (receiving bank)': {'value': 'ce260715-47c0-f011-bbd3-7c1e5263130f',
+  'data-parent': '9579125d-afc1-ed11-83fe-000d3a6ad49b'}}
 
 # %% [markdown]
 # ### Obtain search results
@@ -1142,6 +1163,96 @@ def text_from_html(body):
     visible_texts = filter(tag_visible, texts)  
     return u"\n".join(t.strip() for t in visible_texts)
 
+
+# %%
+
+#Helpers for the post 14 June 2024 portal (Power Pages)
+afca_portal_base_url = 'https://my.afca.org.au'
+
+def afca_to_iso_date(date_input):
+    """The portal's date boxes are <input type="date">, whose value is always YYYY-MM-DD.
+    Accepts dd/mm/yyyy (or anything dateutil can read, day first) and returns YYYY-MM-DD."""
+    if isinstance(date_input, (datetime, date)):
+        return date_input.strftime('%Y-%m-%d')
+    date_text = str(date_input).strip()
+    #Already ISO: return as is (dayfirst parsing would swap month and day)
+    if re.fullmatch(r'\d{4}-\d{2}-\d{2}', date_text):
+        return date_text
+    return parser.parse(date_text, dayfirst = True).strftime('%Y-%m-%d')
+
+def afca_set_select(browser, element_id, value, timeout = 30):
+    """Choose a <select> option by value and fire 'change' so the page's cascading menus update.
+    Done in JS because the page hides non-matching options (display:none), which Selenium's
+    Select class can refuse to click, and typing into <input type=date> depends on browser locale."""
+    #Wait until the menu is enabled (the page disables it while it reloads via AJAX)
+    Wait(browser, timeout).until(lambda b: b.find_element(By.ID, element_id).is_enabled())
+    ok = browser.execute_script("""
+        var el = document.getElementById(arguments[0]);
+        var found = false;
+        for (var i = 0; i < el.options.length; i++) {
+            if (el.options[i].value === arguments[1]) { found = true; break; }
+        }
+        if (!found) { return false; }
+        el.value = arguments[1];
+        el.dispatchEvent(new Event('change', {bubbles: true}));
+        return true;
+    """, element_id, value)
+    if not ok:
+        raise ValueError(f"Option value {value} not found in #{element_id}: the menu in this script is out of date.")
+    #Give the AJAX call behind the cascading menus time to finish
+    pause.seconds(3)
+    Wait(browser, timeout).until(lambda b: all(b.find_element(By.ID, i).is_enabled() for i in ['plsearch', 'pcsearch', 'pnsearch', 'itsearch', 'issearch']))
+
+def afca_set_date(browser, element_id, date_input):
+    iso = afca_to_iso_date(date_input)
+    browser.execute_script("""
+        var el = document.getElementById(arguments[0]);
+        el.value = arguments[1];
+        el.dispatchEvent(new Event('input', {bubbles: true}));
+        el.dispatchEvent(new Event('change', {bubbles: true}));
+    """, element_id, iso)
+
+def afca_parse_results(html):
+    """Parse the JS-built result cards: div.kb_record, each with
+    h4.kb-title > a, then 'Case number:', 'Financial Firm:' and 'Date:' rows whose value is in span.article-detail."""
+    soup = BeautifulSoup(html, 'lxml')
+    cases = []
+    for record in soup.select('div.kb_record'):
+        title_a = record.select_one('h4.kb-title a[href]') or record.find('a', href=True)
+        if title_a is None:
+            continue
+        fields = {}
+        for row in record.find_all('div', class_ = 'row'):
+            header = row.find('span', class_ = 'article-header')
+            detail = row.find('span', class_ = 'article-detail')
+            if header is not None and detail is not None:
+                label = header.get_text().replace(':', '').strip().lower()
+                fields[label] = ' '.join(detail.get_text().split())
+        cases.append({'Case number': fields.get('case number', ''),
+                      'Financial firm': fields.get('financial firm', ''),
+                      'Date': fields.get('date', ''),
+                      'Hyperlink to AFCA Portal': urljoin(afca_portal_base_url, title_a['href'])})
+    return cases
+
+def afca_get_live_menus(url = 'https://my.afca.org.au/searchpublisheddecisions/'):
+    """Optional: read the dropdowns straight from the live page (they are server-rendered), so the
+    hard-coded dictionaries below can be checked or regenerated. Repeated names get '*' appended."""
+    soup = BeautifulSoup(requests.get(url, headers = {'User-Agent': 'whatever'}, timeout = 60).content, 'lxml')
+    menus = {}
+    for select_id in ['plsearch', 'pcsearch', 'pnsearch', 'itsearch', 'issearch']:
+        menu = {}
+        for option in soup.select(f'select#{select_id} option'):
+            name, value = option.get_text().strip(), option.get('value', '')
+            if value == '' or name == '':
+                continue
+            while name in menu:
+                name += '*'
+            item = {'value': value}
+            if option.get('data-parent'):
+                item['data-parent'] = option['data-parent']
+            menu[name] = item
+        menus[select_id] = menu
+    return menus
 
 # %%
 #Define search boxes
@@ -1168,115 +1279,44 @@ def afca_search(keywordsearch_input, #= '',
     #Obtain input elements
     
     #'Search for published decisions'
-    keywordsearch = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'keywordsearch')))
+    keywordsearch = Wait(browser,  30).until(EC.visibility_of_element_located((By.ID, 'keywordsearch')))
 
     #'Search for a financial firm'
-    ffsearch = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'ffsearch')))
-    
-    #'Product line'
-    product_line = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'plsearch')))
-    dropdown_product_line = Select(product_line)
-
-    #'Product category'
-    product_category = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pcsearch')))
-    dropdown_product_category = Select(product_category)
-
-    #'Product name'
-    product_name = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'pnsearch')))
-    dropdown_product_name = Select(product_name)
-
-    #'Issue type'
-    issue_type = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'itsearch')))
-    dropdown_issue_type = Select(issue_type)
-
-    #'Issue'
-    issue = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'issearch')))
-    dropdown_issue = Select(issue)
-
-    #'Date from'
-    #date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_from')))
-    date_from = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='date_from']")))
-    
-    #data-date-format="DD/MM/YYYY"
-    #eg date_input.send_keys("07/07/2023")
-    
-    #'Date to'
-    #date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'date_to')))
-    date_to = Wait(browser,  20).until(EC.visibility_of_element_located((By.XPATH, "//input[@id='date_to']")))
+    ffsearch = Wait(browser,  30).until(EC.visibility_of_element_located((By.ID, 'ffsearch')))
     
     #Buttons
-    submit_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'submitsearch')))
-    clear_button = Wait(browser,  20).until(EC.visibility_of_element_located((By.ID, 'clearsearch')))
+    submit_button = Wait(browser,  30).until(EC.element_to_be_clickable((By.ID, 'submitsearch')))
     
     #Enter input
-    #clear_button.click()
-
     if ((keywordsearch_input != None) and (keywordsearch_input != '')):
         keywordsearch.send_keys(keywordsearch_input)
 
     if ((ffsearch_input != None) and (ffsearch_input != '')):
         ffsearch.send_keys(ffsearch_input)
 
+    #Dropdowns are set through JS (see afca_set_select). Order matters: the page cascades
+    #category -> line/name and issue -> issue type, so set the broader menu first.
     if ((product_line_input != None) and (product_line_input != '')):
-        product_line_value = product_line_options[product_line_input]["value"]
-        dropdown_product_line.select_by_value(product_line_value)
+        afca_set_select(browser, 'plsearch', product_line_options[product_line_input]["value"])
 
     if ((product_category_input != None) and (product_category_input != '')):
-
-        product_category_value = product_category_options[product_category_input]["value"]
-        dropdown_product_category.select_by_value(product_category_value)
-
-        #Pause for menu to update
-        pause.seconds(5)
-        
-        #If parent value not automatically updated
-        #for key in product_line_options:
-            #if product_category_options[product_category_input]["data-parent"] == product_line_options[key]["value"]:
-                #product_line_value = product_line_options[product_line_input]["value"]
-                #product_line_value = product_line_options[product_line_input]["value"]
+        afca_set_select(browser, 'pcsearch', product_category_options[product_category_input]["value"])
     
     if ((product_name_input != None) and (product_name_input != '')):
-
-        product_name_value = product_name_options[product_name_input]["value"]
-        dropdown_product_name.select_by_value(product_name_value)
-
-        #Pause for menu to update
-        pause.seconds(5)
+        afca_set_select(browser, 'pnsearch', product_name_options[product_name_input]["value"])
     
     if ((issue_type_input != None) and (issue_type_input != '')):
-
-        issue_type_value = issue_type_options[issue_type_input]["value"]
-        dropdown_issue_type.select_by_value(issue_type_value)
-
-        #Pause for menu to update
-        pause.seconds(5)
+        afca_set_select(browser, 'itsearch', issue_type_options[issue_type_input]["value"])
         
     if ((issue_input != None) and (issue_input != '')):
+        afca_set_select(browser, 'issearch', issue_options[issue_input]["value"])
 
-        issue_value = issue_options[issue_input]["value"]
-        dropdown_issue.select_by_value(issue_value)
-        #If parent value not automatically updated
-
-        #Pause for menu to update
-        pause.seconds(5)
-
-        #for key in issue_type_options:
-            #if issue_options[issue_input]["data-parent"] == issue_type_options[key]["value"]:
-                #issue_type_value = issue_type_options[issue_type_input]["value"]
-                #issue_type_value = issue_type_options[issue_type_input]["value"]
-
-    #if date_from_input != 'DD/MM/YYYY':
+    #Dates: <input type="date"> takes YYYY-MM-DD
     if ((date_from_input != None) and (date_from_input != '')):
-        date_from_converted = streamlit_cloud_date_format(date_from_input)
-                
-        date_from.send_keys(date_from_converted)
+        afca_set_date(browser, 'date_from', date_from_input)
         
-    #if date_to_input != 'DD/MM/YYYY':
     if ((date_to_input != None) and (date_to_input != '')):
-
-        date_to_converted = streamlit_cloud_date_format(date_to_input)
-
-        date_to.send_keys(date_to_converted)
+        afca_set_date(browser, 'date_to', date_to_input)
 
     #Get search results
     submit_button.click()
@@ -1285,28 +1325,19 @@ def afca_search(keywordsearch_input, #= '',
 
     urls = [] #For actual scraping
 
-    raw_cases = [] #Placeholder
-
     try:
-        raw_cases = Wait(browser, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='kb_record panel panel-default container']")))
-            
-        for raw_case in raw_cases:
-            case_name = raw_case.text.split('\n')[0]
-            case_number = raw_case.text.split('\n')[1].replace('Case number: ', '').replace('Case Number: ', '')
-            firm = raw_case.text.split('\n')[2].replace('Financial Firm: ', '').replace('Financial firm: ', '')
-            date = raw_case.text.split('\n')[3].replace('Date: ', '')
+        #Results are built by JS after an AJAX call: either div.kb_record cards or a div.kb-no-result message.
+        #(The old XPath looked for class 'kb_record panel panel-default container', but the page now renders 'kb_record card container'.)
+        Wait(browser, 60).until(lambda b: len(b.find_elements(By.CSS_SELECTOR, 'div.kb_record')) > 0 or len(b.find_elements(By.CSS_SELECTOR, 'div.kb-no-result')) > 0)
 
-            inner_html = raw_case.get_attribute('innerHTML')
-            soup_case = BeautifulSoup(inner_html, "lxml")            
-            url = 'https://my.afca.org.au' + soup_case.find_all('a', href=True)[0]['href']
-            
-            case_meta = {#'Case name': case_name, #Bijective function between case name and number
-                'Case number': case_number, 'Financial firm': firm, 'Date': date, 'Hyperlink to AFCA Portal': url}
-            case_list.append(case_meta)
-            urls.append(url)
+        case_list = afca_parse_results(browser.find_element(By.ID, 'kb-articles-table').get_attribute('innerHTML'))
+        urls = [case['Hyperlink to AFCA Portal'] for case in case_list]
+
+        if len(case_list) == 0:
+            print('Search terms returned no results.')
                     
     except Exception as e:
-        print('Search terms returned no results.')
+        print('Search did not return results in time.')
         print(e)
 
     #Alternative method of getting cases
@@ -1376,8 +1407,8 @@ def afca_meta_judgment_dict(judgment_url):
             
             text_list = []
             
-            for page in pdfdoc_remote.pages:
-                text_list.append(page.extract_text())
+            for pdf_page in pdfdoc_remote.pages:
+                text_list.append(pdf_page.extract_text())
     
             judgment_pdf_text = str(text_list)
     
@@ -1625,11 +1656,11 @@ def afca_new_run(df_master):
     counter = 0
 
     #for link in judgments_links:
-    for link in search_results['urls']:
+    for judgment_url in search_results['urls']:
         
         if counter < judgment_counter_bound:
 
-            judgment_dict = afca_meta_judgment_dict(link)
+            judgment_dict = afca_meta_judgment_dict(judgment_url)
     
             judgments_file.append(judgment_dict)
 

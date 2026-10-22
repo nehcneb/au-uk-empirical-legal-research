@@ -36,6 +36,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib2
 import urllib
 from urllib.request import urlretrieve
+from urllib.parse import urljoin
 import os
 #import pypdf
 import io
@@ -139,6 +140,8 @@ ukpo_sortby_dict = {'Sort A – Z': 'title_ASC',
                   'Decision Date Desc': 'field_decision_date_value_DESC'    
 }
 
+ukpo_base_url = 'https://www.pensions-ombudsman.org.uk'
+
 # %% [markdown]
 # ## Search engine
 
@@ -215,11 +218,14 @@ class ukpo_search_tool:
             params.update({'page': self.page})
         
         #Conduct search
-        response = requests.get(ukpo_url, params = params, headers= {'User-Agent': 'whatever'})
+        response = requests.get(ukpo_url, params = params, headers= {'User-Agent': 'whatever'}, timeout = 60)
         soup = BeautifulSoup(response.content, "lxml")
         
         #Get number of results    
-        results_text = soup.find('div', {'role': 'status'}).text
+        status_tag = soup.find('div', {'role': 'status'})
+        if status_tag is None:
+            raise RuntimeError(f'Unexpected response (status {response.status_code}) from {response.url}: no results header found.')
+        results_text = status_tag.text
         results_text = results_text.replace(',', '').replace('.', '')
         results_count_list = re.findall(r'\d+', results_text)
     
@@ -280,69 +286,45 @@ class ukpo_search_tool:
                     #if result_counter < self.judgment_counter_bound:
                     if len(self.case_infos) < self.judgment_counter_bound:
 
-                        #Get case name
-                        case_name = search_result.find('a', {'class': 'h3'}).text
-                        #case_name
-                        
-                        #Link to case
-                        link = search_result.find('a', {'class': 'h3'})['href']
-                        #link
-                        
-                        #Get metadata
-                        meta_text =  search_result.find('div', {'class': 'teal_font'}).get_text()
-                        meta_list = meta_text.splitlines()
-                        #meta_list
-                        
-                        #Initialise meta labels
-                        complainant = ''
-                        respondent = ''
-                        outcome = ''
-                        topic = ''
-                        ref = ''
-                        date = ''
-                        
+                        #Get case name and link: the <a> sits inside an <h3> and has no class of its own
+                        title_tag = search_result.find('h3').find('a')
+                        case_name = title_tag.get_text(strip = True)
+
+                        #Link to case: href is relative, so make it absolute
+                        link_to_case = urljoin(ukpo_base_url, title_tag['href'])
+
                         case_info = {'Case name': case_name,
-                                    'Hyperlink to the Pensions Ombudsman': link, 
-                                    'Complainant': complainant,
-                                    'Respondent': respondent,
-                                    'Outcome': outcome,
-                                    'Complaint Topic': topic,
-                                    'Ref': ref,
-                                    'Date': date
+                                    'Hyperlink to the Pensions Ombudsman': link_to_case, 
+                                    'Complainant': '',
+                                    'Respondent': '',
+                                    'Outcome': '',
+                                    'Complaint Topic': '',
+                                    'Ref': '',
+                                    'Date': ''
                         }
-                        
-                        #Last added status to capture any lines with no commencing label
-                        last_added = None
-                        
-                        for meta in meta_list:
-                            
-                            if 'complainant' in meta.lower():
-                                case_info['Complainant'] += meta.split(': ')[1]
-                                last_added = 'Complainant'
-                                
-                            elif 'respondent' in meta.lower():
-                                case_info['Respondent'] += meta.split(': ')[1]
-                                last_added = 'Respondent'
-                                
-                            elif 'outcome'  in meta.lower():
-                                case_info['Outcome'] += meta.split(': ')[1]
-                                last_added = 'Outcome'
 
-                            elif 'topic' in meta.lower():
-                                case_info['Complaint Topic'] += meta.split(': ')[1]
-                                last_added = 'Complaint Topic'
+                        #Metadata: each <div> holds the label as plain text and the value inside <strong>
+                        meta_labels = {'complainant': 'Complainant',
+                                       'respondent': 'Respondent',
+                                       'outcome': 'Outcome',
+                                       'complaint topic': 'Complaint Topic',
+                                       'ref': 'Ref',
+                                       'date': 'Date'}
 
-                            elif 'ref' in meta.lower():
-                                case_info['Ref'] += meta.split(': ')[1]
-                                last_added = 'Ref'
+                        meta_container = search_result.find('div', {'class': 'teal_font'})
 
-                            elif 'date' in meta.lower():
-                                case_info['Date'] += meta.split(': ')[1]
-                                last_added = 'Date'
+                        for meta in meta_container.find_all('div', recursive = False):
 
-                            else:
-                                if last_added in case_info.keys():
-                                    case_info[last_added] += meta
+                            value_tag = meta.find('strong')
+
+                            if value_tag is None:
+                                continue
+
+                            label = meta.get_text().split(':')[0].strip().lower()
+                            value = ' '.join(value_tag.get_text().split())
+
+                            if label in meta_labels:
+                                case_info[meta_labels[label]] = value
                                 
                         #Append case to return list and increase counter
                         self.case_infos.append(case_info)
@@ -427,9 +409,11 @@ class ukpo_search_tool:
 
                 case_info_w_judgment.update({'Summary': summary}) 
 
-                #get judgment text or save .doc file locally
-                judgment_link_raw = result_soup.find('a', {'class': 'btn btn_teal download_btn'})['href']
-                judgment_link = 'https://www.pensions-ombudsman.org.uk' + judgment_link_raw
+                judgment_text = ''
+                judgment_link = ''
+                download_tag = result_soup.find('a', {'class': 'download_btn'})
+                if download_tag is not None and download_tag.get('href'):
+                    judgment_link = urljoin(ukpo_base_url, download_tag['href'])
                 judgment_text = ''
 
                 #Pause to avoid getting kicked out
@@ -438,7 +422,10 @@ class ukpo_search_tool:
                 try:
 
                     #Save file first
-                    r = requests.get(judgment_link)
+                    if not judgment_link:
+                        raise ValueError('no download link found on decision page')
+                    r = requests.get(judgment_link, headers = {'User-Agent': 'whatever'}, timeout = 60)
+                    r.raise_for_status()
                 
                     doc_file_name = f"{doc_folder}/{judgment_link.split('/')[-1]}"
                     
