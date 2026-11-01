@@ -797,7 +797,7 @@ def detect_chrome_major(binary_path=None):
 # -----------------------------
 # Your driver factory
 # -----------------------------
-def get_uc_driver(download_dir = os.getcwd(), headless = False):
+def get_uc_driver(download_dir = os.getcwd(), headless = False, page_load_timeout = 45):
     """
     Create a UC Chrome driver with:
       - detected Chrome binary (if found)
@@ -820,6 +820,10 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False):
 
     options = uc.ChromeOptions()
 
+    # Return control once the DOM is ready, without waiting for every third-party script
+    # (analytics, chat widget, recaptcha) to finish. Prevents "Timed out receiving message from renderer".
+    options.page_load_strategy = "eager"
+
     # Download prefs
     prefs = {
         "download.default_directory": download_dir,
@@ -832,6 +836,9 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False):
     # Good practice flags (CI/containers)
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-background-networking")
 
     #Headlessness
     if headless == True:
@@ -848,7 +855,7 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False):
 
     driver = uc.Chrome(**uc_kwargs)
     driver.implicitly_wait(15)
-    driver.set_page_load_timeout(30)
+    driver.set_page_load_timeout(page_load_timeout)
     return driver
 
 

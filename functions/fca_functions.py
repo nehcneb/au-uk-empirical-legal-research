@@ -168,6 +168,51 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import WebDriverException
+
+
+# %%
+#Open a url in a fresh browser, retrying if the page load times out or the renderer crashes
+def safe_get(url, max_attempts = 3, load_timeout = 45):
+
+    last_error = None
+
+    for attempt in range(1, max_attempts + 1):
+
+        browser = None
+
+        try:
+
+            browser = get_uc_driver(download_dir = download_dir, headless = headless, page_load_timeout = load_timeout)
+
+            try:
+                browser.get(url)
+
+            except TimeoutException:
+                #The DOM is usually usable even if third-party scripts never finish loading.
+                #Stop the load and carry on; later Wait() calls fail properly if the page is unusable.
+                try:
+                    browser.execute_script("window.stop();")
+                except Exception:
+                    pass
+
+            return browser
+
+        except (TimeoutException, WebDriverException) as e:
+
+            last_error = e
+
+            print(f"Attempt {attempt}/{max_attempts} to load {url} failed: {type(e).__name__}")
+
+            try:
+                if browser is not None:
+                    browser.quit()
+            except Exception:
+                pass
+
+            pause.seconds(3 * attempt)
+
+    raise last_error
 
 
 # %%
@@ -316,7 +361,43 @@ class fca_search_tool:
                 self.case_infos.append(case_info)
     
     #Function for getting search results
-    def search(self):
+    def search(self, max_attempts = 2):
+
+        base_url = 'https://www.fedcourt.gov.au/digital-law-library/judgments/search'
+
+        last_error = None
+
+        for attempt in range(1, max_attempts + 1):
+
+            browser = None
+
+            try:
+
+                browser = safe_get(base_url)
+
+                self._search_inner(browser)
+
+                return
+
+            except (TimeoutException, WebDriverException) as e:
+
+                last_error = e
+
+                print(f"Search attempt {attempt}/{max_attempts} failed: {type(e).__name__}")
+
+                pause.seconds(5)
+
+            finally:
+
+                if browser is not None:
+                    try:
+                        browser.quit()
+                    except Exception:
+                        pass
+
+        raise last_error
+
+    def _search_inner(self, browser):
 
         #Reset infos of cases found
         self.case_infos = []
@@ -331,9 +412,7 @@ class fca_search_tool:
         
         #Before entering year, justice or CLR, must enter keywords or case number first, then load
 
-        browser = get_uc_driver(download_dir = download_dir, headless = headless)
-        
-        browser.get(self.results_url)
+        #Browser is opened (and closed) by search()
 
         #Clear form first
         clear_form = Wait(browser, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a.clear-form")))
@@ -557,8 +636,6 @@ class fca_search_tool:
                 #Get search results from current page
                 self.get_case_infos()
 
-        browser.quit()
-
     #Function for attaching judgment text to case_info dict
     def attach_judgment(self, case_info):
 
@@ -577,10 +654,11 @@ class fca_search_tool:
         #Check if not taken to a PDF
         if not bool(judgment_dict['Judgment in PDF']):
         
+            browser = None
+            
             try:
     
-                browser = get_uc_driver(download_dir = download_dir, headless = headless)
-                browser.get(judgment_url)
+                browser = safe_get(judgment_url)
         
                 #Wait until judgment present
                 loaded = Wait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.judgment_content")))
@@ -591,8 +669,6 @@ class fca_search_tool:
                 #pause.seconds(10)
                 
                 soup = BeautifulSoup(browser.page_source, "lxml")
-                
-                browser.quit()
                 
                 #Attach judgment
                 try:
@@ -618,18 +694,27 @@ class fca_search_tool:
                 
                 print(f"{judgment_dict['Case name']}: can't get html judgment or meta due to error {e}.")
                 
+            finally:
+                
+                if browser is not None:
+                    try:
+                        browser.quit()
+                    except Exception:
+                        pass
+                
         #Check if gets taken to a PDF
         else:
             
             print(f"{judgment_dict['Case name']}: trying to get pdf judgment")
             
             #Get judgment pdf text
+            browser = None
+            
             try:
                 
                 #judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
 
-                browser = get_uc_driver(download_dir = download_dir, headless = headless)
-                browser.get(judgment_url)
+                browser = safe_get(judgment_url)
                 
                 pdf_file = judgment_url.split('/')[-1]    
     
@@ -651,12 +736,18 @@ class fca_search_tool:
                                                                     
                 #MUST remove pdf from download folder automatically or manually
                 os.remove(pdf_path)
-    
-                browser.quit()
                 
             except Exception as e:
                 
                 print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
+                
+            finally:
+                
+                if browser is not None:
+                    try:
+                        browser.quit()
+                    except Exception:
+                        pass
     
         judgment_dict['judgment'] = judgment_text
         
