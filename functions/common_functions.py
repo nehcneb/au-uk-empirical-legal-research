@@ -849,7 +849,7 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False, page_load_timeou
         options.binary_location = chrome_bin
 
     # Build kwargs for UC
-    uc_kwargs = dict(options=options, use_subprocess=False)
+    uc_kwargs = dict(options=options, use_subprocess=True)
     if chrome_major:
         uc_kwargs["version_main"] = chrome_major
 
