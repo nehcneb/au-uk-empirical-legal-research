@@ -636,121 +636,252 @@ class fca_search_tool:
                 #Get search results from current page
                 self.get_case_infos()
 
+
     #Function for attaching judgment text to case_info dict
     def attach_judgment(self, case_info):
 
         judgment_dict = copy.deepcopy(case_info)
-        
+
         judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
-    
+
         #Get judgment text
         judgment_text = ''
-    
+
         #Check if getting taken to a PDF
         if 'Judgment in PDF' not in judgment_dict.keys():
-    
             judgment_dict.update({'Judgment in PDF': False})
-        
+
         #Check if not taken to a PDF
         if not bool(judgment_dict['Judgment in PDF']):
-        
-            browser = None
-            
-            try:
-    
-                browser = safe_get(judgment_url)
-        
-                #Wait until judgment present
-                loaded = Wait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.judgment_content")))
 
-                #Wait until end of judgment
-                top_link = Wait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.top-link-wrapper a.top-link")))
+            max_attempts = 3
 
-                #pause.seconds(10)
-                
-                soup = BeautifulSoup(browser.page_source, "lxml")
-                
-                #Attach judgment
+            for attempt in range(1, max_attempts + 1):
+
+                browser = None
+
                 try:
-                    
-                    judgment_text = soup.find("div", {"class": "judgment_content"}).get_text(separator="\n", strip=True)
-                                    
-                except:
-                    
-                    judgment_text = soup.get_text(separator="\n", strip=True)
-    
-                #Attach meta tags
-                meta_tags = soup.find_all("meta")
-            
-                #Attach meta tags
-                if len(meta_tags)>0:
-                    for tag_index in range(len(meta_tags)):
-                        meta_name = meta_tags[tag_index].get("name")
-                        if meta_name in fca_metalabels:
-                            meta_content = meta_tags[tag_index].get("content")
-                            judgment_dict.update({meta_name: meta_content})
-                            
-            except Exception as e:
-                
-                print(f"{judgment_dict['Case name']}: can't get html judgment or meta due to error {e}.")
-                
-            finally:
-                
-                if browser is not None:
-                    try:
-                        browser.quit()
-                    except Exception:
-                        pass
-                
-        #Check if gets taken to a PDF
-        else:
-            
-            print(f"{judgment_dict['Case name']}: trying to get pdf judgment")
-            
-            #Get judgment pdf text
-            browser = None
-            
-            try:
-                
-                #judgment_text = pdf_judgment(url_or_path = judgment_url, url_given = True)
 
-                browser = safe_get(judgment_url)
-                
-                pdf_file = judgment_url.split('/')[-1]    
-    
-                pdf_file = urllib.parse.unquote(pdf_file)
-                
-                pdf_path = f"{download_dir}/{pdf_file.upper()}.pdf"
-    
-                #Limiting waiting time for downloading PDF to 1 min
-                
-                waiting_counter = 0
-                
-                while ((not os.path.exists(pdf_path)) and (waiting_counter < 10)):
-                    pause.seconds(10)
-                    waiting_counter += 1
-                                
-                print(f"{case_info['Case name']}: Trying to OCR pdf from pdf_path == {pdf_path}")
-    
-                judgment_text = pdf_judgment(url_or_path = pdf_path, url_given = False)
-                                                                    
-                #MUST remove pdf from download folder automatically or manually
-                os.remove(pdf_path)
-                
-            except Exception as e:
-                
-                print(f"{judgment_dict['Case name']}: can't get pdf judgment due to error {e}.")
-                
-            finally:
-                
-                if browser is not None:
-                    try:
-                        browser.quit()
-                    except Exception:
-                        pass
-    
+                    #Open a fresh browser
+                    browser = safe_get(judgment_url, max_attempts=1)
+
+                    #Wait until judgment present
+                    Wait(browser, 15).until(
+                        EC.visibility_of_element_located(
+                            (By.CSS_SELECTOR, "div.judgment_content")
+                        )
+                    )
+
+                    #Wait until end of judgment
+                    Wait(browser, 15).until(
+                        EC.visibility_of_element_located(
+                            (By.CSS_SELECTOR, "div.top-link-wrapper a.top-link")
+                        )
+                    )
+
+                    #Get page source
+                    soup = BeautifulSoup(browser.page_source, "lxml")
+
+                    #Extract judgment text
+                    content = soup.find(
+                        "div", {"class": "judgment_content"}
+                    )
+
+                    if content is None:
+                        raise ValueError("Judgment content not found")
+
+                    extracted_text = content.get_text(
+                        separator="\n", strip=True
+                    )
+
+                    if not extracted_text:
+                        raise ValueError("Judgment content is empty")
+
+                    #Extract metadata
+                    metadata = {}
+
+                    for tag in soup.find_all("meta"):
+
+                        meta_name = tag.get("name")
+
+                        if meta_name in fca_metalabels:
+                            metadata[meta_name] = tag.get("content")
+
+                    #Save only after successful extraction
+                    judgment_text = extracted_text
+                    judgment_dict.update(metadata)
+
+                    print(
+                        f"{judgment_dict['Case name']}: "
+                        f"HTML judgment retrieved successfully "
+                        f"on attempt {attempt}/{max_attempts}."
+                    )
+
+                    #Success: stop retrying
+                    break
+
+                except (TimeoutException, WebDriverException, ValueError) as e:
+
+                    print(
+                        f"{judgment_dict['Case name']}: "
+                        f"attempt {attempt}/{max_attempts} "
+                        f"to get HTML judgment failed: "
+                        f"{type(e).__name__}: {e}"
+                    )
+
+                finally:
+
+                    #Always close browser
+                    if browser is not None:
+                        try:
+                            browser.quit()
+                        except Exception:
+                            pass
+
+                #Pause before trying again
+                if attempt < max_attempts:
+                    pause.seconds(3 * attempt)
+
+            if not judgment_text:
+                print(
+                    f"{judgment_dict['Case name']}: "
+                    f"failed to retrieve HTML judgment "
+                    f"after {max_attempts} attempts."
+                )
+
+        #Check if taken to a PDF
+        else:
+
+            print(
+                f"{judgment_dict['Case name']}: "
+                f"trying to get PDF judgment"
+            )
+
+            max_attempts = 3
+
+            for attempt in range(1, max_attempts + 1):
+
+                browser = None
+                pdf_path = None
+
+                try:
+
+                    #Open PDF URL in a fresh browser
+                    browser = safe_get(judgment_url, max_attempts=1)
+
+                    #Determine PDF file path
+                    pdf_file = judgment_url.split('/')[-1]
+
+                    pdf_file = urllib.parse.unquote(pdf_file)
+
+                    pdf_path = f"{download_dir}/{pdf_file.upper()}.pdf"
+
+                    #Wait for PDF download
+                    waiting_counter = 0
+
+                    while (
+                        not os.path.exists(pdf_path)
+                        and waiting_counter < 10
+                    ):
+                        pause.seconds(10)
+                        waiting_counter += 1
+
+                    if not os.path.exists(pdf_path):
+                        raise TimeoutException(
+                            "PDF download did not complete within 100 seconds"
+                        )
+
+                    #Wait until download is complete
+                    previous_size = -1
+                    stable_count = 0
+
+                    for _ in range(10):
+
+                        current_size = os.path.getsize(pdf_path)
+
+                        if current_size > 0 and current_size == previous_size:
+                            stable_count += 1
+                        else:
+                            stable_count = 0
+
+                        if stable_count >= 2:
+                            break
+
+                        previous_size = current_size
+                        pause.seconds(1)
+
+                    if stable_count < 2:
+                        raise TimeoutException(
+                            "PDF download did not stabilise"
+                        )
+
+                    print(
+                        f"{case_info['Case name']}: "
+                        f"Trying to extract PDF text from "
+                        f"pdf_path == {pdf_path}"
+                    )
+
+                    #Extract PDF text
+                    extracted_text = pdf_judgment(
+                        url_or_path=pdf_path,
+                        url_given=False
+                    )
+
+                    if not extracted_text:
+                        raise ValueError("PDF judgment text is empty")
+
+                    judgment_text = extracted_text
+
+                    print(
+                        f"{judgment_dict['Case name']}: "
+                        f"PDF judgment retrieved successfully "
+                        f"on attempt {attempt}/{max_attempts}."
+                    )
+
+                    #Success: stop retrying
+                    break
+
+                except Exception as e:
+
+                    print(
+                        f"{judgment_dict['Case name']}: "
+                        f"attempt {attempt}/{max_attempts} "
+                        f"to get PDF judgment failed: "
+                        f"{type(e).__name__}: {e}"
+                    )
+
+                finally:
+
+                    #Close browser
+                    if browser is not None:
+                        try:
+                            browser.quit()
+                        except Exception:
+                            pass
+
+                    #Remove downloaded PDF
+                    if pdf_path is not None and os.path.exists(pdf_path):
+                        try:
+                            os.remove(pdf_path)
+                        except Exception as e:
+                            print(
+                                f"Could not remove PDF {pdf_path}: {e}"
+                            )
+
+                #Pause before trying again
+                if attempt < max_attempts:
+                    pause.seconds(3 * attempt)
+
+            if not judgment_text:
+                print(
+                    f"{judgment_dict['Case name']}: "
+                    f"failed to retrieve PDF judgment "
+                    f"after {max_attempts} attempts."
+                )
+
+        #Attach judgment text
         judgment_dict['judgment'] = judgment_text
-        
+
         return judgment_dict
 
     #Function for getting all requested judgments
