@@ -797,13 +797,15 @@ def detect_chrome_major(binary_path=None):
 # -----------------------------
 # Your driver factory
 # -----------------------------
-def get_uc_driver(download_dir = os.getcwd(), headless = False, page_load_timeout = 45):
+def get_uc_driver(download_dir = os.getcwd(), headless = False, page_load_timeout = 45, use_undetected = True):
+    """Create a Chrome driver with the configured download directory.
+
+    Existing callers retain undetected_chromedriver by default. For the
+    Federal Court workflow, use_undetected=False selects ordinary Selenium,
+    which avoids undetected_chromedriver's repeated patcher downloads.
+    Selenium Manager manages and caches the ChromeDriver when necessary.
     """
-    Create a UC Chrome driver with:
-      - detected Chrome binary (if found)
-      - detected Chrome major version (if found)
-      - download preferences
-    """
+    os.makedirs(download_dir, exist_ok=True)
     chrome_bin = find_chrome_binary()
     chrome_ver = detect_chrome_version(chrome_bin) if chrome_bin else detect_chrome_version()
     chrome_major = int(chrome_ver.split(".")[0]) if chrome_ver else None
@@ -818,7 +820,11 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False, page_load_timeou
     #else:
         #print("[Chrome] Version not detected (will rely on UC auto-detect).")
 
-    options = uc.ChromeOptions()
+    if use_undetected:
+        options = uc.ChromeOptions()
+    else:
+        from selenium import webdriver
+        options = webdriver.ChromeOptions()
 
     # Return control once the DOM is ready, without waiting for every third-party script
     # (analytics, chat widget, recaptcha) to finish. Prevents "Timed out receiving message from renderer".
@@ -848,13 +854,32 @@ def get_uc_driver(download_dir = os.getcwd(), headless = False, page_load_timeou
     if chrome_bin:
         options.binary_location = chrome_bin
 
-    # Build kwargs for UC
-    uc_kwargs = dict(options=options, use_subprocess=True)
-    if chrome_major:
-        uc_kwargs["version_main"] = chrome_major
+    if use_undetected:
+        # Preserve the original behaviour for other jurisdictions.
+        uc_kwargs = dict(options=options, use_subprocess=True)
+        if chrome_major:
+            uc_kwargs["version_main"] = chrome_major
+        driver = uc.Chrome(**uc_kwargs)
+        driver.implicitly_wait(15)
+    else:
+        # Selenium Manager uses a local cache; no UC patcher is involved.
+        from selenium import webdriver
+        from selenium.webdriver.chrome.service import Service
+        driver_path = os.environ.get("CHROMEDRIVER_PATH")
+        if driver_path:
+            if not os.path.isfile(driver_path):
+                raise FileNotFoundError(
+                    f"CHROMEDRIVER_PATH does not exist: {driver_path}"
+                )
+            driver = webdriver.Chrome(
+                service=Service(executable_path=driver_path),
+                options=options,
+            )
+        else:
+            driver = webdriver.Chrome(options=options)
+        # Explicit waits are used in the Federal Court scraper.
+        driver.implicitly_wait(0)
 
-    driver = uc.Chrome(**uc_kwargs)
-    driver.implicitly_wait(15)
     driver.set_page_load_timeout(page_load_timeout)
     return driver
 

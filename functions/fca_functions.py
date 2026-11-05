@@ -173,71 +173,61 @@ from selenium.common.exceptions import WebDriverException
 
 # %%
 
-def safe_get(url, max_attempts=3, load_timeout=45):
+def safe_get(url, max_attempts=2, load_timeout=45):
+    """Open a URL with an ordinary Chrome driver and return a live session.
 
+    The caller must quit the returned browser. Startup errors, including
+    driver-manager download failures, are treated like navigation errors.
+    """
     last_error = None
 
     for attempt in range(1, max_attempts + 1):
-
         browser = None
-
         try:
-
             browser = get_uc_driver(
                 download_dir=download_dir,
                 headless=headless,
-                page_load_timeout=load_timeout
+                page_load_timeout=load_timeout,
+                use_undetected=False,
             )
 
             try:
                 browser.get(url)
-
             except TimeoutException:
-                # The DOM may already be usable even if loading times out.
-                try:
-                    browser.execute_script("window.stop();")
-                except Exception:
-                    pass
+                # Loading third-party assets may time out after the DOM exists.
+                # Do not mistake a closed window for a usable session.
+                browser.execute_script("window.stop();")
 
-            # Check that Chrome still has an open window.
             handles = browser.window_handles
-
             if not handles:
-                raise WebDriverException(
-                    "Chrome has no live windows after navigation"
-                )
+                raise WebDriverException("Chrome has no live windows")
 
-            # Check that Selenium is attached to an open window.
             try:
                 current = browser.current_window_handle
             except WebDriverException:
                 current = None
-
-            # Switch to an existing window if necessary.
             if current not in handles:
                 browser.switch_to.window(handles[-1])
 
+            # A closed or failed tab can still leave a valid window handle.
+            browser.execute_script("return document.readyState")
             return browser
 
-        except (TimeoutException, WebDriverException) as e:
-
+        except Exception as e:
             last_error = e
-
             print(
-                f"Attempt {attempt}/{max_attempts} "
-                f"to load {url} failed: {type(e).__name__}"
+                f"Attempt {attempt}/{max_attempts} to load {url} failed: "
+                f"{type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''}"
             )
-
-            try:
-                if browser is not None:
+            if browser is not None:
+                try:
                     browser.quit()
-            except Exception:
-                pass
-
-            pause.seconds(3 * attempt)
+                except Exception:
+                    pass
+            if attempt < max_attempts:
+                pause.seconds(3 * attempt)
 
     raise last_error
-
 
 
 # %%
@@ -309,6 +299,12 @@ class fca_search_tool:
         
         #For getting judgment directly from FCA database if can't get from OALC
         self.case_infos_direct = []
+
+        # A 403/429 on requests should not trigger repeated identical calls.
+        self.requests_refused = False
+        self.rate_limited = False
+        self.access_denied = False
+        self.failed_judgments = []
 
     #Function for getting case infos from search results page
     def get_case_infos(self):
@@ -664,427 +660,277 @@ class fca_search_tool:
 
 
     def attach_judgment(self, case_info):
-
+        """Get a judgment without allowing one failure to stop the batch."""
         judgment_dict = copy.deepcopy(case_info)
-
-        judgment_url = case_info[
-            'Hyperlink to Federal Court Digital Law Library'
-        ]
-
+        judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
         judgment_text = ''
+        judgment_dict.setdefault('Judgment in PDF', False)
+        case_name = judgment_dict.get('Case name', judgment_url)
 
-        # Check whether the judgment is a PDF.
-        if 'Judgment in PDF' not in judgment_dict:
-            judgment_dict['Judgment in PDF'] = False
-
-        # HTML JUDGMENTS
         if not bool(judgment_dict['Judgment in PDF']):
 
-            # Parse judgment text and metadata from HTML.
             def parse_judgment_html(html_source):
-
-                soup = BeautifulSoup(html_source, "lxml")
-
-                content = soup.select_one(
-                    "div.judgment_content"
-                )
-
+                soup = BeautifulSoup(html_source, 'lxml')
+                content = soup.select_one('div.judgment_content')
                 if content is None:
-                    raise ValueError(
-                        "Judgment content not found in HTML"
-                    )
+                    raise ValueError('Judgment content not found in HTML')
 
-                extracted_text = content.get_text(
-                    separator="\n",
-                    strip=True
-                )
-
-                if not extracted_text:
-                    raise ValueError(
-                        "Judgment content is empty"
-                    )
+                extracted_text = content.get_text(separator='\n', strip=True)
+                if len(extracted_text.strip()) < 100:
+                    raise ValueError('Judgment content is missing or unusually short')
 
                 metadata = {}
-
-                for tag in soup.find_all("meta"):
-
-                    meta_name = tag.get("name")
-
+                for tag in soup.find_all('meta'):
+                    meta_name = tag.get('name')
                     if meta_name in fca_metalabels:
-                        metadata[meta_name] = tag.get("content")
-
+                        metadata[meta_name] = tag.get('content')
                 return extracted_text, metadata
 
-            # METHOD 1: Try requests without Chrome.
-            for attempt in range(1, 3):
-
-                try:
-
-                    response = requests.get(
-                        judgment_url,
-                        headers={
-                            "User-Agent": (
-                                "Mozilla/5.0 "
-                                "(Macintosh; Intel Mac OS X 10_15_7) "
-                                "AppleWebKit/537.36 "
-                                "(KHTML, like Gecko) "
-                                "Chrome/156.0.0.0 Safari/537.36"
-                            ),
-                            "Accept": (
-                                "text/html,application/xhtml+xml,"
-                                "*/*;q=0.8"
-                            ),
-                        },
-                        timeout=(10, 45),
-                        allow_redirects=True,
-                    )
-
-                    response.raise_for_status()
-
-                    judgment_text, metadata = (
-                        parse_judgment_html(response.content)
-                    )
-
-                    judgment_dict.update(metadata)
-
-                    print(
-                        f"{judgment_dict['Case name']}: "
-                        f"HTML judgment retrieved by requests "
-                        f"on attempt {attempt}/2."
-                    )
-
-                    break
-
-                except (
-                    requests.RequestException,
-                    ValueError
-                ) as e:
-
-                    print(
-                        f"{judgment_dict['Case name']}: "
-                        f"requests attempt {attempt}/2 failed: "
-                        f"{type(e).__name__}: "
-                        f"{str(e).splitlines()[0]}"
-                    )
-
-                    if attempt < 2:
-                        pause.seconds(3)
-
-            # METHOD 2: Selenium fallback.
-            if not judgment_text:
-
-                max_attempts = 3
-
-                for attempt in range(1, max_attempts + 1):
-
-                    browser = None
-
+            # METHOD 1: a normal HTTP request, unless this host already refused.
+            if not self.requests_refused:
+                for attempt in range(1, 3):
                     try:
-
-                        # Start a fresh Chrome browser.
-                        browser = safe_get(
+                        response = requests.get(
                             judgment_url,
-                            max_attempts=1
+                            headers={'User-Agent': 'LawtoData research scraper'},
+                            timeout=(10, 45),
+                            allow_redirects=True,
                         )
-
-                        # Wait for actual judgment text.
-                        # No longer wait for top-link-wrapper.
-                        Wait(
-                            browser,
-                            25,
-                            poll_frequency=0.75
-                        ).until(
-                            lambda driver: driver.execute_script(
-                                "return (document.querySelector("
-                                "'div.judgment_content')?.textContent "
-                                "|| '').trim().length"
-                            ) > 0
-                        )
-
-                        # Get page source and parse judgment.
-                        extracted_text, metadata = (
-                            parse_judgment_html(
-                                browser.page_source
-                            )
-                        )
-
-                        # Save only after successful extraction.
+                        response.raise_for_status()
+                        extracted_text, metadata = parse_judgment_html(response.content)
                         judgment_text = extracted_text
-
                         judgment_dict.update(metadata)
-
-                        print(
-                            f"{judgment_dict['Case name']}: "
-                            f"HTML judgment retrieved by Selenium "
-                            f"on attempt {attempt}/{max_attempts}."
-                        )
-
+                        print(f'{case_name}: HTML retrieved by requests.')
                         break
+                    except requests.HTTPError as e:
+                        status = e.response.status_code if e.response is not None else None
+                        print(f'{case_name}: requests HTTP {status}.')
+                        if status == 429:
+                            self.requests_refused = True
+                            self.rate_limited = True
+                            print('Rate limited by the court website; stopping this batch.')
+                            break
+                        if status == 403:
+                            self.requests_refused = True
+                            print('Direct requests refused; not repeating them this run.')
+                            break
+                        if status and status < 500:
+                            break  # Repeating a permanent client error will not help.
+                        if attempt < 2:
+                            pause.seconds(3 * attempt)
+                    except (requests.RequestException, ValueError) as e:
+                        print(f'{case_name}: requests failed: {type(e).__name__}: {e}')
+                        if attempt < 2:
+                            pause.seconds(3 * attempt)
 
-                    except (
-                        TimeoutException,
-                        WebDriverException,
-                        ValueError
-                    ) as e:
+            # METHOD 2: use a regular Chrome browser if HTTP access failed.
+            if not judgment_text and not self.rate_limited:
+                max_attempts = 2
+                for attempt in range(1, max_attempts + 1):
+                    browser = None
+                    denied = False
+                    try:
+                        browser = safe_get(judgment_url, max_attempts=1)
 
-                        print(
-                            f"{judgment_dict['Case name']}: "
-                            f"Selenium attempt "
-                            f"{attempt}/{max_attempts} failed: "
-                            f"{type(e).__name__}: "
-                            f"{str(e).splitlines()[0]}"
+                        def judgment_loaded(driver):
+                            # Fail promptly if the server explicitly denies access.
+                            page_title = (driver.title or '').strip().lower()
+                            if page_title in ('403 forbidden', 'access denied', '429 too many requests'):
+                                raise PermissionError(f'Website returned: {page_title}')
+                            return driver.execute_script(
+                                "return (document.querySelector('div.judgment_content')"
+                                "?.textContent || '').trim().length >= 100"
+                            )
+
+                        Wait(browser, 25, poll_frequency=0.75).until(judgment_loaded)
+                        extracted_text, metadata = parse_judgment_html(
+                            browser.page_source
                         )
-
+                        judgment_text = extracted_text
+                        judgment_dict.update(metadata)
+                        print(
+                            f'{case_name}: HTML retrieved by Selenium '
+                            f'on attempt {attempt}/{max_attempts}.'
+                        )
+                        break
+                    except PermissionError as e:
+                        denied = True
+                        if '429' in str(e):
+                            self.rate_limited = True
+                        else:
+                            self.access_denied = True
+                        print(f'{case_name}: {e}; stopping further direct requests.')
+                    except Exception as e:
+                        print(
+                            f'{case_name}: Selenium attempt {attempt}/{max_attempts} '
+                            f'failed: {type(e).__name__}: '
+                            f'{str(e).splitlines()[0] if str(e) else ""}'
+                        )
                     finally:
-
-                        # Close browser, even if an error occurred.
                         if browser is not None:
                             try:
                                 browser.quit()
                             except Exception:
                                 pass
-
-                    # Retry with a completely fresh browser.
+                    if denied:
+                        break
                     if attempt < max_attempts:
                         pause.seconds(3 * attempt)
 
-            if not judgment_text:
-
-                print(
-                    f"{judgment_dict['Case name']}: "
-                    "failed to retrieve HTML judgment "
-                    "using both methods."
-                )
-
-        # PDF JUDGMENTS: Existing approach retained.
         else:
-
-            print(
-                f"{judgment_dict['Case name']}: "
-                f"trying to get PDF judgment"
-            )
-
-            max_attempts = 3
-
+            # PDF JUDGMENTS: retain the original extraction approach.
+            print(f'{case_name}: trying to get PDF judgment')
+            os.makedirs(download_dir, exist_ok=True)
+            max_attempts = 2
             for attempt in range(1, max_attempts + 1):
-
                 browser = None
                 pdf_path = None
-
                 try:
+                    pdf_file = urllib.parse.unquote(judgment_url.split('/')[-1])
+                    pdf_path = os.path.join(download_dir, f'{pdf_file.upper()}.pdf')
+                    # Remove stale files before attempting a new download.
+                    if os.path.isfile(pdf_path):
+                        os.remove(pdf_path)
 
-                    # Open PDF URL in a fresh browser.
-                    browser = safe_get(
-                        judgment_url,
-                        max_attempts=1
-                    )
-
-                    # Determine PDF file path.
-                    pdf_file = judgment_url.split('/')[-1]
-
-                    pdf_file = urllib.parse.unquote(pdf_file)
-
-                    pdf_path = (
-                        f"{download_dir}/{pdf_file.upper()}.pdf"
-                    )
-
-                    # Wait for PDF download.
+                    browser = safe_get(judgment_url, max_attempts=1)
                     waiting_counter = 0
-
-                    while (
-                        not os.path.exists(pdf_path)
-                        and waiting_counter < 10
-                    ):
-
+                    while not os.path.isfile(pdf_path) and waiting_counter < 10:
                         pause.seconds(10)
                         waiting_counter += 1
+                    if not os.path.isfile(pdf_path):
+                        raise TimeoutException('PDF download did not complete in 100 seconds')
 
-                    if not os.path.exists(pdf_path):
-
-                        raise TimeoutException(
-                            "PDF download did not complete "
-                            "within 100 seconds"
-                        )
-
-                    # Wait until download is complete.
-                    previous_size = -1
-                    stable_count = 0
-
+                    previous_size, stable_count = -1, 0
                     for _ in range(10):
-
-                        current_size = os.path.getsize(pdf_path)
-
-                        if (
-                            current_size > 0
-                            and current_size == previous_size
-                        ):
-                            stable_count += 1
-                        else:
-                            stable_count = 0
-
+                        size = os.path.getsize(pdf_path)
+                        stable_count = stable_count + 1 if size > 0 and size == previous_size else 0
                         if stable_count >= 2:
                             break
-
-                        previous_size = current_size
-
+                        previous_size = size
                         pause.seconds(1)
-
                     if stable_count < 2:
+                        raise TimeoutException('PDF download did not stabilise')
 
-                        raise TimeoutException(
-                            "PDF download did not stabilise"
-                        )
-
-                    print(
-                        f"{case_info['Case name']}: "
-                        f"Trying to extract PDF text from "
-                        f"pdf_path == {pdf_path}"
-                    )
-
-                    # Extract PDF text.
-                    extracted_text = pdf_judgment(
-                        url_or_path=pdf_path,
-                        url_given=False
-                    )
-
-                    if not extracted_text:
-                        raise ValueError(
-                            "PDF judgment text is empty"
-                        )
-
+                    extracted_text = pdf_judgment(pdf_path, url_given=False)
+                    if not extracted_text or len(extracted_text.strip()) < 100:
+                        raise ValueError('PDF judgment text is missing or unusually short')
                     judgment_text = extracted_text
-
-                    print(
-                        f"{judgment_dict['Case name']}: "
-                        f"PDF judgment retrieved successfully "
-                        f"on attempt {attempt}/{max_attempts}."
-                    )
-
+                    print(f'{case_name}: PDF retrieved on attempt {attempt}/{max_attempts}.')
                     break
-
                 except Exception as e:
-
                     print(
-                        f"{judgment_dict['Case name']}: "
-                        f"attempt {attempt}/{max_attempts} "
-                        f"to get PDF judgment failed: "
-                        f"{type(e).__name__}: {e}"
+                        f'{case_name}: PDF attempt {attempt}/{max_attempts} failed: '
+                        f'{type(e).__name__}: {e}'
                     )
-
                 finally:
-
-                    # Close browser.
                     if browser is not None:
                         try:
                             browser.quit()
                         except Exception:
                             pass
-
-                    # Remove downloaded PDF.
-                    if (
-                        pdf_path is not None
-                        and os.path.exists(pdf_path)
-                    ):
+                    if pdf_path and os.path.exists(pdf_path):
                         try:
                             os.remove(pdf_path)
-                        except Exception as e:
-                            print(
-                                f"Could not remove PDF "
-                                f"{pdf_path}: {e}"
-                            )
-
+                        except OSError:
+                            pass
                 if attempt < max_attempts:
                     pause.seconds(3 * attempt)
 
-            if not judgment_text:
-
-                print(
-                    f"{judgment_dict['Case name']}: "
-                    f"failed to retrieve PDF judgment "
-                    f"after {max_attempts} attempts."
-                )
-
-        # Attach judgment text.
+        if not judgment_text:
+            print(f'{case_name}: judgment unavailable; it will not be saved as complete.')
         judgment_dict['judgment'] = judgment_text
-
         return judgment_dict
 
     #Function for getting all requested judgments
-    def get_judgments(self):
+    def get_judgments(self, exclude_mncs=None, on_judgment=None):
+        """Retrieve complete judgments, optionally excluding existing citations.
 
+        on_judgment, if given, is called after each successful retrieval so
+        callers can checkpoint progress before a later failure or interruption.
+        """
         self.case_infos_w_judgments = []
+        self.case_infos_direct = []
+        self.failed_judgments = []
+        excluded = set(exclude_mncs or [])
 
-        #Search if not done yet
-        if len(self.case_infos) == 0:
-
+        if not self.case_infos:
             self.search()
 
-        #If huggingface enabled
-        if huggingface == True:
+        candidates = [
+            info for info in self.case_infos
+            if info['Medium neutral citation'] not in excluded
+        ][:self.judgment_counter_bound]
+        target_count = len(candidates)
+        print(f'Found {target_count} judgments not already in the dataset.')
+        if not candidates:
+            return
 
-            #Create a list of mncs for HuggingFace:
-            mnc_list = []
-    
-            for case_info in self.case_infos:
+        def record_complete(case_info, method):
+            judgment = case_info.get('judgment')
+            if not isinstance(judgment, str) or not judgment.strip():
+                self.failed_judgments.append({
+                    'Medium neutral citation': case_info.get('Medium neutral citation'),
+                    'URL': case_info.get('Hyperlink to Federal Court Digital Law Library'),
+                })
+                return False
+            judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
+            case_info['Hyperlink to Federal Court Digital Law Library'] = link(judgment_url)
+            self.case_infos_w_judgments.append(case_info)
+            if on_judgment is not None:
+                try:
+                    on_judgment(case_info)
+                except Exception as e:
+                    # Do not report a successful checkpoint if persistence failed.
+                    raise RuntimeError(
+                        f'Could not checkpoint {case_info.get("Medium neutral citation")}'
+                    ) from e
+            print(
+                f'{case_info["Case name"]} '
+                f'{case_info["Medium neutral citation"]}: got judgment from {method}; '
+                f'{len(self.case_infos_w_judgments)}/{target_count} completed'
+            )
+            return True
 
-                if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
-                    
-                    #Add mnc to list for HuggingFace
-                    mnc_list.append(case_info['Medium neutral citation'])
-    
-            #Get judgments from oalc first
-            mnc_judgment_dict = get_judgment_from_oalc(mnc_list)
-        
-            #Append OALC judgment 
-            for case_info in self.case_infos:
-                
-                #Append judgments from oalc first
-                if case_info['Medium neutral citation'] in mnc_judgment_dict.keys():
-                    
-                    case_info.update({'judgment': mnc_judgment_dict[case_info['Medium neutral citation']]})
-
-                    #Make link clickable
-                    judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
-                    case_info.update({'Hyperlink to Federal Court Digital Law Library': link(judgment_url)})
-
-                    #Add case_info to self.case_infos_w_judgments
-                    self.case_infos_w_judgments.append(case_info)
-    
-                    print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from OALC")
-    
+        if huggingface:
+            mnc_list = [info['Medium neutral citation'] for info in candidates]
+            try:
+                mnc_judgment_dict = get_judgment_from_oalc(mnc_list) or {}
+            except Exception as e:
+                print(f'OALC lookup failed ({type(e).__name__}: {e}); using FCA directly.')
+                mnc_judgment_dict = {}
+            for case_info in candidates:
+                mnc = case_info['Medium neutral citation']
+                text = mnc_judgment_dict.get(mnc)
+                if isinstance(text, str) and text.strip():
+                    case_copy = copy.deepcopy(case_info)
+                    case_copy['judgment'] = text
+                    record_complete(case_copy, 'OALC')
                 else:
-                    
-                    #To get from FCA database directly if can't get from OALC
                     self.case_infos_direct.append(case_info)
-
-            print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments from OALC")
-
         else:
-            
-            #If huggingface not enabled
-            self.case_infos_direct = copy.deepcopy(self.case_infos)
-        
-        #Get judgments from FCA database directly
+            self.case_infos_direct = copy.deepcopy(candidates)
+
         for case_info in self.case_infos_direct:
+            if self.rate_limited or self.access_denied:
+                print('Stopping direct retrieval because the site refused browser access.')
+                break
+            pause.seconds(np.random.randint(10, 15))
+            try:
+                completed_info = self.attach_judgment(case_info)
+            except Exception as e:
+                print(
+                    f'{case_info["Case name"]}: could not retrieve judgment: '
+                    f'{type(e).__name__}: {e}'
+                )
+                completed_info = copy.deepcopy(case_info)
+                completed_info['judgment'] = ''
+            record_complete(completed_info, 'FCA directly')
 
-            if len(self.case_infos_w_judgments) < self.judgment_counter_bound:
-
-                #Pause to avoid getting kicked out
-                pause.seconds(np.random.randint(10, 15))
-    
-                case_info = self.attach_judgment(case_info)
-    
-                #Make link clickable
-                judgment_url = case_info['Hyperlink to Federal Court Digital Law Library']
-                case_info.update({'Hyperlink to Federal Court Digital Law Library': link(judgment_url)})
-    
-                #Add case_info to self.case_infos_w_judgments
-    
-                self.case_infos_w_judgments.append(case_info)
-                
-                print(f"{case_info['Case name']} {case_info['Medium neutral citation']}: got judgment from FCA directly")
-                
-                print(f"Scraped {len(self.case_infos_w_judgments)}/{min(self.results_count, self.judgment_counter_bound)} judgments")
+        if self.failed_judgments:
+            print(
+                f'{len(self.failed_judgments)} judgments were unavailable; '
+                'they have NOT been recorded as successfully retrieved.'
+            )
 
 
 # %%
